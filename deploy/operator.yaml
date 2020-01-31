@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: application-runtime-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: application-runtime-operator
+  template:
+    metadata:
+      labels:
+        name: application-runtime-operator
+    spec:
+      serviceAccountName: application-runtime-operator
+      containers:
+        - name: application-runtime-operator
+          image: application-runtimes/operator:daily
+          command:
+          - application-runtime-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "application-runtime-operator"
