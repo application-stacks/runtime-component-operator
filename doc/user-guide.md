@@ -4,7 +4,7 @@ This generic Operator is capable of deploying any application image and can be i
 
 ## Operator installation
 
-Use the instructions for one of the [releases](../deploy/releases) to install the operator into a Kubernetes cluster.
+Use the instructions for one of the releases to install the operator into a Kubernetes cluster.
 
 The Application Runtime Operator can be installed to:
 
@@ -41,7 +41,7 @@ spec:
 
 ### Custom Resource Definition (CRD)
 
-The following table lists configurable parameters of the `RuntimeApplication` CRD. For complete OpenAPI v3 representation of these values please see [`RuntimeApplication` CRD](../deploy/crds/runtimeapp_v1beta1_runtimeapplication_crd.yaml).
+The following table lists configurable parameters of the `RuntimeApplication` CRD. For complete OpenAPI v3 representation of these values please see [`RuntimeApplication` CRD](../deploy/crds/runtime.app_runtimeapplications_crd.yaml).
 
 Each `RuntimeApplication` CR must specify `applicationImage` parameter. Specifying other parameters is optional.
 
