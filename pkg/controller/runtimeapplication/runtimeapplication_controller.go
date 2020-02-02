@@ -3,7 +3,6 @@ package runtimeapplication
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/application-runtimes/operator/pkg/common"
@@ -31,7 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"sigs.k8s.io/yaml"
 )
 
 var log = logf.Log.WithName("controller_runtimeapplication")
@@ -47,8 +45,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	reconciler := &ReconcileRuntimeApplication{ReconcilerBase: runtimeapputils.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("application-runtime-operator")),
-		StackDefaults: map[string]runtimeappv1beta1.RuntimeApplicationSpec{}, StackConstants: map[string]*runtimeappv1beta1.RuntimeApplicationSpec{}}
+	reconciler := &ReconcileRuntimeApplication{ReconcilerBase: runtimeapputils.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("application-runtime-operator"))}
 
 	watchNamespaces, err := runtimeapputils.GetWatchNamespaces()
 	if err != nil {
@@ -63,44 +60,6 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 		// If the operator is running locally, use the first namespace in the `watchNamespaces`
 		// `watchNamespaces` must have at least one item
 		ns = watchNamespaces[0]
-	}
-
-	fData, err := ioutil.ReadFile("deploy/stack_defaults.yaml")
-	if err != nil {
-		log.Error(err, "Failed to read defaults config map from file")
-		os.Exit(1)
-	}
-
-	configMap := &corev1.ConfigMap{}
-	err = yaml.Unmarshal(fData, configMap)
-	if err != nil {
-		log.Error(err, "Failed to parse defaults config map from file")
-		os.Exit(1)
-	}
-	configMap.Namespace = ns
-	err = reconciler.GetClient().Create(context.TODO(), configMap)
-	if err != nil && !kerrors.IsAlreadyExists(err) {
-		log.Error(err, "Failed to create defaults config map in the cluster")
-		os.Exit(1)
-	}
-
-	fData, err = ioutil.ReadFile("deploy/stack_constants.yaml")
-	if err != nil {
-		log.Error(err, "Failed to read constants config map from file")
-		os.Exit(1)
-	}
-
-	configMap = &corev1.ConfigMap{}
-	err = yaml.Unmarshal(fData, configMap)
-	if err != nil {
-		log.Error(err, "Failed to parse constants config map from file")
-		os.Exit(1)
-	}
-	configMap.Namespace = ns
-	err = reconciler.GetClient().Create(context.TODO(), configMap)
-	if err != nil && !kerrors.IsAlreadyExists(err) {
-		log.Error(err, "Failed to create constants config map in the cluster")
-		os.Exit(1)
 	}
 
 	return reconciler
@@ -261,10 +220,6 @@ type ReconcileRuntimeApplication struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	runtimeapputils.ReconcilerBase
-	StackDefaults   map[string]runtimeappv1beta1.RuntimeApplicationSpec
-	StackConstants  map[string]*runtimeappv1beta1.RuntimeApplicationSpec
-	lastDefautsRV   string
-	lastConstantsRV string
 }
 
 // Reconcile reads that state of the cluster for a RuntimeApplication object and makes changes based on the state read
@@ -292,48 +247,6 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 		ns = watchNamespaces[0]
 	}
 
-	configMap, err := r.GetOpConfigMap("application-runtime-operator-defaults", ns)
-	if err != nil {
-		log.Info("Failed to find config map defaults in namespace " + ns)
-	} else {
-		if r.lastDefautsRV != configMap.ResourceVersion {
-			for k := range r.StackDefaults {
-				delete(r.StackDefaults, k)
-			}
-			for stack, values := range configMap.Data {
-				var defaults runtimeappv1beta1.RuntimeApplicationSpec
-				unerr := yaml.Unmarshal([]byte(values), &defaults)
-				if unerr != nil {
-					reqLogger.Error(unerr, "Failed to parse config map defaults")
-				} else {
-					r.StackDefaults[stack] = defaults
-				}
-			}
-		}
-		r.lastDefautsRV = configMap.ResourceVersion
-	}
-
-	configMap, err = r.GetOpConfigMap("application-runtime-operator-constants", ns)
-	if err != nil {
-		log.Info("Failed to find config map constants")
-	} else {
-		if r.lastConstantsRV != configMap.ResourceVersion {
-			for k := range r.StackConstants {
-				delete(r.StackConstants, k)
-			}
-			for stack, values := range configMap.Data {
-				var constants runtimeappv1beta1.RuntimeApplicationSpec
-				unerr := yaml.Unmarshal([]byte(values), &constants)
-				if unerr != nil {
-					reqLogger.Error(unerr, "Failed to parse config map constants")
-				} else {
-					r.StackConstants[stack] = &constants
-				}
-			}
-		}
-		r.lastConstantsRV = configMap.ResourceVersion
-	}
-
 	// Fetch the RuntimeApplication instance
 	instance := &runtimeappv1beta1.RuntimeApplication{}
 	var ba common.BaseApplication
@@ -349,27 +262,9 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-	stackDefaults, ok := r.StackDefaults[instance.Spec.Stack]
-	if ok {
-		_, ok = r.StackConstants[instance.Spec.Stack]
-		if ok {
-			instance.Initialize(stackDefaults, r.StackConstants[instance.Spec.Stack])
-		} else {
-			instance.Initialize(stackDefaults, r.StackConstants["generic"])
-		}
-	} else {
-		stackDefaults, ok = r.StackDefaults["generic"]
-		if !ok {
-			err = fmt.Errorf("Failed to find stack neither `%v` nor `generic` in the ConfigMap holding default values", instance.Spec.Stack)
-			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-		}
-		_, ok = r.StackConstants[instance.Spec.Stack]
-		if ok {
-			instance.Initialize(stackDefaults, r.StackConstants[instance.Spec.Stack])
-		} else {
-			instance.Initialize(stackDefaults, r.StackConstants["generic"])
-		}
-	}
+
+	// initialize the RuntimeApplication instance
+	instance.Initialize()
 
 	_, err = runtimeapputils.Validate(instance)
 	// If there's any validation error, don't bother with requeuing
@@ -462,7 +357,7 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 	}
 
 	// Check if Knative is supported and delete Knative service if supported
-	if ok, err = r.IsGroupVersionSupported(servingv1alpha1.SchemeGroupVersion.String()); err != nil {
+	if ok, err := r.IsGroupVersionSupported(servingv1alpha1.SchemeGroupVersion.String()); err != nil {
 		reqLogger.Error(err, fmt.Sprintf("Failed to check if %s is supported", servingv1alpha1.SchemeGroupVersion.String()))
 		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	} else if ok {
@@ -614,7 +509,7 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported", routev1.SchemeGroupVersion.String()))
 	}
 
-	if ok, err = r.IsGroupVersionSupported(prometheusv1.SchemeGroupVersion.String()); err != nil {
+	if ok, err := r.IsGroupVersionSupported(prometheusv1.SchemeGroupVersion.String()); err != nil {
 		reqLogger.Error(err, fmt.Sprintf("Failed to check if %s is supported", routev1.SchemeGroupVersion.String()))
 		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	} else if ok {

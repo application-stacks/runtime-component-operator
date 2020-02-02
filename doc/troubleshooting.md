@@ -40,7 +40,7 @@ If the operator is running fine, check the status of the `RuntimeApplication` Cu
   $ oc get runtimeapplication my-app -o yaml
   ```
 
-  Ensure that the effective CR values are what you want since the initial CR values you specified might have been masked by the default values from the default and constant `ConfigMap`s.
+  Ensure that the effective CR values are what you want.
 
 * Check the `status` section of the CR. If the CR was successfully reconciled, the output should look like the following:
 

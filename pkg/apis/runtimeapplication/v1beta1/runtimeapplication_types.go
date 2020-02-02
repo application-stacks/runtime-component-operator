@@ -40,7 +40,6 @@ type RuntimeApplicationSpec struct {
 	Architecture         []string                      `json:"architecture,omitempty"`
 	Storage              *RuntimeApplicationStorage    `json:"storage,omitempty"`
 	CreateKnativeService *bool                         `json:"createKnativeService,omitempty"`
-	Stack                string                        `json:"stack,omitempty"`
 	Monitoring           *RuntimeApplicationMonitoring `json:"monitoring,omitempty"`
 	CreateAppDefinition  *bool                         `json:"createAppDefinition,omitempty"`
 	// +listType=map
@@ -511,71 +510,19 @@ func (r *RuntimeApplicationRoute) GetPath() string {
 	return r.Path
 }
 
-// Initialize the RuntimeApplication instance with values from the default and constant ConfigMap
-func (cr *RuntimeApplication) Initialize(defaults RuntimeApplicationSpec, constants *RuntimeApplicationSpec) {
+// Initialize the RuntimeApplication instance
+func (cr *RuntimeApplication) Initialize() {
 
 	if cr.Spec.PullPolicy == nil {
-		cr.Spec.PullPolicy = defaults.PullPolicy
-		if cr.Spec.PullPolicy == nil {
-			pp := corev1.PullIfNotPresent
-			cr.Spec.PullPolicy = &pp
-		}
-	}
-
-	if cr.Spec.PullSecret == nil {
-		cr.Spec.PullSecret = defaults.PullSecret
-	}
-
-	if cr.Spec.ServiceAccountName == nil {
-		cr.Spec.ServiceAccountName = defaults.ServiceAccountName
-	}
-
-	if cr.Spec.ReadinessProbe == nil {
-		cr.Spec.ReadinessProbe = defaults.ReadinessProbe
-	}
-	if cr.Spec.LivenessProbe == nil {
-		cr.Spec.LivenessProbe = defaults.LivenessProbe
-	}
-	if cr.Spec.Env == nil {
-		cr.Spec.Env = defaults.Env
-	}
-	if cr.Spec.EnvFrom == nil {
-		cr.Spec.EnvFrom = defaults.EnvFrom
-	}
-
-	if cr.Spec.Volumes == nil {
-		cr.Spec.Volumes = defaults.Volumes
-	}
-
-	if cr.Spec.VolumeMounts == nil {
-		cr.Spec.VolumeMounts = defaults.VolumeMounts
+		pp := corev1.PullIfNotPresent
+		cr.Spec.PullPolicy = &pp
 	}
 
 	if cr.Spec.ResourceConstraints == nil {
-		if defaults.ResourceConstraints != nil {
-			cr.Spec.ResourceConstraints = defaults.ResourceConstraints
-		} else {
-			cr.Spec.ResourceConstraints = &corev1.ResourceRequirements{}
-		}
+		cr.Spec.ResourceConstraints = &corev1.ResourceRequirements{}
 	}
 
-	if cr.Spec.Autoscaling == nil {
-		cr.Spec.Autoscaling = defaults.Autoscaling
-	}
-
-	if cr.Spec.Expose == nil {
-		cr.Spec.Expose = defaults.Expose
-	}
-
-	if cr.Spec.CreateKnativeService == nil {
-		cr.Spec.CreateKnativeService = defaults.CreateKnativeService
-	}
-
-	if cr.Spec.Service == nil {
-		cr.Spec.Service = defaults.Service
-	}
-
-	// This is to handle when there is no service in the CR nor defaults
+	// This is to handle when there is no service in the CR
 	if cr.Spec.Service == nil {
 		cr.Spec.Service = &RuntimeApplicationService{}
 	}
@@ -584,30 +531,9 @@ func (cr *RuntimeApplication) Initialize(defaults RuntimeApplicationSpec, consta
 		st := corev1.ServiceTypeClusterIP
 		cr.Spec.Service.Type = &st
 	}
+
 	if cr.Spec.Service.Port == 0 {
-		if defaults.Service != nil && defaults.Service.Port != 0 {
-			cr.Spec.Service.Port = defaults.Service.Port
-		} else {
-			cr.Spec.Service.Port = 8080
-		}
-	}
-
-	if cr.Spec.CreateAppDefinition == nil {
-		if defaults.CreateAppDefinition != nil {
-			cr.Spec.CreateAppDefinition = defaults.CreateAppDefinition
-		}
-	}
-
-	if cr.Spec.Monitoring == nil {
-		if defaults.Monitoring != nil {
-			cr.Spec.Monitoring = defaults.Monitoring
-		}
-	}
-
-	if cr.Spec.InitContainers == nil {
-		if defaults.InitContainers != nil {
-			cr.Spec.InitContainers = defaults.InitContainers
-		}
+		cr.Spec.Service.Port = 8080
 	}
 
 	if cr.Spec.Service.Provides != nil && cr.Spec.Service.Provides.Protocol == "" {
@@ -621,144 +547,6 @@ func (cr *RuntimeApplication) Initialize(defaults RuntimeApplicationSpec, consta
 			}
 		}
 	}
-
-	if constants != nil {
-		cr.applyConstants(defaults, constants)
-	}
-}
-
-func (cr *RuntimeApplication) applyConstants(defaults RuntimeApplicationSpec, constants *RuntimeApplicationSpec) {
-
-	if constants.Replicas != nil {
-		cr.Spec.Replicas = constants.Replicas
-	}
-
-	if constants.Stack != "" {
-		cr.Spec.Stack = constants.Stack
-	}
-
-	if constants.ApplicationImage != "" {
-		cr.Spec.ApplicationImage = constants.ApplicationImage
-	}
-
-	if constants.PullPolicy != nil {
-		cr.Spec.PullPolicy = constants.PullPolicy
-	}
-
-	if constants.PullSecret != nil {
-		cr.Spec.PullSecret = constants.PullSecret
-	}
-
-	if constants.Expose != nil {
-		cr.Spec.Expose = constants.Expose
-	}
-
-	if constants.CreateKnativeService != nil {
-		cr.Spec.CreateKnativeService = constants.CreateKnativeService
-	}
-
-	if constants.ServiceAccountName != nil {
-		cr.Spec.ServiceAccountName = constants.ServiceAccountName
-	}
-
-	if constants.Architecture != nil {
-		cr.Spec.Architecture = constants.Architecture
-	}
-
-	if constants.ReadinessProbe != nil {
-		cr.Spec.ReadinessProbe = constants.ReadinessProbe
-	}
-
-	if constants.LivenessProbe != nil {
-		cr.Spec.LivenessProbe = constants.LivenessProbe
-	}
-
-	if constants.EnvFrom != nil {
-		for _, v := range constants.EnvFrom {
-
-			found := false
-			for _, v2 := range cr.Spec.EnvFrom {
-				if v2 == v {
-					found = true
-				}
-			}
-			if !found {
-				cr.Spec.EnvFrom = append(cr.Spec.EnvFrom, v)
-			}
-		}
-	}
-
-	if constants.Env != nil {
-		for _, v := range constants.Env {
-			found := false
-			for _, v2 := range cr.Spec.Env {
-				if v2.Name == v.Name {
-					found = true
-				}
-			}
-			if !found {
-				cr.Spec.Env = append(cr.Spec.Env, v)
-			}
-		}
-	}
-
-	if constants.Volumes != nil {
-		for _, v := range constants.Volumes {
-			found := false
-			for _, v2 := range cr.Spec.Volumes {
-				if v2.Name == v.Name {
-					found = true
-				}
-			}
-			if !found {
-				cr.Spec.Volumes = append(cr.Spec.Volumes, v)
-			}
-		}
-	}
-
-	if constants.VolumeMounts != nil {
-		for _, v := range constants.VolumeMounts {
-			found := false
-			for _, v2 := range cr.Spec.VolumeMounts {
-				if v2.Name == v.Name && v2.SubPath == v.SubPath {
-					found = true
-				}
-			}
-			if !found {
-				cr.Spec.VolumeMounts = append(cr.Spec.VolumeMounts, v)
-			}
-		}
-	}
-
-	if constants.ResourceConstraints != nil {
-		cr.Spec.ResourceConstraints = constants.ResourceConstraints
-	}
-
-	if constants.Service != nil {
-		if constants.Service.Type != nil {
-			cr.Spec.Service.Type = constants.Service.Type
-		}
-		if constants.Service.Port != 0 {
-			cr.Spec.Service.Port = constants.Service.Port
-		}
-	}
-
-	if constants.Autoscaling != nil {
-		cr.Spec.Autoscaling = constants.Autoscaling
-	}
-
-	if constants.InitContainers != nil {
-		cr.Spec.InitContainers = constants.InitContainers
-	}
-
-	if constants.Monitoring != nil {
-		cr.Spec.Monitoring = constants.Monitoring
-	}
-
-	if constants.CreateAppDefinition != nil {
-		cr.Spec.CreateAppDefinition = constants.CreateAppDefinition
-	}
-
 }
 
 // GetLabels returns set of labels to be added to all resources
@@ -768,10 +556,6 @@ func (cr *RuntimeApplication) GetLabels() map[string]string {
 		"app.kubernetes.io/instance":   cr.Name,
 		"app.kubernetes.io/name":       cr.Name,
 		"app.kubernetes.io/managed-by": "application-runtime-operator",
-	}
-
-	if cr.Spec.Stack != "" {
-		labels["stack.runtime.app/id"] = cr.Spec.Stack
 	}
 
 	if cr.Spec.Version != "" {

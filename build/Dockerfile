@@ -12,8 +12,6 @@ ENV OPERATOR=/usr/local/bin/application-runtime-operator \
 
 # install operator binary
 COPY build/_output/bin/application-runtime-operator ${OPERATOR}
-COPY deploy/stack_defaults.yaml deploy/
-COPY deploy/stack_constants.yaml deploy/
 COPY build/bin /usr/local/bin
 COPY LICENSE /licenses/
 
