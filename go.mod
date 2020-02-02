@@ -20,7 +20,6 @@ require (
 	k8s.io/kube-openapi v0.0.0-20190918143330-0270cf2f1c1d
 	knative.dev/pkg v0.0.0-20190626215608-1104d6c75533 // indirect
 	sigs.k8s.io/controller-runtime v0.3.1-0.20191022174215-ad57a976ffa1
-	sigs.k8s.io/yaml v1.1.0
 )
 
 // Pinned to kubernetes-1.15.4
