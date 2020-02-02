@@ -1569,7 +1569,7 @@ spec:
                     type: string
                   type: object
                 certificate:
-                  description: Certificate ...
+                  description: Certificate is used to request certificates
                   properties:
                     commonName:
                       description: CommonName is a common name to be used on the Certificate.
@@ -1722,7 +1722,7 @@ spec:
                     type: string
                   type: object
                 certificate:
-                  description: Certificate ...
+                  description: Certificate is used to request certificates
                   properties:
                     commonName:
                       description: CommonName is a common name to be used on the Certificate.

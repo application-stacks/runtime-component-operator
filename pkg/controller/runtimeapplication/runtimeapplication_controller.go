@@ -9,7 +9,7 @@ import (
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapplication/v1beta1"
+	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
 	runtimeapputils "github.com/application-runtimes/operator/pkg/utils"
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"

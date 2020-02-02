@@ -11,19 +11,19 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"./pkg/apis/runtimeapplication/v1beta1.RuntimeApplication":            schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplication(ref),
-		"./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationAutoScaling": schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationAutoScaling(ref),
-		"./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationService":     schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationService(ref),
-		"./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationSpec":        schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationSpec(ref),
-		"./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationStatus":      schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationStatus(ref),
-		"./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationRoute":       schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationRoute(ref),
-		"./pkg/apis/runtimeapplication/v1beta1.ServiceBindingConsumes":        schema_pkg_apis_runtimeapplication_v1beta1_ServiceBindingConsumes(ref),
-		"./pkg/apis/runtimeapplication/v1beta1.ServiceBindingProvides":        schema_pkg_apis_runtimeapplication_v1beta1_ServiceBindingProvides(ref),
-		"./pkg/apis/runtimeapplication/v1beta1.StatusCondition":               schema_pkg_apis_runtimeapplication_v1beta1_StatusCondition(ref),
+		"./pkg/apis/runtimeapp/v1beta1.RuntimeApplication":            schema_pkg_apis_runtimeapp_v1beta1_RuntimeApplication(ref),
+		"./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationAutoScaling": schema_pkg_apis_runtimeapp_v1beta1_RuntimeApplicationAutoScaling(ref),
+		"./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationRoute":       schema_pkg_apis_runtimeapp_v1beta1_RuntimeApplicationRoute(ref),
+		"./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationService":     schema_pkg_apis_runtimeapp_v1beta1_RuntimeApplicationService(ref),
+		"./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationSpec":        schema_pkg_apis_runtimeapp_v1beta1_RuntimeApplicationSpec(ref),
+		"./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationStatus":      schema_pkg_apis_runtimeapp_v1beta1_RuntimeApplicationStatus(ref),
+		"./pkg/apis/runtimeapp/v1beta1.ServiceBindingConsumes":        schema_pkg_apis_runtimeapp_v1beta1_ServiceBindingConsumes(ref),
+		"./pkg/apis/runtimeapp/v1beta1.ServiceBindingProvides":        schema_pkg_apis_runtimeapp_v1beta1_ServiceBindingProvides(ref),
+		"./pkg/apis/runtimeapp/v1beta1.StatusCondition":               schema_pkg_apis_runtimeapp_v1beta1_StatusCondition(ref),
 	}
 }
 
-func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplication(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_runtimeapp_v1beta1_RuntimeApplication(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -51,23 +51,23 @@ func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplication(ref common.Re
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationSpec"),
+							Ref: ref("./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationStatus"),
+							Ref: ref("./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationSpec", "./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationSpec", "./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
-func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationAutoScaling(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_runtimeapp_v1beta1_RuntimeApplicationAutoScaling(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -98,7 +98,65 @@ func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationAutoScaling(re
 	}
 }
 
-func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationService(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_runtimeapp_v1beta1_RuntimeApplicationRoute(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "RuntimeApplicationRoute ...",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"annotations": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+					"termination": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"insecureEdgeTerminationPolicy": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"certificate": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("./pkg/apis/runtimeapp/v1beta1.Certificate"),
+						},
+					},
+					"host": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"path": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"./pkg/apis/runtimeapp/v1beta1.Certificate"},
+	}
+}
+
+func schema_pkg_apis_runtimeapp_v1beta1_RuntimeApplicationService(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -142,7 +200,7 @@ func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationService(ref co
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("./pkg/apis/runtimeapplication/v1beta1.ServiceBindingConsumes"),
+										Ref: ref("./pkg/apis/runtimeapp/v1beta1.ServiceBindingConsumes"),
 									},
 								},
 							},
@@ -150,23 +208,23 @@ func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationService(ref co
 					},
 					"provides": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/runtimeapplication/v1beta1.ServiceBindingProvides"),
+							Ref: ref("./pkg/apis/runtimeapp/v1beta1.ServiceBindingProvides"),
 						},
 					},
 					"certificate": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/runtimeapplication/v1beta1.Certificate"),
+							Ref: ref("./pkg/apis/runtimeapp/v1beta1.Certificate"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/runtimeapplication/v1beta1.Certificate", "./pkg/apis/runtimeapplication/v1beta1.ServiceBindingConsumes", "./pkg/apis/runtimeapplication/v1beta1.ServiceBindingProvides"},
+			"./pkg/apis/runtimeapp/v1beta1.Certificate", "./pkg/apis/runtimeapp/v1beta1.ServiceBindingConsumes", "./pkg/apis/runtimeapp/v1beta1.ServiceBindingProvides"},
 	}
 }
 
-func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_runtimeapp_v1beta1_RuntimeApplicationSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -193,7 +251,7 @@ func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationSpec(ref commo
 					},
 					"autoscaling": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationAutoScaling"),
+							Ref: ref("./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationAutoScaling"),
 						},
 					},
 					"pullPolicy": {
@@ -260,7 +318,7 @@ func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationSpec(ref commo
 					},
 					"service": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationService"),
+							Ref: ref("./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationService"),
 						},
 					},
 					"expose": {
@@ -330,7 +388,7 @@ func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationSpec(ref commo
 					},
 					"storage": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationStorage"),
+							Ref: ref("./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationStorage"),
 						},
 					},
 					"createKnativeService": {
@@ -339,15 +397,9 @@ func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationSpec(ref commo
 							Format: "",
 						},
 					},
-					"stack": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
 					"monitoring": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationMonitoring"),
+							Ref: ref("./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationMonitoring"),
 						},
 					},
 					"createAppDefinition": {
@@ -376,7 +428,7 @@ func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationSpec(ref commo
 					},
 					"route": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationRoute"),
+							Ref: ref("./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationRoute"),
 						},
 					},
 				},
@@ -384,11 +436,11 @@ func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationSpec(ref commo
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationAutoScaling", "./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationMonitoring", "./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationService", "./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationStorage", "./pkg/apis/runtimeapplication/v1beta1.RuntimeApplicationRoute", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.EnvFromSource", "k8s.io/api/core/v1.EnvVar", "k8s.io/api/core/v1.Probe", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.Volume", "k8s.io/api/core/v1.VolumeMount"},
+			"./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationAutoScaling", "./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationMonitoring", "./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationRoute", "./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationService", "./pkg/apis/runtimeapp/v1beta1.RuntimeApplicationStorage", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.EnvFromSource", "k8s.io/api/core/v1.EnvVar", "k8s.io/api/core/v1.Probe", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.Volume", "k8s.io/api/core/v1.VolumeMount"},
 	}
 }
 
-func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_runtimeapp_v1beta1_RuntimeApplicationStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -406,7 +458,7 @@ func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationStatus(ref com
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("./pkg/apis/runtimeapplication/v1beta1.StatusCondition"),
+										Ref: ref("./pkg/apis/runtimeapp/v1beta1.StatusCondition"),
 									},
 								},
 							},
@@ -437,69 +489,11 @@ func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationStatus(ref com
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/runtimeapplication/v1beta1.StatusCondition"},
+			"./pkg/apis/runtimeapp/v1beta1.StatusCondition"},
 	}
 }
 
-func schema_pkg_apis_runtimeapplication_v1beta1_RuntimeApplicationRoute(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "RuntimeApplicationRoute ...",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"annotations": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Type:   []string{"string"},
-										Format: "",
-									},
-								},
-							},
-						},
-					},
-					"termination": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"insecureEdgeTerminationPolicy": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"certificate": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/runtimeapplication/v1beta1.Certificate"),
-						},
-					},
-					"host": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"path": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"./pkg/apis/runtimeapplication/v1beta1.Certificate"},
-	}
-}
-
-func schema_pkg_apis_runtimeapplication_v1beta1_ServiceBindingConsumes(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_runtimeapp_v1beta1_ServiceBindingConsumes(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -537,7 +531,7 @@ func schema_pkg_apis_runtimeapplication_v1beta1_ServiceBindingConsumes(ref commo
 	}
 }
 
-func schema_pkg_apis_runtimeapplication_v1beta1_ServiceBindingProvides(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_runtimeapp_v1beta1_ServiceBindingProvides(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -564,7 +558,7 @@ func schema_pkg_apis_runtimeapplication_v1beta1_ServiceBindingProvides(ref commo
 					},
 					"auth": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/runtimeapplication/v1beta1.ServiceBindingAuth"),
+							Ref: ref("./pkg/apis/runtimeapp/v1beta1.ServiceBindingAuth"),
 						},
 					},
 				},
@@ -572,11 +566,11 @@ func schema_pkg_apis_runtimeapplication_v1beta1_ServiceBindingProvides(ref commo
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/runtimeapplication/v1beta1.ServiceBindingAuth"},
+			"./pkg/apis/runtimeapp/v1beta1.ServiceBindingAuth"},
 	}
 }
 
-func schema_pkg_apis_runtimeapplication_v1beta1_StatusCondition(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_runtimeapp_v1beta1_StatusCondition(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{

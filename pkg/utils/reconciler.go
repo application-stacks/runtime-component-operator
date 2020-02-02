@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapplication/v1beta1"
+	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
 	"github.com/application-runtimes/operator/pkg/common"
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	v1 "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
