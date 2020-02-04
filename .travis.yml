@@ -1,0 +1,69 @@
+dist: xenial
+language: go
+go:
+  - 1.13.x
+
+go_import_path: github.com/application-runtimes/operator
+
+services:
+  - docker
+
+cache:
+  directories:
+    - vendor
+
+stages:
+  # - name: unit test
+  # - name: e2e test
+  - name: build
+  - name: build manifest
+
+jobs:
+  include:
+    ## if not pushing to DH just build the image to test
+    - name: Build image
+      stage: build
+      script:
+        - make build-image
+      if: branch != master OR fork = true OR type = pull_request
+    # - name: Run unit tests
+    #   stage: unit test
+    #   script:
+    #     - make unit-test
+    # - name: Run e2e tests
+    #   stage: e2e test
+    #   script:
+    #     - make test-e2e
+    ## if master branch build and push images on all three archs
+    ## the below will all run in parallel as they're the same stage
+    - name: Build image on amd64
+      stage: build
+      os: linux
+      arch: amd64
+      script:
+        - make build-multiarch-image
+        - make build-manifest
+      if: branch = master AND fork = false AND type != pull_request
+    - name: Build image on ppc64le
+      stage: build
+      os: linux
+      arch: ppc64le
+      script:
+        - make build-multiarch-image
+        - make build-manifest
+      if: branch = master AND fork = false AND type != pull_request
+    - name: Build image on s390x
+      stage: build
+      os: linux
+      arch: s390x
+      script:
+        - make build-multiarch-image
+        - make build-manifest
+      if: branch = master AND fork = false AND type != pull_request
+    ## after all is done build manifest list again in case any stages failed to
+    ## push manifest list
+    - name: Build manifest list
+      stage: build manifest
+      script:
+        - make build-manifest
+      if: branch = master AND fork = false AND type != pull_request

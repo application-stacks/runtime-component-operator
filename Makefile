@@ -46,8 +46,11 @@ generate: setup ## Invoke `k8s` and `openapi` generators
 build-image: setup ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}"
 	operator-sdk build ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}
 
-push-image: ## Push operator image
-	docker push ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}
+build-multiarch-image: setup ## Build and push operator image
+	./scripts/build-releases.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
+
+build-manifest:
+	./scripts/build-manifest.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
 
 build-must-gather: setup ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_MUST_GATHER_TAG}"
 	docker build ./must-gather -t ${OPERATOR_IMAGE}:${OPERATOR_MUST_GATHER_TAG} 
