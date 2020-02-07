@@ -28,6 +28,9 @@ main() {
     exit 1
   fi
 
+  ## login to docker
+  echo "${PASS}" | docker login -u "${USER}" --password-stdin
+
   ## build latest master branch
   echo "****** Building release: daily"
   build_release "daily"
@@ -45,7 +48,7 @@ main() {
     build_release "${dockerTag}"
     echo "****** Pushing release: ${dockerTag}"
     push_release "${dockerTag}"
-  done
+  done <<< "${tags}"
 }
 
 build_release() {
