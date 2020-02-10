@@ -3,11 +3,10 @@ module github.com/application-runtimes/operator
 go 1.13
 
 require (
-	contrib.go.opencensus.io/exporter/ocagent v0.4.9 // indirect
 	github.com/Azure/go-autorest v13.0.2+incompatible // indirect
+	github.com/OpenLiberty/open-liberty-operator v0.3.0
 	github.com/coreos/prometheus-operator v0.29.0
 	github.com/go-openapi/spec v0.19.0
-	github.com/google/go-containerregistry v0.0.0-20190717132004-e8c6a4993fa7 // indirect
 	github.com/jetstack/cert-manager v0.12.0
 	github.com/knative/serving v0.7.1-0.20190701162519-7ca25646a186
 	github.com/openshift/api v3.9.1-0.20190424152011-77b8897ec79a+incompatible
@@ -18,8 +17,8 @@ require (
 	k8s.io/apimachinery v0.0.0
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/kube-openapi v0.0.0-20190918143330-0270cf2f1c1d
-	knative.dev/pkg v0.0.0-20190626215608-1104d6c75533 // indirect
 	sigs.k8s.io/controller-runtime v0.3.1-0.20191022174215-ad57a976ffa1
+	sigs.k8s.io/yaml v1.1.0
 )
 
 // Pinned to kubernetes-1.15.4
