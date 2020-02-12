@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"knative.dev/pkg/apis"
 	"knative.dev/pkg/kmp"
 )
 
@@ -37,8 +36,6 @@ type Implementable interface {
 // duck type.  It will generally have TypeMeta, ObjectMeta, and a Status field
 // wrapping a Fooable field.
 type Populatable interface {
-	apis.Listable
-
 	// Populate fills in all possible fields, so that we can verify that
 	// they roundtrip properly through JSON.
 	Populate()
