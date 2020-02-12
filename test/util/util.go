@@ -2,7 +2,6 @@ package util
 
 import (
 	goctx "context"
-	"io/ioutil"
 	"testing"
 	"time"
 
@@ -17,7 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/yaml"
 )
 
 // MakeBasicRuntimeApplication : Create a simple Runtime App with provided number of replicas.
@@ -109,29 +107,6 @@ func InitializeContext(t *testing.T, clean, retryInterval time.Duration) (*frame
 
 	t.Log("Cluster context initialized.")
 	return ctx, nil
-}
-
-// ResetConfigMap : Resets the configmaps to original empty values, this is required to allow tests to be run after the configmaps test
-func ResetConfigMap(t *testing.T, f *framework.Framework, configMap *corev1.ConfigMap, cmName string, fileName string, namespace string) {
-	err := f.Client.Get(goctx.TODO(), types.NamespacedName{Name: cmName, Namespace: namespace}, configMap)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fData, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	configMap = &corev1.ConfigMap{}
-	err = yaml.Unmarshal(fData, configMap)
-	if err != nil {
-		t.Fatal(err)
-	}
-	configMap.Namespace = namespace
-	err = f.Client.Update(goctx.TODO(), configMap)
-	if err != nil {
-		t.Fatal(err)
-	}
 }
 
 // FailureCleanup : Log current state of the namespace and exit with fatal
