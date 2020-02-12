@@ -19,7 +19,10 @@ help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 setup: ## Ensure Operator SDK is installed
-	./scripts/install-operator-sdk.sh ${OPERATOR_SDK_RELEASE_VERSION}
+	./scripts/installers/install-operator-sdk.sh ${OPERATOR_SDK_RELEASE_VERSION}
+
+setup-manifest:
+	./scripts/installers/install-manifest-tool.sh
 
 tidy: ## Clean up Go modules by adding missing and removing unused modules
 	go mod tidy
@@ -49,7 +52,7 @@ build-image: setup ## Build operator Docker image and tag with "${OPERATOR_IMAGE
 build-multiarch-image: setup ## Build and push operator image
 	./scripts/build-releases.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
 
-build-manifest:
+build-manifest: setup-manifest
 	./scripts/build-manifest.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
 
 build-must-gather: setup ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_MUST_GATHER_TAG}"

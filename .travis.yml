@@ -23,14 +23,14 @@ jobs:
       stage: test
       script:
         - make unit-test
-    # - name: Run e2e tests
-    #   script:
-    #     - make test-e2e
+    - name: Run e2e tests
+      script:
+        - make test-e2e
     ## if not pushing to DH just build the image to test
     - name: Build image
       stage: build
       script:
-        - make build-image
+        - make build-multiarch-image
       if: branch != master OR fork = true OR type = pull_request
     ## if master branch build and push images on all three archs
     ## the below will all run in parallel as they're the same stage
@@ -58,9 +58,9 @@ jobs:
         - make build-multiarch-image
         - make build-manifest
       if: branch = master AND fork = false AND type != pull_request
-    ## after all is done build manifest list again in case any stages failed to
-    ## push manifest list
-    - name: Build manifest list
+    ## in case there were concurrency issues with building manifest lists
+    ## in previous steps, create FAT manifests one last time
+    - name: Verify manifest lists
       stage: build manifest
       script:
         - make build-manifest
