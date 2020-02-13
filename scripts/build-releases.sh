@@ -28,6 +28,19 @@ main() {
     exit 1
   fi
 
+  ## Define current arc variable
+  case "$(uname -p)" in
+  "ppc64le")
+    readonly arch="ppc64le"
+    ;;
+  "s390x")
+    readonly arch="s390x"
+    ;;
+  *)
+    readonly arch="amd64"
+    ;;
+  esac
+
   ## login to docker
   echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
@@ -53,7 +66,7 @@ main() {
 
 build_release() {
   local release="$1"
-  local full_image="${image}:${release}-${arch}"
+  local full_image="${IMAGE}:${release}-${arch}"
 
   if [[ ! "${arch}" = "s390x" ]]; then
     echo "*** Building ${full_image} for ${arch}"

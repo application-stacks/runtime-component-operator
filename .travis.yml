@@ -23,9 +23,9 @@ jobs:
       stage: test
       script:
         - make unit-test
-    - name: Run e2e tests
-      script:
-        - make test-e2e
+    # - name: Run e2e tests
+    #   script:
+    #     - make test-e2e
     ## if not pushing to DH just build the image to test
     - name: Build image
       stage: build
