@@ -53,6 +53,10 @@ main() {
   ## loop through tagged releases and build
   local tags=$(git tag -l)
   while read -r tag; do
+    if [[ -z "${tag}" ]]; then
+      break
+    fi
+
     git checkout -q "${tag}"
 
     ## Remove potential leading 'v' from tags

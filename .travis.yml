@@ -23,15 +23,9 @@ jobs:
       stage: test
       script:
         - make unit-test
-    # - name: Run e2e tests
-    #   script:
-    #     - make test-e2e
-    ## if not pushing to DH just build the image to test
-    - name: Build image
-      stage: build
+    - name: Build image and E2E test
       script:
-        - make build-multiarch-image
-      if: branch != master OR fork = true OR type = pull_request
+        - make test-e2e
     ## if master branch build and push images on all three archs
     ## the below will all run in parallel as they're the same stage
     - name: Build image on amd64

@@ -1,5 +1,5 @@
 OPERATOR_SDK_RELEASE_VERSION ?= v0.12.0
-OPERATOR_IMAGE ?= application-runtimes/operator
+OPERATOR_IMAGE ?= appruntime/operator
 OPERATOR_IMAGE_TAG ?= daily
 OPERATOR_MUST_GATHER_TAG ?= daily-must-gather
 

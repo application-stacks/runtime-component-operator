@@ -35,6 +35,10 @@ main() {
 
   local tags=$(git tag -l)
   while read -r tag; do
+    if [[ -z "${tag}" ]]; then
+      break
+    fi
+
     echo "****** Building manifest list for: ${tag}"
     build_manifest "${tag}"
   done <<< "${tags}"
