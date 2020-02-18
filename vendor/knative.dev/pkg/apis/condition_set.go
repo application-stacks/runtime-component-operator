@@ -52,6 +52,9 @@ type ConditionManager interface {
 	// set to true.
 	IsHappy() bool
 
+	// GetTopLevelCondition finds and returns the top level Condition (happy Condition).
+	GetTopLevelCondition() *Condition
+
 	// GetCondition finds and returns the Condition that matches the ConditionType
 	// previously set on Conditions.
 	GetCondition(t ConditionType) *Condition
@@ -59,6 +62,9 @@ type ConditionManager interface {
 	// SetCondition sets or updates the Condition on Conditions for Condition.Type.
 	// If there is an update, Conditions are stored back sorted.
 	SetCondition(new Condition)
+
+	// ClearCondition removes the non terminal condition that matches the ConditionType
+	ClearCondition(t ConditionType) error
 
 	// MarkTrue sets the status of t to true, and then marks the happy condition to
 	// true if all dependents are true.
@@ -127,8 +133,8 @@ type conditionsImpl struct {
 	accessor ConditionsAccessor
 }
 
-// Manage creates a ConditionManager from a accessor object using the original
-// ConditionSet as a reference. Status must be or point to a struct.
+// Manage creates a ConditionManager from an accessor object using the original
+// ConditionSet as a reference. Status must be a pointer to a struct.
 func (r ConditionSet) Manage(status ConditionsAccessor) ConditionManager {
 	return conditionsImpl{
 		accessor:     status,
@@ -136,13 +142,15 @@ func (r ConditionSet) Manage(status ConditionsAccessor) ConditionManager {
 	}
 }
 
-// IsHappy looks at the happy condition and returns true if that condition is
+// IsHappy looks at the top level Condition (happy Condition) and returns true if that condition is
 // set to true.
 func (r conditionsImpl) IsHappy() bool {
-	if c := r.GetCondition(r.happy); c == nil || !c.IsTrue() {
-		return false
-	}
-	return true
+	return r.GetTopLevelCondition().IsTrue()
+}
+
+// GetTopLevelCondition finds and returns the top level Condition (happy Condition).
+func (r conditionsImpl) GetTopLevelCondition() *Condition {
+	return r.GetCondition(r.happy)
 }
 
 // GetCondition finds and returns the Condition that matches the ConditionType
@@ -192,12 +200,7 @@ func (r conditionsImpl) isTerminal(t ConditionType) bool {
 			return true
 		}
 	}
-
-	if t == r.happy {
-		return true
-	}
-
-	return false
+	return t == r.happy
 }
 
 func (r conditionsImpl) severity(t ConditionType) ConditionSeverity {
@@ -205,6 +208,35 @@ func (r conditionsImpl) severity(t ConditionType) ConditionSeverity {
 		return ConditionSeverityError
 	}
 	return ConditionSeverityInfo
+}
+
+// RemoveCondition removes the non terminal condition that matches the ConditionType
+// Not implemented for terminal conditions
+func (r conditionsImpl) ClearCondition(t ConditionType) error {
+	var conditions Conditions
+
+	if r.accessor == nil {
+		return nil
+	}
+	// Terminal conditions are not handled as they can't be nil
+	if r.isTerminal(t) {
+		return fmt.Errorf("Clearing terminal conditions not implemented")
+	}
+	cond := r.GetCondition(t)
+	if cond == nil {
+		return nil
+	}
+	for _, c := range r.accessor.GetConditions() {
+		if c.Type != t {
+			conditions = append(conditions, c)
+		}
+	}
+
+	// Sorted for convenience of the consumer, i.e. kubectl.
+	sort.Slice(conditions, func(i, j int) bool { return conditions[i].Type < conditions[j].Type })
+	r.accessor.SetConditions(conditions)
+
+	return nil
 }
 
 // MarkTrue sets the status of t to true, and then marks the happy condition to
