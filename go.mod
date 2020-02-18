@@ -6,7 +6,7 @@ require (
 	github.com/coreos/prometheus-operator v0.34.0
 	github.com/go-openapi/spec v0.19.4
 	github.com/google/go-containerregistry v0.0.0-20200212224832-c629a66d7231 // indirect
-	github.com/jetstack/cert-manager v0.13.1
+	github.com/jetstack/cert-manager v0.12.0
 	github.com/knative/serving v0.7.1-0.20190701162519-7ca25646a186
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	github.com/operator-framework/operator-sdk v0.15.2
