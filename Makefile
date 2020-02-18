@@ -1,5 +1,5 @@
 OPERATOR_SDK_RELEASE_VERSION ?= v0.12.0
-OPERATOR_IMAGE ?= application-runtimes/operator
+OPERATOR_IMAGE ?= appruntime/operator
 OPERATOR_IMAGE_TAG ?= daily
 OPERATOR_MUST_GATHER_TAG ?= daily-must-gather
 
@@ -19,7 +19,10 @@ help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 setup: ## Ensure Operator SDK is installed
-	./scripts/install-operator-sdk.sh ${OPERATOR_SDK_RELEASE_VERSION}
+	./scripts/installers/install-operator-sdk.sh ${OPERATOR_SDK_RELEASE_VERSION}
+
+setup-manifest:
+	./scripts/installers/install-manifest-tool.sh
 
 tidy: ## Clean up Go modules by adding missing and removing unused modules
 	go mod tidy
@@ -46,8 +49,11 @@ generate: setup ## Invoke `k8s` and `openapi` generators
 build-image: setup ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}"
 	operator-sdk build ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}
 
-push-image: ## Push operator image
-	docker push ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}
+build-multiarch-image: setup ## Build and push operator image
+	./scripts/build-releases.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
+
+build-manifest: setup-manifest
+	./scripts/build-manifest.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
 
 build-must-gather: setup ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_MUST_GATHER_TAG}"
 	docker build ./must-gather -t ${OPERATOR_IMAGE}:${OPERATOR_MUST_GATHER_TAG} 

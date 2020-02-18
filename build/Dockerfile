@@ -11,7 +11,7 @@ ENV OPERATOR=/usr/local/bin/application-runtime-operator \
     USER_NAME=application-runtime-operator
 
 # install operator binary
-COPY build/_output/bin/application-runtime-operator ${OPERATOR}
+COPY build/_output/bin/operator ${OPERATOR}
 COPY build/bin /usr/local/bin
 COPY LICENSE /licenses/
 
