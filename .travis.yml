@@ -10,10 +10,6 @@ env:
 services:
   - docker
 
-cache:
-  directories:
-    - vendor
-
 stages:
   - name: test
   - name: build
