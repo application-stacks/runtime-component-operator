@@ -46,6 +46,12 @@ var _ InformerFactory = (*TypedInformerFactory)(nil)
 
 // Get implements InformerFactory.
 func (dif *TypedInformerFactory) Get(gvr schema.GroupVersionResource) (cache.SharedIndexInformer, cache.GenericLister, error) {
+	// Avoid error cases, like the GVR does not exist.
+	// It is not a full check. Some RBACs might sneak by, but the window is very small.
+	if _, err := dif.Client.Resource(gvr).List(metav1.ListOptions{}); err != nil {
+		return nil, nil, err
+	}
+
 	listObj := dif.Type.GetListType()
 	lw := &cache.ListWatch{
 		ListFunc:  asStructuredLister(dif.Client.Resource(gvr).List, listObj),
@@ -60,7 +66,7 @@ func (dif *TypedInformerFactory) Get(gvr schema.GroupVersionResource) (cache.Sha
 	go inf.Run(dif.StopChannel)
 
 	if ok := cache.WaitForCacheSync(dif.StopChannel, inf.HasSynced); !ok {
-		return nil, nil, fmt.Errorf("Failed starting shared index informer for %v with type %T", gvr, dif.Type)
+		return nil, nil, fmt.Errorf("failed starting shared index informer for %v with type %T", gvr, dif.Type)
 	}
 
 	return inf, lister, nil
