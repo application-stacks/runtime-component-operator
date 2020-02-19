@@ -15,8 +15,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var _ handler.EventHandler = &EnqueueRequestsForServiceBinding{}
-
 // EnqueueRequestsForServiceBinding enqueues reconcile Requests for applications affected by the secrets that
 // EventHandler is called for
 type EnqueueRequestsForServiceBinding struct {

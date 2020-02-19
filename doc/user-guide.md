@@ -43,13 +43,13 @@ spec:
 
 The following table lists configurable parameters of the `RuntimeApplication` CRD. For complete OpenAPI v3 representation of these values please see [`RuntimeApplication` CRD](../deploy/crds/runtime.app_runtimeapplications_crd.yaml).
 
-Each `RuntimeApplication` CR must specify `applicationImage` parameter. Specifying other parameters is optional.
+Each `RuntimeApplication` CR must at least specify the `applicationImage` parameter. Specifying other parameters is optional.
 
 | Parameter | Description |
 |---|---|
 | `version` | The current version of the application. Label `app.kubernetes.io/version` will be added to all resources when the version is defined. |
 | `serviceAccountName` | The name of the OpenShift service account to be used during deployment. |
-| `applicationImage` | The absolute name of the image to be deployed, containing the registry and the tag. |
+| `applicationImage` | The Docker image name to be deployes. On OpenShift, it can also be set to `<project name>/<image stream name>[:<tag>]` to reference an image from an image stream. `<project name>` and `tag` defaults to CR's namespace and `latest` if not defined, respectively. |
 | `pullPolicy` | The policy used when pulling the image.  One of: `Always`, `Never`, and `IfNotPresent`. |
 | `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials. |
 | `initContainers` | The list of [Init Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#container-v1-core) definitions. |
@@ -57,6 +57,7 @@ Each `RuntimeApplication` CR must specify `applicationImage` parameter. Specifyi
 | `service.port` | The port exposed by the container. |
 | `service.type` | The Kubernetes [Service Type](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types). |
 | `service.annotations` | Annotations to be added to the service. |
+| `service.certificate` | A YAML object representing a [Certificate](https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec). |
 | `service.provides.category` | Service binding type to be provided by this CR. At this time, the only allowed value is `openapi`. |
 | `service.provides.protocol` | Protocol of the provided service. Defauts to `http`. |
 | `service.provides.context` | Specifies context root of the service. |
@@ -77,8 +78,8 @@ Each `RuntimeApplication` CR must specify `applicationImage` parameter. Specifyi
 | `resourceConstraints.requests.memory` | The minimum memory in bytes. Specify integers with one of these suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.|
 | `resourceConstraints.limits.cpu` | The upper limit of CPU core. Specify integers, fractions (e.g. 0.5), or millicores values(e.g. 100m, where 100m is equivalent to .1 core). |
 | `resourceConstraints.limits.memory` | The memory upper limit in bytes. Specify integers with suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.|
-| `env`   | An array of environment variables following the format of `{name, value}`, where value is a simple string. |
-| `envFrom`   | An array of environment variables following the format of `{name, valueFrom}`, where `valueFrom` is YAML object containing a property named either `secretKeyRef` or `configMapKeyRef`, which in turn contain the properties `name` and `key`.|
+| `env`   | An array of environment variables following the format of `{name, value}`, where value is a simple string. It may also follow the format of `{name, valueFrom}`, where valueFrom refers to a value in a `ConfigMap` or `Secret` resource. See [Environment variables](https://github.com/application-runtimes/operator/blob/master/doc/user-guide.md#environment-variables) for more info.|
+| `envFrom`   | An array of references to `ConfigMap` or `Secret` resources containing environment variables. Keys from `ConfigMap` or `Secret` resources become environment variable names in your container. See [Environment variables](https://github.com/application-runtimes/operator/blob/master/doc/user-guide.md#environment-variables) for more info.|
 | `readinessProbe`   | A YAML object configuring the [Kubernetes readiness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#define-readiness-probes) that controls when the pod is ready to receive traffic. |
 | `livenessProbe` | A YAML object configuring the [Kubernetes liveness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#define-a-liveness-http-request) that controls when Kubernetes needs to restart the pod.|
 | `volumes` | A YAML object representing a [pod volume](https://kubernetes.io/docs/concepts/storage/volumes). |
@@ -89,6 +90,11 @@ Each `RuntimeApplication` CR must specify `applicationImage` parameter. Specifyi
 | `monitoring.labels` | Labels to set on [ServiceMonitor](https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitor). |
 | `monitoring.endpoints` | A YAML snippet representing an array of [Endpoint](https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#endpoint) component from ServiceMonitor. |
 | `createAppDefinition`   | A boolean to toggle the automatic configuration of `RuntimeApplication`'s Kubernetes resources to allow creation of an application definition by [kAppNav](https://kappnav.io/). The default value is `true`. See [Application Navigator](#kubernetes-application-navigator-kappnav-support) for more information. |
+| `route.host`   | Hostname to be used for the Route. |
+| `route.path`   | Path to be used for Route. |
+| `route.termination`   | TLS termination policy. Can be one of `edge`, `reencrypt` and `passthrough`. |
+| `route.insecureEdgeTerminationPolicy`   | HTTP traffic policy with TLS enabled. Can be one of `Allow`, `Redirect` and `None`. |
+| `route.certificate`  | A YAML object representing a [Certificate](https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec). |
 
 ### Basic usage
 
@@ -103,7 +109,7 @@ spec:
   applicationImage: quay.io/my-repo/my-app:1.0
 ```
 
-The `applicationImage` value is required to be defined in `RuntimeApplication` CR.
+The `applicationImage` value must be defined in `RuntimeApplication` CR. On OpenShift, the Operator would try to match an image stream name with the `applicationImage` value and fallbacks into registry lookup if it is not able to find any image stream that matches the value. If you want to distinguish an image stream called `my-company/my-app` (project: `my-company`, image stream name: `my-app`) from the Docker Hub `my-company/my-app` image, you can use the full image reference as `docker.io/my-company/my-app`.
 
 To get information on the deployed CR, use either of the following:
 
@@ -111,6 +117,27 @@ To get information on the deployed CR, use either of the following:
 oc get runtimeapplication my-app
 oc get app my-app
 ```
+
+### Image Streams
+
+To deploy an image from an image stream, you can use the following CR:
+
+```yaml
+apiVersion: runtime.app/v1beta1
+kind: RuntimeApplication
+metadata:
+  name: my-app
+spec:
+  applicationImage: my-namespace/my-image-stream:1.0
+```
+
+The above example will look up the `1.0` tag from the `my-image-stream` image stream in `my-namespace` project and populate the CR's `.status.imageReference` field with the exact referenced image similar to the following: `image-registry.openshift-image-registry.svc:5000/my-namespace/my-image-stream@sha256:8a829d579b114a9115c0a7172d089413c5d5dd6120665406aae0600f338654d8`. The operator keeps watching the specified image stream and will deploy new images as new ones are available for the specified tag.
+
+To reference an image stream, the `applicationImage` should follow `<project name>/<image stream name>[:<tag>]` format. If `<project name>` or `<tag>` is not specified, the operator default the values to CR's namespace and `latest`, respectively. For example `applicationImage: my-image-stream` would be the same as `my-namespace/my-image-stream:latest`.
+
+The Operator would try to match an image stream name first with `<project name>/<image stream name>[:<tag>]` format and fallback into registry lookup if it is not able to find any image stream that matches the value. 
+
+_This feature is only available if you are running on OKD or OpenShift._
 
 ### Service account
 
@@ -156,7 +183,11 @@ _After the initial deployment of `RuntimeApplication`, any changes to its annota
 
 ### Environment variables
 
-You can set environment variables for your application container. To set environment variables, specify `env` and/or `envFrom` fields in your CR. The environment variables can come directly from key/value pairs, `ConfigMap`s or `Secret`s.
+You can set environment variables for your application container. To set
+environment variables, specify `env` and/or `envFrom` fields in your CR. The
+environment variables can come directly from key/value pairs, `ConfigMap`s or
+`Secret`s. The environment variables set using the `env` or `envFrom` fields will
+override any environment variables specified in the container image.
 
  ```yaml
 apiVersion: runtime.app/v1beta1
@@ -166,8 +197,13 @@ metadata:
 spec:
   applicationImage: quay.io/my-repo/my-app:1.0
   env:
+    - name: DB_NAME
+      value: "database"
     - name: DB_PORT
-      value: "6379"
+      valueFrom:
+        configMapKeyRef:
+          name: db-config
+          key: db-port
     - name: DB_USERNAME
       valueFrom:
         secretKeyRef:
@@ -475,6 +511,113 @@ By default, Application Runtime Operator configures the Kubernetes resources it 
 To join an existing application definition, disable auto-creation and set the label(s) needed to join the application on `RuntimeApplication` CR. See [Labels](#labels) section for more information.
 
 _This feature is only available if you have kAppNav installed on your cluster. Auto creation of an application definition is not supported when Knative service is created_
+
+### Certificate Manager Integration
+
+Application Runtime Operator is enabled to take advantage of [cert-manager](https://cert-manager.io/) tool, if it is installed on the cluster.
+This allows to automatically provision TLS certificates for pods as well as routes.
+
+Cert-manager installation instruction can be found [here](https://cert-manager.io/docs/installation/)
+
+When creating certificates via the RuntimeApplication CR the user can specify a particular issuer name and toggle the scopes between `ClusterIssuer` (cluster scoped) and `Issuer` (namespace scoped). If not specified, these values are retrieved from a ConfigMap called `application-runtime-operator`, with keys `defaultIssuer` (default value of `self-signed`) and `useClusterIssuer` (default value of `"true"`)
+
+_This feature does not support integration with Knative Service._
+
+
+#### Create an ClusterIssuer or Issuer
+
+Self signed:
+
+```yaml
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: self-signed
+spec:
+  selfSigned: {}
+```
+
+Using custom CA key:
+
+```yaml
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: mycompany-ca
+spec:
+  ca:
+    secretName: mycompany-ca-tls
+```
+
+
+#### Simple scenario (Pods certificate)
+
+```yaml
+apiVersion: runtime.app/v1beta1
+kind: RuntimeApplication
+metadata:
+  name: myapp
+  namespace: test
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  ....
+  service:
+    port: 9080
+    certificate: {}
+```
+
+In this scenario the operator will generate `Certificate` resource with common name of `myapp.test.svc` that can be used for service to service communication.
+
+Once this certificate request is resolved by cert-manager the resulting secret `myapp-svc-tls` will be 
+mounted into each pod inside `/etc/x509/certs` folder. Mounted files will be always up to date with a secret.
+
+It will contain private key, certificate and CA certificate.
+It is up to the application container to consume these artifacts, applying any needed transformation or modification.
+
+
+#### Simple scenario (Route certificate)
+
+```yaml
+apiVersion: runtime.app/v1beta1
+kind: RuntimeApplication
+metadata:
+  name: myapp
+  namespace: test
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  expose: true
+  route:
+    host: myapp.mycompany.com
+    termination: reencrypt
+    certificate: {}
+```
+In this scenario the operator will generate `Certificate` resource with common name of `myapp.mycompany.com` that will be injected into `Route` resource.
+
+#### Advanced scenario
+
+In this example we are overriding Issuer to be used for application.
+Certificate will be generated for specific organization and duration. Extra properties can be added as well.
+
+```yaml
+apiVersion: runtime.app/v1beta1
+kind: RuntimeApplication
+metadata:
+  name: myapp
+  namespace: test
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  expose: true
+  route:
+    host: myapp.mycompany.com
+    termination: reencrypt
+    certificate:
+      duration: 8760h0m0s
+      organization:
+        - My Company
+      issuerRef:
+        name: myComanyIssuer
+        kind: ClusterIssuer
+```
 
 ### Troubleshooting
 

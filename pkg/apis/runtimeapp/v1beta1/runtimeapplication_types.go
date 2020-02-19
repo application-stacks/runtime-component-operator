@@ -1,12 +1,13 @@
 package v1beta1
 
 import (
+	"time"
+
 	"github.com/application-runtimes/operator/pkg/common"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -133,6 +134,7 @@ type RuntimeApplicationStatus struct {
 	// +listType=atomic
 	Conditions       []StatusCondition       `json:"conditions,omitempty"`
 	ConsumedServices common.ConsumedServices `json:"consumedServices,omitempty"`
+	ImageReference   string                  `json:"imageReference,omitempty"`
 }
 
 // StatusCondition ...
@@ -344,6 +346,16 @@ func (s *RuntimeApplicationStatus) SetConsumedServices(c common.ConsumedServices
 	s.ConsumedServices = c
 }
 
+// GetImageReference returns Docker image reference to be deployed by the CR
+func (s *RuntimeApplicationStatus) GetImageReference() string {
+	return s.ImageReference
+}
+
+// SetImageReference sets Docker image reference on the status portion of the CR
+func (s *RuntimeApplicationStatus) SetImageReference(imageReference string) {
+	s.ImageReference = imageReference
+}
+
 // GetMinReplicas returns minimum replicas
 func (a *RuntimeApplicationAutoScaling) GetMinReplicas() *int32 {
 	return a.MinReplicas
@@ -545,6 +557,26 @@ func (cr *RuntimeApplication) Initialize() {
 			if cr.Spec.Service.Consumes[i].Namespace == "" {
 				cr.Spec.Service.Consumes[i].Namespace = cr.Namespace
 			}
+		}
+	}
+
+	if cr.Spec.Service.Certificate != nil {
+		if cr.Spec.Service.Certificate.IssuerRef.Name == "" {
+			cr.Spec.Service.Certificate.IssuerRef.Name = common.Config[common.OpConfigPropDefaultIssuer]
+		}
+
+		if cr.Spec.Service.Certificate.IssuerRef.Kind == "" && common.Config[common.OpConfigPropUseClusterIssuer] != "false" {
+			cr.Spec.Service.Certificate.IssuerRef.Kind = "ClusterIssuer"
+		}
+	}
+
+	if cr.Spec.Route != nil && cr.Spec.Route.Certificate != nil {
+		if cr.Spec.Route.Certificate.IssuerRef.Name == "" {
+			cr.Spec.Route.Certificate.IssuerRef.Name = common.Config[common.OpConfigPropDefaultIssuer]
+		}
+
+		if cr.Spec.Route.Certificate.IssuerRef.Kind == "" && common.Config[common.OpConfigPropUseClusterIssuer] != "false" {
+			cr.Spec.Route.Certificate.IssuerRef.Kind = "ClusterIssuer"
 		}
 	}
 }

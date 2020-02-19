@@ -523,8 +523,17 @@ func (r *ReconcilerBase) ReconcileCertificate(ba common.BaseApplication) (reconc
 				crt.Labels = ba.GetLabels()
 				crt.Annotations = MergeMaps(crt.Annotations, ba.GetAnnotations())
 				crt.Spec = ba.GetService().GetCertificate().GetSpec()
+				if crt.Spec.Duration == nil {
+					crt.Spec.Duration = &metav1.Duration{Duration: time.Hour * 24 * 365}
+				}
+				if crt.Spec.RenewBefore == nil {
+					crt.Spec.RenewBefore = &metav1.Duration{Duration: time.Hour * 24 * 31}
+				}
 				crt.Spec.CommonName = obj.GetName() + "." + obj.GetNamespace() + "." + "svc"
 				crt.Spec.SecretName = obj.GetName() + "-svc-tls"
+				if len(crt.Spec.DNSNames) == 0 {
+					crt.Spec.DNSNames = append(crt.Spec.DNSNames, crt.Spec.CommonName)
+				}
 				return nil
 			})
 			if err != nil {
@@ -565,6 +574,12 @@ func (r *ReconcilerBase) ReconcileCertificate(ba common.BaseApplication) (reconc
 				crt.Labels = ba.GetLabels()
 				crt.Annotations = MergeMaps(crt.Annotations, ba.GetAnnotations())
 				crt.Spec = ba.GetRoute().GetCertificate().GetSpec()
+				if crt.Spec.Duration == nil {
+					crt.Spec.Duration = &metav1.Duration{Duration: time.Hour * 24 * 365}
+				}
+				if crt.Spec.RenewBefore == nil {
+					crt.Spec.RenewBefore = &metav1.Duration{Duration: time.Hour * 24 * 31}
+				}
 				crt.Spec.SecretName = obj.GetName() + "-route-tls"
 				// use routes host if no DNS information provided on certificate
 				if crt.Spec.CommonName == "" {
