@@ -6,13 +6,11 @@ go:
 go_import_path: github.com/application-runtimes/operator
 env:
   - GO111MODULE=on
+## avoid an automatic installation stage
+install: true
 
 services:
   - docker
-
-cache:
-  directories:
-    - vendor
 
 stages:
   - name: test
