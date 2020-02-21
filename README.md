@@ -5,7 +5,7 @@ This generic Operator is capable of deploying any application image and can be i
 
 Check out [our docs](https://github.com/application-stacks/operator/blob/master/doc/user-guide.md) to get started!
 
-![Architecture](doc/images/runtime_operators.png)
+![Architecture](doc/images/operator_overview.png)
 
 Currently the projects that are importing this library are:
 - Appsody Operator: https://github.com/appsody/appsody-operator
