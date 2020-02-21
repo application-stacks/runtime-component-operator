@@ -49,7 +49,7 @@ Each `RuntimeApplication` CR must at least specify the `applicationImage` parame
 |---|---|
 | `version` | The current version of the application. Label `app.kubernetes.io/version` will be added to all resources when the version is defined. |
 | `serviceAccountName` | The name of the OpenShift service account to be used during deployment. |
-| `applicationImage` | The Docker image name to be deployes. On OpenShift, it can also be set to `<project name>/<image stream name>[:<tag>]` to reference an image from an image stream. `<project name>` and `tag` defaults to CR's namespace and `latest` if not defined, respectively. |
+| `applicationImage` | The Docker image name to be deployed. On OpenShift, it can also be set to `<project name>/<image stream name>[:<tag>]` to reference an image from an image stream. If `<project name>` and `<tag>` values are not defined, they default to the namespace of the CR and the value of `latest`, respectively. |
 | `pullPolicy` | The policy used when pulling the image.  One of: `Always`, `Never`, and `IfNotPresent`. |
 | `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials. |
 | `initContainers` | The list of [Init Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#container-v1-core) definitions. |
@@ -109,7 +109,7 @@ spec:
   applicationImage: quay.io/my-repo/my-app:1.0
 ```
 
-The `applicationImage` value must be defined in `RuntimeApplication` CR. On OpenShift, the Operator would try to match an image stream name with the `applicationImage` value and fallbacks into registry lookup if it is not able to find any image stream that matches the value. If you want to distinguish an image stream called `my-company/my-app` (project: `my-company`, image stream name: `my-app`) from the Docker Hub `my-company/my-app` image, you can use the full image reference as `docker.io/my-company/my-app`.
+The `applicationImage` value must be defined in the `RuntimeApplication` CR. On OpenShift, the operator tries to find an image stream name with the `applicationImage` value. The operator falls back to the registry lookup if it is not able to find any image stream that matches the value. If you want to distinguish an image stream called `my-company/my-app` (project: `my-company`, image stream name: `my-app`) from the Docker Hub `my-company/my-app` image, you can use the full image reference as `docker.io/my-company/my-app`.
 
 To get information on the deployed CR, use either of the following:
 
@@ -120,7 +120,7 @@ oc get app my-app
 
 ### Image Streams
 
-To deploy an image from an image stream, you can use the following CR:
+To deploy an image from an image stream, use the following CR:
 
 ```yaml
 apiVersion: runtime.app/v1beta1
@@ -131,11 +131,11 @@ spec:
   applicationImage: my-namespace/my-image-stream:1.0
 ```
 
-The above example will look up the `1.0` tag from the `my-image-stream` image stream in `my-namespace` project and populate the CR's `.status.imageReference` field with the exact referenced image similar to the following: `image-registry.openshift-image-registry.svc:5000/my-namespace/my-image-stream@sha256:8a829d579b114a9115c0a7172d089413c5d5dd6120665406aae0600f338654d8`. The operator keeps watching the specified image stream and will deploy new images as new ones are available for the specified tag.
+The previous example looks up the `1.0` tag from the `my-image-stream` image stream in the `my-namespace` project and populates the CR `.status.imageReference` field with the exact referenced image similar to the following one: `image-registry.openshift-image-registry.svc:5000/my-namespace/my-image-stream@sha256:8a829d579b114a9115c0a7172d089413c5d5dd6120665406aae0600f338654d8`. The operator watches the specified image stream and deploys new images as new ones are available for the specified tag.
 
-To reference an image stream, the `applicationImage` should follow `<project name>/<image stream name>[:<tag>]` format. If `<project name>` or `<tag>` is not specified, the operator default the values to CR's namespace and `latest`, respectively. For example `applicationImage: my-image-stream` would be the same as `my-namespace/my-image-stream:latest`.
+To reference an image stream, the `applicationImage` parameter must follow the `<project name>/<image stream name>[:<tag>]` format. If `<project name>` or `<tag>` is not specified, the operator defaults the values to the namespace of the CR and the value of `latest`, respectively. For example, `applicationImage: my-image-stream` would be the same as `applicationImage: my-namespace/my-image-stream:latest`.
 
-The Operator would try to match an image stream name first with `<project name>/<image stream name>[:<tag>]` format and fallback into registry lookup if it is not able to find any image stream that matches the value. 
+The Operator tries to find an image stream name first with the `<project name>/<image stream name>[:<tag>]` format and falls back to the registry lookup if it is not able to find any image stream that matches the value. 
 
 _This feature is only available if you are running on OKD or OpenShift._
 

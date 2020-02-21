@@ -24,8 +24,6 @@ type EnqueueRequestsForServiceBinding struct {
 	Client          client.Client
 }
 
-var logger = log.WithName("EnqueueRequestsForServiceBinding")
-
 // Update implements EventHandler
 func (e *EnqueueRequestsForServiceBinding) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	e.handle(evt.MetaNew, q)
