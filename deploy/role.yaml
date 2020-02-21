@@ -53,23 +53,26 @@ rules:
   verbs:
   - '*'
 - apiGroups:
+  - image.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
   - route.openshift.io
-  attributeRestrictions: null
   resources:
   - routes
   verbs:
   - '*'
 - apiGroups:
   - serving.knative.dev
-  attributeRestrictions: null
   resources:
   - services
   verbs:
   - '*'
 - apiGroups:
   - cert-manager.io
-  attributeRestrictions: null
   resources:
   - certificates
   verbs:
-  - '*'  
+  - '*'

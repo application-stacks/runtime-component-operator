@@ -212,7 +212,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 	}
 
 	pts.Spec.Containers[0].Ports[0].ContainerPort = ba.GetService().GetPort()
-	pts.Spec.Containers[0].Image = ba.GetApplicationImage()
+	pts.Spec.Containers[0].Image = ba.GetStatus().GetImageReference()
 	pts.Spec.Containers[0].Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
 	if ba.GetResourceConstraints() != nil {
 		pts.Spec.Containers[0].Resources = *ba.GetResourceConstraints()
@@ -233,6 +233,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 	pts.Spec.Volumes = ba.GetVolumes()
 
 	if ba.GetService().GetCertificate() != nil {
+		pts.Spec.Containers[0].Env = append(pts.Spec.Containers[0].Env, corev1.EnvVar{Name: "TLS_DIR", Value: "/etc/x509/certs"})
 		pts.Spec.Volumes = append(pts.Spec.Volumes, corev1.Volume{
 			Name: "svc-certificate",
 			VolumeSource: corev1.VolumeSource{
@@ -438,7 +439,7 @@ func CustomizeKnativeService(ksvc *servingv1alpha1.Service, ba common.BaseApplic
 	ksvc.Spec.Template.ObjectMeta.Annotations = MergeMaps(ksvc.Spec.Template.ObjectMeta.Annotations, ba.GetAnnotations())
 
 	ksvc.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = ba.GetService().GetPort()
-	ksvc.Spec.Template.Spec.Containers[0].Image = ba.GetApplicationImage()
+	ksvc.Spec.Template.Spec.Containers[0].Image = ba.GetStatus().GetImageReference()
 	// Knative sets its own resource constraints
 	//ksvc.Spec.Template.Spec.Containers[0].Resources = *cr.Spec.ResourceConstraints
 	ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe = ba.GetReadinessProbe()
@@ -518,7 +519,7 @@ func createValidationError(msg string) error {
 }
 
 func requiredFieldMessage(fieldPaths ...string) string {
-	return "must set the field(s): " + strings.Join(fieldPaths, ",")
+	return "must set the field(s): " + strings.Join(fieldPaths, ", ")
 }
 
 // CustomizeServiceMonitor ...
