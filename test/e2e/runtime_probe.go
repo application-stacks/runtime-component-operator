@@ -84,19 +84,13 @@ func editProbeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 	if err != nil {
 		return err
 	}
+	target := types.NamespacedName{Name: "example-runtime-readiness", Namespace: namespace}
 
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "example-runtime-readiness", Namespace: namespace}, app)
-	if err != nil {
-		return err
-	}
-
-	// Adjust tests for update SMALL amounts to keep the test fast.
-	app.Spec.LivenessProbe.InitialDelaySeconds = int32(6)
-	app.Spec.ReadinessProbe.InitialDelaySeconds = int32(3)
-	err = f.Client.Update(goctx.TODO(), app)
-	if err != nil {
-		return err
-	}
+	util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+		// Adjust tests for update SMALL amounts to keep the test fast.
+		r.Spec.LivenessProbe.InitialDelaySeconds = int32(6)
+		r.Spec.ReadinessProbe.InitialDelaySeconds = int32(3)
+	})
 
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-runtime-readiness", 1, retryInterval, timeout)
 	if err != nil {

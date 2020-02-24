@@ -65,15 +65,13 @@ func updateStorageConfig(t *testing.T, f *framework.Framework, ctx *framework.Te
 		return err
 	}
 
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: app.Name, Namespace: namespace}, app)
-	if err != nil {
-		return err
-	}
-	// remove storage definition to return it to a deployment
-	app.Spec.Storage = nil
-	app.Spec.VolumeMounts = nil
+	target := types.NamespacedName{Name: app.Name, Namespace: namespace}
 
-	err = f.Client.Update(goctx.TODO(), app)
+	err = util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+		// remove storage definition to return it to a deployment
+		r.Spec.Storage = nil
+		r.Spec.VolumeMounts = nil
+	})
 	if err != nil {
 		return err
 	}

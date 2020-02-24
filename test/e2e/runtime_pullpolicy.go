@@ -16,7 +16,6 @@ import (
 
 // RuntimePullPolicyTest checks that the configured pull policy is applied to deployment
 func RuntimePullPolicyTest(t *testing.T) {
-
 	ctx, err := util.InitializeContext(t, cleanupTimeout, retryInterval)
 	if err != nil {
 		t.Fatal(err)

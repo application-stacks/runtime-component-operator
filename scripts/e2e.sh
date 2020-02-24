@@ -19,7 +19,7 @@ login_cluster(){
 ## cleanup : Delete generated resources that are not bound to a test namespace.
 cleanup() {
     # Remove image related resources after the test has finished
-    oc delete imagestream "operator:${TRAVIS_BUILD_NUMBER}" -n openshift
+    oc delete imagestream "runtime-operator:${TRAVIS_BUILD_NUMBER}" -n openshift
 }
 
 main() {
