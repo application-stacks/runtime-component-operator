@@ -167,3 +167,27 @@ func WaitForKnativeDeployment(t *testing.T, f *framework.Framework, ns, n string
 	})
 	return err
 }
+
+// UpdateApplication updates target app using provided function, retrying in the case that status has changed
+func UpdateApplication(f *framework.Framework, target types.NamespacedName, update func(r *runtimeappv1beta1.RuntimeApplication)) error {
+	retryInterval := time.Second * 5
+	timeout := time.Second * 30
+	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
+		temp := &runtimeappv1beta1.RuntimeApplication{}
+		err = f.Client.Get(goctx.TODO(), target, temp)
+		if err != nil {
+			return true, err
+		}
+
+		update(temp)
+
+		err = f.Client.Update(goctx.TODO(), temp)
+		if err != nil {
+			return false, err
+		}
+
+		return true, nil
+	})
+
+	return err
+}

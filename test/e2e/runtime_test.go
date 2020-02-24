@@ -21,10 +21,10 @@ func TestRuntimeApplication(t *testing.T) {
 		t.Fatalf("Failed to add CR scheme to framework: %v", err)
 	}
 
-	t.Run("RuntimePullPolicyTest", RuntimePullPolicyTest)
-	t.Run("RuntimeBasicTest", RuntimeBasicTest)
-	t.Run("RuntimeStorageTest", RuntimeBasicStorageTest)
-	t.Run("RuntimePersistenceTest", RuntimePersistenceTest)
+	// t.Run("RuntimePullPolicyTest", RuntimePullPolicyTest)
+	// t.Run("RuntimeBasicTest", RuntimeBasicTest)
+	// t.Run("RuntimeStorageTest", RuntimeBasicStorageTest)
+	// t.Run("RuntimePersistenceTest", RuntimePersistenceTest)
 	t.Run("RuntimeProbeTest", RuntimeProbeTest)
 	t.Run("RuntimeAutoScalingTest", RuntimeAutoScalingTest)
 	t.Run("RuntimeServiceMonitorTest", RuntimeServiceMonitorTest)

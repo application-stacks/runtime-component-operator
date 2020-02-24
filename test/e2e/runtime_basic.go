@@ -83,14 +83,12 @@ func runtimeBasicScaleTest(t *testing.T, f *framework.Framework, ctx *framework.
 }
 
 func runtimeUpdateScaleTest(t *testing.T, f *framework.Framework, namespace string, exampleRuntime *runtimeappv1beta1.RuntimeApplication) error {
-	err := f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "example-runtime", Namespace: namespace}, exampleRuntime)
-	if err != nil {
-		return err
-	}
+	target := types.NamespacedName{Name: "example-runtime", Namespace: namespace}
 
-	helper2 := int32(2)
-	exampleRuntime.Spec.Replicas = &helper2
-	err = f.Client.Update(goctx.TODO(), exampleRuntime)
+	err := util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+		helper2 := int32(2)
+		r.Spec.Replicas = &helper2
+	})
 	if err != nil {
 		return err
 	}

@@ -73,25 +73,17 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	if len(smList.Items) != 0 {
-		util.FailureCleanup(t, f, namespace, errors.New("There is another service monitor running"))
-	}
+	target := types.NamespacedName{Name: "example-runtime-sm", Namespace: namespace}
+	err = util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+		// Adds the mandatory label to the application so it will be picked up by the prometheus operator
+		label := map[string]string{"apps-prometheus": ""}
+		monitor := &runtimeappv1beta1.RuntimeApplicationMonitoring{Labels: label}
+		r.Spec.Monitoring = monitor
 
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "example-runtime-sm", Namespace: namespace}, runtime)
-	if err != nil {
-		util.FailureCleanup(t, f, namespace, err)
-	}
-
-	// Adds the mandatory label to the application so it will be picked up by the prometheus operator
-	label := map[string]string{"apps-prometheus": ""}
-	monitor := &runtimeappv1beta1.RuntimeApplicationMonitoring{Labels: label}
-	runtime.Spec.Monitoring = monitor
-
-	// Updates the application so the operator is reconciled
-	helper = int32(2)
-	runtime.Spec.Replicas = &helper
-
-	err = f.Client.Update(goctx.TODO(), runtime)
+		// Updates the application so the operator is reconciled
+		helper = int32(2)
+		r.Spec.Replicas = &helper
+	})
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
@@ -154,43 +146,40 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 }
 
 func testSettingRuntimeServiceMonitor(t *testing.T, f *framework.Framework, namespace string, runtime *runtimeappv1beta1.RuntimeApplication) {
-	err := f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "example-runtime-sm", Namespace: namespace}, runtime)
+	target := types.NamespacedName{Name: "example-runtime-sm", Namespace: namespace}
+
+	err := util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+		params := map[string][]string{
+			"params": []string{"param1", "param2"},
+		}
+		username := v1.SecretKeySelector{Key: "username"}
+		password := v1.SecretKeySelector{Key: "password"}
+
+		// Creates the endpoint fields the user can customize
+		endpoint := prometheusv1.Endpoint{
+			Path:            "/path",
+			Scheme:          "myScheme",
+			Params:          params,
+			Interval:        "30s",
+			ScrapeTimeout:   "10s",
+			TLSConfig:       &prometheusv1.TLSConfig{InsecureSkipVerify: true},
+			BearerTokenFile: "myBTF",
+			BasicAuth:       &prometheusv1.BasicAuth{Username: username, Password: password},
+		}
+
+		endpoints := []prometheusv1.Endpoint{endpoint}
+
+		// Adds the mandatory label to the application so it will be picked up by the prometheus operator
+		label := map[string]string{"apps-prometheus": ""}
+		monitor := &runtimeappv1beta1.RuntimeApplicationMonitoring{Labels: label, Endpoints: endpoints}
+		r.Spec.Monitoring = monitor
+
+		// Updates the application so the operator is reconciled
+		helper := int32(3)
+		r.Spec.Replicas = &helper
+	})
 	if err != nil {
 		t.Fatal(err)
-	}
-
-	params := map[string][]string{
-		"params": []string{"param1", "param2"},
-	}
-	username := v1.SecretKeySelector{Key: "username"}
-	password := v1.SecretKeySelector{Key: "password"}
-
-	// Creates the endpoint fields the user can customize
-	endpoint := prometheusv1.Endpoint{
-		Path:            "/path",
-		Scheme:          "myScheme",
-		Params:          params,
-		Interval:        "30s",
-		ScrapeTimeout:   "10s",
-		TLSConfig:       &prometheusv1.TLSConfig{InsecureSkipVerify: true},
-		BearerTokenFile: "myBTF",
-		BasicAuth:       &prometheusv1.BasicAuth{Username: username, Password: password},
-	}
-
-	endpoints := []prometheusv1.Endpoint{endpoint}
-
-	// Adds the mandatory label to the application so it will be picked up by the prometheus operator
-	label := map[string]string{"apps-prometheus": ""}
-	monitor := &runtimeappv1beta1.RuntimeApplicationMonitoring{Labels: label, Endpoints: endpoints}
-	runtime.Spec.Monitoring = monitor
-
-	// Updates the application so the operator is reconciled
-	helper := int32(3)
-	runtime.Spec.Replicas = &helper
-
-	err = f.Client.Update(goctx.TODO(), runtime)
-	if err != nil {
-		util.FailureCleanup(t, f, namespace, err)
 	}
 
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-runtime-sm", 3, retryInterval, timeout)
