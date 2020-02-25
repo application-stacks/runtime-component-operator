@@ -149,7 +149,21 @@ If applications require specific permissions but still want the operator to crea
 
 ### Labels
 
-By default, the operator adds the following labels into all resources created for an `RuntimeApplication` CR: `app.kubernetes.io/instance`, `app.kubernetes.io/name`, `app.kubernetes.io/managed-by`, `app.kubernetes.io/version` (when `version` is defined). You can set new labels in addition to the pre-existing ones or overwrite them, excluding the `app.kubernetes.io/instance` label. To set labels, specify them in your CR as key/value pairs.
+By default, the operator adds the following labels into all resources created
+for an `RuntimeApplication` CR: 
+
+| Label                          | Default                        | Description                                                                                                                                                  |
+|--------------------------------|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `app.kubernetes.io/instance`   | `metadata.name`                | A unique name or identifier for this component. This cannot be modified.                                                                                                                 |
+| `app.kubernetes.io/name`       | `metadata.name`                | A name that represents this component.                                                                                                               |
+| `app.kubernetes.io/managed-by` | `application-runtime-operator` | The tool being used to manage this component.                                                                                                                |
+| `app.kubernetes.io/component`  | `backend`                      | The type of component being created. See OpenShift [documentation](https://github.com/gorkem/app-labels/blob/master/labels-annotation-for-openshift.adoc#labels) for full list. |
+| `app.kubernetes.io/part-of`    | `metadata.name`                | The service that this component belongs to. Configure this if the component is not a standalone application. |
+| `app.kubernetes.io/version`    | `version`                      | The version of the component.                                                                                                                                |
+
+You can set new labels in addition to the pre-existing ones or overwrite them,
+excluding the `app.kubernetes.io/instance` label. To set labels, specify them in
+your CR as key/value pairs.
 
 ```yaml
 apiVersion: runtime.app/v1beta1
@@ -163,6 +177,11 @@ spec:
 ```
 
 _After the initial deployment of `RuntimeApplication`, any changes to its labels would be applied only when one of the parameters from `spec` is updated._
+
+#### OpenShift Labels
+
+When running in OpenShift, there are additional labels and annotations that are
+standard on the platform. See OpenShift [documentation]() for a full list.
 
 ### Annotations
 

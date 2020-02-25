@@ -583,11 +583,12 @@ func (cr *RuntimeApplication) Initialize() {
 
 // GetLabels returns set of labels to be added to all resources
 func (cr *RuntimeApplication) GetLabels() map[string]string {
-
 	labels := map[string]string{
 		"app.kubernetes.io/instance":   cr.Name,
 		"app.kubernetes.io/name":       cr.Name,
 		"app.kubernetes.io/managed-by": "application-runtime-operator",
+		"app.kubernetes.io/component": "backend",
+		"app.kubernetes.io/part-of": cr.Name,
 	}
 
 	if cr.Spec.Version != "" {
