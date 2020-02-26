@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/application-runtimes/operator/test/util"
+	"github.com/application-stacks/operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	corev1 "k8s.io/api/core/v1"
@@ -33,7 +33,7 @@ func RuntimeKnativeTest(t *testing.T) {
 		return
 	}
 
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-runtime-operator", 1, retryInterval, operatorTimeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-stacks-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}

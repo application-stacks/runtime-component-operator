@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/application-runtimes/operator/pkg/common"
+	"github.com/application-stacks/operator/pkg/common"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -31,7 +31,7 @@ var (
 		Name:      "app",
 		Namespace: "runtimeapp",
 	}
-	spec = runtimeappv1beta1.RuntimeApplicationSpec{}
+	spec = appstacksv1beta1.RuntimeApplicationSpec{}
 )
 
 func TestGetDiscoveryClient(t *testing.T) {
@@ -39,7 +39,7 @@ func TestGetDiscoveryClient(t *testing.T) {
 
 	runtimeapp := createRuntimeApp(name, namespace, spec)
 	objs, s := []runtime.Object{runtimeapp}, scheme.Scheme
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimeapp)
 	cl := fakeclient.NewFakeClient(objs...)
 
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
@@ -57,7 +57,7 @@ func TestCreateOrUpdate(t *testing.T) {
 
 	runtimeapp := createRuntimeApp(name, namespace, spec)
 	objs, s := []runtime.Object{runtimeapp}, scheme.Scheme
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimeapp)
 	cl := fakeclient.NewFakeClient(objs...)
 
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
@@ -76,7 +76,7 @@ func TestDeleteResources(t *testing.T) {
 
 	runtimeapp := createRuntimeApp(name, namespace, spec)
 	objs, s := []runtime.Object{runtimeapp}, scheme.Scheme
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimeapp)
 	cl := fakeclient.NewFakeClient(objs...)
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
@@ -127,7 +127,7 @@ func TestGetOpConfigMap(t *testing.T) {
 
 	runtimeapp := createRuntimeApp(name, namespace, spec)
 	objs, s := []runtime.Object{runtimeapp}, scheme.Scheme
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimeapp)
 	cl := fakeclient.NewFakeClient(objs...)
 
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
@@ -151,7 +151,7 @@ func TestManageError(t *testing.T) {
 
 	runtimeapp := createRuntimeApp(name, namespace, spec)
 	objs, s := []runtime.Object{runtimeapp}, scheme.Scheme
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimeapp)
 	cl := fakeclient.NewFakeClient(objs...)
 
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
@@ -170,7 +170,7 @@ func TestManageSuccess(t *testing.T) {
 
 	runtimeapp := createRuntimeApp(name, namespace, spec)
 	objs, s := []runtime.Object{runtimeapp}, scheme.Scheme
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimeapp)
 	cl := fakeclient.NewFakeClient(objs...)
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
@@ -187,7 +187,7 @@ func TestIsGroupVersionSupported(t *testing.T) {
 
 	runtimeapp := createRuntimeApp(name, namespace, spec)
 	objs, s := []runtime.Object{runtimeapp}, scheme.Scheme
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimeapp)
 	cl := fakeclient.NewFakeClient(objs...)
 
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))

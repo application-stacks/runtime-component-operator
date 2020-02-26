@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -28,7 +28,7 @@ var (
 	expose             = true
 	createKNS          = true
 	targetCPUPer int32 = 30
-	autoscaling        = &runtimeappv1beta1.RuntimeApplicationAutoScaling{
+	autoscaling        = &appstacksv1beta1.RuntimeApplicationAutoScaling{
 		TargetCPUUtilizationPercentage: &targetCPUPer,
 		MinReplicas:                    &replicas,
 		MaxReplicas:                    3,
@@ -39,11 +39,11 @@ var (
 	pullSecret         = "mysecret"
 	serviceAccountName = "service-account"
 	serviceType        = corev1.ServiceTypeClusterIP
-	service            = &runtimeappv1beta1.RuntimeApplicationService{Type: &serviceType, Port: 8443}
+	service            = &appstacksv1beta1.RuntimeApplicationService{Type: &serviceType, Port: 8443}
 	volumeCT           = &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{Name: "pvc", Namespace: namespace},
 		TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"}}
-	storage        = runtimeappv1beta1.RuntimeApplicationStorage{Size: "10Mi", MountPath: "/mnt/data", VolumeClaimTemplate: volumeCT}
+	storage        = appstacksv1beta1.RuntimeApplicationStorage{Size: "10Mi", MountPath: "/mnt/data", VolumeClaimTemplate: volumeCT}
 	arch           = []string{"ppc64le"}
 	readinessProbe = &corev1.Probe{
 		Handler: corev1.Handler{
@@ -73,7 +73,7 @@ type Test struct {
 
 func TestCustomizeRoute(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	spec := runtimeappv1beta1.RuntimeApplicationSpec{Service: service}
+	spec := appstacksv1beta1.RuntimeApplicationSpec{Service: service}
 	route, runtime := &routev1.Route{}, createRuntimeApp(name, namespace, spec)
 
 	CustomizeRoute(route, runtime, "", "", "", "")
@@ -93,7 +93,7 @@ func TestCustomizeRoute(t *testing.T) {
 func TestCustomizeService(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
-	spec := runtimeappv1beta1.RuntimeApplicationSpec{Service: service}
+	spec := appstacksv1beta1.RuntimeApplicationSpec{Service: service}
 	svc, runtime := &corev1.Service{}, createRuntimeApp(name, namespace, spec)
 
 	CustomizeService(svc, runtime)
@@ -110,7 +110,7 @@ func TestCustomizeService(t *testing.T) {
 func TestCustomizePodSpec(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
-	spec := runtimeappv1beta1.RuntimeApplicationSpec{
+	spec := appstacksv1beta1.RuntimeApplicationSpec{
 		ApplicationImage:    appImage,
 		Service:             service,
 		ResourceConstraints: resourceContraints,
@@ -129,7 +129,7 @@ func TestCustomizePodSpec(t *testing.T) {
 	noPorts := len(pts.Spec.Containers[0].Ports)
 	ptsSAN := pts.Spec.ServiceAccountName
 	// if cond
-	spec = runtimeappv1beta1.RuntimeApplicationSpec{
+	spec = appstacksv1beta1.RuntimeApplicationSpec{
 		ApplicationImage:    appImage,
 		Service:             service,
 		ResourceConstraints: resourceContraints,
@@ -171,7 +171,7 @@ func TestCustomizePodSpec(t *testing.T) {
 func TestCustomizePersistence(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
-	spec := runtimeappv1beta1.RuntimeApplicationSpec{Storage: &storage}
+	spec := appstacksv1beta1.RuntimeApplicationSpec{Storage: &storage}
 	statefulSet, runtime := &appsv1.StatefulSet{}, createRuntimeApp(name, namespace, spec)
 	statefulSet.Spec.Template.Spec.Containers = []corev1.Container{{}}
 	statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{}
@@ -181,8 +181,8 @@ func TestCustomizePersistence(t *testing.T) {
 	ssMountPath := statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath
 
 	//reset
-	storageNilVCT := runtimeappv1beta1.RuntimeApplicationStorage{Size: "10Mi", MountPath: "/mnt/data", VolumeClaimTemplate: nil}
-	spec = runtimeappv1beta1.RuntimeApplicationSpec{Storage: &storageNilVCT}
+	storageNilVCT := appstacksv1beta1.RuntimeApplicationStorage{Size: "10Mi", MountPath: "/mnt/data", VolumeClaimTemplate: nil}
+	spec = appstacksv1beta1.RuntimeApplicationSpec{Storage: &storageNilVCT}
 	statefulSet, runtime = &appsv1.StatefulSet{}, createRuntimeApp(name, namespace, spec)
 
 	statefulSet.Spec.Template.Spec.Containers = []corev1.Container{{}}
@@ -203,13 +203,13 @@ func TestCustomizePersistence(t *testing.T) {
 func TestCustomizeServiceAccount(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
-	spec := runtimeappv1beta1.RuntimeApplicationSpec{PullSecret: &pullSecret}
+	spec := appstacksv1beta1.RuntimeApplicationSpec{PullSecret: &pullSecret}
 	sa, runtime := &corev1.ServiceAccount{}, createRuntimeApp(name, namespace, spec)
 	CustomizeServiceAccount(sa, runtime)
 	emptySAIPS := sa.ImagePullSecrets[0].Name
 
 	newSecret := "my-new-secret"
-	spec = runtimeappv1beta1.RuntimeApplicationSpec{PullSecret: &newSecret}
+	spec = appstacksv1beta1.RuntimeApplicationSpec{PullSecret: &newSecret}
 	runtime = createRuntimeApp(name, namespace, spec)
 	CustomizeServiceAccount(sa, runtime)
 
@@ -223,7 +223,7 @@ func TestCustomizeServiceAccount(t *testing.T) {
 func TestCustomizeKnativeService(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
-	spec := runtimeappv1beta1.RuntimeApplicationSpec{
+	spec := appstacksv1beta1.RuntimeApplicationSpec{
 		ApplicationImage: appImage,
 		Service:          service,
 		LivenessProbe:    livenessProbe,
@@ -245,7 +245,7 @@ func TestCustomizeKnativeService(t *testing.T) {
 	ksvcRPTCP := ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.TCPSocket.Port
 	ksvcLabelNoExpose := ksvc.Labels["serving.knative.dev/visibility"]
 
-	spec = runtimeappv1beta1.RuntimeApplicationSpec{
+	spec = appstacksv1beta1.RuntimeApplicationSpec{
 		ApplicationImage:   appImage,
 		Service:            service,
 		PullPolicy:         &pullPolicy,
@@ -284,12 +284,12 @@ func TestCustomizeKnativeService(t *testing.T) {
 func TestCustomizeHPA(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
-	spec := runtimeappv1beta1.RuntimeApplicationSpec{Autoscaling: autoscaling}
+	spec := appstacksv1beta1.RuntimeApplicationSpec{Autoscaling: autoscaling}
 	hpa, runtime := &autoscalingv1.HorizontalPodAutoscaler{}, createRuntimeApp(name, namespace, spec)
 	CustomizeHPA(hpa, runtime)
 	nilSTRKind := hpa.Spec.ScaleTargetRef.Kind
 
-	spec = runtimeappv1beta1.RuntimeApplicationSpec{Autoscaling: autoscaling, Storage: &storage}
+	spec = appstacksv1beta1.RuntimeApplicationSpec{Autoscaling: autoscaling, Storage: &storage}
 	runtime = createRuntimeApp(name, namespace, spec)
 	CustomizeHPA(hpa, runtime)
 	STRKind := hpa.Spec.ScaleTargetRef.Kind
@@ -309,7 +309,7 @@ func TestCustomizeHPA(t *testing.T) {
 func TestCustomizeServiceMonitor(t *testing.T) {
 
 	logf.SetLogger(logf.ZapLogger(true))
-	spec := runtimeappv1beta1.RuntimeApplicationSpec{Service: service}
+	spec := appstacksv1beta1.RuntimeApplicationSpec{Service: service}
 
 	params := map[string][]string{
 		"params": []string{"param1", "param2"},
@@ -338,12 +338,12 @@ func TestCustomizeServiceMonitor(t *testing.T) {
 	smspec := &prometheusv1.ServiceMonitorSpec{Endpoints: endpointsSM, Selector: *selector}
 
 	sm, runtime := &prometheusv1.ServiceMonitor{Spec: *smspec}, createRuntimeApp(name, namespace, spec)
-	runtime.Spec.Monitoring = &runtimeappv1beta1.RuntimeApplicationMonitoring{Labels: labelMap, Endpoints: endpointsApp}
+	runtime.Spec.Monitoring = &appstacksv1beta1.RuntimeApplicationMonitoring{Labels: labelMap, Endpoints: endpointsApp}
 
 	CustomizeServiceMonitor(sm, runtime)
 
 	labelMatches := map[string]string{
-		"app.runtime.app/monitor":    "true",
+		"app.app.stacks/monitor":    "true",
 		"app.kubernetes.io/instance": name,
 	}
 
@@ -382,15 +382,15 @@ func TestCustomizeServiceMonitor(t *testing.T) {
 
 func TestGetCondition(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	status := &runtimeappv1beta1.RuntimeApplicationStatus{
-		Conditions: []runtimeappv1beta1.StatusCondition{
+	status := &appstacksv1beta1.RuntimeApplicationStatus{
+		Conditions: []appstacksv1beta1.StatusCondition{
 			{
 				Status: corev1.ConditionTrue,
-				Type:   runtimeappv1beta1.StatusConditionTypeReconciled,
+				Type:   appstacksv1beta1.StatusConditionTypeReconciled,
 			},
 		},
 	}
-	conditionType := runtimeappv1beta1.StatusConditionTypeReconciled
+	conditionType := appstacksv1beta1.StatusConditionTypeReconciled
 	cond := GetCondition(conditionType, status)
 	testGC := []Test{{"Set status condition", status.Conditions[0].Status, cond.Status}}
 	verifyTests(testGC, t)
@@ -398,14 +398,14 @@ func TestGetCondition(t *testing.T) {
 
 func TestSetCondition(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	status := &runtimeappv1beta1.RuntimeApplicationStatus{
-		Conditions: []runtimeappv1beta1.StatusCondition{
-			{Type: runtimeappv1beta1.StatusConditionTypeReconciled},
+	status := &appstacksv1beta1.RuntimeApplicationStatus{
+		Conditions: []appstacksv1beta1.StatusCondition{
+			{Type: appstacksv1beta1.StatusConditionTypeReconciled},
 		},
 	}
-	condition := runtimeappv1beta1.StatusCondition{
+	condition := appstacksv1beta1.StatusCondition{
 		Status: corev1.ConditionTrue,
-		Type:   runtimeappv1beta1.StatusConditionTypeReconciled,
+		Type:   appstacksv1beta1.StatusConditionTypeReconciled,
 	}
 	SetCondition(condition, status)
 	testSC := []Test{{"Set status condition", condition.Status, status.Conditions[0].Status}}
@@ -452,7 +452,7 @@ func TestGetWatchNamespaces(t *testing.T) {
 func TestUpdateAppDefinition(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
-	spec := runtimeappv1beta1.RuntimeApplicationSpec{Service: service, Version: "v1alpha"}
+	spec := appstacksv1beta1.RuntimeApplicationSpec{Service: service, Version: "v1alpha"}
 	app := createRuntimeApp(name, namespace, spec)
 
 	// Toggle app definition off [disabled]
@@ -501,7 +501,7 @@ func TestUpdateAppDefinition(t *testing.T) {
 
 // Helper Functions
 // Unconditionally set the proper tags for an enabled runtime application
-func createAppDefinitionTags(app *runtimeappv1beta1.RuntimeApplication) (map[string]string, map[string]string) {
+func createAppDefinitionTags(app *appstacksv1beta1.RuntimeApplication) (map[string]string, map[string]string) {
 	// The purpose of this function demands all fields configured
 	if app.Spec.Version == "" {
 		app.Spec.Version = "v1alpha"
@@ -519,8 +519,8 @@ func createAppDefinitionTags(app *runtimeappv1beta1.RuntimeApplication) (map[str
 	}
 	return label, annotations
 }
-func createRuntimeApp(n, ns string, spec runtimeappv1beta1.RuntimeApplicationSpec) *runtimeappv1beta1.RuntimeApplication {
-	app := &runtimeappv1beta1.RuntimeApplication{
+func createRuntimeApp(n, ns string, spec appstacksv1beta1.RuntimeApplicationSpec) *appstacksv1beta1.RuntimeApplication {
+	app := &appstacksv1beta1.RuntimeApplication{
 		ObjectMeta: metav1.ObjectMeta{Name: n, Namespace: ns},
 		Spec:       spec,
 	}

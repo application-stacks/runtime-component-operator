@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
-	"github.com/application-runtimes/operator/test/util"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
+	"github.com/application-stacks/operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	k "k8s.io/api/core/v1"
@@ -27,7 +27,7 @@ func RuntimePullPolicyTest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not get namespace: %v", err)
 	}
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-runtime-operator", 1, retryInterval, operatorTimeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-stacks-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
@@ -35,7 +35,7 @@ func RuntimePullPolicyTest(t *testing.T) {
 	t.Logf("%s - Starting runtime pull policy test...", timestamp)
 
 	// create one replica of the operator deployment in current namespace with provided name
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-runtime-operator", 1, retryInterval, operatorTimeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-stacks-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +66,7 @@ func RuntimePullPolicyTest(t *testing.T) {
 	}
 }
 
-func verifyPullPolicy(t *testing.T, f *framework.Framework, app *runtimeappv1beta1.RuntimeApplication) error {
+func verifyPullPolicy(t *testing.T, f *framework.Framework, app *appstacksv1beta1.RuntimeApplication) error {
 	name := app.ObjectMeta.Name
 	ns := app.ObjectMeta.Namespace
 

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
-	"github.com/application-runtimes/operator/test/util"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
+	"github.com/application-stacks/operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
@@ -34,7 +34,7 @@ func RuntimeAutoScalingTest(t *testing.T) {
 	}
 
 	// Wait for the operator as the following configmaps won't exist until it has deployed
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-runtime-operator", 1, retryInterval, operatorTimeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-stacks-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
@@ -43,7 +43,7 @@ func RuntimeAutoScalingTest(t *testing.T) {
 	t.Logf("%s - Starting runtime autoscaling test...", timestamp)
 
 	// create one replica of the operator deployment in current namespace with provided name
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-runtime-operator", 1, retryInterval, operatorTimeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-stacks-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +71,7 @@ func RuntimeAutoScalingTest(t *testing.T) {
 
 	// Update autoscaler
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
-	err = util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
 		r.Spec.ResourceConstraints = setResources("0.2")
 		r.Spec.Autoscaling = setAutoScale(5, 50)
 	})
@@ -126,21 +126,21 @@ func setResources(cpu string) *corev1.ResourceRequirements {
 	}
 }
 
-func setAutoScale(values ...int32) *runtimeappv1beta1.RuntimeApplicationAutoScaling {
+func setAutoScale(values ...int32) *appstacksv1beta1.RuntimeApplicationAutoScaling {
 	if len(values) == 3 {
-		return &runtimeappv1beta1.RuntimeApplicationAutoScaling{
+		return &appstacksv1beta1.RuntimeApplicationAutoScaling{
 			TargetCPUUtilizationPercentage: &values[2],
 			MaxReplicas:                    values[0],
 			MinReplicas:                    &values[1],
 		}
 	} else if len(values) == 2 {
-		return &runtimeappv1beta1.RuntimeApplicationAutoScaling{
+		return &appstacksv1beta1.RuntimeApplicationAutoScaling{
 			TargetCPUUtilizationPercentage: &values[1],
 			MaxReplicas:                    values[0],
 		}
 	}
 
-	return &runtimeappv1beta1.RuntimeApplicationAutoScaling{}
+	return &appstacksv1beta1.RuntimeApplicationAutoScaling{}
 
 }
 
@@ -165,10 +165,10 @@ func checkValues(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, m
 }
 
 // Updates the values and checks they are changed
-func updateTest(t *testing.T, f *framework.Framework, runtimeApplication *runtimeappv1beta1.RuntimeApplication, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
+func updateTest(t *testing.T, f *framework.Framework, runtimeApplication *appstacksv1beta1.RuntimeApplication, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
-	err := util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
 		r.Spec.ResourceConstraints = setResources("0.2")
 		r.Spec.Autoscaling = setAutoScale(3, 2, 30)
 	})
@@ -188,10 +188,10 @@ func updateTest(t *testing.T, f *framework.Framework, runtimeApplication *runtim
 }
 
 // Checks when max is less than min, there should be no update
-func minMaxTest(t *testing.T, f *framework.Framework, runtimeApplication *runtimeappv1beta1.RuntimeApplication, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
+func minMaxTest(t *testing.T, f *framework.Framework, runtimeApplication *appstacksv1beta1.RuntimeApplication, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
-	err := util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
 		r.Spec.ResourceConstraints = setResources("0.2")
 		r.Spec.Autoscaling = setAutoScale(1, 6, 10)
 	})
@@ -211,10 +211,10 @@ func minMaxTest(t *testing.T, f *framework.Framework, runtimeApplication *runtim
 }
 
 // When min is set to less than 1, there should be no update since the minReplicas are updated to a value less than 1
-func minBoundaryTest(t *testing.T, f *framework.Framework, runtimeApplication *runtimeappv1beta1.RuntimeApplication, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
+func minBoundaryTest(t *testing.T, f *framework.Framework, runtimeApplication *appstacksv1beta1.RuntimeApplication, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
-	err := util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
 		r.Spec.ResourceConstraints = setResources("0.5")
 		r.Spec.Autoscaling = setAutoScale(4, 0, 20)
 	})
@@ -269,7 +269,7 @@ func incorrectFieldsTest(t *testing.T, f *framework.Framework, ctx *framework.Te
 
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
-	err = util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
 		r.Spec.ResourceConstraints = setResources("0.3")
 		r.Spec.Autoscaling = setAutoScale(4)
 	})

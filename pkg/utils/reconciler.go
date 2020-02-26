@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
-	"github.com/application-runtimes/operator/pkg/common"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
+	"github.com/application-stacks/operator/pkg/common"
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	v1 "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -163,7 +163,7 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 
 	oldCondition := s.GetCondition(conditionType)
 	if oldCondition == nil {
-		oldCondition = &runtimeappv1beta1.StatusCondition{LastUpdateTime: metav1.Time{}}
+		oldCondition = &appstacksv1beta1.StatusCondition{LastUpdateTime: metav1.Time{}}
 	}
 
 	lastUpdate := oldCondition.GetLastUpdateTime().Time
@@ -223,7 +223,7 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 	s := ba.GetStatus()
 	oldCondition := s.GetCondition(conditionType)
 	if oldCondition == nil {
-		oldCondition = &runtimeappv1beta1.StatusCondition{LastUpdateTime: metav1.Time{}}
+		oldCondition = &appstacksv1beta1.StatusCondition{LastUpdateTime: metav1.Time{}}
 	}
 
 	// Keep the old `LastTransitionTime` when status has not changed

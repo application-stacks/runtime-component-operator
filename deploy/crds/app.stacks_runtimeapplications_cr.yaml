@@ -1,4 +1,4 @@
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: example-app

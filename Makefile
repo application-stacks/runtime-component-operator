@@ -31,24 +31,24 @@ build: ## Compile the operator
 	go install ./cmd/manager
 
 unit-test: ## Run unit tests
-	go test -v -mod=vendor -tags=unit github.com/application-runtimes/operator/pkg/...
+	go test -v -mod=vendor -tags=unit github.com/application-stacks/operator/pkg/...
 
 test-e2e: setup ## Run end-to-end tests
 	./scripts/e2e.sh
 
 test-e2e-locally: setup
 	kubectl apply -f scripts/servicemonitor.crd.yaml
-	operator-sdk test local github.com/application-runtimes/operator/test/e2e --verbose --debug --up-local --namespace ${WATCH_NAMESPACE}
+	operator-sdk test local github.com/application-stacks/operator/test/e2e --verbose --debug --up-local --namespace ${WATCH_NAMESPACE}
 
 generate: setup ## Invoke `k8s` and `openapi` generators
 	operator-sdk generate k8s
 	operator-sdk generate openapi
 
 	# Remove `x-kubernetes-int-or-string: true` from CRD. Causing issues on clusters with older k8s: https://github.com/kubernetes/kubernetes/issues/83778 https://github.com/openshift/api/pull/505
-	sed -i '' '/x\-kubernetes\-int\-or\-string\: true/d' deploy/crds/runtime.app_runtimeapplications_crd.yaml
+	sed -i '' '/x\-kubernetes\-int\-or\-string\: true/d' deploy/crds/app.stacks_runtimeapplications_crd.yaml
 
-	cat deploy/crds/runtime.app_runtimeapplications_crd.yaml | awk '/type: object/ {max=NR} {a[NR]=$$0} END{for (i=1;i<=NR;i++) {if (i!=max) print a[i]}}' > deploy/crds/runtime.app_runtimeapplications_crd.yaml.tmp
-	mv deploy/crds/runtime.app_runtimeapplications_crd.yaml.tmp deploy/crds/runtime.app_runtimeapplications_crd.yaml
+	cat deploy/crds/app.stacks_runtimeapplications_crd.yaml | awk '/type: object/ {max=NR} {a[NR]=$$0} END{for (i=1;i<=NR;i++) {if (i!=max) print a[i]}}' > deploy/crds/app.stacks_runtimeapplications_crd.yaml.tmp
+	mv deploy/crds/app.stacks_runtimeapplications_crd.yaml.tmp deploy/crds/app.stacks_runtimeapplications_crd.yaml
 
 build-image: setup ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}"
 	operator-sdk build ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}
@@ -80,22 +80,22 @@ clean: ## Clean binary artifacts
 	rm -rf build/_output
 
 install-crd: ## Installs operator CRD in the daily directory
-	kubectl apply -f deploy/releases/daily/runtime-app-crd.yaml
+	kubectl apply -f deploy/releases/daily/app-stacks-crd.yaml
 
 install-rbac: ## Installs RBAC objects required for the operator to in a cluster-wide manner
-	sed -i.bak -e "s/APPLICATION_RUNTIME_OPERATOR_NAMESPACE/${OPERATOR_NAMESPACE}/" deploy/releases/daily/runtime-app-cluster-rbac.yaml
-	kubectl apply -f deploy/releases/daily/runtime-app-cluster-rbac.yaml
+	sed -i.bak -e "s/APPLICATION_STACKS_OPERATOR_NAMESPACE/${OPERATOR_NAMESPACE}/" deploy/releases/daily/app-stacks-cluster-rbac.yaml
+	kubectl apply -f deploy/releases/daily/app-stacks-cluster-rbac.yaml
 
 install-operator: ## Installs operator in the ${OPERATOR_NAMESPACE} namespace and watches ${WATCH_NAMESPACE} namespace. ${WATCH_NAMESPACE} defaults to `default`. ${OPERATOR_NAMESPACE} defaults to ${WATCH_NAMESPACE}
-ifneq "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}" "application-runtimes/operator:daily"
-	sed -i.bak -e 's!image: application-runtimes/operator:daily!image: ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}!' deploy/releases/daily/runtime-app-operator.yaml
+ifneq "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}" "application-stacks/operator:daily"
+	sed -i.bak -e 's!image: application-stacks/operator:daily!image: ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}!' deploy/releases/daily/app-stacks-operator.yaml
 endif
-	sed -i.bak -e "s/APPLICATION_RUNTIME_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" deploy/releases/daily/runtime-app-operator.yaml
-	kubectl apply -n ${OPERATOR_NAMESPACE} -f deploy/releases/daily/runtime-app-operator.yaml
+	sed -i.bak -e "s/APPLICATION_STACKS_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" deploy/releases/daily/app-stacks-operator.yaml
+	kubectl apply -n ${OPERATOR_NAMESPACE} -f deploy/releases/daily/app-stacks-operator.yaml
 
 install-all: install-crd install-rbac install-operator
 
 uninstall-all:
-	kubectl delete -n ${OPERATOR_NAMESPACE} -f deploy/releases/daily/runtime-app-operator.yaml
-	kubectl delete -f deploy/releases/daily/runtime-app-cluster-rbac.yaml
-	kubectl delete -f deploy/releases/daily/runtime-app-crd.yaml
+	kubectl delete -n ${OPERATOR_NAMESPACE} -f deploy/releases/daily/app-stacks-operator.yaml
+	kubectl delete -f deploy/releases/daily/app-stacks-cluster-rbac.yaml
+	kubectl delete -f deploy/releases/daily/app-stacks-crd.yaml

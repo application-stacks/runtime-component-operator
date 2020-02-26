@@ -22,7 +22,7 @@ The architecture of the Application Stacks Operator follows the basic controller
 Each instance of `RuntimeApplication` CR represents the application to be deployed on the cluster:
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-app
@@ -41,7 +41,7 @@ spec:
 
 ### Custom Resource Definition (CRD)
 
-The following table lists configurable parameters of the `RuntimeApplication` CRD. For complete OpenAPI v3 representation of these values please see [`RuntimeApplication` CRD](../deploy/crds/runtime.app_runtimeapplications_crd.yaml).
+The following table lists configurable parameters of the `RuntimeApplication` CRD. For complete OpenAPI v3 representation of these values please see [`RuntimeApplication` CRD](../deploy/crds/app.stacks_runtimeapplications_crd.yaml).
 
 Each `RuntimeApplication` CR must at least specify the `applicationImage` parameter. Specifying other parameters is optional.
 
@@ -78,8 +78,8 @@ Each `RuntimeApplication` CR must at least specify the `applicationImage` parame
 | `resourceConstraints.requests.memory` | The minimum memory in bytes. Specify integers with one of these suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.|
 | `resourceConstraints.limits.cpu` | The upper limit of CPU core. Specify integers, fractions (e.g. 0.5), or millicores values(e.g. 100m, where 100m is equivalent to .1 core). |
 | `resourceConstraints.limits.memory` | The memory upper limit in bytes. Specify integers with suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.|
-| `env`   | An array of environment variables following the format of `{name, value}`, where value is a simple string. It may also follow the format of `{name, valueFrom}`, where valueFrom refers to a value in a `ConfigMap` or `Secret` resource. See [Environment variables](https://github.com/application-runtimes/operator/blob/master/doc/user-guide.md#environment-variables) for more info.|
-| `envFrom`   | An array of references to `ConfigMap` or `Secret` resources containing environment variables. Keys from `ConfigMap` or `Secret` resources become environment variable names in your container. See [Environment variables](https://github.com/application-runtimes/operator/blob/master/doc/user-guide.md#environment-variables) for more info.|
+| `env`   | An array of environment variables following the format of `{name, value}`, where value is a simple string. It may also follow the format of `{name, valueFrom}`, where valueFrom refers to a value in a `ConfigMap` or `Secret` resource. See [Environment variables](https://github.com/application-stacks/operator/blob/master/doc/user-guide.md#environment-variables) for more info.|
+| `envFrom`   | An array of references to `ConfigMap` or `Secret` resources containing environment variables. Keys from `ConfigMap` or `Secret` resources become environment variable names in your container. See [Environment variables](https://github.com/application-stacks/operator/blob/master/doc/user-guide.md#environment-variables) for more info.|
 | `readinessProbe`   | A YAML object configuring the [Kubernetes readiness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#define-readiness-probes) that controls when the pod is ready to receive traffic. |
 | `livenessProbe` | A YAML object configuring the [Kubernetes liveness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#define-a-liveness-http-request) that controls when Kubernetes needs to restart the pod.|
 | `volumes` | A YAML object representing a [pod volume](https://kubernetes.io/docs/concepts/storage/volumes). |
@@ -102,7 +102,7 @@ Each `RuntimeApplication` CR must at least specify the `applicationImage` parame
 To deploy a Docker image containing a runtime application to a Kubernetes environment you can use the following CR:
 
  ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-app
@@ -124,7 +124,7 @@ oc get app my-app
 To deploy an image from an image stream, use the following CR:
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-app
@@ -157,7 +157,7 @@ for an `RuntimeApplication` CR:
 |--------------------------------|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `app.kubernetes.io/instance`   | `metadata.name`                | A unique name or identifier for this component. This cannot be modified.                                                                                                                 |
 | `app.kubernetes.io/name`       | `metadata.name`                | A name that represents this component.                                                                                                               |
-| `app.kubernetes.io/managed-by` | `application-runtime-operator` | The tool being used to manage this component.                                                                                                                |
+| `app.kubernetes.io/managed-by` | `application-stacks-operator` | The tool being used to manage this component.                                                                                                                |
 | `app.kubernetes.io/component`  | `backend`                      | The type of component being created. See OpenShift [documentation](https://github.com/gorkem/app-labels/blob/master/labels-annotation-for-openshift.adoc#labels) for full list. |
 | `app.kubernetes.io/part-of`    | `metadata.name`                | The name of the higher-level application this component is a part of. Configure this if the component is not a standalone application. |
 | `app.kubernetes.io/version`    | `version`                      | The version of the component.                                                                                                                                |
@@ -167,7 +167,7 @@ excluding the `app.kubernetes.io/instance` label. To set labels, specify them in
 your CR as key/value pairs.
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-app
@@ -190,7 +190,7 @@ where applicable and add any labels from the list that are not set by default us
 To add new annotations into all resources created for an `RuntimeApplication`, specify them in your CR as key/value pairs. Annotations specified in CR would override any annotations specified on a resource, except for the annotations set on `Service` using `service.annotations`.
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-app
@@ -218,7 +218,7 @@ environment variables can come directly from key/value pairs, `ConfigMap`s or
 override any environment variables specified in the container image.
 
  ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-app
@@ -274,7 +274,7 @@ With the `RuntimeApplication` CR definition below the operator will create `Pers
 The operator will also create a volume mount for the `StatefulSet` mounting to `/data` folder. You can use `volumeMounts` field instead of `storage.mountPath` if you require to persist more then one folder.
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-app
@@ -292,7 +292,7 @@ Application Stacks Operator allows users to provide entire `volumeClaimTemplate`
 It is also possible to create multiple volume mount points for persistent volume using `volumeMounts` field as shown below. You can still use `storage.mountPath` if you require only a single mount point.
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-app
@@ -325,7 +325,7 @@ Application Stacks Operator can be used to help with service binding in a cluste
 The provider lists information about the REST API it provides:
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-provider
@@ -359,7 +359,7 @@ type: Opaque
 And the consumer lists the services it is intending to consume:
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-consumer
@@ -391,7 +391,7 @@ _This feature does not support integration with Knative Service. Prometheus Oper
 At minimum, a label needs to be provided that Prometheus expects to be set on `ServiceMonitor` objects. In this case, it is `apps-prometheus`.
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-app
@@ -407,7 +407,7 @@ spec:
 For advanced scenarios, it is possible to set many `ServicerMonitor` settings such as authentication secret using [Prometheus Endpoint](https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#endpoint)
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-app
@@ -436,7 +436,7 @@ Application Stacks Operator can deploy serverless applications with [Knative](ht
 To create Knative service, set `createKnativeService` to `true`:
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-app
@@ -462,7 +462,7 @@ _This feature is only available if you have Knative installed on your cluster._
 To expose your application externally, set `expose` to `true`:
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-app
@@ -482,7 +482,7 @@ _This feature is only available if you are running on OKD or OpenShift._
 To expose your application as a Knative service externally, set `expose` to `true`:
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: my-app
@@ -511,7 +511,7 @@ This allows to automatically provision TLS certificates for pods as well as rout
 
 Cert-manager installation instruction can be found [here](https://cert-manager.io/docs/installation/)
 
-When creating certificates via the RuntimeApplication CR the user can specify a particular issuer name and toggle the scopes between `ClusterIssuer` (cluster scoped) and `Issuer` (namespace scoped). If not specified, these values are retrieved from a ConfigMap called `application-runtime-operator`, with keys `defaultIssuer` (default value of `self-signed`) and `useClusterIssuer` (default value of `"true"`)
+When creating certificates via the RuntimeApplication CR the user can specify a particular issuer name and toggle the scopes between `ClusterIssuer` (cluster scoped) and `Issuer` (namespace scoped). If not specified, these values are retrieved from a ConfigMap called `application-stacks-operator`, with keys `defaultIssuer` (default value of `self-signed`) and `useClusterIssuer` (default value of `"true"`)
 
 _This feature does not support integration with Knative Service._
 
@@ -545,7 +545,7 @@ spec:
 #### Simple scenario (Pods certificate)
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: myapp
@@ -570,7 +570,7 @@ It is up to the application container to consume these artifacts, applying any n
 #### Simple scenario (Route certificate)
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: myapp
@@ -591,7 +591,7 @@ In this example we are overriding Issuer to be used for application.
 Certificate will be generated for specific organization and duration. Extra properties can be added as well.
 
 ```yaml
-apiVersion: runtime.app/v1beta1
+apiVersion: app.stacks/v1beta1
 kind: RuntimeApplication
 metadata:
   name: myapp

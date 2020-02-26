@@ -5,22 +5,22 @@ Here are some basic troubleshooting methods to check if the operator is running 
 * Run the following and check if the output is similar to the following:
 
   ```console
-  $ oc get pods -l name=application-runtime-operator
+  $ oc get pods -l name=application-stacks-operator
 
   NAME                                            READY     STATUS    RESTARTS   AGE
-  application-runtime-operator-584d6bd86d-fzq2n   1/1       Running   0          33m
+  application-stacks-operator-584d6bd86d-fzq2n   1/1       Running   0          33m
   ```
 
 * Check the operators events:
 
   ```console
-  $ oc describe pod application-runtime-operator-584d6bd86d-fzq2n
+  $ oc describe pod application-stacks-operator-584d6bd86d-fzq2n
   ```
 
 * Check the operator logs:
 
   ```console
-  $ oc logs application-runtime-operator-584d6bd86d-fzq2n
+  $ oc logs application-stacks-operator-584d6bd86d-fzq2n
   ```
 
 If the operator is running fine, check the status of the `RuntimeApplication` Custom Resource (CR) instance:
@@ -47,7 +47,7 @@ If the operator is running fine, check the status of the `RuntimeApplication` Cu
   ```console
   $ oc get runtimeapplication my-app -o yaml
 
-  apiVersion: runtime.app/v1beta1
+  apiVersion: app.stacks/v1beta1
   kind: RuntimeApplication
   ...
   status:

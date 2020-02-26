@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/application-runtimes/operator/pkg/common"
+	"github.com/application-stacks/operator/pkg/common"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
-	runtimeapputils "github.com/application-runtimes/operator/pkg/utils"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
+	runtimeapputils "github.com/application-stacks/operator/pkg/utils"
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 
@@ -50,7 +50,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	reconciler := &ReconcileRuntimeApplication{ReconcilerBase: runtimeapputils.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("application-runtime-operator"))}
+	reconciler := &ReconcileRuntimeApplication{ReconcilerBase: runtimeapputils.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("application-stacks-operator"))}
 
 	watchNamespaces, err := runtimeapputils.GetWatchNamespaces()
 	if err != nil {
@@ -69,7 +69,7 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 
 	configMap := &corev1.ConfigMap{}
 	configMap.Namespace = ns
-	configMap.Name = "application-runtime-operator"
+	configMap.Name = "application-stacks-operator"
 	configMap.Data = common.DefaultOpConfig()
 	err = reconciler.GetClient().Create(context.TODO(), configMap)
 	if err != nil && !kerrors.IsAlreadyExists(err) {
@@ -81,8 +81,8 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 }
 
 func setup(mgr manager.Manager) {
-	mgr.GetFieldIndexer().IndexField(&runtimeappv1beta1.RuntimeApplication{}, indexFieldImageStreamName, func(obj runtime.Object) []string {
-		instance := obj.(*runtimeappv1beta1.RuntimeApplication)
+	mgr.GetFieldIndexer().IndexField(&appstacksv1beta1.RuntimeApplication{}, indexFieldImageStreamName, func(obj runtime.Object) []string {
+		instance := obj.(*appstacksv1beta1.RuntimeApplication)
 		image, err := imageutil.ParseDockerImageReference(instance.Spec.ApplicationImage)
 		if err == nil {
 			imageNamespace := image.Namespace
@@ -138,7 +138,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// Watch for changes to primary resource RuntimeApplication
-	err = c.Watch(&source.Kind{Type: &runtimeappv1beta1.RuntimeApplication{}}, &handler.EnqueueRequestForObject{}, pred)
+	err = c.Watch(&source.Kind{Type: &appstacksv1beta1.RuntimeApplication{}}, &handler.EnqueueRequestForObject{}, pred)
 	if err != nil {
 		return err
 	}
@@ -161,7 +161,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &runtimeappv1beta1.RuntimeApplication{},
+		OwnerType:    &appstacksv1beta1.RuntimeApplication{},
 	}, predSubResource)
 	if err != nil {
 		return err
@@ -169,7 +169,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &appsv1.StatefulSet{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &runtimeappv1beta1.RuntimeApplication{},
+		OwnerType:    &appstacksv1beta1.RuntimeApplication{},
 	}, predSubResource)
 	if err != nil {
 		return err
@@ -177,7 +177,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &runtimeappv1beta1.RuntimeApplication{},
+		OwnerType:    &appstacksv1beta1.RuntimeApplication{},
 	}, predSubResource)
 	if err != nil {
 		return err
@@ -185,14 +185,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &autoscalingv1.HorizontalPodAutoscaler{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &runtimeappv1beta1.RuntimeApplication{},
+		OwnerType:    &appstacksv1beta1.RuntimeApplication{},
 	}, predSubResource)
 	if err != nil {
 		return err
 	}
 
 	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
-		OwnerType: &runtimeappv1beta1.RuntimeApplication{},
+		OwnerType: &appstacksv1beta1.RuntimeApplication{},
 	}, predSubResource)
 	if err != nil {
 		return err
@@ -202,7 +202,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		&source.Kind{Type: &corev1.Secret{}},
 		&runtimeapputils.EnqueueRequestsForServiceBinding{
 			Client:          mgr.GetClient(),
-			GroupName:       "runtime.app",
+			GroupName:       "app.stacks",
 			WatchNamespaces: watchNamespaces,
 		})
 	if err != nil {
@@ -223,7 +223,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if ok {
 		c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
-			OwnerType:    &runtimeappv1beta1.RuntimeApplication{},
+			OwnerType:    &appstacksv1beta1.RuntimeApplication{},
 		}, predSubResource)
 	}
 
@@ -231,7 +231,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if ok {
 		c.Watch(&source.Kind{Type: &servingv1alpha1.Service{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
-			OwnerType:    &runtimeappv1beta1.RuntimeApplication{},
+			OwnerType:    &appstacksv1beta1.RuntimeApplication{},
 		}, predSubResource)
 	}
 
@@ -239,7 +239,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if ok {
 		c.Watch(&source.Kind{Type: &certmngrv1alpha2.Certificate{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
-			OwnerType:    &runtimeappv1beta1.RuntimeApplication{},
+			OwnerType:    &appstacksv1beta1.RuntimeApplication{},
 		}, predSubResource)
 	}
 
@@ -247,7 +247,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if ok {
 		c.Watch(&source.Kind{Type: &prometheusv1.ServiceMonitor{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
-			OwnerType:    &runtimeappv1beta1.RuntimeApplication{},
+			OwnerType:    &appstacksv1beta1.RuntimeApplication{},
 		}, predSubResource)
 	}
 	return nil
@@ -288,15 +288,15 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 		ns = watchNamespaces[0]
 	}
 
-	configMap, err := r.GetOpConfigMap("application-runtime-operator", ns)
+	configMap, err := r.GetOpConfigMap("application-stacks-operator", ns)
 	if err != nil {
-		log.Info("Failed to find application-runtime-operator config map")
+		log.Info("Failed to find application-stacks-operator config map")
 	} else {
 		common.Config.LoadFromConfigMap(configMap)
 	}
 
 	// Fetch the RuntimeApplication instance
-	instance := &runtimeappv1beta1.RuntimeApplication{}
+	instance := &appstacksv1beta1.RuntimeApplication{}
 	var ba common.BaseApplication
 	ba = instance
 	err = r.GetClient().Get(context.TODO(), request.NamespacedName, instance)

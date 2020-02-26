@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"testing"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
-	runtimeapputils "github.com/application-runtimes/operator/pkg/utils"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
+	runtimeapputils "github.com/application-stacks/operator/pkg/utils"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 
@@ -38,14 +38,14 @@ var (
 	appImage                   = "my-image"
 	ksvcAppImage               = "ksvc-image"
 	replicas             int32 = 3
-	autoscaling                = &runtimeappv1beta1.RuntimeApplicationAutoScaling{MaxReplicas: 3}
+	autoscaling                = &appstacksv1beta1.RuntimeApplicationAutoScaling{MaxReplicas: 3}
 	pullPolicy                 = corev1.PullAlways
 	serviceType                = corev1.ServiceTypeClusterIP
-	service                    = &runtimeappv1beta1.RuntimeApplicationService{Type: &serviceType, Port: 8080}
+	service                    = &appstacksv1beta1.RuntimeApplicationService{Type: &serviceType, Port: 8080}
 	expose                     = true
 	serviceAccountName         = "service-account"
 	volumeCT                   = &corev1.PersistentVolumeClaim{TypeMeta: metav1.TypeMeta{Kind: "StatefulSet"}}
-	storage                    = runtimeappv1beta1.RuntimeApplicationStorage{Size: "10Mi", MountPath: "/mnt/data", VolumeClaimTemplate: volumeCT}
+	storage                    = appstacksv1beta1.RuntimeApplicationStorage{Size: "10Mi", MountPath: "/mnt/data", VolumeClaimTemplate: volumeCT}
 	createKnativeService       = true
 	statefulSetSN              = name + "-headless"
 )
@@ -61,7 +61,7 @@ func TestRuntimeController(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 	os.Setenv("WATCH_NAMESPACE", namespace)
 
-	spec := runtimeappv1beta1.RuntimeApplicationSpec{}
+	spec := appstacksv1beta1.RuntimeApplicationSpec{}
 	runtimeapp := createRuntimeApp(name, namespace, spec)
 
 	// Set objects to track in the fake client and register operator types with the runtime scheme.
@@ -88,7 +88,7 @@ func TestRuntimeController(t *testing.T) {
 		t.Fatalf("Unable to add prometheus scheme: (%v)", err)
 	}
 
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimeapp)
 	s.AddKnownTypes(certmngrv1alpha2.SchemeGroupVersion, &certmngrv1alpha2.Certificate{})
 	s.AddKnownTypes(prometheusv1.SchemeGroupVersion, &prometheusv1.ServiceMonitor{})
 
@@ -120,7 +120,7 @@ func TestRuntimeController(t *testing.T) {
 
 	// Update runtimeapp with values for StatefulSet
 	// Update ServiceAccountName for empty case
-	runtimeapp.Spec = runtimeappv1beta1.RuntimeApplicationSpec{
+	runtimeapp.Spec = appstacksv1beta1.RuntimeApplicationSpec{
 		Storage:          &storage,
 		Replicas:         &replicas,
 		ApplicationImage: appImage,
@@ -152,7 +152,7 @@ func TestRuntimeController(t *testing.T) {
 	verifyTests("statefulSet", ssTests, t)
 
 	// Enable CreateKnativeService
-	runtimeapp.Spec = runtimeappv1beta1.RuntimeApplicationSpec{
+	runtimeapp.Spec = appstacksv1beta1.RuntimeApplicationSpec{
 		CreateKnativeService: &createKnativeService,
 		PullPolicy:           &pullPolicy,
 		ApplicationImage:     ksvcAppImage,
@@ -188,7 +188,7 @@ func TestRuntimeController(t *testing.T) {
 	verifyTests("ksvc", ksvcTests, t)
 
 	// Disable Knative and enable Expose to test route
-	runtimeapp.Spec = runtimeappv1beta1.RuntimeApplicationSpec{Expose: &expose}
+	runtimeapp.Spec = appstacksv1beta1.RuntimeApplicationSpec{Expose: &expose}
 	updateRuntimeApp(r, runtimeapp, t)
 
 	// Reconcile again to check for the route and updated resources
@@ -208,7 +208,7 @@ func TestRuntimeController(t *testing.T) {
 	verifyTests("route", routeTests, t)
 
 	// Disable Route/Expose and enable Autoscaling
-	runtimeapp.Spec = runtimeappv1beta1.RuntimeApplicationSpec{
+	runtimeapp.Spec = appstacksv1beta1.RuntimeApplicationSpec{
 		Autoscaling: autoscaling,
 	}
 	updateRuntimeApp(r, runtimeapp, t)
@@ -259,8 +259,8 @@ func TestRuntimeController(t *testing.T) {
 }
 
 // Helper Functions
-func createRuntimeApp(n, ns string, spec runtimeappv1beta1.RuntimeApplicationSpec) *runtimeappv1beta1.RuntimeApplication {
-	app := &runtimeappv1beta1.RuntimeApplication{
+func createRuntimeApp(n, ns string, spec appstacksv1beta1.RuntimeApplicationSpec) *appstacksv1beta1.RuntimeApplication {
+	app := &appstacksv1beta1.RuntimeApplication{
 		ObjectMeta: metav1.ObjectMeta{Name: n, Namespace: ns},
 		Spec:       spec,
 	}
@@ -338,7 +338,7 @@ func verifyTests(n string, tests []Test, t *testing.T) {
 	}
 }
 
-func updateRuntimeApp(r *ReconcileRuntimeApplication, runtimeapp *runtimeappv1beta1.RuntimeApplication, t *testing.T) {
+func updateRuntimeApp(r *ReconcileRuntimeApplication, runtimeapp *appstacksv1beta1.RuntimeApplication, t *testing.T) {
 	if err := r.GetClient().Update(context.TODO(), runtimeapp); err != nil {
 		t.Fatalf("Update runtimeapp: (%v)", err)
 	}

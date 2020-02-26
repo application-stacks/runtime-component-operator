@@ -1,14 +1,14 @@
 FROM registry.access.redhat.com/ubi7/ubi-minimal:latest
 
-LABEL vendor="Application Runtimes" \
-      name="Application Runtime Operator" \
+LABEL vendor="Application Stacks" \
+      name="Application Stacks Operator" \
       version="0.4.0" \
-      summary="Image for Application Runtime Operator" \
-      description="This image contains the controller for Application Runtime Operator. See https://github.com/application-runtimes/operator"
+      summary="Image for Application Stacks Operator" \
+      description="This image contains the controller for Application Stacks Operator. See https://github.com/application-stacks/operator"
       
-ENV OPERATOR=/usr/local/bin/application-runtime-operator \
+ENV OPERATOR=/usr/local/bin/application-stacks-operator \
     USER_UID=1001 \
-    USER_NAME=application-runtime-operator
+    USER_NAME=application-stacks-operator
 
 # install operator binary
 COPY build/_output/bin/operator ${OPERATOR}

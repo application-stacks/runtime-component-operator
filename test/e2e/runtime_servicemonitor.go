@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
-	"github.com/application-runtimes/operator/test/util"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
+	"github.com/application-stacks/operator/test/util"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
@@ -40,7 +40,7 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 	}
 
 	// create one replica of the operator deployment in current namespace with provided name
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-runtime-operator", 1, retryInterval, operatorTimeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-stacks-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
@@ -74,10 +74,10 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 	}
 
 	target := types.NamespacedName{Name: "example-runtime-sm", Namespace: namespace}
-	err = util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
 		// Adds the mandatory label to the application so it will be picked up by the prometheus operator
 		label := map[string]string{"apps-prometheus": ""}
-		monitor := &runtimeappv1beta1.RuntimeApplicationMonitoring{Labels: label}
+		monitor := &appstacksv1beta1.RuntimeApplicationMonitoring{Labels: label}
 		r.Spec.Monitoring = monitor
 
 		// Updates the application so the operator is reconciled
@@ -145,10 +145,10 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 	testSettingRuntimeServiceMonitor(t, f, namespace, runtime)
 }
 
-func testSettingRuntimeServiceMonitor(t *testing.T, f *framework.Framework, namespace string, runtime *runtimeappv1beta1.RuntimeApplication) {
+func testSettingRuntimeServiceMonitor(t *testing.T, f *framework.Framework, namespace string, runtime *appstacksv1beta1.RuntimeApplication) {
 	target := types.NamespacedName{Name: "example-runtime-sm", Namespace: namespace}
 
-	err := util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
 		params := map[string][]string{
 			"params": []string{"param1", "param2"},
 		}
@@ -171,7 +171,7 @@ func testSettingRuntimeServiceMonitor(t *testing.T, f *framework.Framework, name
 
 		// Adds the mandatory label to the application so it will be picked up by the prometheus operator
 		label := map[string]string{"apps-prometheus": ""}
-		monitor := &runtimeappv1beta1.RuntimeApplicationMonitoring{Labels: label, Endpoints: endpoints}
+		monitor := &appstacksv1beta1.RuntimeApplicationMonitoring{Labels: label, Endpoints: endpoints}
 		r.Spec.Monitoring = monitor
 
 		// Updates the application so the operator is reconciled

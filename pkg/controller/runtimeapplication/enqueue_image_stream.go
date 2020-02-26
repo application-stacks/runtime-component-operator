@@ -3,8 +3,8 @@ package runtimeapplication
 import (
 	"context"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
-	runtimeapputils "github.com/application-runtimes/operator/pkg/utils"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
+	runtimeapputils "github.com/application-stacks/operator/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -57,8 +57,8 @@ func (e *EnqueueRequestsForImageStream) handle(evtMeta metav1.Object, q workqueu
 }
 
 // matchApplication returns the NamespacedName of all applications using the input ImageStreamTag
-func (e *EnqueueRequestsForImageStream) matchApplication(imageStreamTag metav1.Object) ([]runtimeappv1beta1.RuntimeApplication, error) {
-	apps := []runtimeappv1beta1.RuntimeApplication{}
+func (e *EnqueueRequestsForImageStream) matchApplication(imageStreamTag metav1.Object) ([]appstacksv1beta1.RuntimeApplication, error) {
+	apps := []appstacksv1beta1.RuntimeApplication{}
 	var namespaces []string
 	if runtimeapputils.IsClusterWide(e.WatchNamespaces) {
 		nsList := &corev1.NamespaceList{}
@@ -72,7 +72,7 @@ func (e *EnqueueRequestsForImageStream) matchApplication(imageStreamTag metav1.O
 		namespaces = e.WatchNamespaces
 	}
 	for _, ns := range namespaces {
-		appList := &runtimeappv1beta1.RuntimeApplicationList{}
+		appList := &appstacksv1beta1.RuntimeApplicationList{}
 		err := e.Client.List(context.Background(),
 			appList,
 			client.InNamespace(ns),

@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/application-runtimes/operator.svg?branch=master)](https://travis-ci.org/application-stacks/operator)
+[![Build Status](https://travis-ci.org/application-stacks/operator.svg?branch=master)](https://travis-ci.org/application-stacks/operator)
 
 # Application Stacks Operator
 This generic Operator is capable of deploying any application image with consistent, production-grade QoS.  It enables enterprise architects to govern the way their applications get deployed & managed in the cluster, while dramatically reducing the learning curve for developers to deploy into Kubernetes - allowing them to focus on writing the code!

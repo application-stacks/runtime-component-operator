@@ -3,7 +3,7 @@ package v1beta1
 import (
 	"time"
 
-	"github.com/application-runtimes/operator/pkg/common"
+	"github.com/application-stacks/operator/pkg/common"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -322,7 +322,7 @@ func (cr *RuntimeApplication) GetInitContainers() []corev1.Container {
 
 // GetGroupName returns group name to be used in labels and annotation
 func (cr *RuntimeApplication) GetGroupName() string {
-	return "runtime.app"
+	return "app.stacks"
 }
 
 // GetRoute returns route configuration for RuntimeApplication
@@ -586,7 +586,7 @@ func (cr *RuntimeApplication) GetLabels() map[string]string {
 	labels := map[string]string{
 		"app.kubernetes.io/instance":   cr.Name,
 		"app.kubernetes.io/name":       cr.Name,
-		"app.kubernetes.io/managed-by": "application-runtime-operator",
+		"app.kubernetes.io/managed-by": "application-stacks-operator",
 		"app.kubernetes.io/component": "backend",
 		"app.kubernetes.io/part-of": cr.Name,
 	}
@@ -602,7 +602,7 @@ func (cr *RuntimeApplication) GetLabels() map[string]string {
 	}
 
 	if cr.Spec.Service != nil && cr.Spec.Service.Provides != nil {
-		labels["service.runtime.app/bindable"] = "true"
+		labels["service.app.stacks/bindable"] = "true"
 	}
 
 	return labels

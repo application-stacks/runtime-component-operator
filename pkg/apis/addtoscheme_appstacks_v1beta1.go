@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
+	"github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
 )
 
 func init() {

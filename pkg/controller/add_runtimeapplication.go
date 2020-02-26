@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/application-runtimes/operator/pkg/controller/runtimeapplication"
+	"github.com/application-stacks/operator/pkg/controller/runtimeapplication"
 )
 
 func init() {

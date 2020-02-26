@@ -5,7 +5,7 @@
 package v1beta1
 
 import (
-	common "github.com/application-runtimes/operator/pkg/common"
+	common "github.com/application-stacks/operator/pkg/common"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	v1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	routev1 "github.com/openshift/api/route/v1"
