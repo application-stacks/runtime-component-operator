@@ -6,7 +6,7 @@ This generic Operator is capable of deploying any application image and can be i
 
 Use the instructions for one of the releases to install the operator into a Kubernetes cluster.
 
-The Application Runtime Operator can be installed to:
+The Application Stacks Operator can be installed to:
 
 - watch own namespace
 - watch another namespace
@@ -17,7 +17,7 @@ Appropriate cluster roles and bindings are required to watch another namespace, 
 
 ## Overview
 
-The architecture of the Application Runtime Operator follows the basic controller pattern:  the Operator container with the controller is deployed into a Pod and listens for incoming resources with `Kind: RuntimeApplication`. Creating an `RuntimeApplication` custom resource (CR) triggers the Application Runtime Operator to create, update or delete Kubernetes resources needed by the application to run on your cluster.
+The architecture of the Application Stacks Operator follows the basic controller pattern:  the Operator container with the controller is deployed into a Pod and listens for incoming resources with `Kind: RuntimeApplication`. Creating an `RuntimeApplication` custom resource (CR) triggers the Application Stacks Operator to create, update or delete Kubernetes resources needed by the application to run on your cluster.
 
 Each instance of `RuntimeApplication` CR represents the application to be deployed on the cluster:
 
@@ -90,6 +90,7 @@ Each `RuntimeApplication` CR must at least specify the `applicationImage` parame
 | `monitoring.labels` | Labels to set on [ServiceMonitor](https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitor). |
 | `monitoring.endpoints` | A YAML snippet representing an array of [Endpoint](https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#endpoint) component from ServiceMonitor. |
 | `createAppDefinition`   | A boolean to toggle the automatic configuration of `RuntimeApplication`'s Kubernetes resources to allow creation of an application definition by [kAppNav](https://kappnav.io/). The default value is `true`. See [Application Navigator](#kubernetes-application-navigator-kappnav-support) for more information. |
+| `route.annotations` | Annotations to be added to the Route. |
 | `route.host`   | Hostname to be used for the Route. |
 | `route.path`   | Path to be used for Route. |
 | `route.termination`   | TLS termination policy. Can be one of `edge`, `reencrypt` and `passthrough`. |
@@ -262,7 +263,7 @@ Run multiple instances of your application for high availability using one of th
 
 ### Persistence
 
-Application Runtime Operator is capable of creating a `StatefulSet` and `PersistentVolumeClaim` for each pod if storage is specified in the `RuntimeApplication` CR.
+Application Stacks Operator is capable of creating a `StatefulSet` and `PersistentVolumeClaim` for each pod if storage is specified in the `RuntimeApplication` CR.
 
 Users also can provide mount points for their application. There are 2 ways to enable storage.
 
@@ -286,7 +287,7 @@ spec:
 
 #### Advanced storage
 
-Application Runtime Operator allows users to provide entire `volumeClaimTemplate` for full control over automatically created `PersistentVolumeClaim`.
+Application Stacks Operator allows users to provide entire `volumeClaimTemplate` for full control over automatically created `PersistentVolumeClaim`.
 
 It is also possible to create multiple volume mount points for persistent volume using `volumeMounts` field as shown below. You can still use `storage.mountPath` if you require only a single mount point.
 
@@ -319,7 +320,7 @@ spec:
 
 ### Service binding
 
-Application Runtime Operator can be used to help with service binding in a cluster. The operator creates a secret on behalf of the **provider** `RuntimeApplication` and injects the secret into pods of the **consumer** `RuntimeApplication` as either environment variable or mounted files. See [Application Runtime Operator Design for Service Binding](https://docs.google.com/document/d/1riOX0iTnBBJpTKAHcQShYVMlgkaTNKb4m8fY7W1GqMA/edit) for more information on the architecture. At this time, the only supported service binding type is `openapi`.
+Application Stacks Operator can be used to help with service binding in a cluster. The operator creates a secret on behalf of the **provider** `RuntimeApplication` and injects the secret into pods of the **consumer** `RuntimeApplication` as either environment variable or mounted files. See [Application Stacks Operator Design for Service Binding](https://docs.google.com/document/d/1riOX0iTnBBJpTKAHcQShYVMlgkaTNKb4m8fY7W1GqMA/edit) for more information on the architecture. At this time, the only supported service binding type is `openapi`.
 
 The provider lists information about the REST API it provides:
 
@@ -381,7 +382,7 @@ If consumer's CR does not include `mountPath`, the secret will be bound to envir
 
 ### Monitoring
 
-Application Runtime Operator can create a `ServiceMonitor` resource to integrate with `Prometheus Operator`.
+Application Stacks Operator can create a `ServiceMonitor` resource to integrate with `Prometheus Operator`.
 
 _This feature does not support integration with Knative Service. Prometheus Operator is required to use ServiceMonitor._
 
@@ -430,7 +431,7 @@ spec:
 
 ### Knative support
 
-Application Runtime Operator can deploy serverless applications with [Knative](https://knative.dev/docs/) on a Kubernetes cluster. To achieve this, the operator creates a [Knative `Service`](https://github.com/knative/serving/blob/master/docs/spec/spec.md#service) resource which manages the whole life cycle of a workload.
+Application Stacks Operator can deploy serverless applications with [Knative](https://knative.dev/docs/) on a Kubernetes cluster. To achieve this, the operator creates a [Knative `Service`](https://github.com/knative/serving/blob/master/docs/spec/spec.md#service) resource which manages the whole life cycle of a workload.
 
 To create Knative service, set `createKnativeService` to `true`:
 
@@ -472,45 +473,9 @@ spec:
 
 By setting this parameter, the operator creates an unsecured route based on your application service. Setting this parameter is the same as running `oc expose service <service-name>`.
 
-To create a secured HTTPS route, see [secured routes](https://docs.openshift.com/container-platform/3.11/architecture/networking/routes.html#secured-routes) for more information.
+To create a secured HTTPS route, see the [Certificate Manager Integration](#certificate-manager-integration) section for more information.
 
 _This feature is only available if you are running on OKD or OpenShift._
-
-##### Canary deployment using `Route`
-
-You can easily test a new version of your application using the Canary deployment methodology by levering the traffic split capability built into OKD's `Route` resource.
-*  deploy the first version of the application using the instructions above with `expose: true`, which will create an OKD `Route`.
-*  when a new application version is available, deploy it via the Application Runtime Operator but this time choose `expose: false`.
-*  edit the first application's `Route` resource to split the traffic between the two services using the desired percentage.  
-
-    Here is a screenshot of the split via the OKD UI:
-
-    ![Traffic Split](route.png)
-
-    Here is the corresponding YAML, which you can edit using the OKD UI or simply using `oc get route <routeID>` and then `oc apply -f <routeYAML>`:
-
-    ```yaml
-    apiVersion: route.openshift.io/v1
-    kind: Route
-    metadata:
-      labels:
-        app: my-app-1
-      name: canary-route
-    spec:
-      alternateBackends:
-        - kind: Service
-          name: my-app-2
-          weight: 20
-      host: canary-route-testing.my-host.com
-      port:
-        targetPort: 9080-tcp
-      to:
-        kind: Service
-        name: my-app-1
-        weight: 80
-    ```      
-
-*  once you are satisfied with the results you can simply route 100% of the traffic by switching the `Route`'s `spec.to` object to point to `my-app-2` at a weight of 100 and remove the `spec.alternateBackends` object. This can similarly be done via the OKD UI.
 
 #### Knative deployment
 
@@ -529,11 +494,11 @@ spec:
 
 When `expose` is **not** set to `true`, the Knative service is labeled with `serving.knative.dev/visibility=cluster-local` which makes the Knative route to only be available on the cluster-local network (and not on the public Internet). However, if `expose` is set `true`, the Knative route would be accessible externally.
 
-To configure secure HTTPS connections for your deployment, see [Configuring HTTPS with TLS certificates](https://knative.dev/docs/serving/using-a-tls-cert/) for more information.
+To configure secure HTTPS connections for your Knative deployment, see [Configuring HTTPS with TLS certificates](https://knative.dev/docs/serving/using-a-tls-cert/) for more information.
 
 ### Kubernetes Application Navigator (kAppNav) support
 
-By default, Application Runtime Operator configures the Kubernetes resources it generates to allow automatic creation of an application definition by [kAppNav](https://kappnav.io/), Kubernetes Application Navigator. You can easily view and manage the deployed resources that comprise your application using Application Navigator. You can disable auto-creation by setting `createAppDefinition` to `false`.
+By default, Application Stacks Operator configures the Kubernetes resources it generates to allow automatic creation of an application definition by [kAppNav](https://kappnav.io/), Kubernetes Application Navigator. You can easily view and manage the deployed resources that comprise your application using Application Navigator. You can disable auto-creation by setting `createAppDefinition` to `false`.
 
 To join an existing application definition, disable auto-creation and set the label(s) needed to join the application on `RuntimeApplication` CR. See [Labels](#labels) section for more information.
 
@@ -541,7 +506,7 @@ _This feature is only available if you have kAppNav installed on your cluster. A
 
 ### Certificate Manager Integration
 
-Application Runtime Operator is enabled to take advantage of [cert-manager](https://cert-manager.io/) tool, if it is installed on the cluster.
+Application Stacks Operator is enabled to take advantage of [cert-manager](https://cert-manager.io/) tool, if it is installed on the cluster.
 This allows to automatically provision TLS certificates for pods as well as routes.
 
 Cert-manager installation instruction can be found [here](https://cert-manager.io/docs/installation/)
