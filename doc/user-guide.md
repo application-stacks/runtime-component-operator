@@ -158,7 +158,7 @@ for an `RuntimeApplication` CR:
 | `app.kubernetes.io/name`       | `metadata.name`                | A name that represents this component.                                                                                                               |
 | `app.kubernetes.io/managed-by` | `application-runtime-operator` | The tool being used to manage this component.                                                                                                                |
 | `app.kubernetes.io/component`  | `backend`                      | The type of component being created. See OpenShift [documentation](https://github.com/gorkem/app-labels/blob/master/labels-annotation-for-openshift.adoc#labels) for full list. |
-| `app.kubernetes.io/part-of`    | `metadata.name`                | The service that this component belongs to. Configure this if the component is not a standalone application. |
+| `app.kubernetes.io/part-of`    | `metadata.name`                | The name of the higher-level application this component is a part of. Configure this if the component is not a standalone application. |
 | `app.kubernetes.io/version`    | `version`                      | The version of the component.                                                                                                                                |
 
 You can set new labels in addition to the pre-existing ones or overwrite them,
