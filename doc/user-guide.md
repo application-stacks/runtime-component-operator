@@ -178,10 +178,11 @@ spec:
 
 _After the initial deployment of `RuntimeApplication`, any changes to its labels would be applied only when one of the parameters from `spec` is updated._
 
-#### OpenShift Labels
+#### OpenShift Recommended Labels
 
 When running in OpenShift, there are additional labels and annotations that are
-standard on the platform. See OpenShift [documentation]() for a full list.
+standard on the platform. It is recommended that you overwrite our defaults
+where applicable and add any labels from the list that are not set by default using the above instructions. See [documentation](https://github.com/gorkem/app-labels/blob/master/labels-annotation-for-openshift.adoc#labels) for a full list.
 
 ### Annotations
 
@@ -199,6 +200,13 @@ spec:
 ```
 
 _After the initial deployment of `RuntimeApplication`, any changes to its annotations would be applied only when one of the parameters from `spec` is updated._
+
+#### OpenShift Recommended Annotations
+
+When running in OpenShift, there are additional annotations that are
+standard on the platform. It is recommended that you overwrite our defaults
+where applicable and add any annotations from the list that are not set by
+default using the above instructions. See [documentation](https://github.com/gorkem/app-labels/blob/master/labels-annotation-for-openshift.adoc#labels) for a full list.
 
 ### Environment variables
 
