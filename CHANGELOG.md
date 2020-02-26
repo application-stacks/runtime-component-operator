@@ -10,3 +10,5 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+- Changed the default labels that are created by the operator, to better
+  accommodate components that are being deployed onto OpenShift. ([#21](https://github.com/application-stacks/operator/pull/21))
