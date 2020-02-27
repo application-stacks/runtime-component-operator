@@ -1,7 +1,7 @@
 apiVersion: app.stacks/v1beta1
-kind: RuntimeApplication
+kind: RuntimeComponent
 metadata:
-  name: example-app
+  name: example-runtime-component
 spec:
   # Add fields here
   applicationImage: <SPECIFY_APPLICATION_IMAGE_HERE>

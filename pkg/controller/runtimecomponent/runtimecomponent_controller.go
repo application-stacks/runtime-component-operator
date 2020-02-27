@@ -1,4 +1,4 @@
-package runtimeapplication
+package runtimecomponent
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 
 	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
-	runtimeapputils "github.com/application-stacks/operator/pkg/utils"
+	appstacksutils "github.com/application-stacks/operator/pkg/utils"
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 
@@ -36,12 +36,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_runtimeapplication")
+var log = logf.Log.WithName("controller_runtimecomponent")
 
 // Holds a list of namespaces the operator will be watching
 var watchNamespaces []string
 
-// Add creates a new RuntimeApplication Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new RuntimeComponent Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	setup(mgr)
@@ -50,9 +50,9 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	reconciler := &ReconcileRuntimeApplication{ReconcilerBase: runtimeapputils.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("application-stacks-operator"))}
+	reconciler := &ReconcileRuntimeComponent{ReconcilerBase: appstacksutils.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("application-stacks-operator"))}
 
-	watchNamespaces, err := runtimeapputils.GetWatchNamespaces()
+	watchNamespaces, err := appstacksutils.GetWatchNamespaces()
 	if err != nil {
 		log.Error(err, "Failed to get watch namespace")
 		os.Exit(1)
@@ -81,8 +81,8 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 }
 
 func setup(mgr manager.Manager) {
-	mgr.GetFieldIndexer().IndexField(&appstacksv1beta1.RuntimeApplication{}, indexFieldImageStreamName, func(obj runtime.Object) []string {
-		instance := obj.(*appstacksv1beta1.RuntimeApplication)
+	mgr.GetFieldIndexer().IndexField(&appstacksv1beta1.RuntimeComponent{}, indexFieldImageStreamName, func(obj runtime.Object) []string {
+		instance := obj.(*appstacksv1beta1.RuntimeComponent)
 		image, err := imageutil.ParseDockerImageReference(instance.Spec.ApplicationImage)
 		if err == nil {
 			imageNamespace := image.Namespace
@@ -100,14 +100,14 @@ func setup(mgr manager.Manager) {
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
 
-	reconciler := r.(*ReconcileRuntimeApplication)
+	reconciler := r.(*ReconcileRuntimeComponent)
 
-	c, err := controller.New("runtimeapplication-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("runtimecomponent-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	watchNamespaces, err := runtimeapputils.GetWatchNamespaces()
+	watchNamespaces, err := appstacksutils.GetWatchNamespaces()
 	if err != nil {
 		log.Error(err, "Failed to get watch namespace")
 		os.Exit(1)
@@ -117,7 +117,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	for _, ns := range watchNamespaces {
 		watchNamespacesMap[ns] = true
 	}
-	isClusterWide := runtimeapputils.IsClusterWide(watchNamespaces)
+	isClusterWide := appstacksutils.IsClusterWide(watchNamespaces)
 
 	log.V(1).Info("Adding a new controller", "watchNamespaces", watchNamespaces, "isClusterWide", isClusterWide)
 
@@ -137,8 +137,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		},
 	}
 
-	// Watch for changes to primary resource RuntimeApplication
-	err = c.Watch(&source.Kind{Type: &appstacksv1beta1.RuntimeApplication{}}, &handler.EnqueueRequestForObject{}, pred)
+	// Watch for changes to primary resource RuntimeComponent
+	err = c.Watch(&source.Kind{Type: &appstacksv1beta1.RuntimeComponent{}}, &handler.EnqueueRequestForObject{}, pred)
 	if err != nil {
 		return err
 	}
@@ -161,7 +161,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &appstacksv1beta1.RuntimeApplication{},
+		OwnerType:    &appstacksv1beta1.RuntimeComponent{},
 	}, predSubResource)
 	if err != nil {
 		return err
@@ -169,7 +169,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &appsv1.StatefulSet{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &appstacksv1beta1.RuntimeApplication{},
+		OwnerType:    &appstacksv1beta1.RuntimeComponent{},
 	}, predSubResource)
 	if err != nil {
 		return err
@@ -177,7 +177,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &appstacksv1beta1.RuntimeApplication{},
+		OwnerType:    &appstacksv1beta1.RuntimeComponent{},
 	}, predSubResource)
 	if err != nil {
 		return err
@@ -185,14 +185,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &autoscalingv1.HorizontalPodAutoscaler{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &appstacksv1beta1.RuntimeApplication{},
+		OwnerType:    &appstacksv1beta1.RuntimeComponent{},
 	}, predSubResource)
 	if err != nil {
 		return err
 	}
 
 	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
-		OwnerType: &appstacksv1beta1.RuntimeApplication{},
+		OwnerType: &appstacksv1beta1.RuntimeComponent{},
 	}, predSubResource)
 	if err != nil {
 		return err
@@ -200,7 +200,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(
 		&source.Kind{Type: &corev1.Secret{}},
-		&runtimeapputils.EnqueueRequestsForServiceBinding{
+		&appstacksutils.EnqueueRequestsForServiceBinding{
 			Client:          mgr.GetClient(),
 			GroupName:       "app.stacks",
 			WatchNamespaces: watchNamespaces,
@@ -223,7 +223,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if ok {
 		c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
-			OwnerType:    &appstacksv1beta1.RuntimeApplication{},
+			OwnerType:    &appstacksv1beta1.RuntimeComponent{},
 		}, predSubResource)
 	}
 
@@ -231,7 +231,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if ok {
 		c.Watch(&source.Kind{Type: &servingv1alpha1.Service{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
-			OwnerType:    &appstacksv1beta1.RuntimeApplication{},
+			OwnerType:    &appstacksv1beta1.RuntimeComponent{},
 		}, predSubResource)
 	}
 
@@ -239,7 +239,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if ok {
 		c.Watch(&source.Kind{Type: &certmngrv1alpha2.Certificate{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
-			OwnerType:    &appstacksv1beta1.RuntimeApplication{},
+			OwnerType:    &appstacksv1beta1.RuntimeComponent{},
 		}, predSubResource)
 	}
 
@@ -247,37 +247,37 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if ok {
 		c.Watch(&source.Kind{Type: &prometheusv1.ServiceMonitor{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
-			OwnerType:    &appstacksv1beta1.RuntimeApplication{},
+			OwnerType:    &appstacksv1beta1.RuntimeComponent{},
 		}, predSubResource)
 	}
 	return nil
 }
 
-// blank assignment to verify that ReconcileRuntimeApplication implements reconcile.Reconciler
-var _ reconcile.Reconciler = &ReconcileRuntimeApplication{}
+// blank assignment to verify that ReconcileRuntimeComponent implements reconcile.Reconciler
+var _ reconcile.Reconciler = &ReconcileRuntimeComponent{}
 
-// ReconcileRuntimeApplication reconciles a RuntimeApplication object
-type ReconcileRuntimeApplication struct {
+// ReconcileRuntimeComponent reconciles a RuntimeComponent object
+type ReconcileRuntimeComponent struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	runtimeapputils.ReconcilerBase
+	appstacksutils.ReconcilerBase
 }
 
-// Reconcile reads that state of the cluster for a RuntimeApplication object and makes changes based on the state read
-// and what is in the RuntimeApplication.Spec
+// Reconcile reads that state of the cluster for a RuntimeComponent object and makes changes based on the state read
+// and what is in the RuntimeComponent.Spec
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling RuntimeApplication")
+	reqLogger.Info("Reconciling RuntimeComponent")
 
 	ns, err := k8sutil.GetOperatorNamespace()
 	// When running the operator locally, `ns` will be empty string
 	if ns == "" {
 		// Since this method can be called directly from unit test, populate `watchNamespaces`.
 		if watchNamespaces == nil {
-			watchNamespaces, err = runtimeapputils.GetWatchNamespaces()
+			watchNamespaces, err = appstacksutils.GetWatchNamespaces()
 			if err != nil {
 				reqLogger.Error(err, "Error getting watch namespace")
 				return reconcile.Result{}, err
@@ -295,8 +295,8 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 		common.Config.LoadFromConfigMap(configMap)
 	}
 
-	// Fetch the RuntimeApplication instance
-	instance := &appstacksv1beta1.RuntimeApplication{}
+	// Fetch the RuntimeComponent instance
+	instance := &appstacksv1beta1.RuntimeComponent{}
 	var ba common.BaseApplication
 	ba = instance
 	err = r.GetClient().Get(context.TODO(), request.NamespacedName, instance)
@@ -311,13 +311,13 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	// initialize the RuntimeApplication instance
+	// initialize the RuntimeComponent instance
 	instance.Initialize()
 
-	_, err = runtimeapputils.Validate(instance)
+	_, err = appstacksutils.Validate(instance)
 	// If there's any validation error, don't bother with requeuing
 	if err != nil {
-		reqLogger.Error(err, "Error validating RuntimeApplication")
+		reqLogger.Error(err, "Error validating RuntimeComponent")
 		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		return reconcile.Result{}, nil
 	}
@@ -325,7 +325,7 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 	currentGen := instance.Generation
 	err = r.GetClient().Update(context.TODO(), instance)
 	if err != nil {
-		reqLogger.Error(err, "Error updating RuntimeApplication")
+		reqLogger.Error(err, "Error updating RuntimeComponent")
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
@@ -363,7 +363,7 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 		reqLogger.Info("Updating status.imageReference", "status.imageReference", instance.Status.ImageReference)
 		err = r.UpdateStatus(instance)
 		if err != nil {
-			reqLogger.Error(err, "Error updating RuntimeApplication status")
+			reqLogger.Error(err, "Error updating RuntimeComponent status")
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		}
 	}
@@ -385,7 +385,7 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 	if instance.Spec.ServiceAccountName == nil || *instance.Spec.ServiceAccountName == "" {
 		serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(serviceAccount, instance, func() error {
-			runtimeapputils.CustomizeServiceAccount(serviceAccount, instance)
+			appstacksutils.CustomizeServiceAccount(serviceAccount, instance)
 			return nil
 		})
 		if err != nil {
@@ -427,9 +427,9 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 		if isKnativeSupported {
 			ksvc := &servingv1alpha1.Service{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(ksvc, instance, func() error {
-				runtimeapputils.CustomizeKnativeService(ksvc, instance)
+				appstacksutils.CustomizeKnativeService(ksvc, instance)
 				if r.IsOpenShift() {
-					ksvc.Spec.Template.ObjectMeta.Annotations = runtimeapputils.MergeMaps(runtimeapputils.GetConnectToAnnotation(instance), ksvc.Spec.Template.ObjectMeta.Annotations)
+					ksvc.Spec.Template.ObjectMeta.Annotations = appstacksutils.MergeMaps(appstacksutils.GetConnectToAnnotation(instance), ksvc.Spec.Template.ObjectMeta.Annotations)
 				}
 				return nil
 			})
@@ -455,8 +455,8 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 
 	svc := &corev1.Service{ObjectMeta: defaultMeta}
 	err = r.CreateOrUpdate(svc, instance, func() error {
-		runtimeapputils.CustomizeService(svc, ba)
-		svc.Annotations = runtimeapputils.MergeMaps(svc.Annotations, instance.Spec.Service.Annotations)
+		appstacksutils.CustomizeService(svc, ba)
+		svc.Annotations = appstacksutils.MergeMaps(svc.Annotations, instance.Spec.Service.Annotations)
 		if instance.Spec.Monitoring != nil {
 			svc.Labels["app."+ba.GetGroupName()+"/monitor"] = "true"
 		} else {
@@ -482,7 +482,7 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 		}
 		svc := &corev1.Service{ObjectMeta: metav1.ObjectMeta{Name: instance.Name + "-headless", Namespace: instance.Namespace}}
 		err = r.CreateOrUpdate(svc, instance, func() error {
-			runtimeapputils.CustomizeService(svc, instance)
+			appstacksutils.CustomizeService(svc, instance)
 			svc.Spec.ClusterIP = corev1.ClusterIPNone
 			svc.Spec.Type = corev1.ServiceTypeClusterIP
 			return nil
@@ -494,11 +494,11 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 
 		statefulSet := &appsv1.StatefulSet{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(statefulSet, instance, func() error {
-			runtimeapputils.CustomizeStatefulSet(statefulSet, instance)
-			runtimeapputils.CustomizePodSpec(&statefulSet.Spec.Template, instance)
-			runtimeapputils.CustomizePersistence(statefulSet, instance)
+			appstacksutils.CustomizeStatefulSet(statefulSet, instance)
+			appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, instance)
+			appstacksutils.CustomizePersistence(statefulSet, instance)
 			if r.IsOpenShift() {
-				statefulSet.Annotations = runtimeapputils.MergeMaps(runtimeapputils.GetConnectToAnnotation(instance), statefulSet.Annotations)
+				statefulSet.Annotations = appstacksutils.MergeMaps(appstacksutils.GetConnectToAnnotation(instance), statefulSet.Annotations)
 			}
 			return nil
 		})
@@ -526,10 +526,10 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 		}
 		deploy := &appsv1.Deployment{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(deploy, instance, func() error {
-			runtimeapputils.CustomizeDeployment(deploy, instance)
-			runtimeapputils.CustomizePodSpec(&deploy.Spec.Template, instance)
+			appstacksutils.CustomizeDeployment(deploy, instance)
+			appstacksutils.CustomizePodSpec(&deploy.Spec.Template, instance)
 			if r.IsOpenShift() {
-				deploy.Annotations = runtimeapputils.MergeMaps(runtimeapputils.GetConnectToAnnotation(instance), deploy.Annotations)
+				deploy.Annotations = appstacksutils.MergeMaps(appstacksutils.GetConnectToAnnotation(instance), deploy.Annotations)
 			}
 			return nil
 		})
@@ -543,7 +543,7 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 	if instance.Spec.Autoscaling != nil {
 		hpa := &autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(hpa, instance, func() error {
-			runtimeapputils.CustomizeHPA(hpa, instance)
+			appstacksutils.CustomizeHPA(hpa, instance)
 			return nil
 		})
 
@@ -571,7 +571,7 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 				if err != nil {
 					return err
 				}
-				runtimeapputils.CustomizeRoute(route, ba, key, cert, caCert, destCACert)
+				appstacksutils.CustomizeRoute(route, ba, key, cert, caCert, destCACert)
 
 				return nil
 			})
@@ -598,7 +598,7 @@ func (r *ReconcileRuntimeApplication) Reconcile(request reconcile.Request) (reco
 		if instance.Spec.Monitoring != nil && (instance.Spec.CreateKnativeService == nil || !*instance.Spec.CreateKnativeService) {
 			sm := &prometheusv1.ServiceMonitor{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(sm, instance, func() error {
-				runtimeapputils.CustomizeServiceMonitor(sm, instance)
+				appstacksutils.CustomizeServiceMonitor(sm, instance)
 				return nil
 			})
 			if err != nil {

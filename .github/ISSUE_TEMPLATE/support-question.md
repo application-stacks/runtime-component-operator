@@ -15,7 +15,7 @@ Are you asking about best practices, how to configure the Application Stacks Ope
 
 ### What did you do?
 
-A clear and concise description of the steps you took (or insert a code snippet). If possible, add `RuntimeApplication` CR.
+A clear and concise description of the steps you took (or insert a code snippet). If possible, add `RuntimeComponent` CR.
 
 ### What did you expect to see?
 

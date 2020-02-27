@@ -45,10 +45,10 @@ generate: setup ## Invoke `k8s` and `openapi` generators
 	operator-sdk generate openapi
 
 	# Remove `x-kubernetes-int-or-string: true` from CRD. Causing issues on clusters with older k8s: https://github.com/kubernetes/kubernetes/issues/83778 https://github.com/openshift/api/pull/505
-	sed -i '' '/x\-kubernetes\-int\-or\-string\: true/d' deploy/crds/app.stacks_runtimeapplications_crd.yaml
+	sed -i '' '/x\-kubernetes\-int\-or\-string\: true/d' deploy/crds/app.stacks_runtimecomponents_crd.yaml
 
-	cat deploy/crds/app.stacks_runtimeapplications_crd.yaml | awk '/type: object/ {max=NR} {a[NR]=$$0} END{for (i=1;i<=NR;i++) {if (i!=max) print a[i]}}' > deploy/crds/app.stacks_runtimeapplications_crd.yaml.tmp
-	mv deploy/crds/app.stacks_runtimeapplications_crd.yaml.tmp deploy/crds/app.stacks_runtimeapplications_crd.yaml
+	cat deploy/crds/app.stacks_runtimecomponents_crd.yaml | awk '/type: object/ {max=NR} {a[NR]=$$0} END{for (i=1;i<=NR;i++) {if (i!=max) print a[i]}}' > deploy/crds/app.stacks_runtimecomponents_crd.yaml.tmp
+	mv deploy/crds/app.stacks_runtimecomponents_crd.yaml.tmp deploy/crds/app.stacks_runtimecomponents_crd.yaml
 
 build-image: setup ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}"
 	operator-sdk build ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}

@@ -9,14 +9,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// TestRuntimeApplication ... end to end tests
-func TestRuntimeApplication(t *testing.T) {
-	runtimeApplicationList := &appstacksv1beta1.RuntimeApplicationList{
+// TestRuntimeComponent ... end to end tests
+func TestRuntimeComponent(t *testing.T) {
+	runtimeComponentList := &appstacksv1beta1.RuntimeComponentList{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "RuntimeApplication",
+			Kind: "RuntimeComponent",
 		},
 	}
-	err := framework.AddToFrameworkScheme(apis.AddToScheme, runtimeApplicationList)
+	err := framework.AddToFrameworkScheme(apis.AddToScheme, runtimeComponentList)
 	if err != nil {
 		t.Fatalf("Failed to add CR scheme to framework: %v", err)
 	}

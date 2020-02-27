@@ -57,7 +57,7 @@ func probeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, pro
 		return err
 	}
 	// default runtime test now has to define probes manually, so we will use those and change in the edit test.
-	exampleRuntime := util.MakeBasicRuntimeApplication(t, f, "example-runtime-readiness", namespace, 1)
+	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, "example-runtime-readiness", namespace, 1)
 
 	err = f.Client.Create(goctx.TODO(), exampleRuntime, &framework.CleanupOptions{
 		TestContext:   ctx,
@@ -79,14 +79,14 @@ func probeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, pro
 	return nil
 }
 
-func editProbeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, app *appstacksv1beta1.RuntimeApplication) error {
+func editProbeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, app *appstacksv1beta1.RuntimeComponent) error {
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		return err
 	}
 	target := types.NamespacedName{Name: "example-runtime-readiness", Namespace: namespace}
 
-	util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
+	util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		// Adjust tests for update SMALL amounts to keep the test fast.
 		r.Spec.LivenessProbe.InitialDelaySeconds = int32(6)
 		r.Spec.ReadinessProbe.InitialDelaySeconds = int32(3)

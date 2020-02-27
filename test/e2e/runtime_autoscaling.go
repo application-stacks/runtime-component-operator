@@ -48,12 +48,12 @@ func RuntimeAutoScalingTest(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Make basic runtime application with 1 replica
+	// Make basic runtime omponent with 1 replica
 	replicas := int32(1)
-	runtimeApplication := util.MakeBasicRuntimeApplication(t, f, "example-runtime-autoscaling", namespace, replicas)
+	runtimeComponent := util.MakeBasicRuntimeComponent(t, f, "example-runtime-autoscaling", namespace, replicas)
 
 	// use TestCtx's create helper to create the object and add a cleanup function for the new object
-	err = f.Client.Create(goctx.TODO(), runtimeApplication, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	err = f.Client.Create(goctx.TODO(), runtimeComponent, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
@@ -71,7 +71,7 @@ func RuntimeAutoScalingTest(t *testing.T) {
 
 	// Update autoscaler
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
-	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
+	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		r.Spec.ResourceConstraints = setResources("0.2")
 		r.Spec.Autoscaling = setAutoScale(5, 50)
 	})
@@ -91,9 +91,9 @@ func RuntimeAutoScalingTest(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	updateTest(t, f, runtimeApplication, options, namespace, hpa)
-	minMaxTest(t, f, runtimeApplication, options, namespace, hpa)
-	minBoundaryTest(t, f, runtimeApplication, options, namespace, hpa)
+	updateTest(t, f, runtimeComponent, options, namespace, hpa)
+	minMaxTest(t, f, runtimeComponent, options, namespace, hpa)
+	minBoundaryTest(t, f, runtimeComponent, options, namespace, hpa)
 	incorrectFieldsTest(t, f, ctx)
 }
 
@@ -126,21 +126,21 @@ func setResources(cpu string) *corev1.ResourceRequirements {
 	}
 }
 
-func setAutoScale(values ...int32) *appstacksv1beta1.RuntimeApplicationAutoScaling {
+func setAutoScale(values ...int32) *appstacksv1beta1.RuntimeComponentAutoScaling {
 	if len(values) == 3 {
-		return &appstacksv1beta1.RuntimeApplicationAutoScaling{
+		return &appstacksv1beta1.RuntimeComponentAutoScaling{
 			TargetCPUUtilizationPercentage: &values[2],
 			MaxReplicas:                    values[0],
 			MinReplicas:                    &values[1],
 		}
 	} else if len(values) == 2 {
-		return &appstacksv1beta1.RuntimeApplicationAutoScaling{
+		return &appstacksv1beta1.RuntimeComponentAutoScaling{
 			TargetCPUUtilizationPercentage: &values[1],
 			MaxReplicas:                    values[0],
 		}
 	}
 
-	return &appstacksv1beta1.RuntimeApplicationAutoScaling{}
+	return &appstacksv1beta1.RuntimeComponentAutoScaling{}
 
 }
 
@@ -165,10 +165,10 @@ func checkValues(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, m
 }
 
 // Updates the values and checks they are changed
-func updateTest(t *testing.T, f *framework.Framework, runtimeApplication *appstacksv1beta1.RuntimeApplication, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
+func updateTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
-	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
+	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		r.Spec.ResourceConstraints = setResources("0.2")
 		r.Spec.Autoscaling = setAutoScale(3, 2, 30)
 	})
@@ -188,10 +188,10 @@ func updateTest(t *testing.T, f *framework.Framework, runtimeApplication *appsta
 }
 
 // Checks when max is less than min, there should be no update
-func minMaxTest(t *testing.T, f *framework.Framework, runtimeApplication *appstacksv1beta1.RuntimeApplication, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
+func minMaxTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
-	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
+	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		r.Spec.ResourceConstraints = setResources("0.2")
 		r.Spec.Autoscaling = setAutoScale(1, 6, 10)
 	})
@@ -211,10 +211,10 @@ func minMaxTest(t *testing.T, f *framework.Framework, runtimeApplication *appsta
 }
 
 // When min is set to less than 1, there should be no update since the minReplicas are updated to a value less than 1
-func minBoundaryTest(t *testing.T, f *framework.Framework, runtimeApplication *appstacksv1beta1.RuntimeApplication, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
+func minBoundaryTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
-	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
+	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		r.Spec.ResourceConstraints = setResources("0.5")
 		r.Spec.Autoscaling = setAutoScale(4, 0, 20)
 	})
@@ -244,12 +244,12 @@ func incorrectFieldsTest(t *testing.T, f *framework.Framework, ctx *framework.Te
 	timestamp := time.Now().UTC()
 	t.Logf("%s - Starting runtime autoscaling test...", timestamp)
 
-	// Make basic runtime application with 1 replica
+	// Make basic runtime omponent with 1 replica
 	replicas := int32(1)
-	runtimeApplication := util.MakeBasicRuntimeApplication(t, f, "example-runtime-autoscaling2", namespace, replicas)
+	runtimeComponent := util.MakeBasicRuntimeComponent(t, f, "example-runtime-autoscaling2", namespace, replicas)
 
 	// use TestCtx's create helper to create the object and add a cleanup function for the new object
-	err = f.Client.Create(goctx.TODO(), runtimeApplication, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	err = f.Client.Create(goctx.TODO(), runtimeComponent, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -269,7 +269,7 @@ func incorrectFieldsTest(t *testing.T, f *framework.Framework, ctx *framework.Te
 
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
-	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
+	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		r.Spec.ResourceConstraints = setResources("0.3")
 		r.Spec.Autoscaling = setAutoScale(4)
 	})

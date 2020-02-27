@@ -23,12 +23,12 @@ Here are some basic troubleshooting methods to check if the operator is running 
   $ oc logs application-stacks-operator-584d6bd86d-fzq2n
   ```
 
-If the operator is running fine, check the status of the `RuntimeApplication` Custom Resource (CR) instance:
+If the operator is running fine, check the status of the `RuntimeComponent` Custom Resource (CR) instance:
 
 * Check the CR status:
 
   ```console
-  $ oc get runtimeapplication my-app -o wide
+  $ oc get runtimecomponent my-app -o wide
 
   NAME                      IMAGE                                             EXPOSED   RECONCILED   REASON    MESSAGE   AGE
   my-app            quay.io/my-repo/my-app:1.0                                false     True                             1h
@@ -37,7 +37,7 @@ If the operator is running fine, check the status of the `RuntimeApplication` Cu
 * Check the CR effective fields:
 
   ```console
-  $ oc get runtimeapplication my-app -o yaml
+  $ oc get runtimecomponent my-app -o yaml
   ```
 
   Ensure that the effective CR values are what you want.
@@ -45,10 +45,10 @@ If the operator is running fine, check the status of the `RuntimeApplication` Cu
 * Check the `status` section of the CR. If the CR was successfully reconciled, the output should look like the following:
 
   ```console
-  $ oc get runtimeapplication my-app -o yaml
+  $ oc get runtimecomponent my-app -o yaml
 
   apiVersion: app.stacks/v1beta1
-  kind: RuntimeApplication
+  kind: RuntimeComponent
   ...
   status:
     conditions:
@@ -61,5 +61,5 @@ If the operator is running fine, check the status of the `RuntimeApplication` Cu
 * Check the CR events:
 
   ```console
-  $ oc describe runtimeapplication my-app
+  $ oc describe runtimecomponent my-app
   ```

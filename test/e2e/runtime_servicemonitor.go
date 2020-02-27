@@ -46,7 +46,7 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 	}
 
 	helper := int32(1)
-	runtime := util.MakeBasicRuntimeApplication(t, f, "example-runtime-sm", namespace, helper)
+	runtime := util.MakeBasicRuntimeComponent(t, f, "example-runtime-sm", namespace, helper)
 
 	// Create application deployment and wait
 	err = f.Client.Create(goctx.TODO(), runtime, &framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
@@ -74,10 +74,10 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 	}
 
 	target := types.NamespacedName{Name: "example-runtime-sm", Namespace: namespace}
-	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
+	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		// Adds the mandatory label to the application so it will be picked up by the prometheus operator
 		label := map[string]string{"apps-prometheus": ""}
-		monitor := &appstacksv1beta1.RuntimeApplicationMonitoring{Labels: label}
+		monitor := &appstacksv1beta1.RuntimeComponentMonitoring{Labels: label}
 		r.Spec.Monitoring = monitor
 
 		// Updates the application so the operator is reconciled
@@ -111,7 +111,7 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 	smBTF := sm.Spec.Endpoints[0].BearerTokenFile
 
 	if sm.Spec.Selector.MatchLabels["app.kubernetes.io/instance"] != "example-runtime-sm" {
-		util.FailureCleanup(t, f, namespace, errors.New("The service monitor is not connected to the runtime application?"))
+		util.FailureCleanup(t, f, namespace, errors.New("The service monitor is not connected to the runtime omponent?"))
 	}
 
 	if smPath != "" {
@@ -145,10 +145,10 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 	testSettingRuntimeServiceMonitor(t, f, namespace, runtime)
 }
 
-func testSettingRuntimeServiceMonitor(t *testing.T, f *framework.Framework, namespace string, runtime *appstacksv1beta1.RuntimeApplication) {
+func testSettingRuntimeServiceMonitor(t *testing.T, f *framework.Framework, namespace string, runtime *appstacksv1beta1.RuntimeComponent) {
 	target := types.NamespacedName{Name: "example-runtime-sm", Namespace: namespace}
 
-	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
+	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		params := map[string][]string{
 			"params": []string{"param1", "param2"},
 		}
@@ -171,7 +171,7 @@ func testSettingRuntimeServiceMonitor(t *testing.T, f *framework.Framework, name
 
 		// Adds the mandatory label to the application so it will be picked up by the prometheus operator
 		label := map[string]string{"apps-prometheus": ""}
-		monitor := &appstacksv1beta1.RuntimeApplicationMonitoring{Labels: label, Endpoints: endpoints}
+		monitor := &appstacksv1beta1.RuntimeComponentMonitoring{Labels: label, Endpoints: endpoints}
 		r.Spec.Monitoring = monitor
 
 		// Updates the application so the operator is reconciled
@@ -215,7 +215,7 @@ func testSettingRuntimeServiceMonitor(t *testing.T, f *framework.Framework, name
 	smBasicAuth := sm.Spec.Endpoints[0].BasicAuth
 
 	if sm.Spec.Selector.MatchLabels["app.kubernetes.io/instance"] != "example-runtime-sm" {
-		util.FailureCleanup(t, f, namespace, errors.New("The service monitor is not connected to the runtime application?"))
+		util.FailureCleanup(t, f, namespace, errors.New("The service monitor is not connected to the runtime omponent?"))
 	}
 
 	if smPath != "/path" {

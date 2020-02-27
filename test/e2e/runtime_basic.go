@@ -58,10 +58,10 @@ func runtimeBasicScaleTest(t *testing.T, f *framework.Framework, ctx *framework.
 
 	helper := int32(1)
 
-	exampleRuntime := util.MakeBasicRuntimeApplication(t, f, "example-runtime", namespace, helper)
+	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, "example-runtime", namespace, helper)
 
 	timestamp := time.Now().UTC()
-	t.Logf("%s - Creating basic runtime application for scaling test...", timestamp)
+	t.Logf("%s - Creating basic runtime omponent for scaling test...", timestamp)
 	// Create application deployment and wait
 	err = f.Client.Create(goctx.TODO(), exampleRuntime, &framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
 	if err != nil {
@@ -82,10 +82,10 @@ func runtimeBasicScaleTest(t *testing.T, f *framework.Framework, ctx *framework.
 	return err
 }
 
-func runtimeUpdateScaleTest(t *testing.T, f *framework.Framework, namespace string, exampleRuntime *appstacksv1beta1.RuntimeApplication) error {
+func runtimeUpdateScaleTest(t *testing.T, f *framework.Framework, namespace string, exampleRuntime *appstacksv1beta1.RuntimeComponent) error {
 	target := types.NamespacedName{Name: "example-runtime", Namespace: namespace}
 
-	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeApplication) {
+	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		helper2 := int32(2)
 		r.Spec.Replicas = &helper2
 	})

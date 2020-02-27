@@ -12,15 +12,15 @@ import (
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// RuntimeApplicationSpec defines the desired state of RuntimeApplication
+// RuntimeComponentSpec defines the desired state of RuntimeComponent
 // +k8s:openapi-gen=true
-type RuntimeApplicationSpec struct {
-	Version          string                         `json:"version,omitempty"`
-	ApplicationImage string                         `json:"applicationImage"`
-	Replicas         *int32                         `json:"replicas,omitempty"`
-	Autoscaling      *RuntimeApplicationAutoScaling `json:"autoscaling,omitempty"`
-	PullPolicy       *corev1.PullPolicy             `json:"pullPolicy,omitempty"`
-	PullSecret       *string                        `json:"pullSecret,omitempty"`
+type RuntimeComponentSpec struct {
+	Version          string                       `json:"version,omitempty"`
+	ApplicationImage string                       `json:"applicationImage"`
+	Replicas         *int32                       `json:"replicas,omitempty"`
+	Autoscaling      *RuntimeComponentAutoScaling `json:"autoscaling,omitempty"`
+	PullPolicy       *corev1.PullPolicy           `json:"pullPolicy,omitempty"`
+	PullSecret       *string                      `json:"pullSecret,omitempty"`
 	// +listType=map
 	// +listMapKey=name
 	Volumes []corev1.Volume `json:"volumes,omitempty"`
@@ -29,7 +29,7 @@ type RuntimeApplicationSpec struct {
 	ResourceConstraints *corev1.ResourceRequirements `json:"resourceConstraints,omitempty"`
 	ReadinessProbe      *corev1.Probe                `json:"readinessProbe,omitempty"`
 	LivenessProbe       *corev1.Probe                `json:"livenessProbe,omitempty"`
-	Service             *RuntimeApplicationService   `json:"service,omitempty"`
+	Service             *RuntimeComponentService     `json:"service,omitempty"`
 	Expose              *bool                        `json:"expose,omitempty"`
 	// +listType=atomic
 	EnvFrom []corev1.EnvFromSource `json:"envFrom,omitempty"`
@@ -38,20 +38,20 @@ type RuntimeApplicationSpec struct {
 	Env                []corev1.EnvVar `json:"env,omitempty"`
 	ServiceAccountName *string         `json:"serviceAccountName,omitempty"`
 	// +listType=set
-	Architecture         []string                      `json:"architecture,omitempty"`
-	Storage              *RuntimeApplicationStorage    `json:"storage,omitempty"`
-	CreateKnativeService *bool                         `json:"createKnativeService,omitempty"`
-	Monitoring           *RuntimeApplicationMonitoring `json:"monitoring,omitempty"`
-	CreateAppDefinition  *bool                         `json:"createAppDefinition,omitempty"`
+	Architecture         []string                    `json:"architecture,omitempty"`
+	Storage              *RuntimeComponentStorage    `json:"storage,omitempty"`
+	CreateKnativeService *bool                       `json:"createKnativeService,omitempty"`
+	Monitoring           *RuntimeComponentMonitoring `json:"monitoring,omitempty"`
+	CreateAppDefinition  *bool                       `json:"createAppDefinition,omitempty"`
 	// +listType=map
 	// +listMapKey=name
-	InitContainers []corev1.Container       `json:"initContainers,omitempty"`
-	Route          *RuntimeApplicationRoute `json:"route,omitempty"`
+	InitContainers []corev1.Container     `json:"initContainers,omitempty"`
+	Route          *RuntimeComponentRoute `json:"route,omitempty"`
 }
 
-// RuntimeApplicationAutoScaling ...
+// RuntimeComponentAutoScaling ...
 // +k8s:openapi-gen=true
-type RuntimeApplicationAutoScaling struct {
+type RuntimeComponentAutoScaling struct {
 	TargetCPUUtilizationPercentage *int32 `json:"targetCPUUtilizationPercentage,omitempty"`
 	MinReplicas                    *int32 `json:"minReplicas,omitempty"`
 
@@ -59,9 +59,9 @@ type RuntimeApplicationAutoScaling struct {
 	MaxReplicas int32 `json:"maxReplicas,omitempty"`
 }
 
-// RuntimeApplicationService ...
+// RuntimeComponentService ...
 // +k8s:openapi-gen=true
-type RuntimeApplicationService struct {
+type RuntimeComponentService struct {
 	Type *corev1.ServiceType `json:"type,omitempty"`
 
 	// +kubebuilder:validation:Maximum=65536
@@ -94,24 +94,24 @@ type ServiceBindingConsumes struct {
 	MountPath string                        `json:"mountPath,omitempty"`
 }
 
-// RuntimeApplicationStorage ...
+// RuntimeComponentStorage ...
 // +k8s:openapi-gen=false
-type RuntimeApplicationStorage struct {
+type RuntimeComponentStorage struct {
 	// +kubebuilder:validation:Pattern=^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
 	Size                string                        `json:"size,omitempty"`
 	MountPath           string                        `json:"mountPath,omitempty"`
 	VolumeClaimTemplate *corev1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }
 
-// RuntimeApplicationMonitoring ...
-type RuntimeApplicationMonitoring struct {
+// RuntimeComponentMonitoring ...
+type RuntimeComponentMonitoring struct {
 	Labels    map[string]string       `json:"labels,omitempty"`
 	Endpoints []prometheusv1.Endpoint `json:"endpoints,omitempty"`
 }
 
-// RuntimeApplicationRoute ...
+// RuntimeComponentRoute ...
 // +k8s:openapi-gen=true
-type RuntimeApplicationRoute struct {
+type RuntimeComponentRoute struct {
 	Annotations                   map[string]string                          `json:"annotations,omitempty"`
 	Termination                   *routev1.TLSTerminationType                `json:"termination,omitempty"`
 	InsecureEdgeTerminationPolicy *routev1.InsecureEdgeTerminationPolicyType `json:"insecureEdgeTerminationPolicy,omitempty"`
@@ -128,9 +128,9 @@ type ServiceBindingAuth struct {
 	Password corev1.SecretKeySelector `json:"password,omitempty"`
 }
 
-// RuntimeApplicationStatus defines the observed state of RuntimeApplication
+// RuntimeComponentStatus defines the observed state of RuntimeComponent
 // +k8s:openapi-gen=true
-type RuntimeApplicationStatus struct {
+type RuntimeComponentStatus struct {
 	// +listType=atomic
 	Conditions       []StatusCondition       `json:"conditions,omitempty"`
 	ConsumedServices common.ConsumedServices `json:"consumedServices,omitempty"`
@@ -161,9 +161,9 @@ const (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// RuntimeApplication is the Schema for the runtimeapplications API
+// RuntimeComponent is the Schema for the runtimecomponents API
 // +k8s:openapi-gen=true
-// +kubebuilder:resource:path=runtimeapplications,scope=Namespaced,shortName=app;apps
+// +kubebuilder:resource:path=runtimecomponents,scope=Namespaced,shortName=app;apps
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Image",type="string",JSONPath=".spec.applicationImage",priority=0,description="Absolute name of the deployed image containing registry and tag"
 // +kubebuilder:printcolumn:name="Exposed",type="boolean",JSONPath=".spec.expose",priority=0,description="Specifies whether deployment is exposed externally via default Route"
@@ -172,104 +172,104 @@ const (
 // +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].message",priority=1,description="Failure message from reconcile condition"
 // +kubebuilder:printcolumn:name="DependenciesSatisfied",type="string",JSONPath=".status.conditions[?(@.type=='DependenciesSatisfied')].status",priority=1,description="Status of the application dependencies"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",priority=0,description="Age of the resource"
-type RuntimeApplication struct {
+type RuntimeComponent struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   RuntimeApplicationSpec   `json:"spec,omitempty"`
-	Status RuntimeApplicationStatus `json:"status,omitempty"`
+	Spec   RuntimeComponentSpec   `json:"spec,omitempty"`
+	Status RuntimeComponentStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// RuntimeApplicationList contains a list of RuntimeApplication
-type RuntimeApplicationList struct {
+// RuntimeComponentList contains a list of RuntimeComponent
+type RuntimeComponentList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []RuntimeApplication `json:"items"`
+	Items           []RuntimeComponent `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&RuntimeApplication{}, &RuntimeApplicationList{})
+	SchemeBuilder.Register(&RuntimeComponent{}, &RuntimeComponentList{})
 }
 
 // GetApplicationImage returns application image
-func (cr *RuntimeApplication) GetApplicationImage() string {
+func (cr *RuntimeComponent) GetApplicationImage() string {
 	return cr.Spec.ApplicationImage
 }
 
 // GetPullPolicy returns image pull policy
-func (cr *RuntimeApplication) GetPullPolicy() *corev1.PullPolicy {
+func (cr *RuntimeComponent) GetPullPolicy() *corev1.PullPolicy {
 	return cr.Spec.PullPolicy
 }
 
 // GetPullSecret returns secret name for docker registry credentials
-func (cr *RuntimeApplication) GetPullSecret() *string {
+func (cr *RuntimeComponent) GetPullSecret() *string {
 	return cr.Spec.PullSecret
 }
 
 // GetServiceAccountName returns service account name
-func (cr *RuntimeApplication) GetServiceAccountName() *string {
+func (cr *RuntimeComponent) GetServiceAccountName() *string {
 	return cr.Spec.ServiceAccountName
 }
 
 // GetReplicas returns number of replicas
-func (cr *RuntimeApplication) GetReplicas() *int32 {
+func (cr *RuntimeComponent) GetReplicas() *int32 {
 	return cr.Spec.Replicas
 }
 
 // GetLivenessProbe returns liveness probe
-func (cr *RuntimeApplication) GetLivenessProbe() *corev1.Probe {
+func (cr *RuntimeComponent) GetLivenessProbe() *corev1.Probe {
 	return cr.Spec.LivenessProbe
 }
 
 // GetReadinessProbe returns readiness probe
-func (cr *RuntimeApplication) GetReadinessProbe() *corev1.Probe {
+func (cr *RuntimeComponent) GetReadinessProbe() *corev1.Probe {
 	return cr.Spec.ReadinessProbe
 }
 
 // GetVolumes returns volumes slice
-func (cr *RuntimeApplication) GetVolumes() []corev1.Volume {
+func (cr *RuntimeComponent) GetVolumes() []corev1.Volume {
 	return cr.Spec.Volumes
 }
 
 // GetVolumeMounts returns volume mounts slice
-func (cr *RuntimeApplication) GetVolumeMounts() []corev1.VolumeMount {
+func (cr *RuntimeComponent) GetVolumeMounts() []corev1.VolumeMount {
 	return cr.Spec.VolumeMounts
 }
 
 // GetResourceConstraints returns resource constraints
-func (cr *RuntimeApplication) GetResourceConstraints() *corev1.ResourceRequirements {
+func (cr *RuntimeComponent) GetResourceConstraints() *corev1.ResourceRequirements {
 	return cr.Spec.ResourceConstraints
 }
 
 // GetExpose returns expose flag
-func (cr *RuntimeApplication) GetExpose() *bool {
+func (cr *RuntimeComponent) GetExpose() *bool {
 	return cr.Spec.Expose
 }
 
 // GetEnv returns slice of environment variables
-func (cr *RuntimeApplication) GetEnv() []corev1.EnvVar {
+func (cr *RuntimeComponent) GetEnv() []corev1.EnvVar {
 	return cr.Spec.Env
 }
 
 // GetEnvFrom returns slice of environment variables from source
-func (cr *RuntimeApplication) GetEnvFrom() []corev1.EnvFromSource {
+func (cr *RuntimeComponent) GetEnvFrom() []corev1.EnvFromSource {
 	return cr.Spec.EnvFrom
 }
 
 // GetCreateKnativeService returns flag that toggles Knative service
-func (cr *RuntimeApplication) GetCreateKnativeService() *bool {
+func (cr *RuntimeComponent) GetCreateKnativeService() *bool {
 	return cr.Spec.CreateKnativeService
 }
 
 // GetArchitecture returns slice of architectures
-func (cr *RuntimeApplication) GetArchitecture() []string {
+func (cr *RuntimeComponent) GetArchitecture() []string {
 	return cr.Spec.Architecture
 }
 
 // GetAutoscaling returns autoscaling settings
-func (cr *RuntimeApplication) GetAutoscaling() common.BaseApplicationAutoscaling {
+func (cr *RuntimeComponent) GetAutoscaling() common.BaseApplicationAutoscaling {
 	if cr.Spec.Autoscaling == nil {
 		return nil
 	}
@@ -277,7 +277,7 @@ func (cr *RuntimeApplication) GetAutoscaling() common.BaseApplicationAutoscaling
 }
 
 // GetStorage returns storage settings
-func (cr *RuntimeApplication) GetStorage() common.BaseApplicationStorage {
+func (cr *RuntimeComponent) GetStorage() common.BaseApplicationStorage {
 	if cr.Spec.Storage == nil {
 		return nil
 	}
@@ -285,7 +285,7 @@ func (cr *RuntimeApplication) GetStorage() common.BaseApplicationStorage {
 }
 
 // GetService returns service settings
-func (cr *RuntimeApplication) GetService() common.BaseApplicationService {
+func (cr *RuntimeComponent) GetService() common.BaseApplicationService {
 	if cr.Spec.Service == nil {
 		return nil
 	}
@@ -293,40 +293,40 @@ func (cr *RuntimeApplication) GetService() common.BaseApplicationService {
 }
 
 // GetVersion returns application version
-func (cr *RuntimeApplication) GetVersion() string {
+func (cr *RuntimeComponent) GetVersion() string {
 	return cr.Spec.Version
 }
 
 // GetCreateAppDefinition returns a toggle for integration with kAppNav
-func (cr *RuntimeApplication) GetCreateAppDefinition() *bool {
+func (cr *RuntimeComponent) GetCreateAppDefinition() *bool {
 	return cr.Spec.CreateAppDefinition
 }
 
 // GetMonitoring returns monitoring settings
-func (cr *RuntimeApplication) GetMonitoring() common.BaseApplicationMonitoring {
+func (cr *RuntimeComponent) GetMonitoring() common.BaseApplicationMonitoring {
 	if cr.Spec.Monitoring == nil {
 		return nil
 	}
 	return cr.Spec.Monitoring
 }
 
-// GetStatus returns RuntimeApplication status
-func (cr *RuntimeApplication) GetStatus() common.BaseApplicationStatus {
+// GetStatus returns RuntimeComponent status
+func (cr *RuntimeComponent) GetStatus() common.BaseApplicationStatus {
 	return &cr.Status
 }
 
 // GetInitContainers returns list of init containers
-func (cr *RuntimeApplication) GetInitContainers() []corev1.Container {
+func (cr *RuntimeComponent) GetInitContainers() []corev1.Container {
 	return cr.Spec.InitContainers
 }
 
 // GetGroupName returns group name to be used in labels and annotation
-func (cr *RuntimeApplication) GetGroupName() string {
+func (cr *RuntimeComponent) GetGroupName() string {
 	return "app.stacks"
 }
 
-// GetRoute returns route configuration for RuntimeApplication
-func (cr *RuntimeApplication) GetRoute() common.BaseApplicationRoute {
+// GetRoute returns route configuration for RuntimeComponent
+func (cr *RuntimeComponent) GetRoute() common.BaseApplicationRoute {
 	if cr.Spec.Route == nil {
 		return nil
 	}
@@ -334,7 +334,7 @@ func (cr *RuntimeApplication) GetRoute() common.BaseApplicationRoute {
 }
 
 // GetConsumedServices returns a map of all the service names to be consumed by the application
-func (s *RuntimeApplicationStatus) GetConsumedServices() common.ConsumedServices {
+func (s *RuntimeComponentStatus) GetConsumedServices() common.ConsumedServices {
 	if s.ConsumedServices == nil {
 		return nil
 	}
@@ -342,67 +342,67 @@ func (s *RuntimeApplicationStatus) GetConsumedServices() common.ConsumedServices
 }
 
 // SetConsumedServices sets ConsumedServices
-func (s *RuntimeApplicationStatus) SetConsumedServices(c common.ConsumedServices) {
+func (s *RuntimeComponentStatus) SetConsumedServices(c common.ConsumedServices) {
 	s.ConsumedServices = c
 }
 
 // GetImageReference returns Docker image reference to be deployed by the CR
-func (s *RuntimeApplicationStatus) GetImageReference() string {
+func (s *RuntimeComponentStatus) GetImageReference() string {
 	return s.ImageReference
 }
 
 // SetImageReference sets Docker image reference on the status portion of the CR
-func (s *RuntimeApplicationStatus) SetImageReference(imageReference string) {
+func (s *RuntimeComponentStatus) SetImageReference(imageReference string) {
 	s.ImageReference = imageReference
 }
 
 // GetMinReplicas returns minimum replicas
-func (a *RuntimeApplicationAutoScaling) GetMinReplicas() *int32 {
+func (a *RuntimeComponentAutoScaling) GetMinReplicas() *int32 {
 	return a.MinReplicas
 }
 
 // GetMaxReplicas returns maximum replicas
-func (a *RuntimeApplicationAutoScaling) GetMaxReplicas() int32 {
+func (a *RuntimeComponentAutoScaling) GetMaxReplicas() int32 {
 	return a.MaxReplicas
 }
 
 // GetTargetCPUUtilizationPercentage returns target cpu usage
-func (a *RuntimeApplicationAutoScaling) GetTargetCPUUtilizationPercentage() *int32 {
+func (a *RuntimeComponentAutoScaling) GetTargetCPUUtilizationPercentage() *int32 {
 	return a.TargetCPUUtilizationPercentage
 }
 
 // GetSize returns persistent volume size
-func (s *RuntimeApplicationStorage) GetSize() string {
+func (s *RuntimeComponentStorage) GetSize() string {
 	return s.Size
 }
 
 // GetMountPath returns mount path for persistent volume
-func (s *RuntimeApplicationStorage) GetMountPath() string {
+func (s *RuntimeComponentStorage) GetMountPath() string {
 	return s.MountPath
 }
 
 // GetVolumeClaimTemplate returns a template representing requested persitent volume
-func (s *RuntimeApplicationStorage) GetVolumeClaimTemplate() *corev1.PersistentVolumeClaim {
+func (s *RuntimeComponentStorage) GetVolumeClaimTemplate() *corev1.PersistentVolumeClaim {
 	return s.VolumeClaimTemplate
 }
 
 // GetAnnotations returns a set of annotations to be added to the service
-func (s *RuntimeApplicationService) GetAnnotations() map[string]string {
+func (s *RuntimeComponentService) GetAnnotations() map[string]string {
 	return s.Annotations
 }
 
 // GetPort returns service port
-func (s *RuntimeApplicationService) GetPort() int32 {
+func (s *RuntimeComponentService) GetPort() int32 {
 	return s.Port
 }
 
 // GetType returns service type
-func (s *RuntimeApplicationService) GetType() *corev1.ServiceType {
+func (s *RuntimeComponentService) GetType() *corev1.ServiceType {
 	return s.Type
 }
 
 // GetProvides returns service provider configuration
-func (s *RuntimeApplicationService) GetProvides() common.ServiceBindingProvides {
+func (s *RuntimeComponentService) GetProvides() common.ServiceBindingProvides {
 	if s.Provides == nil {
 		return nil
 	}
@@ -410,7 +410,7 @@ func (s *RuntimeApplicationService) GetProvides() common.ServiceBindingProvides 
 }
 
 // GetCertificate returns services certificate configuration
-func (s *RuntimeApplicationService) GetCertificate() common.Certificate {
+func (s *RuntimeComponentService) GetCertificate() common.Certificate {
 	if s.Certificate == nil {
 		return nil
 	}
@@ -441,7 +441,7 @@ func (p *ServiceBindingProvides) GetProtocol() string {
 }
 
 // GetConsumes returns a list of service consumers' configuration
-func (s *RuntimeApplicationService) GetConsumes() []common.ServiceBindingConsumes {
+func (s *RuntimeComponentService) GetConsumes() []common.ServiceBindingConsumes {
 	consumes := make([]common.ServiceBindingConsumes, len(s.Consumes))
 	for i := range s.Consumes {
 		consumes[i] = &s.Consumes[i]
@@ -480,22 +480,22 @@ func (a *ServiceBindingAuth) GetPassword() corev1.SecretKeySelector {
 }
 
 // GetLabels returns labels to be added on ServiceMonitor
-func (m *RuntimeApplicationMonitoring) GetLabels() map[string]string {
+func (m *RuntimeComponentMonitoring) GetLabels() map[string]string {
 	return m.Labels
 }
 
 // GetEndpoints returns endpoints to be added to ServiceMonitor
-func (m *RuntimeApplicationMonitoring) GetEndpoints() []prometheusv1.Endpoint {
+func (m *RuntimeComponentMonitoring) GetEndpoints() []prometheusv1.Endpoint {
 	return m.Endpoints
 }
 
 // GetAnnotations returns route annotations
-func (r *RuntimeApplicationRoute) GetAnnotations() map[string]string {
+func (r *RuntimeComponentRoute) GetAnnotations() map[string]string {
 	return r.Annotations
 }
 
 // GetCertificate returns certficate spec for route
-func (r *RuntimeApplicationRoute) GetCertificate() common.Certificate {
+func (r *RuntimeComponentRoute) GetCertificate() common.Certificate {
 	if r.Certificate == nil {
 		return nil
 	}
@@ -503,27 +503,27 @@ func (r *RuntimeApplicationRoute) GetCertificate() common.Certificate {
 }
 
 // GetTermination returns terminatation of the route's TLS
-func (r *RuntimeApplicationRoute) GetTermination() *routev1.TLSTerminationType {
+func (r *RuntimeComponentRoute) GetTermination() *routev1.TLSTerminationType {
 	return r.Termination
 }
 
 // GetInsecureEdgeTerminationPolicy returns terminatation of the route's TLS
-func (r *RuntimeApplicationRoute) GetInsecureEdgeTerminationPolicy() *routev1.InsecureEdgeTerminationPolicyType {
+func (r *RuntimeComponentRoute) GetInsecureEdgeTerminationPolicy() *routev1.InsecureEdgeTerminationPolicyType {
 	return r.InsecureEdgeTerminationPolicy
 }
 
 // GetHost returns hostname to be used by the route
-func (r *RuntimeApplicationRoute) GetHost() string {
+func (r *RuntimeComponentRoute) GetHost() string {
 	return r.Host
 }
 
 // GetPath returns path to use for the route
-func (r *RuntimeApplicationRoute) GetPath() string {
+func (r *RuntimeComponentRoute) GetPath() string {
 	return r.Path
 }
 
-// Initialize the RuntimeApplication instance
-func (cr *RuntimeApplication) Initialize() {
+// Initialize the RuntimeComponent instance
+func (cr *RuntimeComponent) Initialize() {
 
 	if cr.Spec.PullPolicy == nil {
 		pp := corev1.PullIfNotPresent
@@ -536,7 +536,7 @@ func (cr *RuntimeApplication) Initialize() {
 
 	// This is to handle when there is no service in the CR
 	if cr.Spec.Service == nil {
-		cr.Spec.Service = &RuntimeApplicationService{}
+		cr.Spec.Service = &RuntimeComponentService{}
 	}
 
 	if cr.Spec.Service.Type == nil {
@@ -582,13 +582,13 @@ func (cr *RuntimeApplication) Initialize() {
 }
 
 // GetLabels returns set of labels to be added to all resources
-func (cr *RuntimeApplication) GetLabels() map[string]string {
+func (cr *RuntimeComponent) GetLabels() map[string]string {
 	labels := map[string]string{
 		"app.kubernetes.io/instance":   cr.Name,
 		"app.kubernetes.io/name":       cr.Name,
 		"app.kubernetes.io/managed-by": "application-stacks-operator",
-		"app.kubernetes.io/component": "backend",
-		"app.kubernetes.io/part-of": cr.Name,
+		"app.kubernetes.io/component":  "backend",
+		"app.kubernetes.io/part-of":    cr.Name,
 	}
 
 	if cr.Spec.Version != "" {
@@ -609,7 +609,7 @@ func (cr *RuntimeApplication) GetLabels() map[string]string {
 }
 
 // GetAnnotations returns set of annotations to be added to all resources
-func (cr *RuntimeApplication) GetAnnotations() map[string]string {
+func (cr *RuntimeComponent) GetAnnotations() map[string]string {
 	return cr.Annotations
 }
 
@@ -674,12 +674,12 @@ func (c *StatusCondition) SetStatus(s corev1.ConditionStatus) {
 }
 
 // NewCondition returns new condition
-func (s *RuntimeApplicationStatus) NewCondition() common.StatusCondition {
+func (s *RuntimeComponentStatus) NewCondition() common.StatusCondition {
 	return &StatusCondition{}
 }
 
 // GetConditions returns slice of conditions
-func (s *RuntimeApplicationStatus) GetConditions() []common.StatusCondition {
+func (s *RuntimeComponentStatus) GetConditions() []common.StatusCondition {
 	var conditions = make([]common.StatusCondition, len(s.Conditions))
 	for i := range s.Conditions {
 		conditions[i] = &s.Conditions[i]
@@ -688,7 +688,7 @@ func (s *RuntimeApplicationStatus) GetConditions() []common.StatusCondition {
 }
 
 // GetCondition ...
-func (s *RuntimeApplicationStatus) GetCondition(t common.StatusConditionType) common.StatusCondition {
+func (s *RuntimeComponentStatus) GetCondition(t common.StatusConditionType) common.StatusCondition {
 	for i := range s.Conditions {
 		if s.Conditions[i].GetType() == t {
 			return &s.Conditions[i]
@@ -698,7 +698,7 @@ func (s *RuntimeApplicationStatus) GetCondition(t common.StatusConditionType) co
 }
 
 // SetCondition ...
-func (s *RuntimeApplicationStatus) SetCondition(c common.StatusCondition) {
+func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 	condition := &StatusCondition{}
 	found := false
 	for i := range s.Conditions {

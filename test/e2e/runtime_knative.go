@@ -40,7 +40,7 @@ func RuntimeKnativeTest(t *testing.T) {
 	knativeBool := true
 	applicationName := "example-runtime-knative"
 
-	exampleRuntime := util.MakeBasicRuntimeApplication(t, f, applicationName, namespace, 1)
+	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, applicationName, namespace, 1)
 	exampleRuntime.Spec.CreateKnativeService = &knativeBool
 
 	// Create application deployment and wait

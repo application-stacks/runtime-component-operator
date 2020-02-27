@@ -43,11 +43,11 @@ func RuntimePullPolicyTest(t *testing.T) {
 	replicas := int32(1)
 	policy := k.PullAlways
 
-	runtimeApplication := util.MakeBasicRuntimeApplication(t, f, "example-runtime-pullpolicy", namespace, replicas)
-	runtimeApplication.Spec.PullPolicy = &policy
+	runtimeComponent := util.MakeBasicRuntimeComponent(t, f, "example-runtime-pullpolicy", namespace, replicas)
+	runtimeComponent.Spec.PullPolicy = &policy
 
 	// use TestCtx's create helper to create the object and add a cleanup function for the new object
-	err = f.Client.Create(goctx.TODO(), runtimeApplication, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	err = f.Client.Create(goctx.TODO(), runtimeComponent, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
@@ -61,12 +61,12 @@ func RuntimePullPolicyTest(t *testing.T) {
 	timestamp = time.Now().UTC()
 	t.Logf("%s - Deployment created, verifying pull policy...", timestamp)
 
-	if err = verifyPullPolicy(t, f, runtimeApplication); err != nil {
+	if err = verifyPullPolicy(t, f, runtimeComponent); err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 }
 
-func verifyPullPolicy(t *testing.T, f *framework.Framework, app *appstacksv1beta1.RuntimeApplication) error {
+func verifyPullPolicy(t *testing.T, f *framework.Framework, app *appstacksv1beta1.RuntimeComponent) error {
 	name := app.ObjectMeta.Name
 	ns := app.ObjectMeta.Namespace
 

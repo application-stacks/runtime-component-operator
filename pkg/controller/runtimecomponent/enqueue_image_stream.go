@@ -1,10 +1,10 @@
-package runtimeapplication
+package runtimecomponent
 
 import (
 	"context"
 
 	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
-	runtimeapputils "github.com/application-stacks/operator/pkg/utils"
+	appstacksutils "github.com/application-stacks/operator/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -21,7 +21,7 @@ const (
 	indexFieldImageStreamName = "spec.applicationImage"
 )
 
-// EnqueueRequestsForImageStream enqueues reconcile Requests Runtime Applications if the app is relying on
+// EnqueueRequestsForImageStream enqueues reconcile Requests Runtime Components if the app is relying on
 // the image stream
 type EnqueueRequestsForImageStream struct {
 	handler.Funcs
@@ -57,10 +57,10 @@ func (e *EnqueueRequestsForImageStream) handle(evtMeta metav1.Object, q workqueu
 }
 
 // matchApplication returns the NamespacedName of all applications using the input ImageStreamTag
-func (e *EnqueueRequestsForImageStream) matchApplication(imageStreamTag metav1.Object) ([]appstacksv1beta1.RuntimeApplication, error) {
-	apps := []appstacksv1beta1.RuntimeApplication{}
+func (e *EnqueueRequestsForImageStream) matchApplication(imageStreamTag metav1.Object) ([]appstacksv1beta1.RuntimeComponent, error) {
+	apps := []appstacksv1beta1.RuntimeComponent{}
 	var namespaces []string
-	if runtimeapputils.IsClusterWide(e.WatchNamespaces) {
+	if appstacksutils.IsClusterWide(e.WatchNamespaces) {
 		nsList := &corev1.NamespaceList{}
 		if err := e.Client.List(context.Background(), nsList, client.InNamespace("")); err != nil {
 			return nil, err
@@ -72,7 +72,7 @@ func (e *EnqueueRequestsForImageStream) matchApplication(imageStreamTag metav1.O
 		namespaces = e.WatchNamespaces
 	}
 	for _, ns := range namespaces {
-		appList := &appstacksv1beta1.RuntimeApplicationList{}
+		appList := &appstacksv1beta1.RuntimeComponentList{}
 		err := e.Client.List(context.Background(),
 			appList,
 			client.InNamespace(ns),

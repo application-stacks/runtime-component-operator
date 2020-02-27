@@ -578,7 +578,7 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseAppl
 }
 
 // GetCondition ...
-func GetCondition(conditionType appstacksv1beta1.StatusConditionType, status *appstacksv1beta1.RuntimeApplicationStatus) *appstacksv1beta1.StatusCondition {
+func GetCondition(conditionType appstacksv1beta1.StatusConditionType, status *appstacksv1beta1.RuntimeComponentStatus) *appstacksv1beta1.StatusCondition {
 	for i := range status.Conditions {
 		if status.Conditions[i].Type == conditionType {
 			return &status.Conditions[i]
@@ -589,7 +589,7 @@ func GetCondition(conditionType appstacksv1beta1.StatusConditionType, status *ap
 }
 
 // SetCondition ...
-func SetCondition(condition appstacksv1beta1.StatusCondition, status *appstacksv1beta1.RuntimeApplicationStatus) {
+func SetCondition(condition appstacksv1beta1.StatusCondition, status *appstacksv1beta1.RuntimeComponentStatus) {
 	for i := range status.Conditions {
 		if status.Conditions[i].Type == condition.Type {
 			status.Conditions[i] = condition
