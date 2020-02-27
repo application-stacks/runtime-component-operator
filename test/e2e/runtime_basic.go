@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
 
-	"github.com/application-runtimes/operator/test/util"
+	"github.com/application-stacks/operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	"k8s.io/apimachinery/pkg/types"
@@ -40,7 +40,7 @@ func RuntimeBasicTest(t *testing.T) {
 	f := framework.Global
 
 	// create one replica of the operator deployment in current namespace with provided name
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-runtime-operator", 1, retryInterval, operatorTimeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-stacks-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
@@ -58,10 +58,10 @@ func runtimeBasicScaleTest(t *testing.T, f *framework.Framework, ctx *framework.
 
 	helper := int32(1)
 
-	exampleRuntime := util.MakeBasicRuntimeApplication(t, f, "example-runtime", namespace, helper)
+	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, "example-runtime", namespace, helper)
 
 	timestamp := time.Now().UTC()
-	t.Logf("%s - Creating basic runtime application for scaling test...", timestamp)
+	t.Logf("%s - Creating basic runtime omponent for scaling test...", timestamp)
 	// Create application deployment and wait
 	err = f.Client.Create(goctx.TODO(), exampleRuntime, &framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
 	if err != nil {
@@ -82,10 +82,10 @@ func runtimeBasicScaleTest(t *testing.T, f *framework.Framework, ctx *framework.
 	return err
 }
 
-func runtimeUpdateScaleTest(t *testing.T, f *framework.Framework, namespace string, exampleRuntime *runtimeappv1beta1.RuntimeApplication) error {
+func runtimeUpdateScaleTest(t *testing.T, f *framework.Framework, namespace string, exampleRuntime *appstacksv1beta1.RuntimeComponent) error {
 	target := types.NamespacedName{Name: "example-runtime", Namespace: namespace}
 
-	err := util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		helper2 := int32(2)
 		r.Spec.Replicas = &helper2
 	})

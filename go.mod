@@ -1,4 +1,4 @@
-module github.com/application-runtimes/operator
+module github.com/application-stacks/operator
 
 go 1.13
 

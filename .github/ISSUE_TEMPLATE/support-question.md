@@ -9,13 +9,13 @@ assignees: ''
 
 ## Type of question
 
-Are you asking about best practices, how to configure the Application Runtime Operator, or about general context and help around the operator?
+Are you asking about best practices, how to configure the Application Stacks Operator, or about general context and help around the operator?
 
 ## Question
 
 ### What did you do?
 
-A clear and concise description of the steps you took (or insert a code snippet). If possible, add `RuntimeApplication` CR.
+A clear and concise description of the steps you took (or insert a code snippet). If possible, add `RuntimeComponent` CR.
 
 ### What did you expect to see?
 

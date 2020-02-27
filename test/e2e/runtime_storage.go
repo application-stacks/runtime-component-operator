@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
-	"github.com/application-runtimes/operator/test/util"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
+	"github.com/application-stacks/operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -30,13 +30,13 @@ func RuntimeBasicStorageTest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not get namespace: %v", err)
 	}
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-runtime-operator", 1, retryInterval, operatorTimeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-stacks-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	exampleRuntime := util.MakeBasicRuntimeApplication(t, f, "example-runtime-storage", namespace, 1)
-	exampleRuntime.Spec.Storage = &runtimeappv1beta1.RuntimeApplicationStorage{
+	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, "example-runtime-storage", namespace, 1)
+	exampleRuntime.Spec.Storage = &appstacksv1beta1.RuntimeComponentStorage{
 		Size:      "10Mi",
 		MountPath: "/mnt/data",
 	}
@@ -59,7 +59,7 @@ func RuntimeBasicStorageTest(t *testing.T) {
 	}
 }
 
-func updateStorageConfig(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, app *runtimeappv1beta1.RuntimeApplication) error {
+func updateStorageConfig(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, app *appstacksv1beta1.RuntimeComponent) error {
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func updateStorageConfig(t *testing.T, f *framework.Framework, ctx *framework.Te
 
 	target := types.NamespacedName{Name: app.Name, Namespace: namespace}
 
-	err = util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		// remove storage definition to return it to a deployment
 		r.Spec.Storage = nil
 		r.Spec.VolumeMounts = nil
@@ -103,8 +103,8 @@ func RuntimePersistenceTest(t *testing.T) {
 	}
 
 	// Create PVC and mount for our statefulset.
-	exampleRuntime := util.MakeBasicRuntimeApplication(t, f, "example-runtime-persistence", namespace, 1)
-	exampleRuntime.Spec.Storage = &runtimeappv1beta1.RuntimeApplicationStorage{
+	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, "example-runtime-persistence", namespace, 1)
+	exampleRuntime.Spec.Storage = &appstacksv1beta1.RuntimeComponentStorage{
 		VolumeClaimTemplate: &corev1.PersistentVolumeClaim{
 			metav1.TypeMeta{},
 			metav1.ObjectMeta{

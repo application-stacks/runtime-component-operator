@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/application-runtimes/operator/test/util"
+	"github.com/application-stacks/operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	corev1 "k8s.io/api/core/v1"
@@ -33,7 +33,7 @@ func RuntimeProbeTest(t *testing.T) {
 	f := framework.Global
 
 	// create one replica of the operator deployment in current namespace with provided name
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-runtime-operator", 1, retryInterval, operatorTimeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-stacks-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
@@ -57,7 +57,7 @@ func probeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, pro
 		return err
 	}
 	// default runtime test now has to define probes manually, so we will use those and change in the edit test.
-	exampleRuntime := util.MakeBasicRuntimeApplication(t, f, "example-runtime-readiness", namespace, 1)
+	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, "example-runtime-readiness", namespace, 1)
 
 	err = f.Client.Create(goctx.TODO(), exampleRuntime, &framework.CleanupOptions{
 		TestContext:   ctx,
@@ -79,14 +79,14 @@ func probeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, pro
 	return nil
 }
 
-func editProbeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, app *runtimeappv1beta1.RuntimeApplication) error {
+func editProbeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, app *appstacksv1beta1.RuntimeComponent) error {
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		return err
 	}
 	target := types.NamespacedName{Name: "example-runtime-readiness", Namespace: namespace}
 
-	util.UpdateApplication(f, target, func(r *runtimeappv1beta1.RuntimeApplication) {
+	util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		// Adjust tests for update SMALL amounts to keep the test fast.
 		r.Spec.LivenessProbe.InitialDelaySeconds = int32(6)
 		r.Spec.ReadinessProbe.InitialDelaySeconds = int32(3)

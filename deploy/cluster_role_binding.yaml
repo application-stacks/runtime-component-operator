@@ -1,12 +1,12 @@
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: application-runtime-operator
+  name: application-stacks-operator
 subjects:
 - kind: ServiceAccount
-  name: application-runtime-operator
-  namespace: APPLICATION_RUNTIME_OPERATOR_NAMESPACE
+  name: application-stacks-operator
+  namespace: APPLICATION_STACKS_OPERATOR_NAMESPACE
 roleRef:
   kind: ClusterRole
-  name: application-runtime-operator
+  name: application-stacks-operator
   apiGroup: rbac.authorization.k8s.io

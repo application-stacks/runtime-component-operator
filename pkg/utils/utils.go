@@ -5,10 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/application-runtimes/operator/pkg/common"
+	"github.com/application-stacks/operator/pkg/common"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
@@ -578,7 +578,7 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseAppl
 }
 
 // GetCondition ...
-func GetCondition(conditionType runtimeappv1beta1.StatusConditionType, status *runtimeappv1beta1.RuntimeApplicationStatus) *runtimeappv1beta1.StatusCondition {
+func GetCondition(conditionType appstacksv1beta1.StatusConditionType, status *appstacksv1beta1.RuntimeComponentStatus) *appstacksv1beta1.StatusCondition {
 	for i := range status.Conditions {
 		if status.Conditions[i].Type == conditionType {
 			return &status.Conditions[i]
@@ -589,7 +589,7 @@ func GetCondition(conditionType runtimeappv1beta1.StatusConditionType, status *r
 }
 
 // SetCondition ...
-func SetCondition(condition runtimeappv1beta1.StatusCondition, status *runtimeappv1beta1.RuntimeApplicationStatus) {
+func SetCondition(condition appstacksv1beta1.StatusCondition, status *appstacksv1beta1.RuntimeComponentStatus) {
 	for i := range status.Conditions {
 		if status.Conditions[i].Type == condition.Type {
 			status.Conditions[i] = condition

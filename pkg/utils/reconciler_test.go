@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/application-runtimes/operator/pkg/common"
+	"github.com/application-stacks/operator/pkg/common"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -29,17 +29,17 @@ import (
 var (
 	defaultMeta = metav1.ObjectMeta{
 		Name:      "app",
-		Namespace: "runtimeapp",
+		Namespace: "runtimecomponent",
 	}
-	spec = runtimeappv1beta1.RuntimeApplicationSpec{}
+	spec = appstacksv1beta1.RuntimeComponentSpec{}
 )
 
 func TestGetDiscoveryClient(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
-	runtimeapp := createRuntimeApp(name, namespace, spec)
-	objs, s := []runtime.Object{runtimeapp}, scheme.Scheme
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	runtimecomponent := createRuntimeComponent(name, namespace, spec)
+	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
 
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
@@ -55,15 +55,15 @@ func TestCreateOrUpdate(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 	serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
 
-	runtimeapp := createRuntimeApp(name, namespace, spec)
-	objs, s := []runtime.Object{runtimeapp}, scheme.Scheme
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	runtimecomponent := createRuntimeComponent(name, namespace, spec)
+	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
 
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
-	err := r.CreateOrUpdate(serviceAccount, runtimeapp, func() error {
-		CustomizeServiceAccount(serviceAccount, runtimeapp)
+	err := r.CreateOrUpdate(serviceAccount, runtimecomponent, func() error {
+		CustomizeServiceAccount(serviceAccount, runtimecomponent)
 		return nil
 	})
 
@@ -74,14 +74,14 @@ func TestCreateOrUpdate(t *testing.T) {
 func TestDeleteResources(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
-	runtimeapp := createRuntimeApp(name, namespace, spec)
-	objs, s := []runtime.Object{runtimeapp}, scheme.Scheme
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	runtimecomponent := createRuntimeComponent(name, namespace, spec)
+	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
 	r.SetDiscoveryClient(createFakeDiscoveryClient())
-	nsn := types.NamespacedName{Name: "app", Namespace: "runtimeapp"}
+	nsn := types.NamespacedName{Name: "app", Namespace: "runtimecomponent"}
 
 	sa := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
 	ss := &appsv1.StatefulSet{ObjectMeta: defaultMeta}
@@ -125,9 +125,9 @@ func TestGetOpConfigMap(t *testing.T) {
 		},
 	}
 
-	runtimeapp := createRuntimeApp(name, namespace, spec)
-	objs, s := []runtime.Object{runtimeapp}, scheme.Scheme
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	runtimecomponent := createRuntimeComponent(name, namespace, spec)
+	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
 
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
@@ -149,18 +149,18 @@ func TestManageError(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 	err := fmt.Errorf("test-error")
 
-	runtimeapp := createRuntimeApp(name, namespace, spec)
-	objs, s := []runtime.Object{runtimeapp}, scheme.Scheme
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	runtimecomponent := createRuntimeComponent(name, namespace, spec)
+	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
 
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
-	rec, err := r.ManageError(err, common.StatusConditionTypeReconciled, runtimeapp)
+	rec, err := r.ManageError(err, common.StatusConditionTypeReconciled, runtimecomponent)
 
 	testME := []Test{
 		{"ManageError Requeue", true, rec.Requeue},
-		{"ManageError New Condition Status", corev1.ConditionFalse, runtimeapp.Status.Conditions[0].Status},
+		{"ManageError New Condition Status", corev1.ConditionFalse, runtimecomponent.Status.Conditions[0].Status},
 	}
 	verifyTests(testME, t)
 }
@@ -168,16 +168,16 @@ func TestManageError(t *testing.T) {
 func TestManageSuccess(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
-	runtimeapp := createRuntimeApp(name, namespace, spec)
-	objs, s := []runtime.Object{runtimeapp}, scheme.Scheme
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	runtimecomponent := createRuntimeComponent(name, namespace, spec)
+	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
-	r.ManageSuccess(common.StatusConditionTypeReconciled, runtimeapp)
+	r.ManageSuccess(common.StatusConditionTypeReconciled, runtimecomponent)
 
 	testMS := []Test{
-		{"ManageSuccess New Condition Status", corev1.ConditionTrue, runtimeapp.Status.Conditions[0].Status},
+		{"ManageSuccess New Condition Status", corev1.ConditionTrue, runtimecomponent.Status.Conditions[0].Status},
 	}
 	verifyTests(testMS, t)
 }
@@ -185,9 +185,9 @@ func TestManageSuccess(t *testing.T) {
 func TestIsGroupVersionSupported(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
-	runtimeapp := createRuntimeApp(name, namespace, spec)
-	objs, s := []runtime.Object{runtimeapp}, scheme.Scheme
-	s.AddKnownTypes(runtimeappv1beta1.SchemeGroupVersion, runtimeapp)
+	runtimecomponent := createRuntimeComponent(name, namespace, spec)
+	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
 
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))

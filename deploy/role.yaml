@@ -2,7 +2,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   creationTimestamp: null
-  name: application-runtime-operator
+  name: application-stacks-operator
 rules:
 - apiGroups:
   - ""
@@ -41,13 +41,13 @@ rules:
 - apiGroups:
   - apps
   resourceNames:
-  - application-runtime-operator
+  - application-stacks-operator
   resources:
   - deployments/finalizers
   verbs:
   - update
 - apiGroups:
-  - runtime.app
+  - app.stacks
   resources:
   - '*'
   verbs:

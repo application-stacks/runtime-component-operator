@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	runtimeappv1beta1 "github.com/application-runtimes/operator/pkg/apis/runtimeapp/v1beta1"
+	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	corev1 "k8s.io/api/core/v1"
@@ -18,8 +18,8 @@ import (
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// MakeBasicRuntimeApplication : Create a simple Runtime App with provided number of replicas.
-func MakeBasicRuntimeApplication(t *testing.T, f *framework.Framework, n string, ns string, replicas int32) *runtimeappv1beta1.RuntimeApplication {
+// MakeBasicRuntimeComponent : Create a simple RuntimeComponent with provided number of replicas.
+func MakeBasicRuntimeComponent(t *testing.T, f *framework.Framework, n string, ns string, replicas int32) *appstacksv1beta1.RuntimeComponent {
 	probe := corev1.Handler{
 		HTTPGet: &corev1.HTTPGetAction{
 			Path: "/",
@@ -28,20 +28,20 @@ func MakeBasicRuntimeApplication(t *testing.T, f *framework.Framework, n string,
 	}
 	expose := false
 	serviceType := corev1.ServiceTypeClusterIP
-	return &runtimeappv1beta1.RuntimeApplication{
+	return &appstacksv1beta1.RuntimeComponent{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "RuntimeApplication",
+			Kind:       "RuntimeComponent",
 			APIVersion: "runtime.dev/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      n,
 			Namespace: ns,
 		},
-		Spec: runtimeappv1beta1.RuntimeApplicationSpec{
+		Spec: appstacksv1beta1.RuntimeComponentSpec{
 			ApplicationImage: "navidsh/demo-day",
 			Replicas:         &replicas,
 			Expose:           &expose,
-			Service: &runtimeappv1beta1.RuntimeApplicationService{
+			Service: &appstacksv1beta1.RuntimeComponentService{
 				Port: 3000,
 				Type: &serviceType,
 			},
@@ -127,13 +127,13 @@ func FailureCleanup(t *testing.T, f *framework.Framework, ns string, failure err
 		t.Log(p)
 	}
 
-	crlist := &runtimeappv1beta1.RuntimeApplicationList{}
+	crlist := &appstacksv1beta1.RuntimeComponentList{}
 	err = f.Client.List(goctx.TODO(), crlist, options)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Logf("***** Logging Runtime Applications in namespace: %s", ns)
+	t.Logf("***** Logging Runtime Components in namespace: %s", ns)
 	for _, application := range crlist.Items {
 		t.Log("-------------------")
 		t.Log(application)
@@ -169,11 +169,11 @@ func WaitForKnativeDeployment(t *testing.T, f *framework.Framework, ns, n string
 }
 
 // UpdateApplication updates target app using provided function, retrying in the case that status has changed
-func UpdateApplication(f *framework.Framework, target types.NamespacedName, update func(r *runtimeappv1beta1.RuntimeApplication)) error {
+func UpdateApplication(f *framework.Framework, target types.NamespacedName, update func(r *appstacksv1beta1.RuntimeComponent)) error {
 	retryInterval := time.Second * 5
 	timeout := time.Second * 30
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
-		temp := &runtimeappv1beta1.RuntimeApplication{}
+		temp := &appstacksv1beta1.RuntimeComponent{}
 		err = f.Client.Get(goctx.TODO(), target, temp)
 		if err != nil {
 			return true, err
