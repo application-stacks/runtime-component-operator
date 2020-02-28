@@ -46,8 +46,9 @@ type RuntimeComponentSpec struct {
 	ApplicationName      string                      `json:"applicationName,omitempty"`
 	// +listType=map
 	// +listMapKey=name
-	InitContainers []corev1.Container     `json:"initContainers,omitempty"`
-	Route          *RuntimeComponentRoute `json:"route,omitempty"`
+	InitContainers  []corev1.Container     `json:"initContainers,omitempty"`
+	ExtraContainers []corev1.Container     `json:"extraContainers,omitempty"`
+	Route           *RuntimeComponentRoute `json:"route,omitempty"`
 }
 
 // RuntimeComponentAutoScaling ...
@@ -326,6 +327,11 @@ func (cr *RuntimeComponent) GetStatus() common.BaseApplicationStatus {
 // GetInitContainers returns list of init containers
 func (cr *RuntimeComponent) GetInitContainers() []corev1.Container {
 	return cr.Spec.InitContainers
+}
+
+// GetExtraContainers returns list of user specified containers
+func (cr *RuntimeComponent) GetExtraContainers() []corev1.Container {
+	return cr.Spec.ExtraContainers
 }
 
 // GetGroupName returns group name to be used in labels and annotation
