@@ -470,7 +470,7 @@ func (c *ServiceBindingConsumes) IsNamespaceProvided() bool {
 		return false;
 	}
 	return true
-}q
+}
 
 // GetCategory returns category of a service consumer configuration
 func (c *ServiceBindingConsumes) GetCategory() common.ServiceBindingCategory {
