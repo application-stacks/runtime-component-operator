@@ -53,7 +53,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `pullPolicy` | The policy used when pulling the image.  One of: `Always`, `Never`, and `IfNotPresent`. |
 | `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials. |
 | `initContainers` | The list of [Init Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#container-v1-core) definitions. |
-| `extraContainers` | A YAML array of `containers` definitions. These are additional containers to be added to the pods |
+| `extraContainers` | A YAML array of `containers` definitions. These are additional containers to be added to the pods. Note: the extraContainers can not be named `app`. |
 | `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference. |
 | `service.port` | The port exposed by the container. |
 | `service.type` | The Kubernetes [Service Type](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types). |
