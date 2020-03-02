@@ -459,18 +459,18 @@ func (c *ServiceBindingConsumes) GetName() string {
 func (c *ServiceBindingConsumes) GetNamespace() string {
 	namespace := c.Namespace
 	if strings.HasSuffix(namespace, "_") {
-		namespace = namespace[:len(namespace)-len("_")]
+		namespace = namespace[:len(namespace) - 1]
 	}
 	return namespace
 }
 
 // IsNamespaceProvided returns if namespace is provided in consumes or not
 func (c *ServiceBindingConsumes) IsNamespaceProvided() bool {
-	if c.Namespace[len(c.Namespace)-1:] == "_" {
+	if c.Namespace[len(c.Namespace) - 1:] == "_" {
 		return false;
 	}
 	return true
-}
+}q
 
 // GetCategory returns category of a service consumer configuration
 func (c *ServiceBindingConsumes) GetCategory() common.ServiceBindingCategory {
