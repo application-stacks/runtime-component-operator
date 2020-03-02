@@ -271,7 +271,12 @@ func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseApplicatio
 		for _, svc := range ba.GetStatus().GetConsumedServices()[common.ServiceBindingCategoryOpenAPI] {
 			c, _ := findConsumes(svc, ba)
 			if c.GetMountPath() != "" {
-				actualMountPath := strings.Join([]string{c.GetMountPath(), c.GetNamespace(), c.GetName()}, "/")
+				actualMountPath := ""
+				if c.IsNamespaceProvided() {
+					actualMountPath = strings.Join([]string{c.GetMountPath(), c.GetNamespace(), c.GetName()}, "/")
+				} else {
+					actualMountPath = strings.Join([]string{c.GetMountPath(), c.GetName()}, "/")
+				}
 				volMount := corev1.VolumeMount{Name: svc, MountPath: actualMountPath, ReadOnly: true}
 				podSpec.Containers[0].VolumeMounts = append(podSpec.Containers[0].VolumeMounts, volMount)
 

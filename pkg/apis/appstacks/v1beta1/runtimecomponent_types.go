@@ -1,6 +1,7 @@
 package v1beta1
 
 import (
+	"strings"
 	"time"
 
 	"github.com/application-stacks/operator/pkg/common"
@@ -456,7 +457,19 @@ func (c *ServiceBindingConsumes) GetName() string {
 
 // GetNamespace returns namespace of a service consumer configuration
 func (c *ServiceBindingConsumes) GetNamespace() string {
-	return c.Namespace
+	namespace := c.Namespace
+	if strings.HasSuffix(namespace, "_") {
+		namespace = namespace[:len(namespace)-len("_")]
+	}
+	return namespace
+}
+
+// IsNamespaceProvided returns if namespace is provided in consumes or not
+func (c *ServiceBindingConsumes) IsNamespaceProvided() bool {
+	if c.Namespace[len(c.Namespace)-1:] == "_" {
+		return false;
+	}
+	return true
 }
 
 // GetCategory returns category of a service consumer configuration
@@ -555,7 +568,7 @@ func (cr *RuntimeComponent) Initialize() {
 	for i := range cr.Spec.Service.Consumes {
 		if cr.Spec.Service.Consumes[i].Category == common.ServiceBindingCategoryOpenAPI {
 			if cr.Spec.Service.Consumes[i].Namespace == "" {
-				cr.Spec.Service.Consumes[i].Namespace = cr.Namespace
+				cr.Spec.Service.Consumes[i].Namespace = cr.Namespace + "_"
 			}
 		}
 	}
