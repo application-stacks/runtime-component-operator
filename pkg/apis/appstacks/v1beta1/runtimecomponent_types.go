@@ -68,7 +68,7 @@ type RuntimeComponentService struct {
 	// +kubebuilder:validation:Minimum=1
 	Port int32 `json:"port,omitempty"`
 
-	Name string `json:"name,omitempty"`
+	PortName string `json:"portName,omitempty"`
 
 	Annotations map[string]string `json:"annotations,omitempty"`
 	// +listType=atomic
@@ -398,9 +398,9 @@ func (s *RuntimeComponentService) GetPort() int32 {
 	return s.Port
 }
 
-// GetName returns service name
-func (s *RuntimeComponentService) GetName() string {
-	return s.Name
+// GetPortName returns name of service port
+func (s *RuntimeComponentService) GetPortName() string {
+	return s.PortName
 }
 
 // GetType returns service type
