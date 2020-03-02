@@ -155,7 +155,12 @@ func CustomizeService(svc *corev1.Service, ba common.BaseApplication) {
 
 	svc.Spec.Ports[0].Port = ba.GetService().GetPort()
 	svc.Spec.Ports[0].TargetPort = intstr.FromInt(int(ba.GetService().GetPort()))
-	svc.Spec.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	// svc.Spec.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	if ba.GetService().GetName() != "" {
+		svc.Spec.Ports[0].Name = ba.GetService().GetName()
+	} else {
+		svc.Spec.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	}
 	svc.Spec.Type = *ba.GetService().GetType()
 	svc.Spec.Selector = map[string]string{
 		"app.kubernetes.io/instance": obj.GetName(),
