@@ -568,6 +568,8 @@ func (cr *RuntimeComponent) Initialize() {
 	for i := range cr.Spec.Service.Consumes {
 		if cr.Spec.Service.Consumes[i].Category == common.ServiceBindingCategoryOpenAPI {
 			if cr.Spec.Service.Consumes[i].Namespace == "" {
+				// add "_" suffix at the end of the namespace as a flag
+				// to identify that namespace is not provided in the consumes
 				cr.Spec.Service.Consumes[i].Namespace = cr.Namespace + "_"
 			}
 		}
