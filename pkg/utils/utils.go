@@ -154,9 +154,9 @@ func CustomizeService(svc *corev1.Service, ba common.BaseApplication) {
 
 	svc.Spec.Ports[0].Port = ba.GetService().GetPort()
 	svc.Spec.Ports[0].TargetPort = intstr.FromInt(int(ba.GetService().GetPort()))
-	// svc.Spec.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
-	if ba.GetService().GetName() != "" {
-		svc.Spec.Ports[0].Name = ba.GetService().GetName()
+
+	if ba.GetService().GetPortName() != "" {
+		svc.Spec.Ports[0].Name = ba.GetService().GetPortName()
 	} else {
 		svc.Spec.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
 	}
