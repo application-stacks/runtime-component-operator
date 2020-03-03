@@ -552,14 +552,6 @@ func (cr *RuntimeComponent) Initialize() {
 		cr.Spec.Service.Provides.Protocol = "http"
 	}
 
-	for i := range cr.Spec.Service.Consumes {
-		if cr.Spec.Service.Consumes[i].Category == common.ServiceBindingCategoryOpenAPI {
-			if cr.Spec.Service.Consumes[i].Namespace == "" {
-				cr.Spec.Service.Consumes[i].Namespace = cr.Namespace
-			}
-		}
-	}
-
 	if cr.Spec.Service.Certificate != nil {
 		if cr.Spec.Service.Certificate.IssuerRef.Name == "" {
 			cr.Spec.Service.Certificate.IssuerRef.Name = common.Config[common.OpConfigPropDefaultIssuer]

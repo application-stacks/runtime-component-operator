@@ -378,6 +378,8 @@ spec:
 
 In the above example, the operator creates a secret named `pro-namespace-my-provider` and adds the following key-value pairs: `username`, `password`, `url`, `context`, `protocol` and `hostname`. The `url` value format is `<protocol>://<name>.<namespace>.svc.cluster.local:<port>/<context>`. Since the provider and the consumer are in two different namespaces, the operator copies the provider secret into consumer's namespace. The operator then mounts the provider secret into a directory with the pattern `<mountPath>/<namespace>/<service_name>` on application container within pods. In the above example, the secret will be serialized into `/sample/pro-namespace/my-provider`, which means we will have a file for each key, where the filename is the key and the content is the key's value.
 
+If the `namespace` is not provided in the above example under `consumes`, then the operator mounts the provider secret into a directory with pattern `<mountPath>/<service_name>`.
+
 If consumer's CR does not include `mountPath`, the secret will be bound to environment variables with the pattern `<NAMESPACE>_<SERVICE-NAME>_<KEY>`, and the value of that env var is the key’s value. Due to syntax restrictions for Kubernetes environment variables, the string representing the namespace and the string representing the service name will have to be normalized by turning any non-`[azAZ09]` characters to become an underscore `(_)` character.
 
 ### Monitoring

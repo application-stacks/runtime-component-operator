@@ -637,7 +637,13 @@ func BuildServiceBindingSecretName(name, namespace string) string {
 
 func findConsumes(secretName string, ba common.BaseApplication) (common.ServiceBindingConsumes, error) {
 	for _, v := range ba.GetService().GetConsumes() {
-		if BuildServiceBindingSecretName(v.GetName(), v.GetNamespace()) == secretName {
+		namespace := ""
+		if v.GetNamespace() == "" {
+			namespace = ba.(metav1.Object).GetNamespace()
+		} else {
+			namespace = v.GetNamespace()
+		}
+		if BuildServiceBindingSecretName(v.GetName(), namespace) == secretName {
 			return v, nil
 		}
 	}
