@@ -13,19 +13,22 @@ services:
 stages:
   - name: test
   - name: build
+    if: branch = master AND fork = false AND type != pull_request
   - name: build manifest
+    if: branch = master AND fork = false AND type != pull_request
 
 jobs:
   include:
     - name: Unit testing
       stage: test
-      script:
-        - make unit-test
-    - name: Build image and E2E test
-      script:
-        - make test-e2e
+      script: make unit-test
+    - name: Verify operator image build
+      script: make build-image
+      if: branch != master OR fork = true OR type = pull_request
+    - name: E2E testing
+      script: make test-e2e
+      if: fork = false
     ## if master branch build and push images on all three archs
-    ## the below will all run in parallel as they're the same stage
     - name: Build image on amd64
       stage: build
       os: linux
@@ -33,27 +36,20 @@ jobs:
       script:
         - make build-multiarch-image
         - make build-manifest
-      if: branch = master AND fork = false AND type != pull_request
     - name: Build image on ppc64le
-      stage: build
       os: linux
       arch: ppc64le
       script:
         - make build-multiarch-image
         - make build-manifest
-      if: branch = master AND fork = false AND type != pull_request
     - name: Build image on s390x
-      stage: build
       os: linux
       arch: s390x
       script:
         - make build-multiarch-image
         - make build-manifest
-      if: branch = master AND fork = false AND type != pull_request
     ## in case there were concurrency issues with building manifest lists
     ## in previous steps, create FAT manifests one last time
     - name: Verify manifest lists
       stage: build manifest
-      script:
-        - make build-manifest
-      if: branch = master AND fork = false AND type != pull_request
+      script: make build-manifest
