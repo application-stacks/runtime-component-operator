@@ -136,6 +136,12 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentRoute(ref common.Referenc
 							Ref: ref("./pkg/apis/appstacks/v1beta1.Certificate"),
 						},
 					},
+					"certificateSecretRef": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"host": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -214,6 +220,12 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentService(ref common.Refere
 					"certificate": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("./pkg/apis/appstacks/v1beta1.Certificate"),
+						},
+					},
+					"certificateSecretRef": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 				},

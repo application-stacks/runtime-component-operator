@@ -58,6 +58,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `service.type` | The Kubernetes [Service Type](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types). |
 | `service.annotations` | Annotations to be added to the service. |
 | `service.certificate` | A YAML object representing a [Certificate](https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec). |
+| `service.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.  |
 | `service.provides.category` | Service binding type to be provided by this CR. At this time, the only allowed value is `openapi`. |
 | `service.provides.protocol` | Protocol of the provided service. Defauts to `http`. |
 | `service.provides.context` | Specifies context root of the service. |
@@ -96,6 +97,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `route.termination`   | TLS termination policy. Can be one of `edge`, `reencrypt` and `passthrough`. |
 | `route.insecureEdgeTerminationPolicy`   | HTTP traffic policy with TLS enabled. Can be one of `Allow`, `Redirect` and `None`. |
 | `route.certificate`  | A YAML object representing a [Certificate](https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec). |
+| `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.  |
 
 ### Basic usage
 
@@ -609,6 +611,47 @@ spec:
       issuerRef:
         name: myComanyIssuer
         kind: ClusterIssuer
+```
+
+#### Use existing certificates
+
+It is possible to bring your own certificates to be used in a pod and the route.
+In this case the cert-manager is not required.
+
+```yaml
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: myapp
+  namespace: test
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  expose: true
+  route:
+    host: myapp.mycompany.com
+    termination: reencrypt
+    certificateSecretRef: myapp-rt-tls
+  service:
+    port: 9443
+```
+
+Example of the manually provided route secret
+
+```yaml
+kind: Secret
+apiVersion: v1
+metadata:
+  name: myapp-rt-tls
+data:
+  ca.crt: >-
+    Certificate Authority public certificate...(base64)
+  tls.crt: >-
+    Route public certificate...(base64)
+  tls.key: >-
+    Route private key...(base64)
+  destCA: >-
+    Pod/Service certificate Certificate Authority (base64). Might be required when using reencrypt termination policy.
+type: kubernetes.io/tls
 ```
 
 ### Troubleshooting

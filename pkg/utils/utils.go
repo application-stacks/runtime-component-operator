@@ -232,13 +232,20 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 	pts.Spec.Containers[0].VolumeMounts = ba.GetVolumeMounts()
 	pts.Spec.Volumes = ba.GetVolumes()
 
-	if ba.GetService().GetCertificate() != nil {
+	if ba.GetService().GetCertificate() != nil || ba.GetService().GetCertificateSecretRef() != nil {
+		secretName := obj.GetName() + "-svc-tls"
+		if ba.GetService().GetCertificate() != nil && ba.GetService().GetCertificate().GetSpec().SecretName != "" {
+			secretName = ba.GetService().GetCertificate().GetSpec().SecretName
+		}
+		if ba.GetService().GetCertificateSecretRef() != nil {
+			secretName = *ba.GetService().GetCertificateSecretRef()
+		}
 		pts.Spec.Containers[0].Env = append(pts.Spec.Containers[0].Env, corev1.EnvVar{Name: "TLS_DIR", Value: "/etc/x509/certs"})
 		pts.Spec.Volumes = append(pts.Spec.Volumes, corev1.Volume{
 			Name: "svc-certificate",
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
-					SecretName: obj.GetName() + "-svc-tls",
+					SecretName: secretName,
 				},
 			},
 		})

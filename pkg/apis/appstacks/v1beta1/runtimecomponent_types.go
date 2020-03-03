@@ -73,7 +73,8 @@ type RuntimeComponentService struct {
 	Consumes []ServiceBindingConsumes `json:"consumes,omitempty"`
 	Provides *ServiceBindingProvides  `json:"provides,omitempty"`
 	// +k8s:openapi-gen=true
-	Certificate *Certificate `json:"certificate,omitempty"`
+	Certificate          *Certificate `json:"certificate,omitempty"`
+	CertificateSecretRef *string      `json:"certificateSecretRef,omitempty"`
 }
 
 // ServiceBindingProvides represents information about
@@ -116,6 +117,7 @@ type RuntimeComponentRoute struct {
 	Termination                   *routev1.TLSTerminationType                `json:"termination,omitempty"`
 	InsecureEdgeTerminationPolicy *routev1.InsecureEdgeTerminationPolicyType `json:"insecureEdgeTerminationPolicy,omitempty"`
 	Certificate                   *Certificate                               `json:"certificate,omitempty"`
+	CertificateSecretRef          *string                                    `json:"certificateSecretRef,omitempty"`
 	Host                          string                                     `json:"host,omitempty"`
 	Path                          string                                     `json:"path,omitempty"`
 }
@@ -417,6 +419,11 @@ func (s *RuntimeComponentService) GetCertificate() common.Certificate {
 	return s.Certificate
 }
 
+// GetCertificateSecretRef returns a secret reference with a certificate
+func (s *RuntimeComponentService) GetCertificateSecretRef() *string {
+	return s.CertificateSecretRef
+}
+
 // GetCategory returns category of a service provider configuration
 func (p *ServiceBindingProvides) GetCategory() common.ServiceBindingCategory {
 	return p.Category
@@ -500,6 +507,11 @@ func (r *RuntimeComponentRoute) GetCertificate() common.Certificate {
 		return nil
 	}
 	return r.Certificate
+}
+
+// GetCertificateSecretRef returns a secret reference with a certificate
+func (r *RuntimeComponentRoute) GetCertificateSecretRef() *string {
+	return r.CertificateSecretRef
 }
 
 // GetTermination returns terminatation of the route's TLS
