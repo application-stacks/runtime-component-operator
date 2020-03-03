@@ -1,11 +1,11 @@
 [![Build Status](https://travis-ci.org/application-stacks/operator.svg?branch=master)](https://travis-ci.org/application-stacks/operator)
 
-# Application Stacks Operator
+# Runtime Component Operator
 This generic Operator is capable of deploying any application image with consistent, production-grade QoS.  It enables enterprise architects to govern the way their applications get deployed & managed in the cluster, while dramatically reducing the learning curve for developers to deploy into Kubernetes - allowing them to focus on writing the code!
 
 Check out [our docs](https://github.com/application-stacks/operator/blob/master/doc/user-guide.md) to get started.
 
-Learn more about the Application Stack [architecture](https://appsody.dev/docs/stacks/stacks-overview/) to see how easy it is to use the community's Application Stack Hub to create your own configured and curated Hub!
+A great way to develop these runtime components is through Application Stacks.  Learn more about the [stacks architecture](https://appsody.dev/docs/stacks/stacks-overview/) to see how easy it is to use the community's Application Stack Hub to create your own configured and curated Hub!
 
 ![Architecture](doc/images/operator_overview.png)
 

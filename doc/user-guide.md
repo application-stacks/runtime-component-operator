@@ -1,4 +1,4 @@
-# Application Stacks Operator
+# Runtime Component Operator
 
 This generic Operator is capable of deploying any application image and can be imported into any runtime-specific Operator as library of application capabilities.  This architecture ensures compatibility and consistency between all runtime Operators, allowing everyone to benefit from the functionality added in this project.
 
@@ -6,7 +6,7 @@ This generic Operator is capable of deploying any application image and can be i
 
 Use the instructions for one of the releases to install the operator into a Kubernetes cluster.
 
-The Application Stacks Operator can be installed to:
+The Runtime Component Operator can be installed to:
 
 - watch own namespace
 - watch another namespace
@@ -17,7 +17,7 @@ Appropriate cluster roles and bindings are required to watch another namespace, 
 
 ## Overview
 
-The architecture of the Application Stacks Operator follows the basic controller pattern:  the Operator container with the controller is deployed into a Pod and listens for incoming resources with `Kind: RuntimeComponent`. Creating a `RuntimeComponent` custom resource (CR) triggers the Application Stacks Operator to create, update or delete Kubernetes resources needed by the application to run on your cluster.
+The architecture of the Runtime Component Operator follows the basic controller pattern:  the Operator container with the controller is deployed into a Pod and listens for incoming resources with `Kind: RuntimeComponent`. Creating a `RuntimeComponent` custom resource (CR) triggers the Runtime Component Operator to create, update or delete Kubernetes resources needed by the application to run on your cluster.
 
 Each instance of `RuntimeComponent` CR represents the application to be deployed on the cluster:
 
@@ -263,7 +263,7 @@ Run multiple instances of your application for high availability using one of th
 
 ### Persistence
 
-Application Stacks Operator is capable of creating a `StatefulSet` and `PersistentVolumeClaim` for each pod if storage is specified in the `RuntimeComponent` CR.
+Runtime Component Operator is capable of creating a `StatefulSet` and `PersistentVolumeClaim` for each pod if storage is specified in the `RuntimeComponent` CR.
 
 Users also can provide mount points for their application. There are 2 ways to enable storage.
 
@@ -287,7 +287,7 @@ spec:
 
 #### Advanced storage
 
-Application Stacks Operator allows users to provide entire `volumeClaimTemplate` for full control over automatically created `PersistentVolumeClaim`.
+Runtime Component Operator allows users to provide entire `volumeClaimTemplate` for full control over automatically created `PersistentVolumeClaim`.
 
 It is also possible to create multiple volume mount points for persistent volume using `volumeMounts` field as shown below. You can still use `storage.mountPath` if you require only a single mount point.
 
@@ -320,7 +320,7 @@ spec:
 
 ### Service binding
 
-Application Stacks Operator can be used to help with service binding in a cluster. The operator creates a secret on behalf of the **provider** `RuntimeComponent` and injects the secret into pods of the **consumer** `RuntimeComponent` as either environment variable or mounted files. See [Application Stacks Operator Design for Service Binding](https://docs.google.com/document/d/1riOX0iTnBBJpTKAHcQShYVMlgkaTNKb4m8fY7W1GqMA/edit) for more information on the architecture. At this time, the only supported service binding type is `openapi`.
+Runtime Component Operator can be used to help with service binding in a cluster. The operator creates a secret on behalf of the **provider** `RuntimeComponent` and injects the secret into pods of the **consumer** `RuntimeComponent` as either environment variable or mounted files. See [Runtime Component Operator Design for Service Binding](https://docs.google.com/document/d/1riOX0iTnBBJpTKAHcQShYVMlgkaTNKb4m8fY7W1GqMA/edit) for more information on the architecture. At this time, the only supported service binding type is `openapi`.
 
 The provider lists information about the REST API it provides:
 
@@ -382,7 +382,7 @@ If consumer's CR does not include `mountPath`, the secret will be bound to envir
 
 ### Monitoring
 
-Application Stacks Operator can create a `ServiceMonitor` resource to integrate with `Prometheus Operator`.
+Runtime Component Operator can create a `ServiceMonitor` resource to integrate with `Prometheus Operator`.
 
 _This feature does not support integration with Knative Service. Prometheus Operator is required to use ServiceMonitor._
 
@@ -431,7 +431,7 @@ spec:
 
 ### Knative support
 
-Application Stacks Operator can deploy serverless applications with [Knative](https://knative.dev/docs/) on a Kubernetes cluster. To achieve this, the operator creates a [Knative `Service`](https://github.com/knative/serving/blob/master/docs/spec/spec.md#service) resource which manages the whole life cycle of a workload.
+Runtime Component Operator can deploy serverless applications with [Knative](https://knative.dev/docs/) on a Kubernetes cluster. To achieve this, the operator creates a [Knative `Service`](https://github.com/knative/serving/blob/master/docs/spec/spec.md#service) resource which manages the whole life cycle of a workload.
 
 To create Knative service, set `createKnativeService` to `true`:
 
@@ -498,7 +498,7 @@ To configure secure HTTPS connections for your Knative deployment, see [Configur
 
 ### Kubernetes Application Navigator (kAppNav) support
 
-By default, Application Stacks Operator configures the Kubernetes resources it generates to allow automatic creation of an application definition by [kAppNav](https://kappnav.io/), Kubernetes Application Navigator. You can easily view and manage the deployed resources that comprise your application using Application Navigator. You can disable auto-creation by setting `createAppDefinition` to `false`.
+By default, Runtime Component Operator configures the Kubernetes resources it generates to allow automatic creation of an application definition by [kAppNav](https://kappnav.io/), Kubernetes Application Navigator. You can easily view and manage the deployed resources that comprise your application using Application Navigator. You can disable auto-creation by setting `createAppDefinition` to `false`.
 
 To join an existing application definition, disable auto-creation and set the label(s) needed to join the application on `RuntimeComponent` CR. See [Labels](#labels) section for more information.
 
@@ -506,7 +506,7 @@ _This feature is only available if you have kAppNav installed on your cluster. A
 
 ### Certificate Manager Integration
 
-Application Stacks Operator is enabled to take advantage of [cert-manager](https://cert-manager.io/) tool, if it is installed on the cluster.
+Runtime Component Operator is enabled to take advantage of [cert-manager](https://cert-manager.io/) tool, if it is installed on the cluster.
 This allows to automatically provision TLS certificates for pods as well as routes.
 
 Cert-manager installation instruction can be found [here](https://cert-manager.io/docs/installation/)
