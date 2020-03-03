@@ -425,9 +425,15 @@ func (r *ReconcilerBase) ReconcileConsumes(ba common.BaseApplication) (reconcile
 	mObj := ba.(metav1.Object)
 	for _, con := range ba.GetService().GetConsumes() {
 		if con.GetCategory() == common.ServiceBindingCategoryOpenAPI {
-			secretName := BuildServiceBindingSecretName(con.GetName(), con.GetNamespace())
+			namespace := ""
+			if con.GetNamespace() == "" {
+				namespace = mObj.GetNamespace()
+			} else {
+				namespace = con.GetNamespace()
+			}
+			secretName := BuildServiceBindingSecretName(con.GetName(), namespace)
 			existingSecret := &corev1.Secret{}
-			err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: con.GetNamespace()}, existingSecret)
+			err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: namespace}, existingSecret)
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					delErr := r.DeleteResource(&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secretName, Namespace: mObj.GetNamespace()}})

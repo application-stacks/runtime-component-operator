@@ -109,7 +109,6 @@ type ServiceBindingConsumes interface {
 	GetNamespace() string
 	GetCategory() ServiceBindingCategory
 	GetMountPath() string
-	IsNamespaceProvided() bool
 }
 
 // ServiceBindingAuth represents authentication info when binding services
