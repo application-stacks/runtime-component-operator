@@ -1976,6 +1976,8 @@ spec:
                         type: string
                       type: array
                   type: object
+                certificateSecretRef:
+                  type: string
                 host:
                   type: string
                 insecureEdgeTerminationPolicy:
@@ -2129,6 +2131,8 @@ spec:
                         type: string
                       type: array
                   type: object
+                certificateSecretRef:
+                  type: string
                 consumes:
                   items:
                     description: ServiceBindingConsumes represents a service to be

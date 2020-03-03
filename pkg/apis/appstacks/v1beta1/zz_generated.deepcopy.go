@@ -208,6 +208,11 @@ func (in *RuntimeComponentRoute) DeepCopyInto(out *RuntimeComponentRoute) {
 		*out = new(Certificate)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.CertificateSecretRef != nil {
+		in, out := &in.CertificateSecretRef, &out.CertificateSecretRef
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 
@@ -250,6 +255,11 @@ func (in *RuntimeComponentService) DeepCopyInto(out *RuntimeComponentService) {
 		in, out := &in.Certificate, &out.Certificate
 		*out = new(Certificate)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.CertificateSecretRef != nil {
+		in, out := &in.CertificateSecretRef, &out.CertificateSecretRef
+		*out = new(string)
+		**out = **in
 	}
 	return
 }

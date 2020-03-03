@@ -536,7 +536,9 @@ func (r *ReconcilerBase) ReconcileCertificate(ba common.BaseApplication) (reconc
 					crt.Spec.RenewBefore = &metav1.Duration{Duration: time.Hour * 24 * 31}
 				}
 				crt.Spec.CommonName = obj.GetName() + "." + obj.GetNamespace() + "." + "svc"
-				crt.Spec.SecretName = obj.GetName() + "-svc-tls"
+				if crt.Spec.SecretName == "" {
+					crt.Spec.SecretName = obj.GetName() + "-svc-tls"
+				}
 				if len(crt.Spec.DNSNames) == 0 {
 					crt.Spec.DNSNames = append(crt.Spec.DNSNames, crt.Spec.CommonName)
 				}
@@ -586,7 +588,9 @@ func (r *ReconcilerBase) ReconcileCertificate(ba common.BaseApplication) (reconc
 				if crt.Spec.RenewBefore == nil {
 					crt.Spec.RenewBefore = &metav1.Duration{Duration: time.Hour * 24 * 31}
 				}
-				crt.Spec.SecretName = obj.GetName() + "-route-tls"
+				if crt.Spec.SecretName == "" {
+					crt.Spec.SecretName = obj.GetName() + "-route-tls"
+				}
 				// use routes host if no DNS information provided on certificate
 				if crt.Spec.CommonName == "" {
 					crt.Spec.CommonName = ba.GetRoute().GetHost()
@@ -644,9 +648,16 @@ func (r *ReconcilerBase) IsOpenShift() bool {
 func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseApplication) (key string, cert string, ca string, destCa string, err error) {
 	key, cert, ca, destCa = "", "", "", ""
 	mObj := ba.(metav1.Object)
-	if ba.GetService() != nil && ba.GetService().GetCertificate() != nil {
+	if ba.GetService() != nil && (ba.GetService().GetCertificate() != nil || ba.GetService().GetCertificateSecretRef() != nil) {
 		tlsSecret := &corev1.Secret{}
-		err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: mObj.GetName() + "-svc-tls", Namespace: mObj.GetNamespace()}, tlsSecret)
+		secretName := mObj.GetName() + "-svc-tls"
+		if ba.GetService().GetCertificate() != nil && ba.GetService().GetCertificate().GetSpec().SecretName != "" {
+			secretName = ba.GetService().GetCertificate().GetSpec().SecretName
+		}
+		if ba.GetService().GetCertificateSecretRef() != nil {
+			secretName = *ba.GetService().GetCertificateSecretRef()
+		}
+		err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: mObj.GetNamespace()}, tlsSecret)
 		if err != nil {
 			r.ManageError(err, common.StatusConditionTypeReconciled, ba)
 			return "", "", "", "", err
@@ -656,9 +667,16 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseApplication) (key strin
 			destCa = string(caCrt)
 		}
 	}
-	if ba.GetRoute() != nil && ba.GetRoute().GetCertificate() != nil {
+	if ba.GetRoute() != nil && (ba.GetRoute().GetCertificate() != nil || ba.GetRoute().GetCertificateSecretRef() != nil) {
 		tlsSecret := &corev1.Secret{}
-		err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: mObj.GetName() + "-route-tls", Namespace: mObj.GetNamespace()}, tlsSecret)
+		secretName := mObj.GetName() + "-route-tls"
+		if ba.GetRoute().GetCertificate() != nil && ba.GetRoute().GetCertificate().GetSpec().SecretName != "" {
+			secretName = ba.GetRoute().GetCertificate().GetSpec().SecretName
+		}
+		if ba.GetRoute().GetCertificateSecretRef() != nil {
+			secretName = *ba.GetRoute().GetCertificateSecretRef()
+		}
+		err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: mObj.GetNamespace()}, tlsSecret)
 		if err != nil {
 			r.ManageError(err, common.StatusConditionTypeReconciled, ba)
 			return "", "", "", "", err
@@ -674,6 +692,10 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseApplication) (key strin
 		v, ok = tlsSecret.Data["tls.key"]
 		if ok {
 			key = string(v)
+		}
+		v, ok = tlsSecret.Data["destCA.crt"]
+		if ok {
+			destCa = string(v)
 		}
 	}
 	return key, cert, ca, destCa, nil
