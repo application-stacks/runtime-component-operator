@@ -133,8 +133,12 @@ func CustomizeRoute(route *routev1.Route, ba common.BaseApplication, key string,
 	if route.Spec.Port == nil {
 		route.Spec.Port = &routev1.RoutePort{}
 	}
-	route.Spec.Port.TargetPort = intstr.FromString(strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp")
 
+	if ba.GetService().GetPortName() != "" {
+		route.Spec.Port.TargetPort = intstr.FromString(ba.GetService().GetPortName())
+	} else {
+		route.Spec.Port.TargetPort = intstr.FromString(strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp")
+	}
 }
 
 // ErrorIsNoMatchesForKind ...
@@ -223,10 +227,13 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 	if len(appContainer.Ports) == 0 {
 		appContainer.Ports = append(appContainer.Ports, corev1.ContainerPort{})
 	}
-
 	appContainer.Ports[0].ContainerPort = ba.GetService().GetPort()
 	appContainer.Image = ba.GetStatus().GetImageReference()
-	appContainer.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	if ba.GetService().GetPortName() != "" {
+		appContainer.Ports[0].Name = ba.GetService().GetPortName()
+	} else {
+		appContainer.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	}
 	if ba.GetResourceConstraints() != nil {
 		appContainer.Resources = *ba.GetResourceConstraints()
 	}
@@ -576,7 +583,11 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseAppl
 	if len(sm.Spec.Endpoints) == 0 {
 		sm.Spec.Endpoints = append(sm.Spec.Endpoints, prometheusv1.Endpoint{})
 	}
-	sm.Spec.Endpoints[0].Port = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	if ba.GetService().GetPortName() != "" {
+		sm.Spec.Endpoints[0].Port = ba.GetService().GetPortName()
+	} else {
+		sm.Spec.Endpoints[0].Port = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	}
 	if len(ba.GetMonitoring().GetLabels()) > 0 {
 		for k, v := range ba.GetMonitoring().GetLabels() {
 			sm.Labels[k] = v
