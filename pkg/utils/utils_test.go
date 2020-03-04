@@ -511,10 +511,10 @@ func createAppDefinitionTags(app *appstacksv1beta1.RuntimeComponent) (map[string
 		"kappnav.app.auto-create": "true",
 	}
 	annotations := map[string]string{
-		"kappnav.app.auto-create.name":          app.Name,
+		"kappnav.app.auto-create.name":          app.Spec.ApplicationName,
 		"kappnav.app.auto-create.kinds":         "Deployment, StatefulSet, Service, Route, Ingress, ConfigMap",
-		"kappnav.app.auto-create.label":         "app.kubernetes.io/instance",
-		"kappnav.app.auto-create.labels-values": app.Name,
+		"kappnav.app.auto-create.label":         "app.kubernetes.io/part-of",
+		"kappnav.app.auto-create.labels-values": app.Spec.ApplicationName,
 		"kappnav.app.auto-create.version":       app.Spec.Version,
 	}
 	return label, annotations
