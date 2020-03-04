@@ -8,6 +8,7 @@ require (
 	github.com/google/go-containerregistry v0.0.0-20200212224832-c629a66d7231 // indirect
 	github.com/jetstack/cert-manager v0.12.0
 	github.com/knative/serving v0.7.1-0.20190701162519-7ca25646a186
+	github.com/kubernetes-sigs/application v0.8.1 // indirect
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	github.com/openshift/library-go v0.0.0-20200214084717-e77ad9dd8ebd
 	github.com/operator-framework/operator-sdk v0.15.2
@@ -18,6 +19,7 @@ require (
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a
 	knative.dev/pkg v0.0.0-20200218144759-9b3ea736c68c // indirect
+	sigs.k8s.io/application v0.8.1
 	sigs.k8s.io/controller-runtime v0.4.0
 )
 

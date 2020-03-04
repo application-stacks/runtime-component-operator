@@ -59,9 +59,8 @@ func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseApplica
 	UpdateAppDefinition(statefulSet.Labels, statefulSet.Annotations, ba)
 }
 
-// UpdateAppDefinition ...
+// UpdateAppDefinition adds or removes kAppNav auto-create related annotations/labels
 func UpdateAppDefinition(labels map[string]string, annotations map[string]string, ba common.BaseApplication) {
-	obj := ba.(metav1.Object)
 	if ba.GetCreateAppDefinition() != nil && !*ba.GetCreateAppDefinition() {
 		delete(labels, "kappnav.app.auto-create")
 		delete(annotations, "kappnav.app.auto-create.name")
@@ -71,10 +70,10 @@ func UpdateAppDefinition(labels map[string]string, annotations map[string]string
 		delete(annotations, "kappnav.app.auto-create.version")
 	} else {
 		labels["kappnav.app.auto-create"] = "true"
-		annotations["kappnav.app.auto-create.name"] = obj.GetName()
+		annotations["kappnav.app.auto-create.name"] = ba.GetApplicationName()
 		annotations["kappnav.app.auto-create.kinds"] = "Deployment, StatefulSet, Service, Route, Ingress, ConfigMap"
-		annotations["kappnav.app.auto-create.label"] = "app.kubernetes.io/instance"
-		annotations["kappnav.app.auto-create.labels-values"] = obj.GetName()
+		annotations["kappnav.app.auto-create.label"] = "app.kubernetes.io/part-of"
+		annotations["kappnav.app.auto-create.labels-values"] = ba.GetApplicationName()
 		if ba.GetVersion() == "" {
 			delete(annotations, "kappnav.app.auto-create.version")
 		} else {
