@@ -255,20 +255,22 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 		})
 	}
 
-	extraContainers := ba.GetExtraContainers()
-	if extraContainers != nil {
-		for i := 0; i < len(extraContainers); i++ {
-			exists := false
-			for j := 0; j < len(pts.Spec.Containers); j++ {
-				if extraContainers[i].Name == pts.Spec.Containers[j].Name {
-					exists = true
-					break
-				}
-			}
-			if exists == false {
-				pts.Spec.Containers = append(pts.Spec.Containers, extraContainers[i])
-			}
+	sidecarContainers := ba.GetSidecarContainers()
+	if sidecarContainers != nil {
+		m := make(map[string]corev1.Container)
+		for j := 0; j < len(sidecarContainers); j++ {
+			m[sidecarContainers[j].Name] = sidecarContainers[j]
 		}
+
+		containerList := make([]corev1.Container, len(m)+1)
+		containerList[0] = pts.Spec.Containers[0]
+		index := 1
+		for _, value := range m {
+			containerList[index] = value
+			index++
+			pts.Spec.Containers = containerList
+		}
+
 	}
 
 	CustomizeConsumedServices(&pts.Spec, ba)

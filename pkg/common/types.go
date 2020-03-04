@@ -155,7 +155,7 @@ type BaseApplication interface {
 	GetAnnotations() map[string]string
 	GetStatus() BaseApplicationStatus
 	GetInitContainers() []corev1.Container
-	GetExtraContainers() []corev1.Container
+	GetSidecarContainers() []corev1.Container
 	GetGroupName() string
 	GetRoute() BaseApplicationRoute
 }
