@@ -299,12 +299,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 // CustomizeConsumedServices ...
 func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseApplication) {
 	if ba.GetStatus().GetConsumedServices() != nil {
-		appContainer := &corev1.Container{}
-		for i := 0; i < len(podSpec.Containers); i++ {
-			if podSpec.Containers[i].Name == "app" {
-				appContainer = &podSpec.Containers[i]
-			}
-		}
+		appContainer := GetAppContainer(podSpec.Containers)
 		for _, svc := range ba.GetStatus().GetConsumedServices()[common.ServiceBindingCategoryOpenAPI] {
 			c, _ := findConsumes(svc, ba)
 			if c.GetMountPath() != "" {
@@ -376,12 +371,8 @@ func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseApplica
 		statefulSet.Spec.VolumeClaimTemplates = append(statefulSet.Spec.VolumeClaimTemplates, *pvc)
 	}
 
-	appContainer := &corev1.Container{}
-	for i := 0; i < len(statefulSet.Spec.Template.Spec.Containers); i++ {
-		if statefulSet.Spec.Template.Spec.Containers[i].Name == "app" {
-			appContainer = &statefulSet.Spec.Template.Spec.Containers[i]
-		}
-	}
+	appContainer := GetAppContainer(statefulSet.Spec.Template.Spec.Containers)
+
 	if ba.GetStorage().GetMountPath() != "" {
 		found := false
 		for _, v := range appContainer.VolumeMounts {
