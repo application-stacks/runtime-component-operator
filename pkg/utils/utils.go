@@ -202,33 +202,58 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 	pts.Labels = ba.GetLabels()
 	pts.Annotations = MergeMaps(pts.Annotations, ba.GetAnnotations())
 
-	if len(pts.Spec.Containers) == 0 {
-		pts.Spec.Containers = append(pts.Spec.Containers, corev1.Container{})
-	}
-	pts.Spec.Containers[0].Name = "app"
-	if len(pts.Spec.Containers[0].Ports) == 0 {
-		pts.Spec.Containers[0].Ports = append(pts.Spec.Containers[0].Ports, corev1.ContainerPort{})
+	containerMap := map[string]*corev1.Container{}
+	for i := range pts.Spec.Containers {
+		container := pts.Spec.Containers[i]
+		containerMap[container.Name] = &container
 	}
 
-	pts.Spec.Containers[0].Ports[0].ContainerPort = ba.GetService().GetPort()
-	pts.Spec.Containers[0].Image = ba.GetStatus().GetImageReference()
-	pts.Spec.Containers[0].Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	appContainer, ok := containerMap["app"]
+	if !ok {
+		containerMap["app"] = &corev1.Container{}
+		appContainer = containerMap["app"]
+	}
+
+	appContainer.Name = "app"
+	if len(appContainer.Ports) == 0 {
+		appContainer.Ports = append(appContainer.Ports, corev1.ContainerPort{})
+	}
+
+	appContainer.Ports[0].ContainerPort = ba.GetService().GetPort()
+	appContainer.Image = ba.GetStatus().GetImageReference()
+	appContainer.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
 	if ba.GetResourceConstraints() != nil {
-		pts.Spec.Containers[0].Resources = *ba.GetResourceConstraints()
+		appContainer.Resources = *ba.GetResourceConstraints()
 	}
-	pts.Spec.Containers[0].ReadinessProbe = ba.GetReadinessProbe()
-	pts.Spec.Containers[0].LivenessProbe = ba.GetLivenessProbe()
+	appContainer.ReadinessProbe = ba.GetReadinessProbe()
+	appContainer.LivenessProbe = ba.GetLivenessProbe()
 
-	if ba.GetInitContainers() != nil {
-		pts.Spec.InitContainers = ba.GetInitContainers()
-	}
 	if ba.GetPullPolicy() != nil {
-		pts.Spec.Containers[0].ImagePullPolicy = *ba.GetPullPolicy()
+		appContainer.ImagePullPolicy = *ba.GetPullPolicy()
 	}
-	pts.Spec.Containers[0].Env = ba.GetEnv()
-	pts.Spec.Containers[0].EnvFrom = ba.GetEnvFrom()
+	appContainer.Env = ba.GetEnv()
+	appContainer.EnvFrom = ba.GetEnvFrom()
 
-	pts.Spec.Containers[0].VolumeMounts = ba.GetVolumeMounts()
+	pts.Spec.InitContainers = ba.GetInitContainers()
+
+	sidecarContainerMap := map[string]*corev1.Container{}
+	for i := range ba.GetSidecarContainers() {
+		container := ba.GetSidecarContainers()[i]
+		if container.Name != "app" {
+			sidecarContainerMap[container.Name] = &container
+			containerMap[container.Name] = &container
+		}
+	}
+	pts.Spec.Containers = []corev1.Container{}
+	for name, container := range containerMap {
+		// Only add containers which are either a sidecar or 'app'. There might be left overs from before
+		// when sidecar container name changes
+		if name == "app" || sidecarContainerMap[name] != nil {
+			pts.Spec.Containers = append(pts.Spec.Containers, *container)
+		}
+	}
+
+	appContainer.VolumeMounts = ba.GetVolumeMounts()
 	pts.Spec.Volumes = ba.GetVolumes()
 
 	if ba.GetService().GetCertificate() != nil || ba.GetService().GetCertificateSecretRef() != nil {
@@ -253,24 +278,6 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 			MountPath: "/etc/x509/certs",
 			ReadOnly:  true,
 		})
-	}
-
-	sidecarContainers := ba.GetSidecarContainers()
-	if sidecarContainers != nil {
-		m := make(map[string]corev1.Container)
-		for j := 0; j < len(sidecarContainers); j++ {
-			m[sidecarContainers[j].Name] = sidecarContainers[j]
-		}
-
-		containerList := make([]corev1.Container, len(m)+1)
-		containerList[0] = pts.Spec.Containers[0]
-		index := 1
-		for _, value := range m {
-			containerList[index] = value
-			index++
-			pts.Spec.Containers = containerList
-		}
-
 	}
 
 	CustomizeConsumedServices(&pts.Spec, ba)
