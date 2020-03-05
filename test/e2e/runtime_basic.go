@@ -61,7 +61,7 @@ func runtimeBasicScaleTest(t *testing.T, f *framework.Framework, ctx *framework.
 	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, "example-runtime", namespace, helper)
 
 	timestamp := time.Now().UTC()
-	t.Logf("%s - Creating basic runtime omponent for scaling test...", timestamp)
+	t.Logf("%s - Creating basic runtime component for scaling test...", timestamp)
 	// Create application deployment and wait
 	err = f.Client.Create(goctx.TODO(), exampleRuntime, &framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
 	if err != nil {

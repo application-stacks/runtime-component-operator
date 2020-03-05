@@ -29,4 +29,5 @@ func TestRuntimeComponent(t *testing.T) {
 	t.Run("RuntimeAutoScalingTest", RuntimeAutoScalingTest)
 	t.Run("RuntimeServiceMonitorTest", RuntimeServiceMonitorTest)
 	t.Run("RuntimeKnativeTest", RuntimeKnativeTest)
+	t.Run("RuntimeCertManagerTest", RuntimeCertManagerTest)
 }
