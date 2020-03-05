@@ -236,23 +236,6 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 
 	pts.Spec.InitContainers = ba.GetInitContainers()
 
-	sidecarContainerMap := map[string]*corev1.Container{}
-	for i := range ba.GetSidecarContainers() {
-		container := ba.GetSidecarContainers()[i]
-		if container.Name != "app" {
-			sidecarContainerMap[container.Name] = &container
-			containerMap[container.Name] = &container
-		}
-	}
-	pts.Spec.Containers = []corev1.Container{}
-	for name, container := range containerMap {
-		// Only add containers which are either a sidecar or 'app'. There might be left overs from before
-		// when sidecar container name changes
-		if name == "app" || sidecarContainerMap[name] != nil {
-			pts.Spec.Containers = append(pts.Spec.Containers, *container)
-		}
-	}
-
 	appContainer.VolumeMounts = ba.GetVolumeMounts()
 	pts.Spec.Volumes = ba.GetVolumes()
 
@@ -264,7 +247,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 		if ba.GetService().GetCertificateSecretRef() != nil {
 			secretName = *ba.GetService().GetCertificateSecretRef()
 		}
-		pts.Spec.Containers[0].Env = append(pts.Spec.Containers[0].Env, corev1.EnvVar{Name: "TLS_DIR", Value: "/etc/x509/certs"})
+		appContainer.Env = append(appContainer.Env, corev1.EnvVar{Name: "TLS_DIR", Value: "/etc/x509/certs"})
 		pts.Spec.Volumes = append(pts.Spec.Volumes, corev1.Volume{
 			Name: "svc-certificate",
 			VolumeSource: corev1.VolumeSource{
@@ -273,13 +256,30 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 				},
 			},
 		})
-		pts.Spec.Containers[0].VolumeMounts = append(pts.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+		appContainer.VolumeMounts = append(appContainer.VolumeMounts, corev1.VolumeMount{
 			Name:      "svc-certificate",
 			MountPath: "/etc/x509/certs",
 			ReadOnly:  true,
 		})
 	}
 
+	sidecarContainerMap := map[string]*corev1.Container{}
+	for i := range ba.GetSidecarContainers() {
+		container := ba.GetSidecarContainers()[i]
+		if container.Name != "app" {
+			sidecarContainerMap[container.Name] = &container
+			containerMap[container.Name] = &container
+		}
+	}
+
+	pts.Spec.Containers = []corev1.Container{}
+	for name, container := range containerMap {
+		// Only add containers which are either a sidecar or 'app'. There might be left overs from before
+		// when sidecar container name changes
+		if name == "app" || sidecarContainerMap[name] != nil {
+			pts.Spec.Containers = append(pts.Spec.Containers, *container)
+		}
+	}
 	CustomizeConsumedServices(&pts.Spec, ba)
 
 	if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
@@ -299,12 +299,18 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 // CustomizeConsumedServices ...
 func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseApplication) {
 	if ba.GetStatus().GetConsumedServices() != nil {
+		appContainer := &corev1.Container{}
+		for i := 0; i < len(podSpec.Containers); i++ {
+			if podSpec.Containers[i].Name == "app" {
+				appContainer = &podSpec.Containers[i]
+			}
+		}
 		for _, svc := range ba.GetStatus().GetConsumedServices()[common.ServiceBindingCategoryOpenAPI] {
 			c, _ := findConsumes(svc, ba)
 			if c.GetMountPath() != "" {
 				actualMountPath := strings.Join([]string{c.GetMountPath(), c.GetNamespace(), c.GetName()}, "/")
 				volMount := corev1.VolumeMount{Name: svc, MountPath: actualMountPath, ReadOnly: true}
-				podSpec.Containers[0].VolumeMounts = append(podSpec.Containers[0].VolumeMounts, volMount)
+				appContainer.VolumeMounts = append(appContainer.VolumeMounts, volMount)
 
 				vol := corev1.Volume{
 					Name: svc,
@@ -333,7 +339,7 @@ func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseApplicatio
 							},
 						},
 					}
-					podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, env)
+					appContainer.Env = append(appContainer.Env, env)
 				}
 			}
 		}
@@ -370,9 +376,15 @@ func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseApplica
 		statefulSet.Spec.VolumeClaimTemplates = append(statefulSet.Spec.VolumeClaimTemplates, *pvc)
 	}
 
+	appContainer := &corev1.Container{}
+	for i := 0; i < len(statefulSet.Spec.Template.Spec.Containers); i++ {
+		if statefulSet.Spec.Template.Spec.Containers[i].Name == "app" {
+			appContainer = &statefulSet.Spec.Template.Spec.Containers[i]
+		}
+	}
 	if ba.GetStorage().GetMountPath() != "" {
 		found := false
-		for _, v := range statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts {
+		for _, v := range appContainer.VolumeMounts {
 			if v.Name == statefulSet.Spec.VolumeClaimTemplates[0].Name {
 				found = true
 			}
@@ -383,7 +395,7 @@ func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseApplica
 				Name:      statefulSet.Spec.VolumeClaimTemplates[0].Name,
 				MountPath: ba.GetStorage().GetMountPath(),
 			}
-			statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts = append(statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts, vm)
+			appContainer.VolumeMounts = append(appContainer.VolumeMounts, vm)
 		}
 	}
 
@@ -767,4 +779,14 @@ func GetConnectToAnnotation(ba common.BaseApplication) map[string]string {
 // IsClusterWide returns true if watchNamespaces is set to [""]
 func IsClusterWide(watchNamespaces []string) bool {
 	return len(watchNamespaces) == 1 && watchNamespaces[0] == ""
+}
+
+// GetAppContainer returns the container that is running the app
+func GetAppContainer(containerList []corev1.Container) *corev1.Container {
+	for i := 0; i < len(containerList); i++ {
+		if containerList[i].Name == "app" {
+			return &containerList[i]
+		}
+	}
+	return &corev1.Container{}
 }
