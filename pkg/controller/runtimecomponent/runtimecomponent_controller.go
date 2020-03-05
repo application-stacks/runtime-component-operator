@@ -322,6 +322,17 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		return reconcile.Result{}, nil
 	}
 
+	if r.IsApplicationSupported() {
+		// Get labels from Application CRs selector and merge with instance labels
+		existingAppLabels, err := r.GetSelectorLabelsFromApplications(instance)
+		if err != nil {
+			r.ManageError(errors.Wrapf(err, "unable to get %q Application CR selector's labels ", instance.Spec.ApplicationName), common.StatusConditionTypeReconciled, instance)
+		}
+		instance.Labels = appstacksutils.MergeMaps(existingAppLabels, instance.Labels)
+	} else {
+		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", servingv1alpha1.SchemeGroupVersion.String()))
+	}
+
 	currentGen := instance.Generation
 	err = r.GetClient().Update(context.TODO(), instance)
 	if err != nil {

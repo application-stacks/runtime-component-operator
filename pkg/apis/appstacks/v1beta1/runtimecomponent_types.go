@@ -43,6 +43,7 @@ type RuntimeComponentSpec struct {
 	CreateKnativeService *bool                       `json:"createKnativeService,omitempty"`
 	Monitoring           *RuntimeComponentMonitoring `json:"monitoring,omitempty"`
 	CreateAppDefinition  *bool                       `json:"createAppDefinition,omitempty"`
+	ApplicationName      string                      `json:"applicationName,omitempty"`
 	// +listType=map
 	// +listMapKey=name
 	InitContainers []corev1.Container     `json:"initContainers,omitempty"`
@@ -304,6 +305,11 @@ func (cr *RuntimeComponent) GetCreateAppDefinition() *bool {
 	return cr.Spec.CreateAppDefinition
 }
 
+// GetApplicationName returns Application name to be used for integration with kAppNav
+func (cr *RuntimeComponent) GetApplicationName() string {
+	return cr.Spec.ApplicationName
+}
+
 // GetMonitoring returns monitoring settings
 func (cr *RuntimeComponent) GetMonitoring() common.BaseApplicationMonitoring {
 	if cr.Spec.Monitoring == nil {
@@ -536,7 +542,6 @@ func (r *RuntimeComponentRoute) GetPath() string {
 
 // Initialize the RuntimeComponent instance
 func (cr *RuntimeComponent) Initialize() {
-
 	if cr.Spec.PullPolicy == nil {
 		pp := corev1.PullIfNotPresent
 		cr.Spec.PullPolicy = &pp
@@ -544,6 +549,19 @@ func (cr *RuntimeComponent) Initialize() {
 
 	if cr.Spec.ResourceConstraints == nil {
 		cr.Spec.ResourceConstraints = &corev1.ResourceRequirements{}
+	}
+
+	// Default applicationName to cr.Name, if a user sets createAppDefinition to true but doesn't set applicationName
+	if cr.Spec.ApplicationName == "" {
+		if cr.Labels != nil && cr.Labels["app.kubernetes.io/part-of"] != "" {
+			cr.Spec.ApplicationName = cr.Labels["app.kubernetes.io/part-of"]
+		} else {
+			cr.Spec.ApplicationName = cr.Name
+		}
+	}
+
+	if cr.Labels != nil {
+		cr.Labels["app.kubernetes.io/part-of"] = cr.Spec.ApplicationName
 	}
 
 	// This is to handle when there is no service in the CR
@@ -592,7 +610,7 @@ func (cr *RuntimeComponent) GetLabels() map[string]string {
 		"app.kubernetes.io/name":       cr.Name,
 		"app.kubernetes.io/managed-by": "application-stacks-operator",
 		"app.kubernetes.io/component":  "backend",
-		"app.kubernetes.io/part-of":    cr.Name,
+		"app.kubernetes.io/part-of":    cr.Spec.ApplicationName,
 	}
 
 	if cr.Spec.Version != "" {

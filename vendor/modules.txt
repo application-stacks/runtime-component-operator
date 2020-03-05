@@ -112,6 +112,11 @@ github.com/knative/serving/pkg/apis/serving/v1alpha1
 github.com/knative/serving/pkg/apis/serving/v1beta1
 # github.com/konsorten/go-windows-terminal-sequences v1.0.2
 github.com/konsorten/go-windows-terminal-sequences
+# github.com/kubernetes-sigs/application v0.8.1
+github.com/kubernetes-sigs/application/pkg/component
+github.com/kubernetes-sigs/application/pkg/customresource
+github.com/kubernetes-sigs/application/pkg/finalizer
+github.com/kubernetes-sigs/application/pkg/resource
 # github.com/mailru/easyjson v0.7.0
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer
@@ -532,6 +537,8 @@ knative.dev/pkg/kmeta
 knative.dev/pkg/kmp
 knative.dev/pkg/ptr
 knative.dev/pkg/tracker
+# sigs.k8s.io/application v0.8.1
+sigs.k8s.io/application/pkg/apis/app/v1beta1
 # sigs.k8s.io/controller-runtime v0.4.0
 sigs.k8s.io/controller-runtime/pkg/cache
 sigs.k8s.io/controller-runtime/pkg/cache/internal
@@ -560,6 +567,7 @@ sigs.k8s.io/controller-runtime/pkg/reconcile
 sigs.k8s.io/controller-runtime/pkg/recorder
 sigs.k8s.io/controller-runtime/pkg/runtime/inject
 sigs.k8s.io/controller-runtime/pkg/runtime/log
+sigs.k8s.io/controller-runtime/pkg/runtime/scheme
 sigs.k8s.io/controller-runtime/pkg/runtime/signals
 sigs.k8s.io/controller-runtime/pkg/scheme
 sigs.k8s.io/controller-runtime/pkg/source

@@ -68,6 +68,8 @@ spec:
           properties:
             applicationImage:
               type: string
+            applicationName:
+              type: string
             architecture:
               items:
                 type: string

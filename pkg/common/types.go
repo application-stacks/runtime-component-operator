@@ -149,6 +149,7 @@ type BaseApplication interface {
 	GetService() BaseApplicationService
 	GetVersion() string
 	GetCreateAppDefinition() *bool
+	GetApplicationName() string
 	GetMonitoring() BaseApplicationMonitoring
 	GetLabels() map[string]string
 	GetAnnotations() map[string]string
