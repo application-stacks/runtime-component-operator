@@ -644,6 +644,15 @@ func (r *ReconcilerBase) IsOpenShift() bool {
 	return isOpenShift
 }
 
+// IsApplicationSupported checks if Application
+func (r *ReconcilerBase) IsApplicationSupported() bool {
+	isApplicationSupported, err := r.IsGroupVersionSupported(applicationsv1beta1.SchemeGroupVersion.String())
+	if err != nil {
+		return false
+	}
+	return isApplicationSupported
+}
+
 // GetRouteTLSValues returns certificate an key values to be used in the route
 func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseApplication) (key string, cert string, ca string, destCa string, err error) {
 	key, cert, ca, destCa = "", "", "", ""
@@ -719,7 +728,7 @@ func (r *ReconcilerBase) GetSelectorLabelsFromApplications(ba common.BaseApplica
 		apps := &applicationsv1beta1.ApplicationList{}
 		if err = r.GetClient().List(context.Background(), apps, client.InNamespace("")); err == nil {
 			for _, app := range apps.Items {
-				if app.Annotations != nil {
+				if app.Name == ba.GetApplicationName() && app.Annotations != nil {
 					namespaces := strings.Split(app.Annotations["kappnav.component.namespaces"], ",")
 					for i := range namespaces {
 						namespaces[i] = strings.TrimSpace(namespaces[i])
