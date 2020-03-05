@@ -42,11 +42,11 @@ func RuntimeCertManagerTest(t *testing.T) {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	t.Log("creating cert issuer...")
-	err = util.CreateCertificateIssuer(t, f, ctx, "runtime-cert-issuer")
-	if err != nil {
-		util.FailureCleanup(t, f, namespace, err)
-	}
+	// t.Log("creating cert issuer...")
+	// err = util.CreateCertificateIssuer(t, f, ctx, "runtime-cert-issuer")
+	// if err != nil {
+	// 	util.FailureCleanup(t, f, namespace, err)
+	// }
 
 	if err = runtimePodCertificateTest(t, f, ctx); err != nil {
 		util.FailureCleanup(t, f, namespace, err)
@@ -149,7 +149,7 @@ func runtimeAdvancedCertificateTest(t *testing.T, f *framework.Framework, ctx *f
 			Duration: &duration,
 			Organization: []string{"My Company"},
 			IssuerRef: cmmeta.ObjectReference{
-				Name: "runtime-cert-issuer",
+				Name: "self-signed",
 				Kind: "ClusterIssuer",
 			},
 		},
