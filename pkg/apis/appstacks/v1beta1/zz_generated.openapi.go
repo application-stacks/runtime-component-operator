@@ -181,6 +181,12 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentService(ref common.Refere
 							Format: "int32",
 						},
 					},
+					"portName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"annotations": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
@@ -433,6 +439,18 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentSpec(ref common.Reference
 								"x-kubernetes-list-type":     "map",
 							},
 						},
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("k8s.io/api/core/v1.Container"),
+									},
+								},
+							},
+						},
+					},
+					"sidecarContainers": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},
 							Items: &spec.SchemaOrArray{

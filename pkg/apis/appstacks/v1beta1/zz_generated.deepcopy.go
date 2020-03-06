@@ -387,6 +387,13 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.SidecarContainers != nil {
+		in, out := &in.SidecarContainers, &out.SidecarContainers
+		*out = make([]corev1.Container, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.Route != nil {
 		in, out := &in.Route, &out.Route
 		*out = new(RuntimeComponentRoute)
