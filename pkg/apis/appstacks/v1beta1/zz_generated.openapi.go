@@ -451,6 +451,12 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentSpec(ref common.Reference
 						},
 					},
 					"sidecarContainers": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": "name",
+								"x-kubernetes-list-type":     "map",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},
 							Items: &spec.SchemaOrArray{

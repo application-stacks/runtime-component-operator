@@ -46,7 +46,9 @@ type RuntimeComponentSpec struct {
 	ApplicationName      string                      `json:"applicationName,omitempty"`
 	// +listType=map
 	// +listMapKey=name
-	InitContainers    []corev1.Container     `json:"initContainers,omitempty"`
+	InitContainers []corev1.Container `json:"initContainers,omitempty"`
+	// +listType=map
+	// +listMapKey=name
 	SidecarContainers []corev1.Container     `json:"sidecarContainers,omitempty"`
 	Route             *RuntimeComponentRoute `json:"route,omitempty"`
 }

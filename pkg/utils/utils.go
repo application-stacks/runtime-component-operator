@@ -211,16 +211,11 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 	pts.Labels = ba.GetLabels()
 	pts.Annotations = MergeMaps(pts.Annotations, ba.GetAnnotations())
 
-	containerMap := map[string]*corev1.Container{}
-	for i := range pts.Spec.Containers {
-		container := pts.Spec.Containers[i]
-		containerMap[container.Name] = &container
-	}
-
-	appContainer, ok := containerMap["app"]
-	if !ok {
-		containerMap["app"] = &corev1.Container{}
-		appContainer = containerMap["app"]
+	var appContainer corev1.Container
+	if len(pts.Spec.Containers) == 0 {
+		appContainer = corev1.Container{}
+	} else {
+		appContainer = *GetAppContainer(pts.Spec.Containers)
 	}
 
 	appContainer.Name = "app"
@@ -275,23 +270,8 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 		})
 	}
 
-	sidecarContainerMap := map[string]*corev1.Container{}
-	for i := range ba.GetSidecarContainers() {
-		container := ba.GetSidecarContainers()[i]
-		if container.Name != "app" {
-			sidecarContainerMap[container.Name] = &container
-			containerMap[container.Name] = &container
-		}
-	}
+	pts.Spec.Containers = append([]corev1.Container{appContainer}, ba.GetSidecarContainers()...)
 
-	pts.Spec.Containers = []corev1.Container{}
-	for name, container := range containerMap {
-		// Only add containers which are either a sidecar or 'app'. There might be left overs from before
-		// when sidecar container name changes
-		if name == "app" || sidecarContainerMap[name] != nil {
-			pts.Spec.Containers = append(pts.Spec.Containers, *container)
-		}
-	}
 	CustomizeConsumedServices(&pts.Spec, ba)
 
 	if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
