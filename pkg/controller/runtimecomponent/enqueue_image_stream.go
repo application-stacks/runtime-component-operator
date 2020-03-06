@@ -3,8 +3,8 @@ package runtimecomponent
 import (
 	"context"
 
-	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
-	appstacksutils "github.com/application-stacks/operator/pkg/utils"
+	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
+	appstacksutils "github.com/application-stacks/runtime-component-operator/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"

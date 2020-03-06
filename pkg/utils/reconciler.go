@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
-	"github.com/application-stacks/operator/pkg/common"
+	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
+	"github.com/application-stacks/runtime-component-operator/pkg/common"
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	v1 "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -153,7 +153,7 @@ func (r *ReconcilerBase) GetOpConfigMap(name string, ns string) (*corev1.ConfigM
 }
 
 // ManageError ...
-func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusConditionType, ba common.BaseApplication) (reconcile.Result, error) {
+func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
 	s := ba.GetStatus()
 	rObj := ba.(runtime.Object)
 	mObj := ba.(metav1.Object)
@@ -219,7 +219,7 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 }
 
 // ManageSuccess ...
-func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType, ba common.BaseApplication) (reconcile.Result, error) {
+func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
 	s := ba.GetStatus()
 	oldCondition := s.GetCondition(conditionType)
 	if oldCondition == nil {
@@ -314,7 +314,7 @@ func (r *ReconcilerBase) AsOwner(rObj runtime.Object, controller bool) (metav1.O
 }
 
 // GetServiceBindingCreds returns a map containing username/password string values based on 'cr.spec.service.provides.auth'
-func (r *ReconcilerBase) GetServiceBindingCreds(ba common.BaseApplication) (map[string]string, error) {
+func (r *ReconcilerBase) GetServiceBindingCreds(ba common.BaseComponent) (map[string]string, error) {
 	if ba.GetService() == nil || ba.GetService().GetProvides() == nil || ba.GetService().GetProvides().GetAuth() == nil {
 		return nil, errors.Errorf("auth is not set on the object %s", ba)
 	}
@@ -354,7 +354,7 @@ func getCredFromSecret(namespace string, sel corev1.SecretKeySelector, cred stri
 }
 
 // ReconcileProvides ...
-func (r *ReconcilerBase) ReconcileProvides(ba common.BaseApplication) (_ reconcile.Result, err error) {
+func (r *ReconcilerBase) ReconcileProvides(ba common.BaseComponent) (_ reconcile.Result, err error) {
 	mObj := ba.(metav1.Object)
 	logger := log.WithValues("ba.Namespace", mObj.GetNamespace(), "ba.Name", mObj.GetName())
 
@@ -420,7 +420,7 @@ func (r *ReconcilerBase) ReconcileProvides(ba common.BaseApplication) (_ reconci
 }
 
 // ReconcileConsumes ...
-func (r *ReconcilerBase) ReconcileConsumes(ba common.BaseApplication) (reconcile.Result, error) {
+func (r *ReconcilerBase) ReconcileConsumes(ba common.BaseComponent) (reconcile.Result, error) {
 	rObj := ba.(runtime.Object)
 	mObj := ba.(metav1.Object)
 	for _, con := range ba.GetService().GetConsumes() {
@@ -517,7 +517,7 @@ func (r *ReconcilerBase) ReconcileConsumes(ba common.BaseApplication) (reconcile
 }
 
 // ReconcileCertificate used to manage cert-manager integration
-func (r *ReconcilerBase) ReconcileCertificate(ba common.BaseApplication) (reconcile.Result, error) {
+func (r *ReconcilerBase) ReconcileCertificate(ba common.BaseComponent) (reconcile.Result, error) {
 	owner := ba.(metav1.Object)
 	if ok, err := r.IsGroupVersionSupported(certmngrv1alpha2.SchemeGroupVersion.String()); err != nil {
 		r.ManageError(err, common.StatusConditionTypeReconciled, ba)
@@ -654,7 +654,7 @@ func (r *ReconcilerBase) IsApplicationSupported() bool {
 }
 
 // GetRouteTLSValues returns certificate an key values to be used in the route
-func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseApplication) (key string, cert string, ca string, destCa string, err error) {
+func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string, cert string, ca string, destCa string, err error) {
 	key, cert, ca, destCa = "", "", "", ""
 	mObj := ba.(metav1.Object)
 	if ba.GetService() != nil && (ba.GetService().GetCertificate() != nil || ba.GetService().GetCertificateSecretRef() != nil) {
@@ -710,9 +710,9 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseApplication) (key strin
 	return key, cert, ca, destCa, nil
 }
 
-// GetSelectorLabelsFromApplications finds application CRs with the specified name in the BaseApplication's namespace and returns labels in `selector.matchLabels`.
+// GetSelectorLabelsFromApplications finds application CRs with the specified name in the BaseComponent's namespace and returns labels in `selector.matchLabels`.
 // If it fails to find in the current namespace, it looks up in the whole cluster and aggregates all labels in `selector.matchLabels`.
-func (r *ReconcilerBase) GetSelectorLabelsFromApplications(ba common.BaseApplication) (map[string]string, error) {
+func (r *ReconcilerBase) GetSelectorLabelsFromApplications(ba common.BaseComponent) (map[string]string, error) {
 	mObj := ba.(metav1.Object)
 	allSelectorLabels := map[string]string{}
 	app := &applicationsv1beta1.Application{}
