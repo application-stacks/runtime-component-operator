@@ -795,5 +795,5 @@ func GetAppContainer(containerList []corev1.Container) *corev1.Container {
 			return &containerList[i]
 		}
 	}
-	return &corev1.Container{}
+	return &containerList[0]
 }
