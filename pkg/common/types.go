@@ -72,6 +72,7 @@ type BaseApplicationStorage interface {
 // BaseApplicationService represents basic service configuration
 type BaseApplicationService interface {
 	GetPort() int32
+	GetPortName() string
 	GetType() *corev1.ServiceType
 	GetAnnotations() map[string]string
 	GetProvides() ServiceBindingProvides
@@ -155,6 +156,7 @@ type BaseApplication interface {
 	GetAnnotations() map[string]string
 	GetStatus() BaseApplicationStatus
 	GetInitContainers() []corev1.Container
+	GetSidecarContainers() []corev1.Container
 	GetGroupName() string
 	GetRoute() BaseApplicationRoute
 }

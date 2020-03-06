@@ -46,8 +46,9 @@ type RuntimeComponentSpec struct {
 	ApplicationName      string                      `json:"applicationName,omitempty"`
 	// +listType=map
 	// +listMapKey=name
-	InitContainers []corev1.Container     `json:"initContainers,omitempty"`
-	Route          *RuntimeComponentRoute `json:"route,omitempty"`
+	InitContainers    []corev1.Container     `json:"initContainers,omitempty"`
+	SidecarContainers []corev1.Container     `json:"sidecarContainers,omitempty"`
+	Route             *RuntimeComponentRoute `json:"route,omitempty"`
 }
 
 // RuntimeComponentAutoScaling ...
@@ -68,6 +69,8 @@ type RuntimeComponentService struct {
 	// +kubebuilder:validation:Maximum=65536
 	// +kubebuilder:validation:Minimum=1
 	Port int32 `json:"port,omitempty"`
+
+	PortName string `json:"portName,omitempty"`
 
 	Annotations map[string]string `json:"annotations,omitempty"`
 	// +listType=atomic
@@ -328,6 +331,11 @@ func (cr *RuntimeComponent) GetInitContainers() []corev1.Container {
 	return cr.Spec.InitContainers
 }
 
+// GetSidecarContainers returns list of user specified containers
+func (cr *RuntimeComponent) GetSidecarContainers() []corev1.Container {
+	return cr.Spec.SidecarContainers
+}
+
 // GetGroupName returns group name to be used in labels and annotation
 func (cr *RuntimeComponent) GetGroupName() string {
 	return "app.stacks"
@@ -402,6 +410,11 @@ func (s *RuntimeComponentService) GetAnnotations() map[string]string {
 // GetPort returns service port
 func (s *RuntimeComponentService) GetPort() int32 {
 	return s.Port
+}
+
+// GetPortName returns name of service port
+func (s *RuntimeComponentService) GetPortName() string {
+	return s.PortName
 }
 
 // GetType returns service type
