@@ -1,0 +1,332 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[{"apiVersion":"app.stacks/v1beta1","kind":"RuntimeComponent","metadata":{"name":"example-runtime-component"},"spec":{"applicationImage":"APPLICATION_IMAGE"}}]'
+    capabilities: Auto Pilot
+    categories: Application Runtime
+    certified: 'true'
+    containerImage: applicationstacks/operator:0.4.0
+    createdAt: 2019-12-02 09:00:00
+    description: Deploys any runtime component with dynamic and auto-tuning configuration
+    repository: https://github.com/application-stacks/runtime-component-operator
+    support: IBM
+  name: runtime-component-operator.v0.4.0
+spec:
+  customresourcedefinitions:
+    owned:
+    - description: Describes runtime component deployment
+      displayName: Runtime Component
+      kind: RuntimeComponent
+      name: runtimecomponents.app.stacks
+      resources:
+      - kind: Deployment
+        name: ''
+      - kind: StatefulSet
+        name: ''
+      - kind: Service
+        name: ''
+      - kind: Route
+        name: ''
+      - kind: HorizontalPodAutoscaler
+        name: ''
+      specDescriptors:
+      - description: application image to be installed
+        displayName: Application Image
+        path: applicationImage
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: version of the application
+        displayName: Application Version
+        path: version
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: image pull policy for container image
+        displayName: Pull Policy
+        path: pullPolicy
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:imagePullPolicy
+      - description: number of pods to create
+        displayName: Replicas
+        path: replicas
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:podCount
+      - description: automatically create HTTP Route
+        displayName: Expose
+        path: expose
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: resource requirements for cpu and memory
+        displayName: Resource Requirements
+        path: resourceConstraints
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:resourceRequirements
+      - description: port to use for kubernetes service
+        displayName: Service Port
+        path: service.port
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
+      - description: type to use for kubernetes service
+        displayName: Service Type
+        path: service.type
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: horizontal pod autoscaling
+        displayName: Autoscaling
+        path: autoscaling
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:label
+      statusDescriptors:
+      - description: status conditions
+        displayName: Status conditions
+        path: conditions
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes.conditions
+      version: v1beta1
+  description: 'This advanced Operator is capable of deploying any runtime component image with 
+    consistent, production-grade QoS. It enables enterprise architects to govern the way their 
+    applications get deployed & managed in the cluster, while dramatically reducing the learning 
+    curve for developers to deploy into Kubernetes - allowing them to focus on writing the code!
+
+    Here are some key features:
+
+    #### Application Lifecyle
+    
+    You can deploy your runtime component container by either pointing to a container image, or an OpenShift ImageStream.
+    When using an ImageStream the Operator will watch for any updates and will re-deploy the modified image.
+
+
+    #### Custom RBAC
+
+    This Operator is capable of using a custom ServiceAccount from the caller, allowing it to follow RBAC restrictions. By default
+    it creates a ServiceAccount if one is not specified, which can also be bound with specific roles.
+
+
+    #### Environment Configuration
+
+    You can configured a variety of artifacts with your deployment, such as: labels, annotations, and environment variables from
+    a ConfigMap, a Secret or a value. 
+
+
+    #### Routing
+
+    Expose your application to external users via a single toggle to create an OpenShift Route.
+    Advanced configuration, such as TLS settings, are also easily enabled.  Expiring Route certificates are re-issued.
+
+
+    #### High Availability via Horizontal Pod Autoscaling
+
+    Run multiple instances of your application for high availability. Either specify
+    a static number of replicas or easily configure horizontal auto scaling to create (and delete)
+    instances based on resource consumption.
+
+
+    #### Persistence and advanced storage
+
+    Enable persistence for your application by specifying simple requirements: just tell us the size
+    of the storage and where you would like it to be mounted and We'll create and manage that storage for you.  
+
+    This toggles a StatefulSet resource instead of a Deployment resource, so your container can recover
+    transactions and state upon a pod restart. 
+
+    We offer an advanced mode where the user specifies a built-in PersistentVolumeClaim, allowing them to configure
+    many details of the persistent volume, such as its storage class and access mode.
+
+
+    #### Service Binding
+
+    Easily bind to available services in your cluster.  Your runtime components can expose and consume other services
+    by simply specifying the target endpoinds: we take care of the heavy lifting such as creating k8s Secrets, injecting
+    them into your container and watching for any changes in configuration!  This way your applications can dynamically
+    reconnect to its required services without any intervention or interruption.
+
+    #### Exposing metrics to Prometheus
+
+    The Runtime Component Operator exposes the runtime container's metrics via the [Prometheus Operator](https://operatorhub.io/operator/prometheus).
+
+    Users can pick between a basic mode, where they simply specify the label that Prometheus is watching to scrape the metrics from the container,
+    or they can specify the full `ServiceMonitor` spec embedded into the RuntimeComponent's `spec.monitoring` key controlling things like the poll 
+    internal and security credentials.
+
+    #### Easily mount logs and transaction directories
+
+    If you need to mount the logs and transaction data from your runtime component to an external volume such as NFS (or any storage supported in your cluster),
+    simply add the following (customizing the folder location and size) to your RuntimeComponent CR:
+
+      ```
+      storage:
+        size: 2Gi
+        mountPath: "/logs"
+      ```
+
+
+    #### Integration with OpenShift's Certificate Manager
+
+    The Runtime Component Operator takes advantage of the [cert-manager tool](https://cert-manager.io/), if it is installed on the cluster. This allows the operator to
+    automatically provision TLS certificates for pods as well as routes.
+
+    When creating certificates via the RuntimeComponent CR the user can specify a particular issuer name and toggle the scopes between ClusterIssuer (cluster scoped) 
+    and Issuer (namespace scoped). If not specified, these values are retrieved from a ConfigMap, with a default value of `self-signed` and `ClusterIssuer`.
+
+    The certificate is mounted into the container via a Secret so that it is automatically refreshed once the certificate is updated.
+
+    #### Integration with OpenShift Serverless
+
+    Deploy your serverless runtime component using a single toggle.  The Operator will convert all of its generated 
+    resources into [Knative](https://knative.dev) resources, allowing your pod to automatically scale to 0 when it is idle.
+
+
+    #### Integration with Kubernetes Application Navigator (kAppNav) and OpenShift's Topology UI
+
+    Automatically configures the Kubernetes resources for integration with [kAppNav](https://kappnav.io/), allowing your
+    runtime component to compose an umbrella [Application](https://github.com/kubernetes-sigs/application).  This integration allows users to monitor 
+    all constituents resources of the application and receive alerts when the health status of a component changes.  From an integrated panel users can
+    also launch day-2-operations, such as viewing the Kibana / Grafana dashboards, and enabling trace for a component.
+    
+    During this integration we also set the corresponding labels to support OpenShift's Developer Topology UI,which allows you to visualize your entire set of deployments 
+    and how they are connected.  
+
+
+    See our [**documentation**](https://github.com/application-stacks/runtime-component-operator/tree/master/doc/)
+    for more information.
+
+    '
+  displayName: Runtime Component
+  icon:
+  - base64data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1Ni43MSA1MC43NSI+PGRlZnM+PHN0eWxlPi5he2lzb2xhdGlvbjppc29sYXRlO30uYntvcGFjaXR5OjAuODt9LmIsLmV7bWl4LWJsZW5kLW1vZGU6bXVsdGlwbHk7fS5je2ZpbGw6I2VkOGUwMDt9LmR7ZmlsbDojYzQzMDJmO30uZXtmaWxsOiNhZjFmNjQ7b3BhY2l0eTowLjg1O308L3N0eWxlPjwvZGVmcz48dGl0bGU+QXNzZXQgMjwvdGl0bGU+PGcgY2xhc3M9ImEiPjxnIGNsYXNzPSJiIj48cGF0aCBjbGFzcz0iYyIgZD0iTTI1Ljg4LjI4Yy0yLjUtLjgxLTUuNTguMTQtOC42MywzLjA2TDMuODcsMTYuMTdDLTIuMjIsMjItMSwyOC44MSw2LjYyLDMxLjI3bDE2LjcsNS40MWM3LjYxLDIuNDYsMTIuNi0yLjMyLDExLjA4LTEwLjYyTDMxLjA4LDcuODJjLS43Ni00LjE1LTIuNjktNi43My01LjItNy41NFoiLz48L2c+PGcgY2xhc3M9ImIiPjxwYXRoIGNsYXNzPSJkIiBkPSJNMzcuOTQsMy4xNEExNS43MywxNS43MywwLDAsMCwzMi41NSw0LjZMMTQuNjYsMTIuNzNjLTQuNTcsMi4wNy03LjMxLDUuMjYtNy43Miw5LS4zOSwzLjUyLDEuNDIsNyw1LjA4LDkuNzRsMTUsMTEuMzFhMTIuMjgsMTIuMjgsMCwwLDAsOC4wNiwyLjhjNC43Ny0uMzEsOC4yOS00LjM1LDkuMi0xMC41M2wyLjg0LTE5LjQ0QzQ4LjEyLDksNDUuNTEsNiw0My44Nyw0Ljc1YTguNzksOC43OSwwLDAsMC01LjkzLTEuNjFaIi8+PC9nPjxwYXRoIGNsYXNzPSJlIiBkPSJNMzMuOCw1MC43MWMtMi45My0uMzMtNS41Ny0yLjM5LTcuNDktNS44OEwxNywyNy44Yy0yLjExLTMuODMtMi4zLTcuNDYtLjU0LTEwLjIyczUuMjEtNC4yNiw5Ljc2LTQuMjhsMjAuMjctLjA3YzQuNTYsMCw3LjkxLDEuNSw5LjQyLDQuMjVzMSw2LjM5LTEuNDUsMTAuMjNMNDMuNDksNDQuOGMtMi40NCwzLjgzLTUuNTgsNS45NC04LjgzLDZBNi4xMiw2LjEyLDAsMCwxLDMzLjgsNTAuNzFaIi8+PC9nPjwvc3ZnPg==
+    mediatype: image/svg+xml
+  install:
+    spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - ''
+          resources:
+          - pods
+          - services
+          - endpoints
+          - persistentvolumeclaims
+          - events
+          - configmaps
+          - secrets
+          - serviceaccounts
+          verbs:
+          - '*'
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          - daemonsets
+          - replicasets
+          - statefulsets
+          verbs:
+          - '*'
+        - apiGroups:
+          - autoscaling
+          resources:
+          - horizontalpodautoscalers
+          verbs:
+          - '*'
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - '*'
+        - apiGroups:
+          - apps
+          resourceNames:
+          - runtime-component-operator
+          resources:
+          - deployments/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - appsody.dev
+          resources:
+          - '*'
+          verbs:
+          - '*'
+        - apiGroups:
+          - route.openshift.io
+          resources:
+          - routes
+          verbs:
+          - '*'
+        - apiGroups:
+          - serving.knative.dev
+          resources:
+          - services
+          verbs:
+          - '*'
+        serviceAccountName: runtime-component-operator
+      deployments:
+      - name: appsody-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              name: appsody-operator
+          strategy: {}
+          template:
+            metadata:
+              labels:
+                name: appsody-operator
+            spec:
+              containers:
+              - command:
+                - appsody-operator
+                env:
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['olm.targetNamespaces']
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: OPERATOR_NAME
+                  value: runtime-component-operator
+                image: applicationstacks/operator:0.4.0
+                imagePullPolicy: Always
+                name: appsody-operator
+                resources: {}
+              serviceAccountName: appsody-operator
+    strategy: deployment
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: true
+    type: SingleNamespace
+  - supported: true
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - Runtime Component
+  - Application Runtime
+  - Application
+  - Node
+  - Swift
+  - MicroProfile
+  - Spring
+  - Java
+  - Runtime
+  - Open Source
+  - Application Stacks
+  links:
+  - name: Documentation
+    url: https://github.com/application-stacks/runtime-component-operator/blob/master/doc
+  maintainers:
+  - email: dzmitry@ca.ibm.com
+    name: Artur Dzmitryieu
+  - email: navidst@ca.ibm.com
+    name: Navid Shakibapour Tabrizi
+  - email: leojc@ca.ibm.com
+    name: Leo Christy Jesuraj
+  - email: arthurdm@ca.ibm.com
+    name: Arthur De Magalhaes
+  maturity: beta
+  provider:
+    name: IBM
+  version: 0.3.0
