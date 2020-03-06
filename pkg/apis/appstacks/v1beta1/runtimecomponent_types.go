@@ -3,7 +3,7 @@ package v1beta1
 import (
 	"time"
 
-	"github.com/application-stacks/operator/pkg/common"
+	"github.com/application-stacks/runtime-component-operator/pkg/common"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -171,7 +171,7 @@ const (
 
 // RuntimeComponent is the Schema for the runtimecomponents API
 // +k8s:openapi-gen=true
-// +kubebuilder:resource:path=runtimecomponents,scope=Namespaced,shortName=app;apps
+// +kubebuilder:resource:path=runtimecomponents,scope=Namespaced,shortName=comp;comps
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Image",type="string",JSONPath=".spec.applicationImage",priority=0,description="Absolute name of the deployed image containing registry and tag"
 // +kubebuilder:printcolumn:name="Exposed",type="boolean",JSONPath=".spec.expose",priority=0,description="Specifies whether deployment is exposed externally via default Route"
@@ -277,7 +277,7 @@ func (cr *RuntimeComponent) GetArchitecture() []string {
 }
 
 // GetAutoscaling returns autoscaling settings
-func (cr *RuntimeComponent) GetAutoscaling() common.BaseApplicationAutoscaling {
+func (cr *RuntimeComponent) GetAutoscaling() common.BaseComponentAutoscaling {
 	if cr.Spec.Autoscaling == nil {
 		return nil
 	}
@@ -285,7 +285,7 @@ func (cr *RuntimeComponent) GetAutoscaling() common.BaseApplicationAutoscaling {
 }
 
 // GetStorage returns storage settings
-func (cr *RuntimeComponent) GetStorage() common.BaseApplicationStorage {
+func (cr *RuntimeComponent) GetStorage() common.BaseComponentStorage {
 	if cr.Spec.Storage == nil {
 		return nil
 	}
@@ -293,7 +293,7 @@ func (cr *RuntimeComponent) GetStorage() common.BaseApplicationStorage {
 }
 
 // GetService returns service settings
-func (cr *RuntimeComponent) GetService() common.BaseApplicationService {
+func (cr *RuntimeComponent) GetService() common.BaseComponentService {
 	if cr.Spec.Service == nil {
 		return nil
 	}
@@ -316,7 +316,7 @@ func (cr *RuntimeComponent) GetApplicationName() string {
 }
 
 // GetMonitoring returns monitoring settings
-func (cr *RuntimeComponent) GetMonitoring() common.BaseApplicationMonitoring {
+func (cr *RuntimeComponent) GetMonitoring() common.BaseComponentMonitoring {
 	if cr.Spec.Monitoring == nil {
 		return nil
 	}
@@ -324,7 +324,7 @@ func (cr *RuntimeComponent) GetMonitoring() common.BaseApplicationMonitoring {
 }
 
 // GetStatus returns RuntimeComponent status
-func (cr *RuntimeComponent) GetStatus() common.BaseApplicationStatus {
+func (cr *RuntimeComponent) GetStatus() common.BaseComponentStatus {
 	return &cr.Status
 }
 
@@ -344,7 +344,7 @@ func (cr *RuntimeComponent) GetGroupName() string {
 }
 
 // GetRoute returns route configuration for RuntimeComponent
-func (cr *RuntimeComponent) GetRoute() common.BaseApplicationRoute {
+func (cr *RuntimeComponent) GetRoute() common.BaseComponentRoute {
 	if cr.Spec.Route == nil {
 		return nil
 	}
@@ -623,7 +623,7 @@ func (cr *RuntimeComponent) GetLabels() map[string]string {
 	labels := map[string]string{
 		"app.kubernetes.io/instance":   cr.Name,
 		"app.kubernetes.io/name":       cr.Name,
-		"app.kubernetes.io/managed-by": "application-stacks-operator",
+		"app.kubernetes.io/managed-by": "runtime-component-operator",
 		"app.kubernetes.io/component":  "backend",
 		"app.kubernetes.io/part-of":    cr.Spec.ApplicationName,
 	}

@@ -83,7 +83,7 @@ build_release() {
     go build -o "$(pwd)/build/_output/bin/operator" \
       -gcflags all=-trimpath=$(pwd)/.. \
       -asmflags all=-trimpath=$(pwd)/..\
-      -mod=vendor "github.com/application-stacks/operator/cmd/manager"
+      -mod=vendor "github.com/application-stacks/runtime-component-operator/cmd/manager"
 
     if [[ $? -ne 0 ]]; then
       echo "Failed to build binary for zLinux, exiting"

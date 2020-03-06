@@ -5,10 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/application-stacks/operator/pkg/common"
+	"github.com/application-stacks/runtime-component-operator/pkg/common"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
-	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
+	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
@@ -22,7 +22,7 @@ import (
 )
 
 // CustomizeDeployment ...
-func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseApplication) {
+func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	deploy.Labels = ba.GetLabels()
 	deploy.Annotations = MergeMaps(deploy.Annotations, ba.GetAnnotations())
@@ -41,7 +41,7 @@ func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseApplication) {
 }
 
 // CustomizeStatefulSet ...
-func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseApplication) {
+func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	statefulSet.Labels = ba.GetLabels()
 	statefulSet.Annotations = MergeMaps(statefulSet.Annotations, ba.GetAnnotations())
@@ -60,7 +60,7 @@ func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseApplica
 }
 
 // UpdateAppDefinition adds or removes kAppNav auto-create related annotations/labels
-func UpdateAppDefinition(labels map[string]string, annotations map[string]string, ba common.BaseApplication) {
+func UpdateAppDefinition(labels map[string]string, annotations map[string]string, ba common.BaseComponent) {
 	if ba.GetCreateAppDefinition() != nil && !*ba.GetCreateAppDefinition() {
 		delete(labels, "kappnav.app.auto-create")
 		delete(annotations, "kappnav.app.auto-create.name")
@@ -83,7 +83,7 @@ func UpdateAppDefinition(labels map[string]string, annotations map[string]string
 }
 
 // CustomizeRoute ...
-func CustomizeRoute(route *routev1.Route, ba common.BaseApplication, key string, crt string, ca string, destCACert string) {
+func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, crt string, ca string, destCACert string) {
 	obj := ba.(metav1.Object)
 	route.Labels = ba.GetLabels()
 	route.Annotations = MergeMaps(route.Annotations, ba.GetAnnotations())
@@ -147,7 +147,7 @@ func ErrorIsNoMatchesForKind(err error, kind string, version string) bool {
 }
 
 // CustomizeService ...
-func CustomizeService(svc *corev1.Service, ba common.BaseApplication) {
+func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	svc.Labels = ba.GetLabels()
 	svc.Annotations = MergeMaps(svc.Annotations, ba.GetAnnotations())
@@ -171,7 +171,7 @@ func CustomizeService(svc *corev1.Service, ba common.BaseApplication) {
 }
 
 // CustomizeServieBindingSecret ...
-func CustomizeServieBindingSecret(secret *corev1.Secret, auth map[string]string, ba common.BaseApplication) {
+func CustomizeServieBindingSecret(secret *corev1.Secret, auth map[string]string, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	secret.Labels = ba.GetLabels()
 	secret.Annotations = MergeMaps(secret.Annotations, ba.GetAnnotations())
@@ -206,7 +206,7 @@ func CustomizeServieBindingSecret(secret *corev1.Secret, auth map[string]string,
 }
 
 // CustomizePodSpec ...
-func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
+func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	pts.Labels = ba.GetLabels()
 	pts.Annotations = MergeMaps(pts.Annotations, ba.GetAnnotations())
@@ -289,7 +289,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 }
 
 // CustomizeConsumedServices ...
-func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseApplication) {
+func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseComponent) {
 	if ba.GetStatus().GetConsumedServices() != nil {
 		appContainer := GetAppContainer(podSpec.Containers)
 		for _, svc := range ba.GetStatus().GetConsumedServices()[common.ServiceBindingCategoryOpenAPI] {
@@ -334,7 +334,7 @@ func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseApplicatio
 }
 
 // CustomizePersistence ...
-func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseApplication) {
+func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	if len(statefulSet.Spec.VolumeClaimTemplates) == 0 {
 		var pvc *corev1.PersistentVolumeClaim
@@ -385,7 +385,7 @@ func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseApplica
 }
 
 // CustomizeServiceAccount ...
-func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseApplication) {
+func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent) {
 	sa.Labels = ba.GetLabels()
 	sa.Annotations = MergeMaps(sa.Annotations, ba.GetAnnotations())
 
@@ -401,7 +401,7 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseApplicatio
 }
 
 // CustomizeAffinity ...
-func CustomizeAffinity(a *corev1.Affinity, ba common.BaseApplication) {
+func CustomizeAffinity(a *corev1.Affinity, ba common.BaseComponent) {
 	a.NodeAffinity = &corev1.NodeAffinity{
 		RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
 			NodeSelectorTerms: []corev1.NodeSelectorTerm{
@@ -438,7 +438,7 @@ func CustomizeAffinity(a *corev1.Affinity, ba common.BaseApplication) {
 }
 
 // CustomizeKnativeService ...
-func CustomizeKnativeService(ksvc *servingv1alpha1.Service, ba common.BaseApplication) {
+func CustomizeKnativeService(ksvc *servingv1alpha1.Service, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	ksvc.Labels = ba.GetLabels()
 	ksvc.Annotations = MergeMaps(ksvc.Annotations, ba.GetAnnotations())
@@ -504,7 +504,7 @@ func CustomizeKnativeService(ksvc *servingv1alpha1.Service, ba common.BaseApplic
 }
 
 // CustomizeHPA ...
-func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseApplication) {
+func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	hpa.Labels = ba.GetLabels()
 	hpa.Annotations = MergeMaps(hpa.Annotations, ba.GetAnnotations())
@@ -523,8 +523,8 @@ func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseAppl
 	}
 }
 
-// Validate if the BaseApplication is valid
-func Validate(ba common.BaseApplication) (bool, error) {
+// Validate if the BaseComponent is valid
+func Validate(ba common.BaseComponent) (bool, error) {
 	// Storage validation
 	if ba.GetStorage() != nil {
 		if ba.GetStorage().GetVolumeClaimTemplate() == nil {
@@ -549,7 +549,7 @@ func requiredFieldMessage(fieldPaths ...string) string {
 }
 
 // CustomizeServiceMonitor ...
-func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseApplication) {
+func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	sm.Labels = ba.GetLabels()
 	sm.Annotations = MergeMaps(sm.Annotations, ba.GetAnnotations())
@@ -665,7 +665,7 @@ func BuildServiceBindingSecretName(name, namespace string) string {
 	return fmt.Sprintf("%s-%s", namespace, name)
 }
 
-func findConsumes(secretName string, ba common.BaseApplication) (common.ServiceBindingConsumes, error) {
+func findConsumes(secretName string, ba common.BaseComponent) (common.ServiceBindingConsumes, error) {
 	for _, v := range ba.GetService().GetConsumes() {
 		namespace := ""
 		if v.GetNamespace() == "" {
@@ -749,7 +749,7 @@ func normalizeEnvVariableName(name string) string {
 
 // GetConnectToAnnotation returns a map containing a key-value annotatio. The key is `app.openshift.io/connects-to`.
 // The value is a comma-seperated list of applications `ba` is connectiong to based on `spec.service.consumes`.
-func GetConnectToAnnotation(ba common.BaseApplication) map[string]string {
+func GetConnectToAnnotation(ba common.BaseComponent) map[string]string {
 	connectTo := []string{}
 	for _, con := range ba.GetService().GetConsumes() {
 		if ba.(metav1.Object).GetNamespace() == con.GetNamespace() {

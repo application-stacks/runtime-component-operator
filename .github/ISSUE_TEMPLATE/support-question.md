@@ -9,7 +9,7 @@ assignees: ''
 
 ## Type of question
 
-Are you asking about best practices, how to configure the Application Stacks Operator, or about general context and help around the operator?
+Are you asking about best practices, how to configure the Runtime Component Operator, or about general context and help around the operator?
 
 ## Question
 

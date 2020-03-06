@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: application-stacks-operator
+  name: runtime-component-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: application-stacks-operator
+      name: runtime-component-operator
   template:
     metadata:
       labels:
-        name: application-stacks-operator
+        name: runtime-component-operator
     spec:
-      serviceAccountName: application-stacks-operator
+      serviceAccountName: runtime-component-operator
       containers:
-        - name: application-stacks-operator
-          image: application-stacks/operator:daily
+        - name: runtime-component-operator
+          image: applicationstacks/operator:daily
           command:
-          - application-stacks-operator
+          - runtime-component-operator
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE
@@ -29,4 +29,4 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "application-stacks-operator"
+              value: "runtime-component-operator"

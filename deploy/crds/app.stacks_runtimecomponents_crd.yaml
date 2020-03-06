@@ -41,8 +41,8 @@ spec:
     listKind: RuntimeComponentList
     plural: runtimecomponents
     shortNames:
-    - app
-    - apps
+    - comp
+    - comps
     singular: runtimecomponent
   scope: Namespaced
   subresources:

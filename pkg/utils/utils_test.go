@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
+	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -343,7 +343,7 @@ func TestCustomizeServiceMonitor(t *testing.T) {
 	CustomizeServiceMonitor(sm, runtime)
 
 	labelMatches := map[string]string{
-		"app.app.stacks/monitor":     "true",
+		"monitor.app.stacks/enabled": "true",
 		"app.kubernetes.io/instance": name,
 	}
 

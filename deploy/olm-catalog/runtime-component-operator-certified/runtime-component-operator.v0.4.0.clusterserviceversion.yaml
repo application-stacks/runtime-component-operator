@@ -242,7 +242,7 @@ spec:
           verbs:
           - update
         - apiGroups:
-          - appsody.dev
+          - app.stacks
           resources:
           - '*'
           verbs:
@@ -261,21 +261,21 @@ spec:
           - '*'
         serviceAccountName: runtime-component-operator
       deployments:
-      - name: appsody-operator
+      - name: runtime-component-operator
         spec:
           replicas: 1
           selector:
             matchLabels:
-              name: appsody-operator
+              name: runtime-component-operator
           strategy: {}
           template:
             metadata:
               labels:
-                name: appsody-operator
+                name: runtime-component-operator
             spec:
               containers:
               - command:
-                - appsody-operator
+                - runtime-component-operator
                 env:
                 - name: WATCH_NAMESPACE
                   valueFrom:
@@ -289,9 +289,9 @@ spec:
                   value: runtime-component-operator
                 image: applicationstacks/operator:0.4.0
                 imagePullPolicy: Always
-                name: appsody-operator
+                name: runtime-component-operator
                 resources: {}
-              serviceAccountName: appsody-operator
+              serviceAccountName: runtime-component-operator
     strategy: deployment
   installModes:
   - supported: true
