@@ -556,8 +556,8 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseAppl
 
 	sm.Spec.Selector = metav1.LabelSelector{
 		MatchLabels: map[string]string{
-			"app.kubernetes.io/instance":            obj.GetName(),
-			"app." + ba.GetGroupName() + "/monitor": "true",
+			"app.kubernetes.io/instance":                obj.GetName(),
+			"monitor." + ba.GetGroupName() + "/enabled": "true",
 		},
 	}
 	if len(sm.Spec.Endpoints) == 0 {
