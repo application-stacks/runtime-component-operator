@@ -7,15 +7,15 @@ metadata:
     categories: Application Runtime
     certified: 'true'
     containerImage: applicationstacks/operator:0.4.0
-    createdAt: 2019-12-02 09:00:00
+    createdAt: 2020-03-06 09:00:00
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     repository: https://github.com/application-stacks/runtime-component-operator
-    support: IBM
+    support: Community
   name: runtime-component-operator.v0.4.0
 spec:
   customresourcedefinitions:
     owned:
-    - description: Describes runtime component deployment
+    - description: Configuration for the deployment of any runtime component 
       displayName: Runtime Component
       kind: RuntimeComponent
       name: runtimecomponents.app.stacks
@@ -124,7 +124,7 @@ spec:
     #### Persistence and advanced storage
 
     Enable persistence for your application by specifying simple requirements: just tell us the size
-    of the storage and where you would like it to be mounted and We'll create and manage that storage for you.  
+    of the storage and where you would like it to be mounted and We will create and manage that storage for you.  
 
     This toggles a StatefulSet resource instead of a Deployment resource, so your container can recover
     transactions and state upon a pod restart. 
@@ -142,10 +142,10 @@ spec:
 
     #### Exposing metrics to Prometheus
 
-    The Runtime Component Operator exposes the runtime container's metrics via the [Prometheus Operator](https://operatorhub.io/operator/prometheus).
+    The Runtime Component Operator exposes the runtime container''s metrics via the [Prometheus Operator](https://operatorhub.io/operator/prometheus).
 
     Users can pick between a basic mode, where they simply specify the label that Prometheus is watching to scrape the metrics from the container,
-    or they can specify the full `ServiceMonitor` spec embedded into the RuntimeComponent's `spec.monitoring` key controlling things like the poll 
+    or they can specify the full `ServiceMonitor` spec embedded into the RuntimeComponent''s `spec.monitoring` key controlling things like the poll 
     internal and security credentials.
 
     #### Easily mount logs and transaction directories
@@ -160,7 +160,7 @@ spec:
       ```
 
 
-    #### Integration with OpenShift's Certificate Manager
+    #### Integration with OpenShift''s Certificate Manager
 
     The Runtime Component Operator takes advantage of the [cert-manager tool](https://cert-manager.io/), if it is installed on the cluster. This allows the operator to
     automatically provision TLS certificates for pods as well as routes.
@@ -176,14 +176,14 @@ spec:
     resources into [Knative](https://knative.dev) resources, allowing your pod to automatically scale to 0 when it is idle.
 
 
-    #### Integration with Kubernetes Application Navigator (kAppNav) and OpenShift's Topology UI
+    #### Integration with Kubernetes Application Navigator (kAppNav) and OpenShift''s Topology UI
 
     Automatically configures the Kubernetes resources for integration with [kAppNav](https://kappnav.io/), allowing your
     runtime component to compose an umbrella [Application](https://github.com/kubernetes-sigs/application).  This integration allows users to monitor 
     all constituents resources of the application and receive alerts when the health status of a component changes.  From an integrated panel users can
     also launch day-2-operations, such as viewing the Kibana / Grafana dashboards, and enabling trace for a component.
     
-    During this integration we also set the corresponding labels to support OpenShift's Developer Topology UI,which allows you to visualize your entire set of deployments 
+    During this integration we also set the corresponding labels to support OpenShift''s Developer Topology UI,which allows you to visualize your entire set of deployments 
     and how they are connected.  
 
 
@@ -191,7 +191,7 @@ spec:
     for more information.
 
     '
-  displayName: Runtime Component
+  displayName: Runtime Component Operator
   icon:
   - base64data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1Ni43MSA1MC43NSI+PGRlZnM+PHN0eWxlPi5he2lzb2xhdGlvbjppc29sYXRlO30uYntvcGFjaXR5OjAuODt9LmIsLmV7bWl4LWJsZW5kLW1vZGU6bXVsdGlwbHk7fS5je2ZpbGw6I2VkOGUwMDt9LmR7ZmlsbDojYzQzMDJmO30uZXtmaWxsOiNhZjFmNjQ7b3BhY2l0eTowLjg1O308L3N0eWxlPjwvZGVmcz48dGl0bGU+QXNzZXQgMjwvdGl0bGU+PGcgY2xhc3M9ImEiPjxnIGNsYXNzPSJiIj48cGF0aCBjbGFzcz0iYyIgZD0iTTI1Ljg4LjI4Yy0yLjUtLjgxLTUuNTguMTQtOC42MywzLjA2TDMuODcsMTYuMTdDLTIuMjIsMjItMSwyOC44MSw2LjYyLDMxLjI3bDE2LjcsNS40MWM3LjYxLDIuNDYsMTIuNi0yLjMyLDExLjA4LTEwLjYyTDMxLjA4LDcuODJjLS43Ni00LjE1LTIuNjktNi43My01LjItNy41NFoiLz48L2c+PGcgY2xhc3M9ImIiPjxwYXRoIGNsYXNzPSJkIiBkPSJNMzcuOTQsMy4xNEExNS43MywxNS43MywwLDAsMCwzMi41NSw0LjZMMTQuNjYsMTIuNzNjLTQuNTcsMi4wNy03LjMxLDUuMjYtNy43Miw5LS4zOSwzLjUyLDEuNDIsNyw1LjA4LDkuNzRsMTUsMTEuMzFhMTIuMjgsMTIuMjgsMCwwLDAsOC4wNiwyLjhjNC43Ny0uMzEsOC4yOS00LjM1LDkuMi0xMC41M2wyLjg0LTE5LjQ0QzQ4LjEyLDksNDUuNTEsNiw0My44Nyw0Ljc1YTguNzksOC43OSwwLDAsMC01LjkzLTEuNjFaIi8+PC9nPjxwYXRoIGNsYXNzPSJlIiBkPSJNMzMuOCw1MC43MWMtMi45My0uMzMtNS41Ny0yLjM5LTcuNDktNS44OEwxNywyNy44Yy0yLjExLTMuODMtMi4zLTcuNDYtLjU0LTEwLjIyczUuMjEtNC4yNiw5Ljc2LTQuMjhsMjAuMjctLjA3YzQuNTYsMCw3LjkxLDEuNSw5LjQyLDQuMjVzMSw2LjM5LTEuNDUsMTAuMjNMNDMuNDksNDQuOGMtMi40NCwzLjgzLTUuNTgsNS45NC04LjgzLDZBNi4xMiw2LjEyLDAsMCwxLDMzLjgsNTAuNzFaIi8+PC9nPjwvc3ZnPg==
     mediatype: image/svg+xml
@@ -210,6 +210,7 @@ spec:
           - configmaps
           - secrets
           - serviceaccounts
+          - namespaces
           verbs:
           - '*'
         - apiGroups:
@@ -248,6 +249,12 @@ spec:
           verbs:
           - '*'
         - apiGroups:
+          - image.openshift.io
+          resources:
+          - '*'
+          verbs:
+          - '*'
+        - apiGroups:
           - route.openshift.io
           resources:
           - routes
@@ -257,6 +264,12 @@ spec:
           - serving.knative.dev
           resources:
           - services
+          verbs:
+          - '*'
+        - apiGroups:
+          - cert-manager.io
+          resources:
+          - certificates
           verbs:
           - '*'
         serviceAccountName: runtime-component-operator
@@ -328,5 +341,5 @@ spec:
     name: Arthur De Magalhaes
   maturity: beta
   provider:
-    name: IBM
-  version: 0.3.0
+    name: Community
+  version: 0.4.0
