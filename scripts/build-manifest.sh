@@ -39,8 +39,10 @@ main() {
       break
     fi
 
-    echo "****** Building manifest list for: ${tag}"
-    build_manifest "${tag}"
+    ## Remove potential leading 'v' from tags
+    local dockerTag="${tag#*v}"
+    echo "****** Building manifest list for: ${dockerTag}"
+    build_manifest "${dockerTag}"
   done <<< "${tags}"
 }
 
