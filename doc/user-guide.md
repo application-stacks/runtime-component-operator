@@ -2,9 +2,11 @@
 
 This generic Operator is capable of deploying any application image and can be imported into any runtime-specific Operator as library of application capabilities.  This architecture ensures compatibility and consistency between all runtime Operators, allowing everyone to benefit from the functionality added in this project.
 
+This documentation refers to the current master branch.  For documentation and samples of older releases, please check out the [main releases](https://github.com/application-stacks/runtime-component-operator/releases) page and navigate the corresponding tag.
+
 ## Operator installation
 
-Use the instructions for one of the releases to install the operator into a Kubernetes cluster.
+Use the instructions for one of the [releases](../deploy/releases) to install the operator into a Kubernetes cluster.
 
 The Runtime Component Operator can be installed to:
 
