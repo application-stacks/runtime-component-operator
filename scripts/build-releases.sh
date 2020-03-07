@@ -80,7 +80,7 @@ build_release() {
     ## build manually on zLinux as operator-sdk doesn't support
     ## NOTE values below must be changed to build other operators
     echo "*** Building binary of operator project"
-    go build -o "$(pwd)/build/_output/bin/operator" \
+    go build -o "$(pwd)/build/_output/bin/runtime-component-operator" \
       -gcflags all=-trimpath=$(pwd)/.. \
       -asmflags all=-trimpath=$(pwd)/..\
       -mod=vendor "github.com/application-stacks/runtime-component-operator/cmd/manager"
