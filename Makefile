@@ -80,22 +80,22 @@ clean: ## Clean binary artifacts
 	rm -rf build/_output
 
 install-crd: ## Installs operator CRD in the daily directory
-	kubectl apply -f deploy/releases/daily/app-stacks-crd.yaml
+	kubectl apply -f deploy/releases/daily/runtime-component-crd.yaml
 
 install-rbac: ## Installs RBAC objects required for the operator to in a cluster-wide manner
-	sed -i.bak -e "s/RUNTIME_COMPONENT_OPERATOR_NAMESPACE/${OPERATOR_NAMESPACE}/" deploy/releases/daily/app-stacks-cluster-rbac.yaml
-	kubectl apply -f deploy/releases/daily/app-stacks-cluster-rbac.yaml
+	sed -i.bak -e "s/RUNTIME_COMPONENT_OPERATOR_NAMESPACE/${OPERATOR_NAMESPACE}/" deploy/releases/daily/runtime-component-cluster-rbac.yaml
+	kubectl apply -f deploy/releases/daily/runtime-component-cluster-rbac.yaml
 
 install-operator: ## Installs operator in the ${OPERATOR_NAMESPACE} namespace and watches ${WATCH_NAMESPACE} namespace. ${WATCH_NAMESPACE} defaults to `default`. ${OPERATOR_NAMESPACE} defaults to ${WATCH_NAMESPACE}
 ifneq "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}" "applicationstacks/operator:daily"
-	sed -i.bak -e 's!image: applicationstacks/operator:daily!image: ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}!' deploy/releases/daily/app-stacks-operator.yaml
+	sed -i.bak -e 's!image: applicationstacks/operator:daily!image: ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}!' deploy/releases/daily/runtime-component-operator.yaml
 endif
-	sed -i.bak -e "s/RUNTIME_COMPONENT_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" deploy/releases/daily/app-stacks-operator.yaml
-	kubectl apply -n ${OPERATOR_NAMESPACE} -f deploy/releases/daily/app-stacks-operator.yaml
+	sed -i.bak -e "s/RUNTIME_COMPONENT_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" deploy/releases/daily/runtime-component-operator.yaml
+	kubectl apply -n ${OPERATOR_NAMESPACE} -f deploy/releases/daily/runtime-component-operator.yaml
 
 install-all: install-crd install-rbac install-operator
 
 uninstall-all:
-	kubectl delete -n ${OPERATOR_NAMESPACE} -f deploy/releases/daily/app-stacks-operator.yaml
-	kubectl delete -f deploy/releases/daily/app-stacks-cluster-rbac.yaml
-	kubectl delete -f deploy/releases/daily/app-stacks-crd.yaml
+	kubectl delete -n ${OPERATOR_NAMESPACE} -f deploy/releases/daily/runtime-component-operator.yaml
+	kubectl delete -f deploy/releases/daily/runtime-component-cluster-rbac.yaml
+	kubectl delete -f deploy/releases/daily/runtime-component-crd.yaml

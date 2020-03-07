@@ -53,7 +53,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `pullPolicy` | The policy used when pulling the image.  One of: `Always`, `Never`, and `IfNotPresent`. |
 | `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials. |
 | `initContainers` | The list of [Init Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#container-v1-core) definitions. |
-| `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: the sideContainers can not be named `app`. |
+| `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`. |
 | `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference. |
 | `service.port` | The port exposed by the container. |
 | `service.portName` | The name for the port exposed by the container. |
@@ -120,8 +120,11 @@ To get information on the deployed CR, use either of the following:
 
 ```sh
 oc get runtimecomponent my-app
-oc get app my-app
+oc get comp my-app
 ```
+
+The short name for `runtimecomponent` is `comp`.
+
 
 ### Image Streams
 

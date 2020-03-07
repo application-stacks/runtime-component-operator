@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.4.0]
 
-- Changed the default labels that are created by the operator, to better
-  accommodate components that are being deployed onto OpenShift. ([#21](https://github.com/application-stacks/runtime-component-operator/pull/21))
+The initial release of the Runtime Component Operator 🎉
+
+
+[Unreleased]: https://github.com/appsody/appsody-operator/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.4.0
