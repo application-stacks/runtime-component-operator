@@ -13,5 +13,5 @@ All notable changes to this project will be documented in this file.
 The initial release of the Runtime Component Operator 🎉
 
 
-[Unreleased]: https://github.com/appsody/appsody-operator/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.4.0...HEAD
 [0.4.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.4.0
