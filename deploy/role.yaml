@@ -77,3 +77,9 @@ rules:
   - certificates
   verbs:
   - '*'
+- apiGroups:
+  - app.k8s.io
+  resources:
+  - applications
+  verbs:
+  - '*'

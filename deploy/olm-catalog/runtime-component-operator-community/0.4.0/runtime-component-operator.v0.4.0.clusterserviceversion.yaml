@@ -273,6 +273,12 @@ spec:
           - certificates
           verbs:
           - '*'
+        - apiGroups:
+          - app.k8s.io
+          resources:
+          - applications
+          verbs:
+          - '*'
         serviceAccountName: runtime-component-operator
       deployments:
       - name: runtime-component-operator
