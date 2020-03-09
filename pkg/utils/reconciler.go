@@ -374,7 +374,7 @@ func (r *ReconcilerBase) ReconcileProvides(ba common.BaseComponent) (_ reconcile
 		}
 		providerSecret := &corev1.Secret{ObjectMeta: secretMeta}
 		err = r.CreateOrUpdate(providerSecret, mObj, func() error {
-			CustomizeServieBindingSecret(providerSecret, creds, ba)
+			CustomizeServiceBindingSecret(providerSecret, creds, ba)
 			return nil
 		})
 		if err != nil {

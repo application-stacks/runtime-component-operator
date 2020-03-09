@@ -170,8 +170,8 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	}
 }
 
-// CustomizeServieBindingSecret ...
-func CustomizeServieBindingSecret(secret *corev1.Secret, auth map[string]string, ba common.BaseComponent) {
+// CustomizeServiceBindingSecret ...
+func CustomizeServiceBindingSecret(secret *corev1.Secret, auth map[string]string, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	secret.Labels = ba.GetLabels()
 	secret.Annotations = MergeMaps(secret.Annotations, ba.GetAnnotations())
