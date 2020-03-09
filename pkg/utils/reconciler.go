@@ -425,23 +425,23 @@ func (r *ReconcilerBase) ReconcileConsumes(ba common.BaseComponent) (reconcile.R
 	mObj := ba.(metav1.Object)
 	for _, con := range ba.GetService().GetConsumes() {
 		if con.GetCategory() == common.ServiceBindingCategoryOpenAPI {
-			namespace := ""
+			conNamespace := ""
 			if con.GetNamespace() == "" {
-				namespace = mObj.GetNamespace()
+				conNamespace = mObj.GetNamespace()
 			} else {
-				namespace = con.GetNamespace()
+				conNamespace = con.GetNamespace()
 			}
-			secretName := BuildServiceBindingSecretName(con.GetName(), namespace)
+			secretName := BuildServiceBindingSecretName(con.GetName(), conNamespace)
 			existingSecret := &corev1.Secret{}
-			err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: namespace}, existingSecret)
+			err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: conNamespace}, existingSecret)
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					delErr := r.DeleteResource(&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secretName, Namespace: mObj.GetNamespace()}})
 					if delErr != nil && !kerrors.IsNotFound(delErr) {
 						delErr = errors.Wrapf(delErr, "unable to delete orphaned secret %q from namespace %q", secretName, mObj.GetNamespace())
-						err = errors.Wrapf(delErr, "unable to find service binding secret %q for service %q in namespace %q", secretName, con.GetName(), con.GetNamespace())
+						err = errors.Wrapf(delErr, "unable to find service binding secret %q for service %q in namespace %q", secretName, con.GetName(), conNamespace)
 					} else {
-						err = errors.Wrapf(err, "unable to find service binding secret %q for service %q in namespace %q", secretName, con.GetName(), con.GetNamespace())
+						err = errors.Wrapf(err, "unable to find service binding secret %q for service %q in namespace %q", secretName, con.GetName(), conNamespace)
 					}
 				}
 				r.ManageError(errors.Wrapf(err, "service binding dependency not satisfied"), common.StatusConditionTypeDependenciesSatisfied, ba)
@@ -483,7 +483,7 @@ func (r *ReconcilerBase) ReconcileConsumes(ba common.BaseComponent) (reconcile.R
 				copiedSecret.Data = existingSecret.Data
 				// Skip setting the owner on the copiedSecret if the consumer and provider are in the same namespace
 				// This is because we want the secret to be deleted if the provider is deleted
-				if con.GetNamespace() != copiedSecret.Namespace {
+				if conNamespace != copiedSecret.Namespace {
 					owner, _ := r.AsOwner(rObj, false)
 					EnsureOwnerRef(copiedSecret, owner)
 				}

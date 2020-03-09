@@ -293,7 +293,10 @@ func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseComponent)
 	if ba.GetStatus().GetConsumedServices() != nil {
 		appContainer := GetAppContainer(podSpec.Containers)
 		for _, svc := range ba.GetStatus().GetConsumedServices()[common.ServiceBindingCategoryOpenAPI] {
-			c, _ := findConsumes(svc, ba)
+			c, err := findConsumes(svc, ba)
+			if err != nil {
+				continue
+			}
 			if c.GetMountPath() != "" {
 				actualMountPath := strings.Join([]string{c.GetMountPath(), c.GetNamespace(), c.GetName()}, "/")
 				volMount := corev1.VolumeMount{Name: svc, MountPath: actualMountPath, ReadOnly: true}
@@ -310,7 +313,12 @@ func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseComponent)
 				podSpec.Volumes = append(podSpec.Volumes, vol)
 			} else {
 				// The characters allowed in names are: digits (0-9), lower case letters (a-z), -, and ..
-				keyPrefix := normalizeEnvVariableName(c.GetNamespace() + "_" + c.GetName() + "_")
+				var keyPrefix string
+				if c.GetNamespace() == "" {
+					keyPrefix = normalizeEnvVariableName(c.GetName() + "_")
+				} else {
+					keyPrefix = normalizeEnvVariableName(c.GetNamespace() + "_" + c.GetName() + "_")
+				}
 				keys := []string{"username", "password", "url", "hostname", "protocol", "port", "context"}
 				trueVal := true
 				for _, k := range keys {
