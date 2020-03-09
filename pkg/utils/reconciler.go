@@ -427,11 +427,9 @@ func (r *ReconcilerBase) ReconcileConsumes(ba common.BaseComponent) (reconcile.R
 	mObj := ba.(metav1.Object)
 	for _, con := range ba.GetService().GetConsumes() {
 		if con.GetCategory() == common.ServiceBindingCategoryOpenAPI {
-			conNamespace := ""
-			if con.GetNamespace() == "" {
+			conNamespace := con.GetNamespace()
+			if conNamespace == "" {
 				conNamespace = mObj.GetNamespace()
-			} else {
-				conNamespace = con.GetNamespace()
 			}
 			secretName := BuildServiceBindingSecretName(con.GetName(), conNamespace)
 			existingSecret := &corev1.Secret{}
