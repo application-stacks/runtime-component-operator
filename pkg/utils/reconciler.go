@@ -359,9 +359,10 @@ func (r *ReconcilerBase) ReconcileProvides(ba common.BaseComponent) (_ reconcile
 	logger := log.WithValues("ba.Namespace", mObj.GetNamespace(), "ba.Name", mObj.GetName())
 
 	secretName := BuildServiceBindingSecretName(mObj.GetName(), mObj.GetNamespace())
-	if ba.GetService().GetProvides() != nil && ba.GetService().GetProvides().GetCategory() == common.ServiceBindingCategoryOpenAPI {
+	provides := ba.GetService().GetProvides()
+	if provides != nil && provides.GetCategory() == common.ServiceBindingCategoryOpenAPI {
 		var creds map[string]string
-		if ba.GetService().GetProvides().GetAuth() != nil {
+		if provides.GetAuth() != nil {
 			if creds, err = r.GetServiceBindingCreds(ba); err != nil {
 				r.ManageError(errors.Wrapf(err, "service binding dependency not satisfied"), common.StatusConditionTypeDependenciesSatisfied, ba)
 				return r.ManageError(errors.New("failed to get authentication info"), common.StatusConditionTypeReconciled, ba)
