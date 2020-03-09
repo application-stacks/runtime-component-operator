@@ -468,11 +468,12 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 	err = r.CreateOrUpdate(svc, instance, func() error {
 		appstacksutils.CustomizeService(svc, ba)
 		svc.Annotations = appstacksutils.MergeMaps(svc.Annotations, instance.Spec.Service.Annotations)
+		monitoringEnabledLabelName := getMonitoringEnabledLabelName(ba)
 		if instance.Spec.Monitoring != nil {
-			svc.Labels["monitor."+ba.GetGroupName()+"/enabled"] = "true"
+			svc.Labels[monitoringEnabledLabelName] = "true"
 		} else {
-			if _, ok := svc.Labels["monitor."+ba.GetGroupName()+"/enabled"]; ok {
-				delete(svc.Labels, "monitor."+ba.GetGroupName()+"/enabled")
+			if _, ok := svc.Labels[monitoringEnabledLabelName]; ok {
+				delete(svc.Labels, monitoringEnabledLabelName)
 			}
 		}
 		return nil
@@ -630,4 +631,8 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 	}
 
 	return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)
+}
+
+func getMonitoringEnabledLabelName(ba common.BaseComponent) string {
+	return "monitor." + ba.GetGroupName() + "/enabled"
 }
