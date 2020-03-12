@@ -271,3 +271,50 @@ func UpdateApplication(f *framework.Framework, target types.NamespacedName, upda
 
 	return err
 }
+
+// MakeImageStreamRuntimeComponent : Create a simple RuntimeComponent with image stream.
+func MakeImageStreamRuntimeComponent(t *testing.T, f *framework.Framework, n string, ns string, replicas int32, imgstream string) *appstacksv1beta1.RuntimeComponent {
+	probe := corev1.Handler{
+		HTTPGet: &corev1.HTTPGetAction{
+			Path: "/",
+			Port: intstr.FromInt(3000),
+		},
+	}
+	expose := true
+	serviceType := corev1.ServiceTypeClusterIP
+	return &appstacksv1beta1.RuntimeComponent{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "RuntimeComponent",
+			APIVersion: "app.stacks/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      n,
+			Namespace: ns,
+		},
+		Spec: appstacksv1beta1.RuntimeComponentSpec{
+			ApplicationImage: imgstream,
+			Replicas:         &replicas,
+			Expose:           &expose,
+			Service: &appstacksv1beta1.RuntimeComponentService{
+				Port: 3000,
+				Type: &serviceType,
+			},
+			ReadinessProbe: &corev1.Probe{
+				Handler:             probe,
+				InitialDelaySeconds: 1,
+				TimeoutSeconds:      1,
+				PeriodSeconds:       5,
+				SuccessThreshold:    1,
+				FailureThreshold:    16,
+			},
+			LivenessProbe: &corev1.Probe{
+				Handler:             probe,
+				InitialDelaySeconds: 4,
+				TimeoutSeconds:      1,
+				PeriodSeconds:       5,
+				SuccessThreshold:    1,
+				FailureThreshold:    6,
+			},
+		},
+	}
+}
