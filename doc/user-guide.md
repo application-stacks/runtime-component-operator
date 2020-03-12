@@ -53,7 +53,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `serviceAccountName` | The name of the OpenShift service account to be used during deployment. |
 | `applicationImage` | The Docker image name to be deployed. On OpenShift, it can also be set to `<project name>/<image stream name>[:<tag>]` to reference an image from an image stream. If `<project name>` and `<tag>` values are not defined, they default to the namespace of the CR and the value of `latest`, respectively. |
 | `applicationName` | The name of the application this resource is part of. If not specified, it defaults to the name of the CR. |
-| `createAppDefinition`   | A boolean to toggle the automatic configuration of `RuntimeComponent`'s Kubernetes resources to allow creation of an application definition by [kAppNav](https://kappnav.io/). The default value is `true`. See [Application Navigator](#kubernetes-application-navigator-kappnav-support) for more information. |
+| `createAppDefinition`   | A boolean to toggle the automatic configuration of Kubernetes resources for the `RuntimeComponent` CR to allow creation of an application definition by [kAppNav](https://kappnav.io/). The default value is `true`. See [Application Navigator](#kubernetes-application-navigator-kappnav-support) for more information. |
 | `pullPolicy` | The policy used when pulling the image.  One of: `Always`, `Never`, and `IfNotPresent`. |
 | `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials. |
 | `initContainers` | The list of [Init Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#container-v1-core) definitions. |
@@ -510,11 +510,11 @@ To configure secure HTTPS connections for your Knative deployment, see [Configur
 
 ### Kubernetes Application Navigator (kAppNav) support
 
-By default, Runtime Component Operator configures the Kubernetes resources it generates to allow automatic creation of an [Application definition](https://github.com/kubernetes-sigs/application) with the `applicationName` parameter as the `Application` CR name. The automatic creation is done by the [kAppNav](https://kappnav.io/), Kubernetes Application Navigator. You can easily view and manage the deployed resources that comprise your application using Application Navigator. You can disable auto-creation by setting `createAppDefinition` to `false`. 
+By default, Runtime Component Operator configures the Kubernetes resources it generates to allow automatic creation of an [Application definition](https://github.com/kubernetes-sigs/application) with the `applicationName` parameter as the `Application` CR name. The automatic creation is done by the [Kubernetes Application Navigator (kAppNav)](https://kappnav.io/). You can easily view and manage the deployed resources that comprise your application by using kAppNav. You can disable auto-creation by setting the `createAppDefinition` parameter to a value of `false`. 
 
-To join an existing application definition in the `RuntimeComponent` CR namespace, ensure the `applicationName` parameter is set to the name of the `Application` CR you want to join to. To join an existing application definition in another namespace, ensure that the `createAppDefinition` parameter is set to `false` and the `applicationName` parameter is set to the name of the existing `Application` CR you want to join to.
+To join an existing application definition in the `RuntimeComponent` CR namespace, ensure that the `applicationName` parameter is set to the name of the `Application` CR that you want to join. To join an existing application definition in another namespace, ensure that the `createAppDefinition` parameter is set to `false` and that the `applicationName` parameter is set to the name of the existing `Application` CR that you want to join.
 
-The operator tries to find an `Application` CR with the `applicationName` parameter in the `RuntimeComponent` CR namespace. If it fails to find any, then it lists all the `Application` CRs with the value of the `applicationName` parameter as the name and the `RuntimeComponent` CR namespace listed in the value of the `kappnav.component.namespaces` annotation. If it finds any `Application` CR with the specified criteria, it adds labels listed in the `spec.selector.matchLabels` parameter to the `RuntimeComponent` CR. When all these steps fails, if the `createAppDefinition` is not set to `false`, the operator configures the Kubernetes resources it generates to allow automatic creation of an `Application` definition.
+The operator tries to find an `Application` CR with the `applicationName` parameter in the `RuntimeComponent` CR namespace. If it fails to find any, then it lists all the `Application` CRs with the value of the `applicationName` parameter as the name and the `RuntimeComponent` CR namespace listed in the value of the `kappnav.component.namespaces` annotation. If it finds any `Application` CR with the specified criteria, it adds labels listed in the `spec.selector.matchLabels` parameter to the `RuntimeComponent` CR. When all these steps fail, if the `createAppDefinition` is not set to `false`, the operator configures the Kubernetes resources it generates to allow automatic creation of an `Application` definition.
 
 _This feature is only available if you have kAppNav installed on your cluster. Auto creation of an application definition is not supported when Knative service is created_
 
@@ -572,10 +572,10 @@ spec:
     certificate: {}
 ```
 
-In this scenario the operator will generate `Certificate` resource with common name of `my-app.test.svc` that can be used for service to service communication.
+In this scenario the operator generates a `Certificate` resource with a common name of `my-app.test.svc` that can be used for service to service communication.
 
-Once this certificate request is resolved by cert-manager the resulting secret `my-app-svc-tls` will be 
-mounted into each pod inside `/etc/x509/certs` folder. Mounted files will be always up to date with a secret.
+After this certificate request is resolved by the certificate manager, the resulting `my-app-svc-tls` secret 
+is mounted onto each pod inside the `/etc/x509/certs` folder. Mounted files are always up to date with a secret.
 
 It will contain private key, certificate and CA certificate.
 It is up to the application container to consume these artifacts, applying any needed transformation or modification.
@@ -597,7 +597,7 @@ spec:
     termination: reencrypt
     certificate: {}
 ```
-In this scenario the operator will generate `Certificate` resource with common name of `myapp.mycompany.com` that will be injected into `Route` resource.
+In this scenario the operator generates a `Certificate` resource with the common name of `myapp.mycompany.com` that will be injected into the `Route` resource.
 
 #### Advanced scenario
 
