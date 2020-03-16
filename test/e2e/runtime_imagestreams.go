@@ -8,9 +8,12 @@ import (
 	"time"
 
 	"github.com/application-stacks/operator/test/util"
+	imagev1 "github.com/openshift/api/image/v1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
+	k "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 //RuntimeImageStreamTest ...
@@ -21,14 +24,20 @@ func RuntimeImageStreamTest(t *testing.T) {
 	}
 	defer ctx.Cleanup()
 
+	f := framework.Global
+
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		t.Fatalf("Couldn't get namespace: %v", err)
 	}
 
-	t.Logf("Namespace: %s", namespace)
+	// Adds the imagestream resources to the scheme
+	if err = imagev1.AddToScheme(f.Scheme); err != nil {
+		t.Logf("Unable to add image scheme: (%v)", err)
+		util.FailureCleanup(t, f, namespace, err)
+	}
 
-	f := framework.Global
+	t.Logf("Namespace: %s", namespace)
 
 	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-stacks-operator", 1, retryInterval, timeout)
 	if err != nil {
@@ -36,7 +45,7 @@ func RuntimeImageStreamTest(t *testing.T) {
 	}
 
 	if err = runtimeImageStreamTest(t, f, ctx); err != nil {
-		out, err := exec.Command("oc", "delete", "imagestream", "imagestream-example", "-n", namespace).Output()
+		out, err := exec.Command("oc", "delete", "imagestream", "imagestream-example").Output()
 		if err != nil {
 			t.Fatalf("Failed to delete imagestream: %s", out)
 		}
@@ -52,11 +61,33 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 	if err != nil {
 		return fmt.Errorf("could not get namespace: %v", err)
 	}
+	t.Logf("Namespace: %s", ns)
 
 	// Create the imagestream
 	out, err := exec.Command("oc", "import-image", imgstreamName, "--from=navidsh/demo-day:v0.1.0", "--confirm").Output()
 	if err != nil {
 		t.Fatalf("Creating the imagestream failed: %s", out)
+	}
+
+	// Check the name field that matches
+	m := map[string]string{"metadata.name": imgstreamName}
+	l := fields.Set(m)
+	selec := l.AsSelector()
+
+	options := k.ListOptions{FieldSelector: selec}
+
+	imageStreamList := &imagev1.ImageStreamList{}
+	if err = f.Client.List(goctx.TODO(), imageStreamList, &options); err != nil {
+		t.Logf("Imagestreams not found: %s", err)
+	}
+
+	if len(imageStreamList.Items) == 0 {
+		for i := 0; i < 10; i++ {
+			time.Sleep(4000 * time.Millisecond)
+			if err = f.Client.List(goctx.TODO(), imageStreamList, &options); err != nil {
+				t.Logf("Imagestreams not found: %s", err)
+			}
+		}
 	}
 
 	// Make an appplication that points to the imagestream
@@ -88,7 +119,7 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 		t.Fatalf("Updating the imagestreamtag failed: %s", out)
 	}
 
-	time.Sleep(4000 * time.Millisecond)
+	time.Sleep(6000 * time.Millisecond)
 
 	// Get the application
 	f.Client.Get(goctx.TODO(), types.NamespacedName{Name: name, Namespace: ns}, runtime)
@@ -109,7 +140,7 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 		t.Fatalf("Updating the imagestreamtag failed: %s", out)
 	}
 
-	time.Sleep(4000 * time.Millisecond)
+	time.Sleep(6000 * time.Millisecond)
 
 	// Get the application
 	f.Client.Get(goctx.TODO(), types.NamespacedName{Name: name, Namespace: ns}, runtime)
@@ -121,6 +152,11 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 	// Check if the image the application is pointing to has been changed
 	if firstImage == secondImage {
 		t.Fatalf("The docker image has not been updated. It is still %s", secondImage)
+	}
+
+	out, err = exec.Command("oc", "delete", "imagestream", "imagestream-example").Output()
+	if err != nil {
+		t.Fatalf("Failed to delete imagestream: %s", out)
 	}
 
 	return nil
