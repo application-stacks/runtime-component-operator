@@ -69,8 +69,6 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 		t.Fatalf("Creating the imagestream failed: %s", out)
 	}
 
-	t.Log(out)
-
 	// Check the name field that matches
 	m := map[string]string{"metadata.name": imgstreamName}
 	l := fields.Set(m)
@@ -116,7 +114,7 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 	firstImage := runtime.Status.ImageReference
 	// Update the imagestreamtag
 	tag := `{"tag":{"from":{"name": "navidsh/demo-day:v0.2.0"}}}`
-	out, err = exec.Command("oc", "patch", "imagestreamtag", imgstreamName+":latest", "-p", tag).Output()
+	out, err = exec.Command("oc", "patch", "imagestreamtag", imgstreamName+":latest", "-n", ns, "-p", tag).Output()
 	if err != nil {
 		t.Fatalf("Updating the imagestreamtag failed: %s", out)
 	}
@@ -137,7 +135,7 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 
 	// Update the imagestreamtag again
 	tag = `{"tag":{"from":{"name": "navidsh/demo-day:v0.1.0"}}}`
-	out, err = exec.Command("oc", "patch", "imagestreamtag", imgstreamName+":latest", "-p", tag).Output()
+	out, err = exec.Command("oc", "patch", "imagestreamtag", imgstreamName+":latest", "-n", ns, "-p", tag).Output()
 	if err != nil {
 		t.Fatalf("Updating the imagestreamtag failed: %s", out)
 	}
@@ -156,7 +154,7 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 		t.Fatalf("The docker image has not been updated. It is still %s", secondImage)
 	}
 
-	out, err = exec.Command("oc", "delete", "imagestream", "imagestream-example").Output()
+	out, err = exec.Command("oc", "delete", "imagestream", "imagestream-example", "-n", ns).Output()
 	if err != nil {
 		t.Fatalf("Failed to delete imagestream: %s", out)
 	}
