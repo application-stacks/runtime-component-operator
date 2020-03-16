@@ -72,6 +72,7 @@ type BaseComponentStorage interface {
 // BaseComponentService represents basic service configuration
 type BaseComponentService interface {
 	GetPort() int32
+	GetTargetPort() *int32
 	GetPortName() string
 	GetType() *corev1.ServiceType
 	GetAnnotations() map[string]string
