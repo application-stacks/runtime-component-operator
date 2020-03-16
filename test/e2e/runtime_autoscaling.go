@@ -70,14 +70,26 @@ func RuntimeAutoScalingTest(t *testing.T) {
 	selec := l.AsSelector()
 
 	// Update autoscaler
-	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
-	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
-		r.Spec.ResourceConstraints = setResources("0.2")
-		r.Spec.Autoscaling = setAutoScale(5, 50)
-	})
+	// target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
+
+	// Get the application
+	f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}, runtimeComponent)
 	if err != nil {
 		t.Fatal(err)
 	}
+	runtimeComponent.Spec.ResourceConstraints = setResources("0.2")
+	runtimeComponent.Spec.Autoscaling = setAutoScale(5, 50)
+	err = f.Client.Update(goctx.TODO(), runtimeComponent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
+	// 	r.Spec.ResourceConstraints = setResources("0.2")
+	// 	r.Spec.Autoscaling = setAutoScale(5, 50)
+	// })
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
 
 	hpa := &autoscalingv1.HorizontalPodAutoscalerList{}
 	options := k.ListOptions{FieldSelector: selec}
@@ -166,12 +178,23 @@ func checkValues(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, m
 
 // Updates the values and checks they are changed
 func updateTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
-	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
+	// target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
-	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
-		r.Spec.ResourceConstraints = setResources("0.2")
-		r.Spec.Autoscaling = setAutoScale(3, 2, 30)
-	})
+	// err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
+	// 	r.Spec.ResourceConstraints = setResources("0.2")
+	// 	r.Spec.Autoscaling = setAutoScale(3, 2, 30)
+	// })
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// Get the application
+	err := f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}, runtimeComponent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runtimeComponent.Spec.ResourceConstraints = setResources("0.2")
+	runtimeComponent.Spec.Autoscaling = setAutoScale(3, 2, 30)
+	err = f.Client.Update(goctx.TODO(), runtimeComponent)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -189,12 +212,23 @@ func updateTest(t *testing.T, f *framework.Framework, runtimeComponent *appstack
 
 // Checks when max is less than min, there should be no update
 func minMaxTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
-	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
+	// target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
-	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
-		r.Spec.ResourceConstraints = setResources("0.2")
-		r.Spec.Autoscaling = setAutoScale(1, 6, 10)
-	})
+	// err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
+	// 	r.Spec.ResourceConstraints = setResources("0.2")
+	// 	r.Spec.Autoscaling = setAutoScale(1, 6, 10)
+	// })
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// Get the application
+	err := f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}, runtimeComponent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runtimeComponent.Spec.ResourceConstraints = setResources("0.2")
+	runtimeComponent.Spec.Autoscaling = setAutoScale(1, 6, 10)
+	err = f.Client.Update(goctx.TODO(), runtimeComponent)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -212,12 +246,23 @@ func minMaxTest(t *testing.T, f *framework.Framework, runtimeComponent *appstack
 
 // When min is set to less than 1, there should be no update since the minReplicas are updated to a value less than 1
 func minBoundaryTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
-	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
+	// target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
-	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
-		r.Spec.ResourceConstraints = setResources("0.5")
-		r.Spec.Autoscaling = setAutoScale(4, 0, 20)
-	})
+	// err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
+	// 	r.Spec.ResourceConstraints = setResources("0.5")
+	// 	r.Spec.Autoscaling = setAutoScale(4, 0, 20)
+	// })
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+
+	err := f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}, runtimeComponent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runtimeComponent.Spec.ResourceConstraints = setResources("0.5")
+	runtimeComponent.Spec.Autoscaling = setAutoScale(4, 0, 20)
+	err = f.Client.Update(goctx.TODO(), runtimeComponent)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -267,12 +312,24 @@ func incorrectFieldsTest(t *testing.T, f *framework.Framework, ctx *framework.Te
 
 	options := k.ListOptions{FieldSelector: selec}
 
-	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
+	// target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
-	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
-		r.Spec.ResourceConstraints = setResources("0.3")
-		r.Spec.Autoscaling = setAutoScale(4)
-	})
+	// err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
+	// 	r.Spec.ResourceConstraints = setResources("0.3")
+	// 	r.Spec.Autoscaling = setAutoScale(4)
+	// })
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+
+	// Get the application
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}, runtimeComponent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runtimeComponent.Spec.ResourceConstraints = setResources("0.3")
+	runtimeComponent.Spec.Autoscaling = setAutoScale(4)
+	err = f.Client.Update(goctx.TODO(), runtimeComponent)
 	if err != nil {
 		t.Fatal(err)
 	}
