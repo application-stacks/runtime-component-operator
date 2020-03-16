@@ -64,10 +64,12 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 	t.Logf("Namespace: %s", ns)
 
 	// Create the imagestream
-	out, err := exec.Command("oc", "import-image", imgstreamName, "--from=navidsh/demo-day:v0.1.0", "--confirm").Output()
+	out, err := exec.Command("oc", "import-image", imgstreamName, "--from=navidsh/demo-day:v0.1.0", "-n", ns, "--confirm").Output()
 	if err != nil {
 		t.Fatalf("Creating the imagestream failed: %s", out)
 	}
+
+	t.Log(out)
 
 	// Check the name field that matches
 	m := map[string]string{"metadata.name": imgstreamName}
