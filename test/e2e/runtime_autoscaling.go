@@ -105,8 +105,8 @@ func getHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, f *fra
 }
 
 func waitForHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, minReplicas int32, maxReplicas int32, utiliz int32, f *framework.Framework, options k.ListOptions) error {
-	for counter := 0; counter < 6; counter++ {
-		time.Sleep(4000 * time.Millisecond)
+	for counter := 0; counter < 10; counter++ {
+		time.Sleep(6000 * time.Millisecond)
 		hpa = getHPA(hpa, t, f, options)
 		if checkValues(hpa, t, minReplicas, maxReplicas, utiliz) == nil {
 			return nil
