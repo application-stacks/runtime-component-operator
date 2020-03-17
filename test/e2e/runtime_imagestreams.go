@@ -74,18 +74,18 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 
 	options := &dynclient.ListOptions{
 		FieldSelector: fields.Set(key).AsSelector(),
-		Namespace:     namespace,
+		Namespace:     ns,
 	}
 
 	imageStreamList := &imagev1.ImageStreamList{}
-	if err = f.Client.List(goctx.TODO(), imageStreamList, &options); err != nil {
+	if err = f.Client.List(goctx.TODO(), imageStreamList, options); err != nil {
 		t.Logf("Imagestreams not found: %s", err)
 	}
 
 	if len(imageStreamList.Items) == 0 {
 		for i := 0; i < 10; i++ {
 			time.Sleep(4000 * time.Millisecond)
-			if err = f.Client.List(goctx.TODO(), imageStreamList, &options); err != nil {
+			if err = f.Client.List(goctx.TODO(), imageStreamList, options); err != nil {
 				t.Logf("Imagestreams not found: %s", err)
 			}
 		}

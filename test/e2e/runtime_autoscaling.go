@@ -99,14 +99,14 @@ func RuntimeAutoScalingTest(t *testing.T) {
 	incorrectFieldsTest(t, f, ctx)
 }
 
-func getHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, f *framework.Framework, options dynclient.ListOptions) *autoscalingv1.HorizontalPodAutoscalerList {
-	if err := f.Client.List(goctx.TODO(), hpa, &options); err != nil {
+func getHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, f *framework.Framework, options *dynclient.ListOptions) *autoscalingv1.HorizontalPodAutoscalerList {
+	if err := f.Client.List(goctx.TODO(), hpa, options); err != nil {
 		t.Logf("Get HPA: (%v)", err)
 	}
 	return hpa
 }
 
-func waitForHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, minReplicas int32, maxReplicas int32, utiliz int32, f *framework.Framework, options dynclient.ListOptions) error {
+func waitForHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, minReplicas int32, maxReplicas int32, utiliz int32, f *framework.Framework, options *dynclient.ListOptions) error {
 	for counter := 0; counter < 10; counter++ {
 		time.Sleep(6000 * time.Millisecond)
 		hpa = getHPA(hpa, t, f, options)
@@ -167,7 +167,7 @@ func checkValues(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, m
 }
 
 // Updates the values and checks they are changed
-func updateTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options dynclient.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
+func updateTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options *dynclient.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
 	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
@@ -190,7 +190,7 @@ func updateTest(t *testing.T, f *framework.Framework, runtimeComponent *appstack
 }
 
 // Checks when max is less than min, there should be no update
-func minMaxTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options dynclient.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
+func minMaxTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options *dynclient.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
 	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
@@ -213,7 +213,7 @@ func minMaxTest(t *testing.T, f *framework.Framework, runtimeComponent *appstack
 }
 
 // When min is set to less than 1, there should be no update since the minReplicas are updated to a value less than 1
-func minBoundaryTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options dynclient.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
+func minBoundaryTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options *dynclient.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
 	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
