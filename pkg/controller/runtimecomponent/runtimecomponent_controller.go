@@ -13,6 +13,7 @@ import (
 	appstacksutils "github.com/application-stacks/runtime-component-operator/pkg/utils"
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
+	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
 
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	imagev1 "github.com/openshift/api/image/v1"
@@ -330,7 +331,7 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		}
 		instance.Labels = appstacksutils.MergeMaps(existingAppLabels, instance.Labels)
 	} else {
-		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", servingv1alpha1.SchemeGroupVersion.String()))
+		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", applicationsv1beta1.SchemeGroupVersion.String()))
 	}
 
 	currentGen := instance.Generation
