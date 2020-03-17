@@ -36,7 +36,7 @@ func RuntimeCertManagerTest(t *testing.T) {
 		return
 	}
 
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-stacks-operator", 1, retryInterval, timeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "runtime-component-operator", 1, retryInterval, timeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
