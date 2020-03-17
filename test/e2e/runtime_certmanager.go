@@ -6,13 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
-	"github.com/openshift/api/route/v1"
-	"github.com/application-stacks/operator/test/util"
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
+	"github.com/application-stacks/runtime-component-operator/test/util"
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
+	v1 "github.com/openshift/api/route/v1"
+	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func RuntimeCertManagerTest(t *testing.T) {
@@ -26,7 +26,6 @@ func RuntimeCertManagerTest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Couldn't get namespace: %v", err)
 	}
-
 
 	t.Logf("Namespace: %s", namespace)
 
@@ -101,7 +100,7 @@ func runtimeRouteCertificateTest(t *testing.T, f *framework.Framework, ctx *fram
 	expose := true
 	runtime.Spec.Expose = &expose
 	runtime.Spec.Route = &v1beta1.RuntimeComponentRoute{
-		Host: "myapp.mycompany.com",
+		Host:        "myapp.mycompany.com",
 		Termination: &terminationPolicy,
 		Certificate: &v1beta1.Certificate{},
 	}
@@ -143,10 +142,10 @@ func runtimeAdvancedCertificateTest(t *testing.T, f *framework.Framework, ctx *f
 	}
 	runtime.Spec.Expose = &expose
 	runtime.Spec.Route = &v1beta1.RuntimeComponentRoute{
-		Host: "myapp.mycompany.com",
+		Host:        "myapp.mycompany.com",
 		Termination: &terminationPolicy,
 		Certificate: &v1beta1.Certificate{
-			Duration: &duration,
+			Duration:     &duration,
 			Organization: []string{"My Company"},
 			IssuerRef: cmmeta.ObjectReference{
 				Name: "self-signed",

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/application-stacks/operator/test/util"
+	"github.com/application-stacks/runtime-component-operator/test/util"
 	imagev1 "github.com/openshift/api/image/v1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
