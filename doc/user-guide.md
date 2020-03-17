@@ -514,7 +514,12 @@ By default, Runtime Component Operator configures the Kubernetes resources it ge
 
 To join an existing application definition in the `RuntimeComponent` CR namespace, ensure that the `applicationName` parameter is set to the name of the `Application` CR that you want to join. To join an existing application definition in another namespace, ensure that the `createAppDefinition` parameter is set to `false` and that the `applicationName` parameter is set to the name of the existing `Application` CR that you want to join.
 
-The operator tries to find an `Application` CR with the `applicationName` parameter in the `RuntimeComponent` CR namespace. If it fails to find any, then it lists all the `Application` CRs with the value of the `applicationName` parameter as the name and the `RuntimeComponent` CR namespace listed in the value of the `kappnav.component.namespaces` annotation. If it finds any `Application` CR with the specified criteria, it adds labels listed in the `spec.selector.matchLabels` parameter to the `RuntimeComponent` CR. When all these steps fail, if the `createAppDefinition` is not set to `false`, the operator configures the Kubernetes resources it generates to allow automatic creation of an `Application` definition.
+First, the operator searches in the `RuntimeComponent` CR namespace to find an `Application` CR named as the `applicationName` parameter.
+If it fails to find any, it searches the whole cluster to find `Application` CRs that meet the following criteria:
+- The `Application` CRs have the same name as the value of the `applicationName` parameter.
+- The `RuntimeComponent` CR namespace is listed in the value of the `kappnav.component.namespaces` annotation.
+
+After the operator finds any `Application` CRs in the previous steps, it adds labels to the `RuntimeComponent` CR. These labels are listed in the `spec.selector.matchLabels` parameter. However, if the operator fails to find any `Application` CRs, and if the `createAppDefinition` parameter is not set to `false`, the operator configures the Kubernetes resources it generates. These Kubernetes resources are configured to allow automatic creation of an `Application` definition.
 
 _This feature is only available if you have kAppNav installed on your cluster. Auto creation of an application definition is not supported when Knative service is created_
 
