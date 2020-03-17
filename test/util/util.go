@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
+	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	corev1 "k8s.io/api/core/v1"
@@ -270,29 +270,4 @@ func UpdateApplication(f *framework.Framework, target types.NamespacedName, upda
 	})
 
 	return err
-}
-
-// MakeImageStreamRuntimeComponent : Create a simple RuntimeComponent with image stream.
-func MakeImageStreamRuntimeComponent(t *testing.T, f *framework.Framework, n string, ns string, replicas int32, imgstream string) *appstacksv1beta1.RuntimeComponent {
-	expose := false
-	serviceType := corev1.ServiceTypeClusterIP
-	return &appstacksv1beta1.RuntimeComponent{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "RuntimeComponent",
-			APIVersion: "app.stacks/v1beta1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      n,
-			Namespace: ns,
-		},
-		Spec: appstacksv1beta1.RuntimeComponentSpec{
-			ApplicationImage: imgstream,
-			Replicas:         &replicas,
-			Expose:           &expose,
-			Service: &appstacksv1beta1.RuntimeComponentService{
-				Port: 3000,
-				Type: &serviceType,
-			},
-		},
-	}
 }

@@ -92,7 +92,8 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 	}
 
 	// Make an appplication that points to the imagestream
-	runtime := util.MakeImageStreamRuntimeComponent(t, f, name, ns, 1, imgstreamName)
+	runtime := util.MakeBasicRuntimeComponent(t, f, name, ns, 1)
+	runtime.Spec.ApplicationImage = imgstreamName
 
 	timestamp := time.Now().UTC()
 	t.Logf("%s - Creating runtime application...", timestamp)
