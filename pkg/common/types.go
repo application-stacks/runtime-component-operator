@@ -32,8 +32,8 @@ type StatusCondition interface {
 	SetType(StatusConditionType)
 }
 
-// BaseApplicationStatus returns base appplication status
-type BaseApplicationStatus interface {
+// BaseComponentStatus returns base appplication status
+type BaseComponentStatus interface {
 	GetConditions() []StatusCondition
 	GetCondition(StatusConditionType) StatusCondition
 	SetCondition(StatusCondition)
@@ -55,23 +55,24 @@ const (
 	StatusConditionTypeDependenciesSatisfied StatusConditionType = "DependenciesSatisfied"
 )
 
-// BaseApplicationAutoscaling represents basic HPA configuration
-type BaseApplicationAutoscaling interface {
+// BaseComponentAutoscaling represents basic HPA configuration
+type BaseComponentAutoscaling interface {
 	GetMinReplicas() *int32
 	GetMaxReplicas() int32
 	GetTargetCPUUtilizationPercentage() *int32
 }
 
-// BaseApplicationStorage represents basic PVC configuration
-type BaseApplicationStorage interface {
+// BaseComponentStorage represents basic PVC configuration
+type BaseComponentStorage interface {
 	GetSize() string
 	GetMountPath() string
 	GetVolumeClaimTemplate() *corev1.PersistentVolumeClaim
 }
 
-// BaseApplicationService represents basic service configuration
-type BaseApplicationService interface {
+// BaseComponentService represents basic service configuration
+type BaseComponentService interface {
 	GetPort() int32
+	GetPortName() string
 	GetType() *corev1.ServiceType
 	GetAnnotations() map[string]string
 	GetProvides() ServiceBindingProvides
@@ -80,14 +81,14 @@ type BaseApplicationService interface {
 	GetCertificateSecretRef() *string
 }
 
-// BaseApplicationMonitoring represents basic service monitoring configuration
-type BaseApplicationMonitoring interface {
+// BaseComponentMonitoring represents basic service monitoring configuration
+type BaseComponentMonitoring interface {
 	GetLabels() map[string]string
 	GetEndpoints() []prometheusv1.Endpoint
 }
 
-// BaseApplicationRoute represents route configuration
-type BaseApplicationRoute interface {
+// BaseComponentRoute represents route configuration
+type BaseComponentRoute interface {
 	GetCertificate() Certificate
 	GetTermination() *routev1.TLSTerminationType
 	GetInsecureEdgeTerminationPolicy() *routev1.InsecureEdgeTerminationPolicyType
@@ -127,8 +128,8 @@ const (
 	ServiceBindingCategoryOpenAPI ServiceBindingCategory = "openapi"
 )
 
-// BaseApplication represents basic kubernetes application
-type BaseApplication interface {
+// BaseComponent represents basic kubernetes application
+type BaseComponent interface {
 	GetApplicationImage() string
 	GetPullPolicy() *corev1.PullPolicy
 	GetPullSecret() *string
@@ -144,19 +145,20 @@ type BaseApplication interface {
 	GetEnvFrom() []corev1.EnvFromSource
 	GetCreateKnativeService() *bool
 	GetArchitecture() []string
-	GetAutoscaling() BaseApplicationAutoscaling
-	GetStorage() BaseApplicationStorage
-	GetService() BaseApplicationService
+	GetAutoscaling() BaseComponentAutoscaling
+	GetStorage() BaseComponentStorage
+	GetService() BaseComponentService
 	GetVersion() string
 	GetCreateAppDefinition() *bool
 	GetApplicationName() string
-	GetMonitoring() BaseApplicationMonitoring
+	GetMonitoring() BaseComponentMonitoring
 	GetLabels() map[string]string
 	GetAnnotations() map[string]string
-	GetStatus() BaseApplicationStatus
+	GetStatus() BaseComponentStatus
 	GetInitContainers() []corev1.Container
+	GetSidecarContainers() []corev1.Container
 	GetGroupName() string
-	GetRoute() BaseApplicationRoute
+	GetRoute() BaseComponentRoute
 }
 
 // Certificate returns cert-manager CertificateSpec

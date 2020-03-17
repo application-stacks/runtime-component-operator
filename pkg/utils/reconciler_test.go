@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/application-stacks/operator/pkg/common"
+	"github.com/application-stacks/runtime-component-operator/pkg/common"
 
-	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
+	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"

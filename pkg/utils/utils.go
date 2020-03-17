@@ -5,10 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/application-stacks/operator/pkg/common"
+	"github.com/application-stacks/runtime-component-operator/pkg/common"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
-	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
+	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
@@ -22,7 +22,7 @@ import (
 )
 
 // CustomizeDeployment ...
-func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseApplication) {
+func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	deploy.Labels = ba.GetLabels()
 	deploy.Annotations = MergeMaps(deploy.Annotations, ba.GetAnnotations())
@@ -41,7 +41,7 @@ func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseApplication) {
 }
 
 // CustomizeStatefulSet ...
-func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseApplication) {
+func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	statefulSet.Labels = ba.GetLabels()
 	statefulSet.Annotations = MergeMaps(statefulSet.Annotations, ba.GetAnnotations())
@@ -60,7 +60,7 @@ func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseApplica
 }
 
 // UpdateAppDefinition adds or removes kAppNav auto-create related annotations/labels
-func UpdateAppDefinition(labels map[string]string, annotations map[string]string, ba common.BaseApplication) {
+func UpdateAppDefinition(labels map[string]string, annotations map[string]string, ba common.BaseComponent) {
 	if ba.GetCreateAppDefinition() != nil && !*ba.GetCreateAppDefinition() {
 		delete(labels, "kappnav.app.auto-create")
 		delete(annotations, "kappnav.app.auto-create.name")
@@ -83,7 +83,7 @@ func UpdateAppDefinition(labels map[string]string, annotations map[string]string
 }
 
 // CustomizeRoute ...
-func CustomizeRoute(route *routev1.Route, ba common.BaseApplication, key string, crt string, ca string, destCACert string) {
+func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, crt string, ca string, destCACert string) {
 	obj := ba.(metav1.Object)
 	route.Labels = ba.GetLabels()
 	route.Annotations = MergeMaps(route.Annotations, ba.GetAnnotations())
@@ -133,8 +133,12 @@ func CustomizeRoute(route *routev1.Route, ba common.BaseApplication, key string,
 	if route.Spec.Port == nil {
 		route.Spec.Port = &routev1.RoutePort{}
 	}
-	route.Spec.Port.TargetPort = intstr.FromString(strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp")
 
+	if ba.GetService().GetPortName() != "" {
+		route.Spec.Port.TargetPort = intstr.FromString(ba.GetService().GetPortName())
+	} else {
+		route.Spec.Port.TargetPort = intstr.FromString(strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp")
+	}
 }
 
 // ErrorIsNoMatchesForKind ...
@@ -143,7 +147,7 @@ func ErrorIsNoMatchesForKind(err error, kind string, version string) bool {
 }
 
 // CustomizeService ...
-func CustomizeService(svc *corev1.Service, ba common.BaseApplication) {
+func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	svc.Labels = ba.GetLabels()
 	svc.Annotations = MergeMaps(svc.Annotations, ba.GetAnnotations())
@@ -154,15 +158,20 @@ func CustomizeService(svc *corev1.Service, ba common.BaseApplication) {
 
 	svc.Spec.Ports[0].Port = ba.GetService().GetPort()
 	svc.Spec.Ports[0].TargetPort = intstr.FromInt(int(ba.GetService().GetPort()))
-	svc.Spec.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+
+	if ba.GetService().GetPortName() != "" {
+		svc.Spec.Ports[0].Name = ba.GetService().GetPortName()
+	} else {
+		svc.Spec.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	}
 	svc.Spec.Type = *ba.GetService().GetType()
 	svc.Spec.Selector = map[string]string{
 		"app.kubernetes.io/instance": obj.GetName(),
 	}
 }
 
-// CustomizeServieBindingSecret ...
-func CustomizeServieBindingSecret(secret *corev1.Secret, auth map[string]string, ba common.BaseApplication) {
+// CustomizeServiceBindingSecret ...
+func CustomizeServiceBindingSecret(secret *corev1.Secret, auth map[string]string, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	secret.Labels = ba.GetLabels()
 	secret.Annotations = MergeMaps(secret.Annotations, ba.GetAnnotations())
@@ -197,38 +206,44 @@ func CustomizeServieBindingSecret(secret *corev1.Secret, auth map[string]string,
 }
 
 // CustomizePodSpec ...
-func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
+func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	pts.Labels = ba.GetLabels()
 	pts.Annotations = MergeMaps(pts.Annotations, ba.GetAnnotations())
 
+	var appContainer corev1.Container
 	if len(pts.Spec.Containers) == 0 {
-		pts.Spec.Containers = append(pts.Spec.Containers, corev1.Container{})
-	}
-	pts.Spec.Containers[0].Name = "app"
-	if len(pts.Spec.Containers[0].Ports) == 0 {
-		pts.Spec.Containers[0].Ports = append(pts.Spec.Containers[0].Ports, corev1.ContainerPort{})
+		appContainer = corev1.Container{}
+	} else {
+		appContainer = *GetAppContainer(pts.Spec.Containers)
 	}
 
-	pts.Spec.Containers[0].Ports[0].ContainerPort = ba.GetService().GetPort()
-	pts.Spec.Containers[0].Image = ba.GetStatus().GetImageReference()
-	pts.Spec.Containers[0].Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	appContainer.Name = "app"
+	if len(appContainer.Ports) == 0 {
+		appContainer.Ports = append(appContainer.Ports, corev1.ContainerPort{})
+	}
+	appContainer.Ports[0].ContainerPort = ba.GetService().GetPort()
+	appContainer.Image = ba.GetStatus().GetImageReference()
+	if ba.GetService().GetPortName() != "" {
+		appContainer.Ports[0].Name = ba.GetService().GetPortName()
+	} else {
+		appContainer.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	}
 	if ba.GetResourceConstraints() != nil {
-		pts.Spec.Containers[0].Resources = *ba.GetResourceConstraints()
+		appContainer.Resources = *ba.GetResourceConstraints()
 	}
-	pts.Spec.Containers[0].ReadinessProbe = ba.GetReadinessProbe()
-	pts.Spec.Containers[0].LivenessProbe = ba.GetLivenessProbe()
+	appContainer.ReadinessProbe = ba.GetReadinessProbe()
+	appContainer.LivenessProbe = ba.GetLivenessProbe()
 
-	if ba.GetInitContainers() != nil {
-		pts.Spec.InitContainers = ba.GetInitContainers()
-	}
 	if ba.GetPullPolicy() != nil {
-		pts.Spec.Containers[0].ImagePullPolicy = *ba.GetPullPolicy()
+		appContainer.ImagePullPolicy = *ba.GetPullPolicy()
 	}
-	pts.Spec.Containers[0].Env = ba.GetEnv()
-	pts.Spec.Containers[0].EnvFrom = ba.GetEnvFrom()
+	appContainer.Env = ba.GetEnv()
+	appContainer.EnvFrom = ba.GetEnvFrom()
 
-	pts.Spec.Containers[0].VolumeMounts = ba.GetVolumeMounts()
+	pts.Spec.InitContainers = ba.GetInitContainers()
+
+	appContainer.VolumeMounts = ba.GetVolumeMounts()
 	pts.Spec.Volumes = ba.GetVolumes()
 
 	if ba.GetService().GetCertificate() != nil || ba.GetService().GetCertificateSecretRef() != nil {
@@ -239,7 +254,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 		if ba.GetService().GetCertificateSecretRef() != nil {
 			secretName = *ba.GetService().GetCertificateSecretRef()
 		}
-		pts.Spec.Containers[0].Env = append(pts.Spec.Containers[0].Env, corev1.EnvVar{Name: "TLS_DIR", Value: "/etc/x509/certs"})
+		appContainer.Env = append(appContainer.Env, corev1.EnvVar{Name: "TLS_DIR", Value: "/etc/x509/certs"})
 		pts.Spec.Volumes = append(pts.Spec.Volumes, corev1.Volume{
 			Name: "svc-certificate",
 			VolumeSource: corev1.VolumeSource{
@@ -248,12 +263,14 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 				},
 			},
 		})
-		pts.Spec.Containers[0].VolumeMounts = append(pts.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+		appContainer.VolumeMounts = append(appContainer.VolumeMounts, corev1.VolumeMount{
 			Name:      "svc-certificate",
 			MountPath: "/etc/x509/certs",
 			ReadOnly:  true,
 		})
 	}
+
+	pts.Spec.Containers = append([]corev1.Container{appContainer}, ba.GetSidecarContainers()...)
 
 	CustomizeConsumedServices(&pts.Spec, ba)
 
@@ -272,14 +289,18 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseApplication) {
 }
 
 // CustomizeConsumedServices ...
-func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseApplication) {
+func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseComponent) {
 	if ba.GetStatus().GetConsumedServices() != nil {
+		appContainer := GetAppContainer(podSpec.Containers)
 		for _, svc := range ba.GetStatus().GetConsumedServices()[common.ServiceBindingCategoryOpenAPI] {
-			c, _ := findConsumes(svc, ba)
+			c, err := findConsumes(svc, ba)
+			if err != nil {
+				continue
+			}
 			if c.GetMountPath() != "" {
 				actualMountPath := strings.Join([]string{c.GetMountPath(), c.GetNamespace(), c.GetName()}, "/")
 				volMount := corev1.VolumeMount{Name: svc, MountPath: actualMountPath, ReadOnly: true}
-				podSpec.Containers[0].VolumeMounts = append(podSpec.Containers[0].VolumeMounts, volMount)
+				appContainer.VolumeMounts = append(appContainer.VolumeMounts, volMount)
 
 				vol := corev1.Volume{
 					Name: svc,
@@ -292,7 +313,12 @@ func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseApplicatio
 				podSpec.Volumes = append(podSpec.Volumes, vol)
 			} else {
 				// The characters allowed in names are: digits (0-9), lower case letters (a-z), -, and ..
-				keyPrefix := normalizeEnvVariableName(c.GetNamespace() + "_" + c.GetName() + "_")
+				var keyPrefix string
+				if c.GetNamespace() == "" {
+					keyPrefix = normalizeEnvVariableName(c.GetName() + "_")
+				} else {
+					keyPrefix = normalizeEnvVariableName(c.GetNamespace() + "_" + c.GetName() + "_")
+				}
 				keys := []string{"username", "password", "url", "hostname", "protocol", "port", "context"}
 				trueVal := true
 				for _, k := range keys {
@@ -308,7 +334,7 @@ func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseApplicatio
 							},
 						},
 					}
-					podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, env)
+					appContainer.Env = append(appContainer.Env, env)
 				}
 			}
 		}
@@ -316,7 +342,7 @@ func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseApplicatio
 }
 
 // CustomizePersistence ...
-func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseApplication) {
+func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	if len(statefulSet.Spec.VolumeClaimTemplates) == 0 {
 		var pvc *corev1.PersistentVolumeClaim
@@ -345,9 +371,11 @@ func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseApplica
 		statefulSet.Spec.VolumeClaimTemplates = append(statefulSet.Spec.VolumeClaimTemplates, *pvc)
 	}
 
+	appContainer := GetAppContainer(statefulSet.Spec.Template.Spec.Containers)
+
 	if ba.GetStorage().GetMountPath() != "" {
 		found := false
-		for _, v := range statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts {
+		for _, v := range appContainer.VolumeMounts {
 			if v.Name == statefulSet.Spec.VolumeClaimTemplates[0].Name {
 				found = true
 			}
@@ -358,14 +386,14 @@ func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseApplica
 				Name:      statefulSet.Spec.VolumeClaimTemplates[0].Name,
 				MountPath: ba.GetStorage().GetMountPath(),
 			}
-			statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts = append(statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts, vm)
+			appContainer.VolumeMounts = append(appContainer.VolumeMounts, vm)
 		}
 	}
 
 }
 
 // CustomizeServiceAccount ...
-func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseApplication) {
+func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent) {
 	sa.Labels = ba.GetLabels()
 	sa.Annotations = MergeMaps(sa.Annotations, ba.GetAnnotations())
 
@@ -381,7 +409,7 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseApplicatio
 }
 
 // CustomizeAffinity ...
-func CustomizeAffinity(a *corev1.Affinity, ba common.BaseApplication) {
+func CustomizeAffinity(a *corev1.Affinity, ba common.BaseComponent) {
 	a.NodeAffinity = &corev1.NodeAffinity{
 		RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
 			NodeSelectorTerms: []corev1.NodeSelectorTerm{
@@ -418,7 +446,7 @@ func CustomizeAffinity(a *corev1.Affinity, ba common.BaseApplication) {
 }
 
 // CustomizeKnativeService ...
-func CustomizeKnativeService(ksvc *servingv1alpha1.Service, ba common.BaseApplication) {
+func CustomizeKnativeService(ksvc *servingv1alpha1.Service, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	ksvc.Labels = ba.GetLabels()
 	ksvc.Annotations = MergeMaps(ksvc.Annotations, ba.GetAnnotations())
@@ -484,7 +512,7 @@ func CustomizeKnativeService(ksvc *servingv1alpha1.Service, ba common.BaseApplic
 }
 
 // CustomizeHPA ...
-func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseApplication) {
+func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	hpa.Labels = ba.GetLabels()
 	hpa.Annotations = MergeMaps(hpa.Annotations, ba.GetAnnotations())
@@ -503,8 +531,8 @@ func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseAppl
 	}
 }
 
-// Validate if the BaseApplication is valid
-func Validate(ba common.BaseApplication) (bool, error) {
+// Validate if the BaseComponent is valid
+func Validate(ba common.BaseComponent) (bool, error) {
 	// Storage validation
 	if ba.GetStorage() != nil {
 		if ba.GetStorage().GetVolumeClaimTemplate() == nil {
@@ -529,21 +557,25 @@ func requiredFieldMessage(fieldPaths ...string) string {
 }
 
 // CustomizeServiceMonitor ...
-func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseApplication) {
+func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	sm.Labels = ba.GetLabels()
 	sm.Annotations = MergeMaps(sm.Annotations, ba.GetAnnotations())
 
 	sm.Spec.Selector = metav1.LabelSelector{
 		MatchLabels: map[string]string{
-			"app.kubernetes.io/instance":            obj.GetName(),
-			"app." + ba.GetGroupName() + "/monitor": "true",
+			"app.kubernetes.io/instance":                obj.GetName(),
+			"monitor." + ba.GetGroupName() + "/enabled": "true",
 		},
 	}
 	if len(sm.Spec.Endpoints) == 0 {
 		sm.Spec.Endpoints = append(sm.Spec.Endpoints, prometheusv1.Endpoint{})
 	}
-	sm.Spec.Endpoints[0].Port = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	if ba.GetService().GetPortName() != "" {
+		sm.Spec.Endpoints[0].Port = ba.GetService().GetPortName()
+	} else {
+		sm.Spec.Endpoints[0].Port = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	}
 	if len(ba.GetMonitoring().GetLabels()) > 0 {
 		for k, v := range ba.GetMonitoring().GetLabels() {
 			sm.Labels[k] = v
@@ -641,7 +673,7 @@ func BuildServiceBindingSecretName(name, namespace string) string {
 	return fmt.Sprintf("%s-%s", namespace, name)
 }
 
-func findConsumes(secretName string, ba common.BaseApplication) (common.ServiceBindingConsumes, error) {
+func findConsumes(secretName string, ba common.BaseComponent) (common.ServiceBindingConsumes, error) {
 	for _, v := range ba.GetService().GetConsumes() {
 		namespace := ""
 		if v.GetNamespace() == "" {
@@ -725,7 +757,7 @@ func normalizeEnvVariableName(name string) string {
 
 // GetConnectToAnnotation returns a map containing a key-value annotatio. The key is `app.openshift.io/connects-to`.
 // The value is a comma-seperated list of applications `ba` is connectiong to based on `spec.service.consumes`.
-func GetConnectToAnnotation(ba common.BaseApplication) map[string]string {
+func GetConnectToAnnotation(ba common.BaseComponent) map[string]string {
 	connectTo := []string{}
 	for _, con := range ba.GetService().GetConsumes() {
 		if ba.(metav1.Object).GetNamespace() == con.GetNamespace() {
@@ -742,4 +774,14 @@ func GetConnectToAnnotation(ba common.BaseApplication) map[string]string {
 // IsClusterWide returns true if watchNamespaces is set to [""]
 func IsClusterWide(watchNamespaces []string) bool {
 	return len(watchNamespaces) == 1 && watchNamespaces[0] == ""
+}
+
+// GetAppContainer returns the container that is running the app
+func GetAppContainer(containerList []corev1.Container) *corev1.Container {
+	for i := 0; i < len(containerList); i++ {
+		if containerList[i].Name == "app" {
+			return &containerList[i]
+		}
+	}
+	return &containerList[0]
 }

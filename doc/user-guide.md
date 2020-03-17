@@ -2,9 +2,11 @@
 
 This generic Operator is capable of deploying any application image and can be imported into any runtime-specific Operator as library of application capabilities.  This architecture ensures compatibility and consistency between all runtime Operators, allowing everyone to benefit from the functionality added in this project.
 
+This documentation refers to the current master branch.  For documentation and samples of older releases, please check out the [main releases](https://github.com/application-stacks/runtime-component-operator/releases) page and navigate the corresponding tag.
+
 ## Operator installation
 
-Use the instructions for one of the releases to install the operator into a Kubernetes cluster.
+Use the instructions for one of the [releases](../deploy/releases) to install the operator into a Kubernetes cluster.
 
 The Runtime Component Operator can be installed to:
 
@@ -53,8 +55,10 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `pullPolicy` | The policy used when pulling the image.  One of: `Always`, `Never`, and `IfNotPresent`. |
 | `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials. |
 | `initContainers` | The list of [Init Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#container-v1-core) definitions. |
+| `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`. |
 | `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference. |
 | `service.port` | The port exposed by the container. |
+| `service.portName` | The name for the port exposed by the container. |
 | `service.type` | The Kubernetes [Service Type](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types). |
 | `service.annotations` | Annotations to be added to the service. |
 | `service.certificate` | A YAML object representing a [Certificate](https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec). |
@@ -79,8 +83,8 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `resourceConstraints.requests.memory` | The minimum memory in bytes. Specify integers with one of these suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.|
 | `resourceConstraints.limits.cpu` | The upper limit of CPU core. Specify integers, fractions (e.g. 0.5), or millicores values(e.g. 100m, where 100m is equivalent to .1 core). |
 | `resourceConstraints.limits.memory` | The memory upper limit in bytes. Specify integers with suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.|
-| `env`   | An array of environment variables following the format of `{name, value}`, where value is a simple string. It may also follow the format of `{name, valueFrom}`, where valueFrom refers to a value in a `ConfigMap` or `Secret` resource. See [Environment variables](https://github.com/application-stacks/operator/blob/master/doc/user-guide.md#environment-variables) for more info.|
-| `envFrom`   | An array of references to `ConfigMap` or `Secret` resources containing environment variables. Keys from `ConfigMap` or `Secret` resources become environment variable names in your container. See [Environment variables](https://github.com/application-stacks/operator/blob/master/doc/user-guide.md#environment-variables) for more info.|
+| `env`   | An array of environment variables following the format of `{name, value}`, where value is a simple string. It may also follow the format of `{name, valueFrom}`, where valueFrom refers to a value in a `ConfigMap` or `Secret` resource. See [Environment variables](https://github.com/application-stacks/runtime-component-operator/blob/master/doc/user-guide.md#environment-variables) for more info.|
+| `envFrom`   | An array of references to `ConfigMap` or `Secret` resources containing environment variables. Keys from `ConfigMap` or `Secret` resources become environment variable names in your container. See [Environment variables](https://github.com/application-stacks/runtime-component-operator/blob/master/doc/user-guide.md#environment-variables) for more info.|
 | `readinessProbe`   | A YAML object configuring the [Kubernetes readiness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#define-readiness-probes) that controls when the pod is ready to receive traffic. |
 | `livenessProbe` | A YAML object configuring the [Kubernetes liveness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#define-a-liveness-http-request) that controls when Kubernetes needs to restart the pod.|
 | `volumes` | A YAML object representing a [pod volume](https://kubernetes.io/docs/concepts/storage/volumes). |
@@ -118,8 +122,11 @@ To get information on the deployed CR, use either of the following:
 
 ```sh
 oc get runtimecomponent my-app
-oc get app my-app
+oc get comp my-app
 ```
+
+The short name for `runtimecomponent` is `comp`.
+
 
 ### Image Streams
 
@@ -159,7 +166,7 @@ for a `RuntimeComponent` CR:
 |--------------------------------|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `app.kubernetes.io/instance`   | `metadata.name`                | A unique name or identifier for this component. This cannot be modified.                                                                                                                 |
 | `app.kubernetes.io/name`       | `metadata.name`                | A name that represents this component.                                                                                                               |
-| `app.kubernetes.io/managed-by` | `application-stacks-operator` | The tool being used to manage this component.                                                                                                                |
+| `app.kubernetes.io/managed-by` | `runtime-component-operator` | The tool being used to manage this component.                                                                                                                |
 | `app.kubernetes.io/component`  | `backend`                      | The type of component being created. See OpenShift [documentation](https://github.com/gorkem/app-labels/blob/master/labels-annotation-for-openshift.adoc#labels) for full list. |
 | `app.kubernetes.io/part-of`    | `metadata.name`                | The name of the higher-level application this component is a part of. Configure this if the component is not a standalone application. |
 | `app.kubernetes.io/version`    | `version`                      | The version of the component.                                                                                                                                |
@@ -515,7 +522,7 @@ This allows to automatically provision TLS certificates for pods as well as rout
 
 Cert-manager installation instruction can be found [here](https://cert-manager.io/docs/installation/)
 
-When creating certificates via the RuntimeComponent CR the user can specify a particular issuer name and toggle the scopes between `ClusterIssuer` (cluster scoped) and `Issuer` (namespace scoped). If not specified, these values are retrieved from a ConfigMap called `application-stacks-operator`, with keys `defaultIssuer` (default value of `self-signed`) and `useClusterIssuer` (default value of `"true"`)
+When creating certificates via the RuntimeComponent CR the user can specify a particular issuer name and toggle the scopes between `ClusterIssuer` (cluster scoped) and `Issuer` (namespace scoped). If not specified, these values are retrieved from a ConfigMap called `runtime-component-operator`, with keys `defaultIssuer` (default value of `self-signed`) and `useClusterIssuer` (default value of `"true"`)
 
 _This feature does not support integration with Knative Service._
 

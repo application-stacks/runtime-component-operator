@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
+	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 
-	"github.com/application-stacks/operator/test/util"
+	"github.com/application-stacks/runtime-component-operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	"k8s.io/apimachinery/pkg/types"
@@ -40,7 +40,7 @@ func RuntimeBasicTest(t *testing.T) {
 	f := framework.Global
 
 	// create one replica of the operator deployment in current namespace with provided name
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "application-stacks-operator", 1, retryInterval, operatorTimeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "runtime-component-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}

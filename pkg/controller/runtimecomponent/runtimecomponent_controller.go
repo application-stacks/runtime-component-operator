@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/application-stacks/operator/pkg/common"
+	"github.com/application-stacks/runtime-component-operator/pkg/common"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 
-	appstacksv1beta1 "github.com/application-stacks/operator/pkg/apis/appstacks/v1beta1"
-	appstacksutils "github.com/application-stacks/operator/pkg/utils"
+	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
+	appstacksutils "github.com/application-stacks/runtime-component-operator/pkg/utils"
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 
@@ -50,7 +50,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	reconciler := &ReconcileRuntimeComponent{ReconcilerBase: appstacksutils.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("application-stacks-operator"))}
+	reconciler := &ReconcileRuntimeComponent{ReconcilerBase: appstacksutils.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("runtime-component-operator"))}
 
 	watchNamespaces, err := appstacksutils.GetWatchNamespaces()
 	if err != nil {
@@ -69,7 +69,7 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 
 	configMap := &corev1.ConfigMap{}
 	configMap.Namespace = ns
-	configMap.Name = "application-stacks-operator"
+	configMap.Name = "runtime-component-operator"
 	configMap.Data = common.DefaultOpConfig()
 	err = reconciler.GetClient().Create(context.TODO(), configMap)
 	if err != nil && !kerrors.IsAlreadyExists(err) {
@@ -288,16 +288,16 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		ns = watchNamespaces[0]
 	}
 
-	configMap, err := r.GetOpConfigMap("application-stacks-operator", ns)
+	configMap, err := r.GetOpConfigMap("runtime-component-operator", ns)
 	if err != nil {
-		log.Info("Failed to find application-stacks-operator config map")
+		log.Info("Failed to find runtime-component-operator config map")
 	} else {
 		common.Config.LoadFromConfigMap(configMap)
 	}
 
 	// Fetch the RuntimeComponent instance
 	instance := &appstacksv1beta1.RuntimeComponent{}
-	var ba common.BaseApplication
+	var ba common.BaseComponent
 	ba = instance
 	err = r.GetClient().Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
@@ -468,11 +468,12 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 	err = r.CreateOrUpdate(svc, instance, func() error {
 		appstacksutils.CustomizeService(svc, ba)
 		svc.Annotations = appstacksutils.MergeMaps(svc.Annotations, instance.Spec.Service.Annotations)
+		monitoringEnabledLabelName := getMonitoringEnabledLabelName(ba)
 		if instance.Spec.Monitoring != nil {
-			svc.Labels["app."+ba.GetGroupName()+"/monitor"] = "true"
+			svc.Labels[monitoringEnabledLabelName] = "true"
 		} else {
-			if _, ok := svc.Labels["app."+ba.GetGroupName()+"/monitor"]; ok {
-				delete(svc.Labels, "app."+ba.GetGroupName()+"/monitor")
+			if _, ok := svc.Labels[monitoringEnabledLabelName]; ok {
+				delete(svc.Labels, monitoringEnabledLabelName)
 			}
 		}
 		return nil
@@ -630,4 +631,8 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 	}
 
 	return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)
+}
+
+func getMonitoringEnabledLabelName(ba common.BaseComponent) string {
+	return "monitor." + ba.GetGroupName() + "/enabled"
 }

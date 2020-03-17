@@ -5,7 +5,7 @@
 package v1beta1
 
 import (
-	common "github.com/application-stacks/operator/pkg/common"
+	common "github.com/application-stacks/runtime-component-operator/pkg/common"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	v1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	routev1 "github.com/openshift/api/route/v1"
@@ -382,6 +382,13 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 	}
 	if in.InitContainers != nil {
 		in, out := &in.InitContainers, &out.InitContainers
+		*out = make([]corev1.Container, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.SidecarContainers != nil {
+		in, out := &in.SidecarContainers, &out.SidecarContainers
 		*out = make([]corev1.Container, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])

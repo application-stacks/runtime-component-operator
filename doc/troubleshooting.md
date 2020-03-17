@@ -5,22 +5,22 @@ Here are some basic troubleshooting methods to check if the operator is running 
 * Run the following and check if the output is similar to the following:
 
   ```console
-  $ oc get pods -l name=application-stacks-operator
+  $ oc get pods -l name=runtime-component-operator
 
   NAME                                            READY     STATUS    RESTARTS   AGE
-  application-stacks-operator-584d6bd86d-fzq2n   1/1       Running   0          33m
+  runtime-component-operator-584d6bd86d-fzq2n     1/1       Running   0          33m
   ```
 
 * Check the operators events:
 
   ```console
-  $ oc describe pod application-stacks-operator-584d6bd86d-fzq2n
+  $ oc describe pod runtime-component-operator-584d6bd86d-fzq2n
   ```
 
 * Check the operator logs:
 
   ```console
-  $ oc logs application-stacks-operator-584d6bd86d-fzq2n
+  $ oc logs runtime-component-operator-584d6bd86d-fzq2n
   ```
 
 If the operator is running fine, check the status of the `RuntimeComponent` Custom Resource (CR) instance:
@@ -31,7 +31,7 @@ If the operator is running fine, check the status of the `RuntimeComponent` Cust
   $ oc get runtimecomponent my-app -o wide
 
   NAME                      IMAGE                                             EXPOSED   RECONCILED   REASON    MESSAGE   AGE
-  my-app            quay.io/my-repo/my-app:1.0                                false     True                             1h
+  my-app                    quay.io/my-repo/my-app:1.0                        false     True                             1h
   ```
 
 * Check the CR effective fields:
