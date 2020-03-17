@@ -6,6 +6,7 @@ import (
 	"time"
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
+	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	corev1 "k8s.io/api/core/v1"
@@ -31,7 +32,7 @@ func MakeBasicRuntimeComponent(t *testing.T, f *framework.Framework, n string, n
 	return &appstacksv1beta1.RuntimeComponent{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "RuntimeComponent",
-			APIVersion: "runtime.dev/v1beta1",
+			APIVersion: "app.stacks/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      n,
@@ -112,6 +113,8 @@ func InitializeContext(t *testing.T, clean, retryInterval time.Duration) (*frame
 // FailureCleanup : Log current state of the namespace and exit with fatal
 func FailureCleanup(t *testing.T, f *framework.Framework, ns string, failure error) {
 	t.Log("***** FAILURE")
+	t.Logf("ERROR: %v", failure)
+	t.Log("*****")
 	options := &dynclient.ListOptions{
 		Namespace: ns,
 	}
@@ -123,7 +126,7 @@ func FailureCleanup(t *testing.T, f *framework.Framework, ns string, failure err
 
 	t.Logf("***** Logging pods in namespace: %s", ns)
 	for _, p := range podlist.Items {
-		t.Log("--------------------")
+		t.Log("------------------------------------------------------------")
 		t.Log(p)
 	}
 
@@ -135,11 +138,11 @@ func FailureCleanup(t *testing.T, f *framework.Framework, ns string, failure err
 
 	t.Logf("***** Logging Runtime Components in namespace: %s", ns)
 	for _, application := range crlist.Items {
-		t.Log("-------------------")
+		t.Log("-----------------------------------------------------------")
 		t.Log(application)
 	}
 
-	t.Fatal(failure)
+	t.FailNow()
 }
 
 // WaitForKnativeDeployment : Poll for ksvc creation when createKnativeService is set to true
@@ -155,16 +158,93 @@ func WaitForKnativeDeployment(t *testing.T, f *framework.Framework, ns, n string
 		lerr := f.Client.Get(goctx.TODO(), types.NamespacedName{Name: n, Namespace: ns}, ksvc)
 		if lerr != nil {
 			if apierrors.IsNotFound(lerr) {
-				t.Logf("Waiting for knative service %s...", n)
+				t.Logf("waiting for knative service %s...", n)
 				return false, nil
 			}
 			// issue retrieving ksvc
 			return false, lerr
 		}
 
-		t.Logf("Found knative service %s", n)
+		t.Logf("found knative service %s", n)
 		return true, nil
 	})
+	return err
+}
+
+func IsCertManagerInstalled(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) bool {
+	certmngrv1alpha2.AddToScheme(f.Scheme)
+
+	ns, _ := ctx.GetNamespace()
+
+	certIssuer := &certmngrv1alpha2.Issuer{}
+
+	err := f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "name", Namespace: ns}, certIssuer)
+	if err != nil {
+		if !apierrors.IsNotFound(err) {
+			t.Log(err)
+			return false
+		}
+	}
+
+	return true
+}
+
+func CreateCertificateIssuer(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, n string) error {
+	err := certmngrv1alpha2.AddToScheme(f.Scheme)
+	if err != nil {
+		return err
+	}
+
+	ns, _ := ctx.GetNamespace()
+
+	certIssuer := &certmngrv1alpha2.ClusterIssuer{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ClusterIssuer",
+			APIVersion: "cert-manager.io/v1alpha2",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      n,
+			Namespace: ns,
+		},
+		Spec: certmngrv1alpha2.IssuerSpec{
+			IssuerConfig: certmngrv1alpha2.IssuerConfig{
+				SelfSigned: &certmngrv1alpha2.SelfSignedIssuer{},
+			},
+		},
+	}
+	err = f.Client.Create(goctx.TODO(), certIssuer, &framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
+	if err != nil {
+		t.Log("failed to create cert issuer!")
+		return err
+	}
+
+	t.Log("cert issuer successfully created!")
+	return nil
+}
+
+// WaitForCertificate : Poll for generated certificates from our cert manager functionality
+func WaitForCertificate(t *testing.T, f *framework.Framework, ns, n string, retryInterval, timeout time.Duration) error {
+	err := certmngrv1alpha2.AddToScheme(f.Scheme)
+	if err != nil {
+		return err
+	}
+
+	err = wait.Poll(retryInterval, timeout, func() (done bool, err error) {
+		cert := &certmngrv1alpha2.Certificate{}
+		certErr := f.Client.Get(goctx.TODO(), types.NamespacedName{Name: n, Namespace: ns}, cert)
+		if certErr != nil {
+			if apierrors.IsNotFound(certErr) {
+				t.Logf("waiting for certificate %s...", n)
+				return false, nil
+			}
+			t.Log("new error encountered")
+			return true, certErr
+		}
+
+		t.Logf("found certificate %s", n)
+		return true, nil
+	})
+
 	return err
 }
 
