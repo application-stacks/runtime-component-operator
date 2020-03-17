@@ -168,6 +168,10 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	svc.Spec.Selector = map[string]string{
 		"app.kubernetes.io/instance": obj.GetName(),
 	}
+
+	if ba.GetService().GetTargetPort() != nil {
+		svc.Spec.Ports[0].TargetPort = intstr.FromInt(int(*ba.GetService().GetTargetPort()))
+	}
 }
 
 // CustomizeServiceBindingSecret ...
@@ -222,12 +226,19 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	if len(appContainer.Ports) == 0 {
 		appContainer.Ports = append(appContainer.Ports, corev1.ContainerPort{})
 	}
-	appContainer.Ports[0].ContainerPort = ba.GetService().GetPort()
+
+	if ba.GetService().GetTargetPort() != nil {
+		appContainer.Ports[0].ContainerPort = *ba.GetService().GetTargetPort()
+	} else {
+		appContainer.Ports[0].ContainerPort = ba.GetService().GetPort()
+	}
+
+
 	appContainer.Image = ba.GetStatus().GetImageReference()
 	if ba.GetService().GetPortName() != "" {
 		appContainer.Ports[0].Name = ba.GetService().GetPortName()
 	} else {
-		appContainer.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+		appContainer.Ports[0].Name = strconv.Itoa(int(appContainer.Ports[0].ContainerPort)) + "-tcp"
 	}
 	if ba.GetResourceConstraints() != nil {
 		appContainer.Resources = *ba.GetResourceConstraints()
@@ -472,7 +483,12 @@ func CustomizeKnativeService(ksvc *servingv1alpha1.Service, ba common.BaseCompon
 	ksvc.Spec.Template.ObjectMeta.Labels = ba.GetLabels()
 	ksvc.Spec.Template.ObjectMeta.Annotations = MergeMaps(ksvc.Spec.Template.ObjectMeta.Annotations, ba.GetAnnotations())
 
-	ksvc.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = ba.GetService().GetPort()
+	if ba.GetService().GetTargetPort() != nil {
+		ksvc.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = *ba.GetService().GetTargetPort()
+	} else {
+		ksvc.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = ba.GetService().GetPort()
+	}
+
 	ksvc.Spec.Template.Spec.Containers[0].Image = ba.GetStatus().GetImageReference()
 	// Knative sets its own resource constraints
 	//ksvc.Spec.Template.Spec.Containers[0].Resources = *cr.Spec.ResourceConstraints

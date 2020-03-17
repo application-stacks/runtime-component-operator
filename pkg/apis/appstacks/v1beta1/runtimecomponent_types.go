@@ -71,6 +71,7 @@ type RuntimeComponentService struct {
 	// +kubebuilder:validation:Maximum=65536
 	// +kubebuilder:validation:Minimum=1
 	Port int32 `json:"port,omitempty"`
+	TargetPort *int32 `json:"targetPort,omitempty"`
 
 	PortName string `json:"portName,omitempty"`
 
@@ -412,6 +413,15 @@ func (s *RuntimeComponentService) GetAnnotations() map[string]string {
 // GetPort returns service port
 func (s *RuntimeComponentService) GetPort() int32 {
 	return s.Port
+}
+
+// GetTargetPort returns the internal target port for containers
+func (s *RuntimeComponentService) GetTargetPort() *int32 {
+	if (s.TargetPort == nil) {
+		return nil
+	}
+
+	return s.TargetPort
 }
 
 // GetPortName returns name of service port

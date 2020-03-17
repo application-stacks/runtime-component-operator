@@ -60,6 +60,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`. |
 | `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference. |
 | `service.port` | The port exposed by the container. |
+| `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`. |
 | `service.portName` | The name for the port exposed by the container. |
 | `service.type` | The Kubernetes [Service Type](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types). |
 | `service.annotations` | Annotations to be added to the service. |
