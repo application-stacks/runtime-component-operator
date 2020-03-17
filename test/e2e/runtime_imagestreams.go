@@ -13,7 +13,7 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
-	k "sigs.k8s.io/controller-runtime/pkg/client"
+	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 //RuntimeImageStreamTest ...
@@ -70,11 +70,12 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 	}
 
 	// Check the name field that matches
-	m := map[string]string{"metadata.name": imgstreamName}
-	l := fields.Set(m)
-	selec := l.AsSelector()
+	key := map[string]string{"metadata.name": imgstreamName}
 
-	options := k.ListOptions{FieldSelector: selec}
+	options := &dynclient.ListOptions{
+		FieldSelector: fields.Set(key).AsSelector(),
+		Namespace:     namespace,
+	}
 
 	imageStreamList := &imagev1.ImageStreamList{}
 	if err = f.Client.List(goctx.TODO(), imageStreamList, &options); err != nil {
@@ -119,7 +120,7 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 		t.Fatalf("Updating the imagestreamtag failed: %s", out)
 	}
 
-	time.Sleep(6000 * time.Millisecond)
+	time.Sleep(4000 * time.Millisecond)
 
 	// Get the application
 	f.Client.Get(goctx.TODO(), types.NamespacedName{Name: name, Namespace: ns}, runtime)
@@ -140,7 +141,7 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 		t.Fatalf("Updating the imagestreamtag failed: %s", out)
 	}
 
-	time.Sleep(6000 * time.Millisecond)
+	time.Sleep(4000 * time.Millisecond)
 
 	// Get the application
 	f.Client.Get(goctx.TODO(), types.NamespacedName{Name: name, Namespace: ns}, runtime)

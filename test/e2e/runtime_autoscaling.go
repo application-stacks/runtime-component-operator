@@ -15,7 +15,7 @@ import (
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
-	k "sigs.k8s.io/controller-runtime/pkg/client"
+	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // RuntimeAutoScalingTest : More indepth testing of autoscaling
@@ -64,11 +64,6 @@ func RuntimeAutoScalingTest(t *testing.T) {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	// Check the name field that matches
-	m := map[string]string{"metadata.name": "example-runtime-autoscaling"}
-	l := fields.Set(m)
-	selec := l.AsSelector()
-
 	// Update autoscaler
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
@@ -79,8 +74,15 @@ func RuntimeAutoScalingTest(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Check the name field that matches
+	key := map[string]string{"metadata.name": "example-runtime-autoscaling"}
+
+	options := &dynclient.ListOptions{
+		FieldSelector: fields.Set(key).AsSelector(),
+		Namespace:     namespace,
+	}
+
 	hpa := &autoscalingv1.HorizontalPodAutoscalerList{}
-	options := k.ListOptions{FieldSelector: selec}
 	hpa = getHPA(hpa, t, f, options)
 
 	timestamp = time.Now().UTC()
@@ -97,14 +99,14 @@ func RuntimeAutoScalingTest(t *testing.T) {
 	incorrectFieldsTest(t, f, ctx)
 }
 
-func getHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, f *framework.Framework, options k.ListOptions) *autoscalingv1.HorizontalPodAutoscalerList {
+func getHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, f *framework.Framework, options dynclient.ListOptions) *autoscalingv1.HorizontalPodAutoscalerList {
 	if err := f.Client.List(goctx.TODO(), hpa, &options); err != nil {
 		t.Logf("Get HPA: (%v)", err)
 	}
 	return hpa
 }
 
-func waitForHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, minReplicas int32, maxReplicas int32, utiliz int32, f *framework.Framework, options k.ListOptions) error {
+func waitForHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, minReplicas int32, maxReplicas int32, utiliz int32, f *framework.Framework, options dynclient.ListOptions) error {
 	for counter := 0; counter < 10; counter++ {
 		time.Sleep(6000 * time.Millisecond)
 		hpa = getHPA(hpa, t, f, options)
@@ -165,7 +167,7 @@ func checkValues(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, m
 }
 
 // Updates the values and checks they are changed
-func updateTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
+func updateTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options dynclient.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
 	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
@@ -188,7 +190,7 @@ func updateTest(t *testing.T, f *framework.Framework, runtimeComponent *appstack
 }
 
 // Checks when max is less than min, there should be no update
-func minMaxTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
+func minMaxTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options dynclient.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
 	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
@@ -211,7 +213,7 @@ func minMaxTest(t *testing.T, f *framework.Framework, runtimeComponent *appstack
 }
 
 // When min is set to less than 1, there should be no update since the minReplicas are updated to a value less than 1
-func minBoundaryTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options k.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
+func minBoundaryTest(t *testing.T, f *framework.Framework, runtimeComponent *appstacksv1beta1.RuntimeComponent, options dynclient.ListOptions, namespace string, hpa *autoscalingv1.HorizontalPodAutoscalerList) {
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
 	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
@@ -261,11 +263,12 @@ func incorrectFieldsTest(t *testing.T, f *framework.Framework, ctx *framework.Te
 	}
 
 	// Check the name field that matches
-	m := map[string]string{"metadata.name": "example-runtime-autoscaling2"}
-	l := fields.Set(m)
-	selec := l.AsSelector()
+	key := map[string]string{"metadata.name": "example-runtime-autoscaling2"}
 
-	options := k.ListOptions{FieldSelector: selec}
+	options := &dynclient.ListOptions{
+		FieldSelector: fields.Set(key).AsSelector(),
+		Namespace:     namespace,
+	}
 
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 
