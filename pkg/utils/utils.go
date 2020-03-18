@@ -233,7 +233,6 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		appContainer.Ports[0].ContainerPort = ba.GetService().GetPort()
 	}
 
-
 	appContainer.Image = ba.GetStatus().GetImageReference()
 	if ba.GetService().GetPortName() != "" {
 		appContainer.Ports[0].Name = ba.GetService().GetPortName()
@@ -672,6 +671,7 @@ func GetWatchNamespaces() ([]string, error) {
 
 // MergeMaps returns a map containing the union of al the key-value pairs from the input maps. The order of the maps passed into the
 // func, defines the importance. e.g. if (keyA, value1) is in map1, and (keyA, value2) is in map2, mergeMaps(map1, map2) would contain (keyA, value2).
+// If the input map is nil, it is treated as empty map.
 func MergeMaps(maps ...map[string]string) map[string]string {
 	dest := make(map[string]string)
 
@@ -785,6 +785,24 @@ func GetConnectToAnnotation(ba common.BaseComponent) map[string]string {
 		anno["app.openshift.io/connects-to"] = strings.Join(connectTo, ",")
 	}
 	return anno
+}
+
+// GetOpenShiftAnnotations returns OpenShift specific annotations
+func GetOpenShiftAnnotations(ba common.BaseComponent) map[string]string {
+	// Conversion table between the pseudo Open Container Initiative <-> OpenShift annotations
+	conversionMap := map[string]string{
+		"image.opencontainers.org/source":   "app.openshift.io/vcs-uri",
+		"image.opencontainers.org/revision": "app.openshift.io/vcs-ref",
+	}
+
+	annos := map[string]string{}
+	for from, to := range conversionMap {
+		if annoVal, ok := ba.GetAnnotations()[from]; ok {
+			annos[to] = annoVal
+		}
+	}
+
+	return MergeMaps(annos, GetConnectToAnnotation(ba))
 }
 
 // IsClusterWide returns true if watchNamespaces is set to [""]

@@ -334,6 +334,12 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", applicationsv1beta1.SchemeGroupVersion.String()))
 	}
 
+	if r.IsOpenShift() {
+		// The order of items passed to the MergeMaps matters here! Annotations from GetOpenShiftAnnotations have higher importance. Otherwise,
+		// it is not possible to override converted annotations.
+		instance.Annotations = appstacksutils.MergeMaps(instance.Annotations, appstacksutils.GetOpenShiftAnnotations(instance))
+	}
+
 	currentGen := instance.Generation
 	err = r.GetClient().Update(context.TODO(), instance)
 	if err != nil {
@@ -440,9 +446,6 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 			ksvc := &servingv1alpha1.Service{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(ksvc, instance, func() error {
 				appstacksutils.CustomizeKnativeService(ksvc, instance)
-				if r.IsOpenShift() {
-					ksvc.Spec.Template.ObjectMeta.Annotations = appstacksutils.MergeMaps(appstacksutils.GetConnectToAnnotation(instance), ksvc.Spec.Template.ObjectMeta.Annotations)
-				}
 				return nil
 			})
 
@@ -510,9 +513,6 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 			appstacksutils.CustomizeStatefulSet(statefulSet, instance)
 			appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, instance)
 			appstacksutils.CustomizePersistence(statefulSet, instance)
-			if r.IsOpenShift() {
-				statefulSet.Annotations = appstacksutils.MergeMaps(appstacksutils.GetConnectToAnnotation(instance), statefulSet.Annotations)
-			}
 			return nil
 		})
 		if err != nil {
@@ -541,9 +541,6 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		err = r.CreateOrUpdate(deploy, instance, func() error {
 			appstacksutils.CustomizeDeployment(deploy, instance)
 			appstacksutils.CustomizePodSpec(&deploy.Spec.Template, instance)
-			if r.IsOpenShift() {
-				deploy.Annotations = appstacksutils.MergeMaps(appstacksutils.GetConnectToAnnotation(instance), deploy.Annotations)
-			}
 			return nil
 		})
 		if err != nil {
