@@ -789,16 +789,16 @@ func GetConnectToAnnotation(ba common.BaseComponent) map[string]string {
 
 // GetOpenShiftAnnotations returns OpenShift specific annotations
 func GetOpenShiftAnnotations(ba common.BaseComponent) map[string]string {
-	// Mapping between the Open Container Initiative <-> OpenShift annotations
-	ociToOpenShiftAnnoMap := map[string]string{
+	// Conversion table between the pseudo Open Container Initiative <-> OpenShift annotations
+	conversionMap := map[string]string{
 		"image.opencontainers.org/source":   "app.openshift.io/vcs-uri",
 		"image.opencontainers.org/revision": "app.openshift.io/vcs-ref",
 	}
 
 	annos := map[string]string{}
-	for existingAnno, existingAnnoVal := range ba.GetAnnotations() {
-		if mappedAnno, ok := ociToOpenShiftAnnoMap[existingAnno]; ok {
-			annos[mappedAnno] = existingAnnoVal
+	for from, to := range conversionMap {
+		if annoVal, ok := ba.GetAnnotations()[from]; ok {
+			annos[to] = annoVal
 		}
 	}
 

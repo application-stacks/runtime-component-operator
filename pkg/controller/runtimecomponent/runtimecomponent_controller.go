@@ -335,7 +335,9 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 	}
 
 	if r.IsOpenShift() {
-		instance.Annotations = appstacksutils.MergeMaps(appstacksutils.GetOpenShiftAnnotations(instance), instance.Annotations)
+		// The order of items passed to the MergeMaps matters here! Annotations from GetOpenShiftAnnotations have higher importance. Otherwise,
+		// it is not possible to override converted annotations.
+		instance.Annotations = appstacksutils.MergeMaps(instance.Annotations, appstacksutils.GetOpenShiftAnnotations(instance))
 	}
 
 	currentGen := instance.Generation
