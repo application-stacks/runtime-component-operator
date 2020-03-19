@@ -74,7 +74,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `service.consumes` | An array consisting of services to be consumed by the `RuntimeComponent`. |
 | `service.consumes[].category` | The type of service binding to be consumed. At this time, the only allowed value is `openapi`. |
 | `service.consumes[].name` | The name of the service to be consumed. If binding to a `RuntimeComponent`, then this would be the provider's CR name. |
-| `service.consumes[].namespace` | The namespace of the service to be consumed. If binding to a `RuntimeComponent`, then this would be the provider's CR name. ||
+| `service.consumes[].namespace` | The namespace of the service to be consumed. If binding to a `RuntimeComponent`, then this would be the provider's CR namespace. ||
 | `service.consumes[].mountPath` | Optional field to specify which location in the pod, service binding secret should be mounted. If not specified, the secret keys would be injected as environment variables. |
 | `createKnativeService`   | A boolean to toggle the creation of Knative resources and usage of Knative serving. |
 | `expose`   | A boolean that toggles the external exposure of this deployment via a Route or a Knative Route resource.|

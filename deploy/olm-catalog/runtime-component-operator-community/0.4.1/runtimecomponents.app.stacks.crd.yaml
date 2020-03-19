@@ -2215,6 +2215,9 @@ spec:
                   required:
                   - category
                   type: object
+                targetPort:
+                  format: int32
+                  type: integer
                 type:
                   description: Service Type string describes ingress methods for a
                     service
