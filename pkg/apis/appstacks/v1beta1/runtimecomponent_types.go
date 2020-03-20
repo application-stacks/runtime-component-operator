@@ -68,9 +68,11 @@ type RuntimeComponentAutoScaling struct {
 type RuntimeComponentService struct {
 	Type *corev1.ServiceType `json:"type,omitempty"`
 
-	// +kubebuilder:validation:Maximum=65536
+	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:validation:Minimum=1
 	Port int32 `json:"port,omitempty"`
+	// +kubebuilder:validation:Maximum=65535
+	// +kubebuilder:validation:Minimum=1
 	TargetPort *int32 `json:"targetPort,omitempty"`
 
 	PortName string `json:"portName,omitempty"`
@@ -417,7 +419,7 @@ func (s *RuntimeComponentService) GetPort() int32 {
 
 // GetTargetPort returns the internal target port for containers
 func (s *RuntimeComponentService) GetTargetPort() *int32 {
-	if (s.TargetPort == nil) {
+	if s.TargetPort == nil {
 		return nil
 	}
 
