@@ -2156,7 +2156,7 @@ spec:
                   type: array
                 port:
                   format: int32
-                  maximum: 65536
+                  maximum: 65535
                   minimum: 1
                   type: integer
                 portName:
@@ -2217,6 +2217,8 @@ spec:
                   type: object
                 targetPort:
                   format: int32
+                  maximum: 65535
+                  minimum: 1
                   type: integer
                 type:
                   description: Service Type string describes ingress methods for a
