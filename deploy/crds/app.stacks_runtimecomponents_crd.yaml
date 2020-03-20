@@ -2156,6 +2156,8 @@ spec:
                   type: array
                 nodePort:
                   format: int32
+                  maximum: 65536
+                  minimum: 1
                   type: integer
                 port:
                   format: int32
@@ -4711,7 +4713,6 @@ spec:
             imageReference:
               type: string
           type: object
-      type: object
   version: v1beta1
   versions:
   - name: v1beta1
