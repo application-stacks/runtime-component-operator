@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
 
 ## [0.4.1]
 
+### Added
+
 - Added optional targetPort field to service in the CRD ([#51](https://github.com/application-stacks/runtime-component-operator/pull/51))
 - Added OpenShift specific annotations ([#54](https://github.com/application-stacks/runtime-component-operator/pull/54))
 - Set port name for Knative service if specified ([#55](https://github.com/application-stacks/runtime-component-operator/pull/55))
