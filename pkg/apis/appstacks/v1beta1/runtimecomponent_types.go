@@ -72,6 +72,7 @@ type RuntimeComponentService struct {
 	// +kubebuilder:validation:Minimum=1
 	Port int32 `json:"port,omitempty"`
 	TargetPort *int32 `json:"targetPort,omitempty"`
+	NodePort int32 `json:"nodePort,omitempty"`
 
 	PortName string `json:"portName,omitempty"`
 
@@ -413,6 +414,11 @@ func (s *RuntimeComponentService) GetAnnotations() map[string]string {
 // GetPort returns service port
 func (s *RuntimeComponentService) GetPort() int32 {
 	return s.Port
+}
+
+// GetNodePort returns service nodePort
+func (s *RuntimeComponentService) GetNodePort() int32 {
+	return s.NodePort
 }
 
 // GetTargetPort returns the internal target port for containers

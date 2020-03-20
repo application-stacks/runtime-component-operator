@@ -164,6 +164,11 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	} else {
 		svc.Spec.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
 	}
+
+	if *ba.GetService().GetType() == corev1.ServiceTypeNodePort && ba.GetService().GetNodePort() != 0 {
+		svc.Spec.Ports[0].NodePort = ba.GetService().GetNodePort()
+	}
+
 	svc.Spec.Type = *ba.GetService().GetType()
 	svc.Spec.Selector = map[string]string{
 		"app.kubernetes.io/instance": obj.GetName(),
