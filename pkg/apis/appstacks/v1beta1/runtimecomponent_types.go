@@ -73,8 +73,8 @@ type RuntimeComponentService struct {
 	Port int32 `json:"port,omitempty"`
 	TargetPort *int32 `json:"targetPort,omitempty"`
 
-	// +kubebuilder:validation:Maximum=65536
-	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=32767
+	// +kubebuilder:validation:Minimum=30000
 	NodePort int32 `json:"nodePort,omitempty"`
 
 	PortName string `json:"portName,omitempty"`
