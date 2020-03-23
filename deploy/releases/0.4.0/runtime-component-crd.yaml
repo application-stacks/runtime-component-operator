@@ -2159,11 +2159,6 @@ spec:
                   maximum: 65536
                   minimum: 1
                   type: integer
-                targetPort:
-                  format: int32
-                  maximum: 65536
-                  minimum: 1
-                  type: integer
                 portName:
                   type: string
                 provides:
