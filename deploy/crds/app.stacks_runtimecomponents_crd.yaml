@@ -2156,7 +2156,7 @@ spec:
                   type: array
                 nodePort:
                   format: int32
-                  maximum: 65536
+                  maximum: 65535
                   minimum: 1
                   type: integer
                 port:
