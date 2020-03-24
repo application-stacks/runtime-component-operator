@@ -30,4 +30,6 @@ func TestRuntimeComponent(t *testing.T) {
 	t.Run("RuntimeServiceMonitorTest", RuntimeServiceMonitorTest)
 	t.Run("RuntimeKnativeTest", RuntimeKnativeTest)
 	t.Run("RuntimeServiceBindingTest", RuntimeServiceBindingTest)
+	t.Run("RuntimeCertManagerTest", RuntimeCertManagerTest)
+	t.Run("RuntimeImageStreamTest", RuntimeImageStreamTest)
 }

@@ -28,6 +28,7 @@ var (
 	expose             = true
 	createKNS          = true
 	targetCPUPer int32 = 30
+	targetPort int32   = 3333
 	autoscaling        = &appstacksv1beta1.RuntimeComponentAutoScaling{
 		TargetCPUUtilizationPercentage: &targetCPUPer,
 		MinReplicas:                    &replicas,
@@ -105,6 +106,20 @@ func TestCustomizeService(t *testing.T) {
 		{"Service selector", name, svc.Spec.Selector["app.kubernetes.io/instance"]},
 	}
 	verifyTests(testCS, t)
+
+	// Verify behaviour of optional target port functionality
+	spec.Service.TargetPort = &targetPort
+	svc, runtime = &corev1.Service{}, createRuntimeComponent(name, namespace, spec)
+
+	CustomizeService(svc, runtime)
+	testCS = []Test{
+		{"Service number of exposed ports", 1, len(svc.Spec.Ports)},
+		{"Service first exposed port", runtime.Spec.Service.Port, svc.Spec.Ports[0].Port},
+		{"Service first exposed target port", intstr.FromInt(int(*runtime.Spec.Service.TargetPort)), svc.Spec.Ports[0].TargetPort},
+		{"Service type", *runtime.Spec.Service.Type, svc.Spec.Type},
+		{"Service selector", name, svc.Spec.Selector["app.kubernetes.io/instance"]},
+	}
+	verifyTests(testCS, t)
 }
 
 func TestCustomizePodSpec(t *testing.T) {
@@ -131,7 +146,11 @@ func TestCustomizePodSpec(t *testing.T) {
 	// if cond
 	spec = appstacksv1beta1.RuntimeComponentSpec{
 		ApplicationImage:    appImage,
-		Service:             service,
+		Service:             &appstacksv1beta1.RuntimeComponentService{
+			Type: &serviceType,
+			Port: 8443,
+			TargetPort: &targetPort,
+		},
 		ResourceConstraints: resourceContraints,
 		ReadinessProbe:      readinessProbe,
 		LivenessProbe:       livenessProbe,
@@ -151,6 +170,7 @@ func TestCustomizePodSpec(t *testing.T) {
 	affArchs := pts.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Values[0]
 	weight := pts.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].Weight
 	prefAffArchs := pts.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].Preference.MatchExpressions[0].Values[0]
+	assignedTPort := pts.Spec.Containers[0].Ports[0].ContainerPort
 
 	testCPS := []Test{
 		{"No containers", 1, noCont},
@@ -164,6 +184,7 @@ func TestCustomizePodSpec(t *testing.T) {
 		{"Archs", arch[0], affArchs},
 		{"Weight", int32(1), int32(weight)},
 		{"Archs", arch[0], prefAffArchs},
+		{"No target port", targetPort, assignedTPort},
 	}
 	verifyTests(testCA, t)
 }

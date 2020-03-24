@@ -168,6 +168,10 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	svc.Spec.Selector = map[string]string{
 		"app.kubernetes.io/instance": obj.GetName(),
 	}
+
+	if ba.GetService().GetTargetPort() != nil {
+		svc.Spec.Ports[0].TargetPort = intstr.FromInt(int(*ba.GetService().GetTargetPort()))
+	}
 }
 
 // CustomizeServiceBindingSecret ...
@@ -222,12 +226,18 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	if len(appContainer.Ports) == 0 {
 		appContainer.Ports = append(appContainer.Ports, corev1.ContainerPort{})
 	}
-	appContainer.Ports[0].ContainerPort = ba.GetService().GetPort()
+
+	if ba.GetService().GetTargetPort() != nil {
+		appContainer.Ports[0].ContainerPort = *ba.GetService().GetTargetPort()
+	} else {
+		appContainer.Ports[0].ContainerPort = ba.GetService().GetPort()
+	}
+
 	appContainer.Image = ba.GetStatus().GetImageReference()
 	if ba.GetService().GetPortName() != "" {
 		appContainer.Ports[0].Name = ba.GetService().GetPortName()
 	} else {
-		appContainer.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+		appContainer.Ports[0].Name = strconv.Itoa(int(appContainer.Ports[0].ContainerPort)) + "-tcp"
 	}
 	if ba.GetResourceConstraints() != nil {
 		appContainer.Resources = *ba.GetResourceConstraints()
@@ -472,7 +482,16 @@ func CustomizeKnativeService(ksvc *servingv1alpha1.Service, ba common.BaseCompon
 	ksvc.Spec.Template.ObjectMeta.Labels = ba.GetLabels()
 	ksvc.Spec.Template.ObjectMeta.Annotations = MergeMaps(ksvc.Spec.Template.ObjectMeta.Annotations, ba.GetAnnotations())
 
-	ksvc.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = ba.GetService().GetPort()
+	if ba.GetService().GetTargetPort() != nil {
+		ksvc.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = *ba.GetService().GetTargetPort()
+	} else {
+		ksvc.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = ba.GetService().GetPort()
+	}
+
+	if ba.GetService().GetPortName() != "" {
+		ksvc.Spec.Template.Spec.Containers[0].Ports[0].Name = ba.GetService().GetPortName()
+	}
+
 	ksvc.Spec.Template.Spec.Containers[0].Image = ba.GetStatus().GetImageReference()
 	// Knative sets its own resource constraints
 	//ksvc.Spec.Template.Spec.Containers[0].Resources = *cr.Spec.ResourceConstraints
@@ -656,6 +675,7 @@ func GetWatchNamespaces() ([]string, error) {
 
 // MergeMaps returns a map containing the union of al the key-value pairs from the input maps. The order of the maps passed into the
 // func, defines the importance. e.g. if (keyA, value1) is in map1, and (keyA, value2) is in map2, mergeMaps(map1, map2) would contain (keyA, value2).
+// If the input map is nil, it is treated as empty map.
 func MergeMaps(maps ...map[string]string) map[string]string {
 	dest := make(map[string]string)
 
@@ -769,6 +789,24 @@ func GetConnectToAnnotation(ba common.BaseComponent) map[string]string {
 		anno["app.openshift.io/connects-to"] = strings.Join(connectTo, ",")
 	}
 	return anno
+}
+
+// GetOpenShiftAnnotations returns OpenShift specific annotations
+func GetOpenShiftAnnotations(ba common.BaseComponent) map[string]string {
+	// Conversion table between the pseudo Open Container Initiative <-> OpenShift annotations
+	conversionMap := map[string]string{
+		"image.opencontainers.org/source":   "app.openshift.io/vcs-uri",
+		"image.opencontainers.org/revision": "app.openshift.io/vcs-ref",
+	}
+
+	annos := map[string]string{}
+	for from, to := range conversionMap {
+		if annoVal, ok := ba.GetAnnotations()[from]; ok {
+			annos[to] = annoVal
+		}
+	}
+
+	return MergeMaps(annos, GetConnectToAnnotation(ba))
 }
 
 // IsClusterWide returns true if watchNamespaces is set to [""]

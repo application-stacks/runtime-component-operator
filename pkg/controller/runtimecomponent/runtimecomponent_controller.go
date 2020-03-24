@@ -13,6 +13,7 @@ import (
 	appstacksutils "github.com/application-stacks/runtime-component-operator/pkg/utils"
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
+	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
 
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	imagev1 "github.com/openshift/api/image/v1"
@@ -330,7 +331,13 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		}
 		instance.Labels = appstacksutils.MergeMaps(existingAppLabels, instance.Labels)
 	} else {
-		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", servingv1alpha1.SchemeGroupVersion.String()))
+		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", applicationsv1beta1.SchemeGroupVersion.String()))
+	}
+
+	if r.IsOpenShift() {
+		// The order of items passed to the MergeMaps matters here! Annotations from GetOpenShiftAnnotations have higher importance. Otherwise,
+		// it is not possible to override converted annotations.
+		instance.Annotations = appstacksutils.MergeMaps(instance.Annotations, appstacksutils.GetOpenShiftAnnotations(instance))
 	}
 
 	currentGen := instance.Generation
@@ -439,9 +446,6 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 			ksvc := &servingv1alpha1.Service{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(ksvc, instance, func() error {
 				appstacksutils.CustomizeKnativeService(ksvc, instance)
-				if r.IsOpenShift() {
-					ksvc.Spec.Template.ObjectMeta.Annotations = appstacksutils.MergeMaps(appstacksutils.GetConnectToAnnotation(instance), ksvc.Spec.Template.ObjectMeta.Annotations)
-				}
 				return nil
 			})
 
@@ -509,9 +513,6 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 			appstacksutils.CustomizeStatefulSet(statefulSet, instance)
 			appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, instance)
 			appstacksutils.CustomizePersistence(statefulSet, instance)
-			if r.IsOpenShift() {
-				statefulSet.Annotations = appstacksutils.MergeMaps(appstacksutils.GetConnectToAnnotation(instance), statefulSet.Annotations)
-			}
 			return nil
 		})
 		if err != nil {
@@ -540,9 +541,6 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		err = r.CreateOrUpdate(deploy, instance, func() error {
 			appstacksutils.CustomizeDeployment(deploy, instance)
 			appstacksutils.CustomizePodSpec(&deploy.Spec.Template, instance)
-			if r.IsOpenShift() {
-				deploy.Annotations = appstacksutils.MergeMaps(appstacksutils.GetConnectToAnnotation(instance), deploy.Annotations)
-			}
 			return nil
 		})
 		if err != nil {

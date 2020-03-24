@@ -52,12 +52,15 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `version` | The current version of the application. Label `app.kubernetes.io/version` will be added to all resources when the version is defined. |
 | `serviceAccountName` | The name of the OpenShift service account to be used during deployment. |
 | `applicationImage` | The Docker image name to be deployed. On OpenShift, it can also be set to `<project name>/<image stream name>[:<tag>]` to reference an image from an image stream. If `<project name>` and `<tag>` values are not defined, they default to the namespace of the CR and the value of `latest`, respectively. |
+| `applicationName` | The name of the application this resource is part of. If not specified, it defaults to the name of the CR. |
+| `createAppDefinition`   | A boolean to toggle the automatic configuration of Kubernetes resources for the `RuntimeComponent` CR to allow creation of an application definition by [kAppNav](https://kappnav.io/). The default value is `true`. See [Application Navigator](#kubernetes-application-navigator-kappnav-support) for more information. |
 | `pullPolicy` | The policy used when pulling the image.  One of: `Always`, `Never`, and `IfNotPresent`. |
 | `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials. |
 | `initContainers` | The list of [Init Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#container-v1-core) definitions. |
 | `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`. |
 | `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference. |
 | `service.port` | The port exposed by the container. |
+| `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`. |
 | `service.portName` | The name for the port exposed by the container. |
 | `service.type` | The Kubernetes [Service Type](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types). |
 | `service.annotations` | Annotations to be added to the service. |
@@ -71,7 +74,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `service.consumes` | An array consisting of services to be consumed by the `RuntimeComponent`. |
 | `service.consumes[].category` | The type of service binding to be consumed. At this time, the only allowed value is `openapi`. |
 | `service.consumes[].name` | The name of the service to be consumed. If binding to a `RuntimeComponent`, then this would be the provider's CR name. |
-| `service.consumes[].namespace` | The namespace of the service to be consumed. If binding to a `RuntimeComponent`, then this would be the provider's CR name. ||
+| `service.consumes[].namespace` | The namespace of the service to be consumed. If binding to a `RuntimeComponent`, then this would be the provider's CR namespace. |
 | `service.consumes[].mountPath` | Optional field to specify which location in the pod, service binding secret should be mounted. If not specified, the secret keys would be injected as environment variables. |
 | `createKnativeService`   | A boolean to toggle the creation of Knative resources and usage of Knative serving. |
 | `expose`   | A boolean that toggles the external exposure of this deployment via a Route or a Knative Route resource.|
@@ -94,7 +97,6 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `storage.volumeClaimTemplate` | A YAML object representing a [volumeClaimTemplate](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components) component of a `StatefulSet`. |
 | `monitoring.labels` | Labels to set on [ServiceMonitor](https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitor). |
 | `monitoring.endpoints` | A YAML snippet representing an array of [Endpoint](https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#endpoint) component from ServiceMonitor. |
-| `createAppDefinition`   | A boolean to toggle the automatic configuration of `RuntimeComponent`'s Kubernetes resources to allow creation of an application definition by [kAppNav](https://kappnav.io/). The default value is `true`. See [Application Navigator](#kubernetes-application-navigator-kappnav-support) for more information. |
 | `route.annotations` | Annotations to be added to the Route. |
 | `route.host`   | Hostname to be used for the Route. |
 | `route.path`   | Path to be used for Route. |
@@ -166,9 +168,9 @@ for a `RuntimeComponent` CR:
 |--------------------------------|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `app.kubernetes.io/instance`   | `metadata.name`                | A unique name or identifier for this component. This cannot be modified.                                                                                                                 |
 | `app.kubernetes.io/name`       | `metadata.name`                | A name that represents this component.                                                                                                               |
-| `app.kubernetes.io/managed-by` | `runtime-component-operator` | The tool being used to manage this component.                                                                                                                |
+| `app.kubernetes.io/managed-by` | `runtime-component-operator`   | The tool being used to manage this component.                                                                                                                |
 | `app.kubernetes.io/component`  | `backend`                      | The type of component being created. See OpenShift [documentation](https://github.com/gorkem/app-labels/blob/master/labels-annotation-for-openshift.adoc#labels) for full list. |
-| `app.kubernetes.io/part-of`    | `metadata.name`                | The name of the higher-level application this component is a part of. Configure this if the component is not a standalone application. |
+| `app.kubernetes.io/part-of`    | `applicationName`              | The name of the higher-level application this component is a part of. Configure this if the component is not a standalone application. |
 | `app.kubernetes.io/version`    | `version`                      | The version of the component.                                                                                                                                |
 
 You can set new labels in addition to the pre-existing ones or overwrite them,
@@ -509,9 +511,16 @@ To configure secure HTTPS connections for your Knative deployment, see [Configur
 
 ### Kubernetes Application Navigator (kAppNav) support
 
-By default, Runtime Component Operator configures the Kubernetes resources it generates to allow automatic creation of an application definition by [kAppNav](https://kappnav.io/), Kubernetes Application Navigator. You can easily view and manage the deployed resources that comprise your application using Application Navigator. You can disable auto-creation by setting `createAppDefinition` to `false`.
+By default, Runtime Component Operator configures the Kubernetes resources it generates to allow automatic creation of an [Application definition](https://github.com/kubernetes-sigs/application) with the `applicationName` parameter as the `Application` CR name. The automatic creation is done by the [Kubernetes Application Navigator (kAppNav)](https://kappnav.io/). You can easily view and manage the deployed resources that comprise your application by using kAppNav. You can disable auto-creation by setting the `createAppDefinition` parameter to a value of `false`. 
 
-To join an existing application definition, disable auto-creation and set the label(s) needed to join the application on `RuntimeComponent` CR. See [Labels](#labels) section for more information.
+To join an existing application definition in the `RuntimeComponent` CR namespace, ensure that the `applicationName` parameter is set to the name of the `Application` CR that you want to join. To join an existing application definition in another namespace, ensure that the `createAppDefinition` parameter is set to `false` and that the `applicationName` parameter is set to the name of the existing `Application` CR that you want to join.
+
+First, the operator searches in the `RuntimeComponent` CR namespace to find an `Application` CR named as the `applicationName` parameter.
+If it fails to find any, it searches the whole cluster to find `Application` CRs that meet the following criteria:
+- The `Application` CRs have the same name as the value of the `applicationName` parameter.
+- The `RuntimeComponent` CR namespace is listed in the value of the `kappnav.component.namespaces` annotation.
+
+After the operator finds any `Application` CRs in the previous steps, it adds labels to the `RuntimeComponent` CR. These labels are listed in the `spec.selector.matchLabels` parameter. However, if the operator fails to find any `Application` CRs, and if the `createAppDefinition` parameter is not set to `false`, the operator configures the Kubernetes resources it generates. These Kubernetes resources are configured to allow automatic creation of an `Application` definition.
 
 _This feature is only available if you have kAppNav installed on your cluster. Auto creation of an application definition is not supported when Knative service is created_
 
@@ -559,7 +568,7 @@ spec:
 apiVersion: app.stacks/v1beta1
 kind: RuntimeComponent
 metadata:
-  name: myapp
+  name: my-app
   namespace: test
 spec:
   applicationImage: quay.io/my-repo/my-app:1.0
@@ -569,10 +578,10 @@ spec:
     certificate: {}
 ```
 
-In this scenario the operator will generate `Certificate` resource with common name of `myapp.test.svc` that can be used for service to service communication.
+In this scenario the operator generates a `Certificate` resource with a common name of `my-app.test.svc` that can be used for service to service communication.
 
-Once this certificate request is resolved by cert-manager the resulting secret `myapp-svc-tls` will be 
-mounted into each pod inside `/etc/x509/certs` folder. Mounted files will be always up to date with a secret.
+After this certificate request is resolved by the certificate manager, the resulting `my-app-svc-tls` secret 
+is mounted onto each pod inside the `/etc/x509/certs` folder. Mounted files are always up to date with a secret.
 
 It will contain private key, certificate and CA certificate.
 It is up to the application container to consume these artifacts, applying any needed transformation or modification.
@@ -584,7 +593,7 @@ It is up to the application container to consume these artifacts, applying any n
 apiVersion: app.stacks/v1beta1
 kind: RuntimeComponent
 metadata:
-  name: myapp
+  name: my-app
   namespace: test
 spec:
   applicationImage: quay.io/my-repo/my-app:1.0
@@ -594,7 +603,7 @@ spec:
     termination: reencrypt
     certificate: {}
 ```
-In this scenario the operator will generate `Certificate` resource with common name of `myapp.mycompany.com` that will be injected into `Route` resource.
+In this scenario the operator generates a `Certificate` resource with the common name of `myapp.mycompany.com` that will be injected into the `Route` resource.
 
 #### Advanced scenario
 
@@ -605,7 +614,7 @@ Certificate will be generated for specific organization and duration. Extra prop
 apiVersion: app.stacks/v1beta1
 kind: RuntimeComponent
 metadata:
-  name: myapp
+  name: my-app
   namespace: test
 spec:
   applicationImage: quay.io/my-repo/my-app:1.0
@@ -631,7 +640,7 @@ In this case the cert-manager is not required.
 apiVersion: app.stacks/v1beta1
 kind: RuntimeComponent
 metadata:
-  name: myapp
+  name: my-app
   namespace: test
 spec:
   applicationImage: quay.io/my-repo/my-app:1.0
@@ -639,7 +648,7 @@ spec:
   route:
     host: myapp.mycompany.com
     termination: reencrypt
-    certificateSecretRef: myapp-rt-tls
+    certificateSecretRef: my-app-rt-tls
   service:
     port: 9443
 ```
@@ -650,7 +659,7 @@ Example of the manually provided route secret
 kind: Secret
 apiVersion: v1
 metadata:
-  name: myapp-rt-tls
+  name: my-app-rt-tls
 data:
   ca.crt: >-
     Certificate Authority public certificate...(base64)
