@@ -68,14 +68,7 @@ type RuntimeComponentAutoScaling struct {
 type RuntimeComponentService struct {
 	Type *corev1.ServiceType `json:"type,omitempty"`
 
-	// +kubebuilder:validation:Maximum=65535
-	// +kubebuilder:validation:Minimum=1
-	Port int32 `json:"port,omitempty"`
-	// +kubebuilder:validation:Maximum=65535
-	// +kubebuilder:validation:Minimum=1
-	TargetPort *int32 `json:"targetPort,omitempty"`
-
-	PortName string `json:"portName,omitempty"`
+	Ports []ServicePorts `json:"ports,omitempty"`
 
 	Annotations map[string]string `json:"annotations,omitempty"`
 	// +listType=atomic
@@ -84,6 +77,19 @@ type RuntimeComponentService struct {
 	// +k8s:openapi-gen=true
 	Certificate          *Certificate `json:"certificate,omitempty"`
 	CertificateSecretRef *string      `json:"certificateSecretRef,omitempty"`
+}
+
+// ServicePorts ...
+// +k8s:openapi-gen=true
+type ServicePorts struct {
+	// +kubebuilder:validation:Maximum=65535
+	// +kubebuilder:validation:Minimum=1
+	Port int32 `json:"port,omitempty"`
+	// +kubebuilder:validation:Maximum=65535
+	// +kubebuilder:validation:Minimum=1
+	TargetPort *int32 `json:"targetPort,omitempty"`
+
+	PortName string `json:"portName,omitempty"`
 }
 
 // ServiceBindingProvides represents information about
@@ -412,13 +418,27 @@ func (s *RuntimeComponentService) GetAnnotations() map[string]string {
 	return s.Annotations
 }
 
+// GetPorts returns a list of service ports
+func (s *RuntimeComponentService) GetPorts() []common.ServicePorts {
+	ports := make([]common.ServicePorts, len(s.Ports))
+	for i := range s.Ports {
+		ports[i] = &s.Ports[i]
+	}
+	return ports
+}
+
+// GetType returns service type
+func (s *RuntimeComponentService) GetType() *corev1.ServiceType {
+	return s.Type
+}
+
 // GetPort returns service port
-func (s *RuntimeComponentService) GetPort() int32 {
+func (s *ServicePorts) GetPort() int32 {
 	return s.Port
 }
 
 // GetTargetPort returns the internal target port for containers
-func (s *RuntimeComponentService) GetTargetPort() *int32 {
+func (s *ServicePorts) GetTargetPort() *int32 {
 	if s.TargetPort == nil {
 		return nil
 	}
@@ -427,13 +447,8 @@ func (s *RuntimeComponentService) GetTargetPort() *int32 {
 }
 
 // GetPortName returns name of service port
-func (s *RuntimeComponentService) GetPortName() string {
+func (s *ServicePorts) GetPortName() string {
 	return s.PortName
-}
-
-// GetType returns service type
-func (s *RuntimeComponentService) GetType() *corev1.ServiceType {
-	return s.Type
 }
 
 // GetProvides returns service provider configuration
@@ -596,13 +611,14 @@ func (cr *RuntimeComponent) Initialize() {
 		cr.Spec.Service = &RuntimeComponentService{}
 	}
 
+	if cr.Spec.Service.Ports == nil {
+		temp := &ServicePorts{Port: 8080}
+		cr.Spec.Service.Ports = []ServicePorts{*temp}
+	}
+
 	if cr.Spec.Service.Type == nil {
 		st := corev1.ServiceTypeClusterIP
 		cr.Spec.Service.Type = &st
-	}
-
-	if cr.Spec.Service.Port == 0 {
-		cr.Spec.Service.Port = 8080
 	}
 
 	if cr.Spec.Service.Provides != nil && cr.Spec.Service.Provides.Protocol == "" {
