@@ -28,7 +28,7 @@ var (
 	expose             = true
 	createKNS          = true
 	targetCPUPer int32 = 30
-	targetPort int32   = 3333
+	targetPort   int32 = 3333
 	autoscaling        = &appstacksv1beta1.RuntimeComponentAutoScaling{
 		TargetCPUUtilizationPercentage: &targetCPUPer,
 		MinReplicas:                    &replicas,
@@ -40,7 +40,8 @@ var (
 	pullSecret         = "mysecret"
 	serviceAccountName = "service-account"
 	serviceType        = corev1.ServiceTypeClusterIP
-	service            = &appstacksv1beta1.RuntimeComponentService{Type: &serviceType, Port: 8443}
+	servicePorts       = appstacksv1beta1.ServicePorts{Port: 8443}
+	service            = &appstacksv1beta1.RuntimeComponentService{Type: &serviceType, Ports: []appstacksv1beta1.ServicePorts{servicePorts}}
 	volumeCT           = &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{Name: "pvc", Namespace: namespace},
 		TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"}}
@@ -85,7 +86,7 @@ func TestCustomizeRoute(t *testing.T) {
 		{"Route target kind", "Service", route.Spec.To.Kind},
 		{"Route target name", name, route.Spec.To.Name},
 		{"Route target weight", int32(100), *route.Spec.To.Weight},
-		{"Route service target port", intstr.FromString(strconv.Itoa(int(runtime.Spec.Service.Port)) + "-tcp"), route.Spec.Port.TargetPort},
+		{"Route service target port", intstr.FromString(strconv.Itoa(int(runtime.Spec.Service.Ports[0].Port)) + "-tcp"), route.Spec.Port.TargetPort},
 	}
 
 	verifyTests(testCR, t)
@@ -100,22 +101,22 @@ func TestCustomizeService(t *testing.T) {
 	CustomizeService(svc, runtime)
 	testCS := []Test{
 		{"Service number of exposed ports", 1, len(svc.Spec.Ports)},
-		{"Sercice first exposed port", runtime.Spec.Service.Port, svc.Spec.Ports[0].Port},
-		{"Service first exposed target port", intstr.FromInt(int(runtime.Spec.Service.Port)), svc.Spec.Ports[0].TargetPort},
+		{"Sercice first exposed port", runtime.Spec.Service.Ports[0].Port, svc.Spec.Ports[0].Port},
+		{"Service first exposed target port", intstr.FromInt(int(runtime.Spec.Service.Ports[0].Port)), svc.Spec.Ports[0].TargetPort},
 		{"Service type", *runtime.Spec.Service.Type, svc.Spec.Type},
 		{"Service selector", name, svc.Spec.Selector["app.kubernetes.io/instance"]},
 	}
 	verifyTests(testCS, t)
 
 	// Verify behaviour of optional target port functionality
-	spec.Service.TargetPort = &targetPort
+	spec.Service.Ports[0].TargetPort = &targetPort
 	svc, runtime = &corev1.Service{}, createRuntimeComponent(name, namespace, spec)
 
 	CustomizeService(svc, runtime)
 	testCS = []Test{
 		{"Service number of exposed ports", 1, len(svc.Spec.Ports)},
-		{"Service first exposed port", runtime.Spec.Service.Port, svc.Spec.Ports[0].Port},
-		{"Service first exposed target port", intstr.FromInt(int(*runtime.Spec.Service.TargetPort)), svc.Spec.Ports[0].TargetPort},
+		{"Service first exposed port", runtime.Spec.Service.Ports[0].Port, svc.Spec.Ports[0].Port},
+		{"Service first exposed target port", intstr.FromInt(int(*runtime.Spec.Service.Ports[0].TargetPort)), svc.Spec.Ports[0].TargetPort},
 		{"Service type", *runtime.Spec.Service.Type, svc.Spec.Type},
 		{"Service selector", name, svc.Spec.Selector["app.kubernetes.io/instance"]},
 	}
@@ -144,12 +145,12 @@ func TestCustomizePodSpec(t *testing.T) {
 	noPorts := len(pts.Spec.Containers[0].Ports)
 	ptsSAN := pts.Spec.ServiceAccountName
 	// if cond
+	port := appstacksv1beta1.ServicePorts{Port: 8443, TargetPort: &targetPort}
 	spec = appstacksv1beta1.RuntimeComponentSpec{
-		ApplicationImage:    appImage,
-		Service:             &appstacksv1beta1.RuntimeComponentService{
-			Type: &serviceType,
-			Port: 8443,
-			TargetPort: &targetPort,
+		ApplicationImage: appImage,
+		Service: &appstacksv1beta1.RuntimeComponentService{
+			Type:  &serviceType,
+			Ports: []appstacksv1beta1.ServicePorts{port},
 		},
 		ResourceConstraints: resourceContraints,
 		ReadinessProbe:      readinessProbe,
@@ -386,7 +387,7 @@ func TestCustomizeServiceMonitor(t *testing.T) {
 	testSM := []Test{
 		{"Service Monitor label for app.kubernetes.io/instance", name, sm.Labels["app.kubernetes.io/instance"]},
 		{"Service Monitor selector match labels", labelMatches, sm.Spec.Selector.MatchLabels},
-		{"Service Monitor endpoints port", strconv.Itoa(int(runtime.Spec.Service.Port)) + "-tcp", sm.Spec.Endpoints[0].Port},
+		{"Service Monitor endpoints port", strconv.Itoa(int(runtime.Spec.Service.Ports[0].Port)) + "-tcp", sm.Spec.Endpoints[0].Port},
 		{"Service Monitor all labels", allSMLabels, sm.Labels},
 		{"Service Monitor endpoints scheme", appScheme, sm.Spec.Endpoints[0].Scheme},
 		{"Service Monitor endpoints interval", appInterval, sm.Spec.Endpoints[0].Interval},

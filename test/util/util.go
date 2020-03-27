@@ -27,6 +27,7 @@ func MakeBasicRuntimeComponent(t *testing.T, f *framework.Framework, n string, n
 			Port: intstr.FromInt(3000),
 		},
 	}
+	port := appstacksv1beta1.ServicePorts{Port: 3000}
 	expose := false
 	serviceType := corev1.ServiceTypeClusterIP
 	return &appstacksv1beta1.RuntimeComponent{
@@ -43,8 +44,8 @@ func MakeBasicRuntimeComponent(t *testing.T, f *framework.Framework, n string, n
 			Replicas:         &replicas,
 			Expose:           &expose,
 			Service: &appstacksv1beta1.RuntimeComponentService{
-				Port: 3000,
-				Type: &serviceType,
+				Ports: []appstacksv1beta1.ServicePorts{port},
+				Type:  &serviceType,
 			},
 			ReadinessProbe: &corev1.Probe{
 				Handler:             probe,
