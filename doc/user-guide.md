@@ -31,8 +31,9 @@ metadata:
 spec:
   applicationImage: quay.io/my-repo/my-app:1.0
   service:
-    type: ClusterIP
-    port: 9080
+	type: ClusterIP
+	ports:
+	- port: 9080
   expose: true
   storage:
     size: 2Gi
@@ -59,9 +60,10 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `initContainers` | The list of [Init Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#container-v1-core) definitions. |
 | `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`. |
 | `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference. |
-| `service.port` | The port exposed by the container. |
-| `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`. |
-| `service.portName` | The name for the port exposed by the container. |
+| `service.ports` | An array consisting of service ports. |
+| `service.ports[].port` | The port exposed by the container. |
+| `service.ports[].targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.ports[].port`. |
+| `service.ports[].portName` | The name for the port exposed by the container. |
 | `service.type` | The Kubernetes [Service Type](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types). |
 | `service.annotations` | Annotations to be added to the service. |
 | `service.certificate` | A YAML object representing a [Certificate](https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec). |
@@ -344,7 +346,8 @@ metadata:
 spec:
   applicationImage: quay.io/my-repo/my-provider:1.0
   service:
-    port: 3000
+	ports:
+	- port: 3000
     provides:
       category: openapi
       context: /my-context
@@ -379,7 +382,8 @@ spec:
   applicationImage: quay.io/my-repo/my-consumer:1.0
   expose: true
   service:
-    port: 9080
+	ports:
+	- port: 9080
     consumes:
     - category: openapi
       name: my-provider
@@ -574,7 +578,8 @@ spec:
   applicationImage: quay.io/my-repo/my-app:1.0
   ....
   service:
-    port: 9080
+	ports:
+	- port: 9080
     certificate: {}
 ```
 
@@ -650,7 +655,8 @@ spec:
     termination: reencrypt
     certificateSecretRef: my-app-rt-tls
   service:
-    port: 9443
+	ports:
+	- port: 9443
 ```
 
 Example of the manually provided route secret

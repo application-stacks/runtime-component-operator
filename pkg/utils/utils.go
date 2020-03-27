@@ -134,10 +134,10 @@ func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, c
 		route.Spec.Port = &routev1.RoutePort{}
 	}
 
-	if ba.GetService().GetPortName() != "" {
-		route.Spec.Port.TargetPort = intstr.FromString(ba.GetService().GetPortName())
+	if ba.GetService().GetPorts()[0].GetPortName() != "" {
+		route.Spec.Port.TargetPort = intstr.FromString(ba.GetService().GetPorts()[0].GetPortName())
 	} else {
-		route.Spec.Port.TargetPort = intstr.FromString(strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp")
+		route.Spec.Port.TargetPort = intstr.FromString(strconv.Itoa(int(ba.GetService().GetPorts()[0].GetPort())) + "-tcp")
 	}
 }
 
@@ -152,25 +152,33 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	svc.Labels = ba.GetLabels()
 	svc.Annotations = MergeMaps(svc.Annotations, ba.GetAnnotations())
 
-	if len(svc.Spec.Ports) == 0 {
-		svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{})
-	}
-
-	svc.Spec.Ports[0].Port = ba.GetService().GetPort()
-	svc.Spec.Ports[0].TargetPort = intstr.FromInt(int(ba.GetService().GetPort()))
-
-	if ba.GetService().GetPortName() != "" {
-		svc.Spec.Ports[0].Name = ba.GetService().GetPortName()
-	} else {
-		svc.Spec.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
-	}
 	svc.Spec.Type = *ba.GetService().GetType()
 	svc.Spec.Selector = map[string]string{
 		"app.kubernetes.io/instance": obj.GetName(),
 	}
 
-	if ba.GetService().GetTargetPort() != nil {
-		svc.Spec.Ports[0].TargetPort = intstr.FromInt(int(*ba.GetService().GetTargetPort()))
+	for i := 0; i < len(ba.GetService().GetPorts()); i++ {
+		length := len(svc.Spec.Ports)
+		for length < len(ba.GetService().GetPorts()) {
+			svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{})
+			length++
+		}
+		for length > len(ba.GetService().GetPorts()) && len(svc.Spec.Ports) != 0 {
+			svc.Spec.Ports = svc.Spec.Ports[:len(svc.Spec.Ports)-1]
+			length--
+		}
+		svc.Spec.Ports[i].Port = ba.GetService().GetPorts()[i].GetPort()
+		svc.Spec.Ports[i].TargetPort = intstr.FromInt(int(ba.GetService().GetPorts()[i].GetPort()))
+
+		if ba.GetService().GetPorts()[i].GetPortName() != "" {
+			svc.Spec.Ports[i].Name = ba.GetService().GetPorts()[i].GetPortName()
+		} else {
+			svc.Spec.Ports[i].Name = strconv.Itoa(int(ba.GetService().GetPorts()[i].GetPort())) + "-tcp"
+		}
+
+		if ba.GetService().GetPorts()[i].GetTargetPort() != nil {
+			svc.Spec.Ports[i].TargetPort = intstr.FromInt(int(*ba.GetService().GetPorts()[i].GetTargetPort()))
+		}
 	}
 }
 
@@ -187,7 +195,7 @@ func CustomizeServiceBindingSecret(secret *corev1.Secret, auth map[string]string
 	secretdata["protocol"] = []byte(protocol)
 	url := fmt.Sprintf("%s://%s", protocol, hostname)
 	if ba.GetCreateKnativeService() == nil || *(ba.GetCreateKnativeService()) == false {
-		port := strconv.Itoa(int(ba.GetService().GetPort()))
+		port := strconv.Itoa(int(ba.GetService().GetPorts()[0].GetPort()))
 		secretdata["port"] = []byte(port)
 		url = fmt.Sprintf("%s:%s", url, port)
 	}
@@ -223,22 +231,31 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	}
 
 	appContainer.Name = "app"
-	if len(appContainer.Ports) == 0 {
-		appContainer.Ports = append(appContainer.Ports, corev1.ContainerPort{})
-	}
 
-	if ba.GetService().GetTargetPort() != nil {
-		appContainer.Ports[0].ContainerPort = *ba.GetService().GetTargetPort()
-	} else {
-		appContainer.Ports[0].ContainerPort = ba.GetService().GetPort()
-	}
+	for i := 0; i < len(ba.GetService().GetPorts()); i++ {
+		length := len(appContainer.Ports)
+		for length < len(ba.GetService().GetPorts()) {
+			appContainer.Ports = append(appContainer.Ports, corev1.ContainerPort{})
+			length++
+		}
+		for length > len(ba.GetService().GetPorts()) && len(appContainer.Ports) != 0 {
+			appContainer.Ports = appContainer.Ports[:len(appContainer.Ports)-1]
+			length--
+		}
+		if ba.GetService().GetPorts()[i].GetTargetPort() != nil {
+			appContainer.Ports[i].ContainerPort = *ba.GetService().GetPorts()[i].GetTargetPort()
+		} else {
+			appContainer.Ports[i].ContainerPort = ba.GetService().GetPorts()[i].GetPort()
+		}
 
+		if ba.GetService().GetPorts()[i].GetPortName() != "" {
+			appContainer.Ports[i].Name = ba.GetService().GetPorts()[i].GetPortName()
+		} else {
+			appContainer.Ports[i].Name = strconv.Itoa(int(ba.GetService().GetPorts()[i].GetPort())) + "-tcp"
+		}
+	}
 	appContainer.Image = ba.GetStatus().GetImageReference()
-	if ba.GetService().GetPortName() != "" {
-		appContainer.Ports[0].Name = ba.GetService().GetPortName()
-	} else {
-		appContainer.Ports[0].Name = strconv.Itoa(int(appContainer.Ports[0].ContainerPort)) + "-tcp"
-	}
+
 	if ba.GetResourceConstraints() != nil {
 		appContainer.Resources = *ba.GetResourceConstraints()
 	}
@@ -476,20 +493,29 @@ func CustomizeKnativeService(ksvc *servingv1alpha1.Service, ba common.BaseCompon
 		ksvc.Spec.Template.Spec.Containers = append(ksvc.Spec.Template.Spec.Containers, corev1.Container{})
 	}
 
-	if len(ksvc.Spec.Template.Spec.Containers[0].Ports) == 0 {
-		ksvc.Spec.Template.Spec.Containers[0].Ports = append(ksvc.Spec.Template.Spec.Containers[0].Ports, corev1.ContainerPort{})
-	}
 	ksvc.Spec.Template.ObjectMeta.Labels = ba.GetLabels()
 	ksvc.Spec.Template.ObjectMeta.Annotations = MergeMaps(ksvc.Spec.Template.ObjectMeta.Annotations, ba.GetAnnotations())
 
-	if ba.GetService().GetTargetPort() != nil {
-		ksvc.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = *ba.GetService().GetTargetPort()
-	} else {
-		ksvc.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = ba.GetService().GetPort()
-	}
+	for i := 0; i < len(ba.GetService().GetPorts()); i++ {
+		length := len(ksvc.Spec.Template.Spec.Containers[0].Ports)
+		for length < len(ba.GetService().GetPorts()) {
+			ksvc.Spec.Template.Spec.Containers[0].Ports = append(ksvc.Spec.Template.Spec.Containers[0].Ports, corev1.ContainerPort{})
+			length++
+		}
+		for length > len(ba.GetService().GetPorts()) && len(ksvc.Spec.Template.Spec.Containers[0].Ports) != 0 {
+			ksvc.Spec.Template.Spec.Containers[0].Ports = ksvc.Spec.Template.Spec.Containers[0].Ports[:len(ksvc.Spec.Template.Spec.Containers[0].Ports)-1]
+			length--
+		}
+		if ba.GetService().GetPorts()[i].GetTargetPort() != nil {
+			ksvc.Spec.Template.Spec.Containers[0].Ports[i].ContainerPort = *ba.GetService().GetPorts()[i].GetTargetPort()
+		} else {
+			ksvc.Spec.Template.Spec.Containers[0].Ports[i].ContainerPort = ba.GetService().GetPorts()[i].GetPort()
+		}
 
-	if ba.GetService().GetPortName() != "" {
-		ksvc.Spec.Template.Spec.Containers[0].Ports[0].Name = ba.GetService().GetPortName()
+		if ba.GetService().GetPorts()[i].GetPortName() != "" {
+			ksvc.Spec.Template.Spec.Containers[0].Ports[i].Name = ba.GetService().GetPorts()[i].GetPortName()
+		}
+
 	}
 
 	ksvc.Spec.Template.Spec.Containers[0].Image = ba.GetStatus().GetImageReference()
@@ -587,13 +613,22 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComp
 			"monitor." + ba.GetGroupName() + "/enabled": "true",
 		},
 	}
-	if len(sm.Spec.Endpoints) == 0 {
-		sm.Spec.Endpoints = append(sm.Spec.Endpoints, prometheusv1.Endpoint{})
-	}
-	if ba.GetService().GetPortName() != "" {
-		sm.Spec.Endpoints[0].Port = ba.GetService().GetPortName()
-	} else {
-		sm.Spec.Endpoints[0].Port = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+
+	for i := 0; i < len(ba.GetService().GetPorts()); i++ {
+		length := len(sm.Spec.Endpoints)
+		for length < len(ba.GetService().GetPorts()) {
+			sm.Spec.Endpoints = append(sm.Spec.Endpoints, prometheusv1.Endpoint{})
+			length++
+		}
+		for length > len(ba.GetService().GetPorts()) && len(sm.Spec.Endpoints) != 0 {
+			sm.Spec.Endpoints = sm.Spec.Endpoints[:len(sm.Spec.Endpoints)-1]
+			length--
+		}
+		if ba.GetService().GetPorts()[i].GetPortName() != "" {
+			sm.Spec.Endpoints[i].Port = ba.GetService().GetPorts()[i].GetPortName()
+		} else {
+			sm.Spec.Endpoints[i].Port = strconv.Itoa(int(ba.GetService().GetPorts()[i].GetPort())) + "-tcp"
+		}
 	}
 	if len(ba.GetMonitoring().GetLabels()) > 0 {
 		for k, v := range ba.GetMonitoring().GetLabels() {

@@ -71,9 +71,7 @@ type BaseComponentStorage interface {
 
 // BaseComponentService represents basic service configuration
 type BaseComponentService interface {
-	GetPort() int32
-	GetTargetPort() *int32
-	GetPortName() string
+	GetPorts() []ServicePorts
 	GetType() *corev1.ServiceType
 	GetAnnotations() map[string]string
 	GetProvides() ServiceBindingProvides
@@ -97,6 +95,13 @@ type BaseComponentRoute interface {
 	GetHost() string
 	GetPath() string
 	GetCertificateSecretRef() *string
+}
+
+// ServicePorts represents multiple ports
+type ServicePorts interface {
+	GetPort() int32
+	GetTargetPort() *int32
+	GetPortName() string
 }
 
 // ServiceBindingProvides represents a service to be provided
