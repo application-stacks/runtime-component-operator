@@ -31,7 +31,7 @@ metadata:
 spec:
   applicationImage: quay.io/my-repo/my-app:1.0
   service:
-  type: ClusterI
+  type: ClusterIP
   ports:
   - port: 9080
   expose: true
