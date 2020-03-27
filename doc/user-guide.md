@@ -346,8 +346,8 @@ metadata:
 spec:
   applicationImage: quay.io/my-repo/my-provider:1.0
   service:
-	ports:
-	- port: 3000
+    ports:
+    - port: 3000
     provides:
       category: openapi
       context: /my-context
@@ -382,8 +382,8 @@ spec:
   applicationImage: quay.io/my-repo/my-consumer:1.0
   expose: true
   service:
-	ports:
-	- port: 9080
+    ports:
+    - port: 9080
     consumes:
     - category: openapi
       name: my-provider
@@ -578,8 +578,8 @@ spec:
   applicationImage: quay.io/my-repo/my-app:1.0
   ....
   service:
-	ports:
-	- port: 9080
+    ports:
+    - port: 9080
     certificate: {}
 ```
 
@@ -655,8 +655,8 @@ spec:
     termination: reencrypt
     certificateSecretRef: my-app-rt-tls
   service:
-	ports:
-	- port: 9443
+    ports:
+    - port: 9443
 ```
 
 Example of the manually provided route secret
