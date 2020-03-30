@@ -42,7 +42,8 @@ var (
 	autoscaling                = &appstacksv1beta1.RuntimeComponentAutoScaling{MaxReplicas: 3}
 	pullPolicy                 = corev1.PullAlways
 	serviceType                = corev1.ServiceTypeClusterIP
-	service                    = &appstacksv1beta1.RuntimeComponentService{Type: &serviceType, Port: 8080}
+	servicePorts               = appstacksv1beta1.ServicePorts{Port: 8080}
+	service                    = &appstacksv1beta1.RuntimeComponentService{Type: &serviceType, Ports: []appstacksv1beta1.ServicePorts{servicePorts}}
 	expose                     = true
 	serviceAccountName         = "service-account"
 	volumeCT                   = &corev1.PersistentVolumeClaim{TypeMeta: metav1.TypeMeta{Kind: "StatefulSet"}}
@@ -209,7 +210,7 @@ func TestRuntimeController(t *testing.T) {
 	}
 
 	// Check updated values in Route
-	routeTests := []Test{{"target port", intstr.FromString(strconv.Itoa(int(service.Port)) + "-tcp"), route.Spec.Port.TargetPort}}
+	routeTests := []Test{{"target port", intstr.FromString(strconv.Itoa(int(service.Ports[0].Port)) + "-tcp"), route.Spec.Port.TargetPort}}
 	verifyTests("route", routeTests, t)
 
 	// Disable Route/Expose and enable Autoscaling
