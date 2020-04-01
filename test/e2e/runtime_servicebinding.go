@@ -451,11 +451,11 @@ func diffNamespaceTest(t *testing.T, f *framework.Framework, ctx *framework.Test
 	}
 
 	for i := 0; i < len(directories)-1; i++ {
-		checkSecret(t, ns2, podName, directories[i], valuePairs, false)
+		checkSecret(t, f, ns2, podName, directories[i], valuePairs, false)
 	}
 
 	out, err = exec.Command("kubectl", "delete", "namespace", ns2).Output()
-	err = util.CommandError(t, f, err, out)
+	err = util.CommandError(t, err, out)
 	if err != nil {
 		t.Fatal("New namespace not deleted")
 	}
