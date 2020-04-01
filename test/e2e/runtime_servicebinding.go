@@ -25,6 +25,7 @@ var (
 	runtimeProvider    = "runtime-provider"
 	runtimeConsumer    = "runtime-consumer"
 	runtimeConsumer2   = "runtime-consumer2"
+	runtimeConsumer3   = "runtime-consumer3"
 	runtimeConsumerEnv = "runtime-consumer-env"
 	runtimeSecret      = "my-secret"
 	runtimeSecret2     = "my-secret2"
@@ -79,6 +80,16 @@ func RuntimeServiceBindingTest(t *testing.T) {
 	// run tests for changing provides
 	err = updateProviderTest(t, f, ctx, ns)
 	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = diffNamespaceTest(t, f, ctx)
+	if err != nil {
+		out, err := exec.Command("kubectl", "delete", "namespace", "e2e-svc-binding").Output()
+		err = util.CommandError(t, err, out)
+		if err != nil {
+			t.Fatal("New namespace not deleted")
+		}
 		t.Fatal(err)
 	}
 
@@ -395,5 +406,58 @@ func updateProviderTest(t *testing.T, f *framework.Framework, ctx *framework.Tes
 		t.Fatal(err)
 	}
 
+	return nil
+}
+
+func diffNamespaceTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
+
+	ns2 := "e2e-svc-binding"
+	// Make a new namespace
+	out, err := exec.Command("kubectl", "create", "namespace", ns2).Output()
+	err = util.CommandError(t, err, out)
+	if err != nil {
+		t.Fatal("New namespace not made")
+	}
+
+	err = createConsumeServiceMount(t, f, ctx, ns2, runtimeProvider, runtimeConsumer3, true)
+	if err != nil {
+		util.FailureCleanup(t, f, ns2, err)
+	}
+
+	// Get consumer pod
+	pods, err := getPods(f, ctx, runtimeConsumer3, ns2)
+	if err != nil {
+		util.FailureCleanup(t, f, ns2, err)
+	}
+	podName := pods.Items[0].GetName()
+
+	// Go inside the pod the pod for Consume service and check values are set
+	out, err = exec.Command("kubectl", "exec", "-n", ns2, "-it", podName, "--", "ls", "../sample/"+ns2+"/"+runtimeProvider).Output()
+	err = util.CommandError(t, err, out)
+	if err != nil {
+		t.Fatal("Directory not made")
+	}
+	directories := strings.Split(string(out), "\n")
+
+	// Set values to check
+	valuePairs := map[string]string{
+		"context":  context,
+		"hostname": runtimeProvider + "." + ns2 + ".svc.cluster.local",
+		"password": password,
+		"port":     port,
+		"protocol": "http",
+		"url":      "http://" + runtimeProvider + "." + ns2 + ".svc.cluster.local:" + port + "/" + context,
+		"username": username,
+	}
+
+	for i := 0; i < len(directories)-1; i++ {
+		checkSecret(t, ns2, podName, directories[i], valuePairs, false)
+	}
+
+	out, err = exec.Command("kubectl", "delete", "namespace", ns2).Output()
+	err = util.CommandError(t, err, out)
+	if err != nil {
+		t.Fatal("New namespace not deleted")
+	}
 	return nil
 }
