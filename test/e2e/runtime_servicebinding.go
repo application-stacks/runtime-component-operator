@@ -443,11 +443,11 @@ func diffNamespaceTest(t *testing.T, f *framework.Framework, ctx *framework.Test
 	valuePairs := map[string]string{
 		"context":  context,
 		"hostname": runtimeProvider + "." + ns2 + ".svc.cluster.local",
-		"password": password,
+		"password": passwordValue,
 		"port":     port,
 		"protocol": "http",
 		"url":      "http://" + runtimeProvider + "." + ns2 + ".svc.cluster.local:" + port + "/" + context,
-		"username": username,
+		"username": usernameValue,
 	}
 
 	for i := 0; i < len(directories)-1; i++ {
@@ -455,7 +455,7 @@ func diffNamespaceTest(t *testing.T, f *framework.Framework, ctx *framework.Test
 	}
 
 	out, err = exec.Command("kubectl", "delete", "namespace", ns2).Output()
-	err = util.CommandError(t, err, out)
+	err = util.CommandError(t, f, err, out)
 	if err != nil {
 		t.Fatal("New namespace not deleted")
 	}
