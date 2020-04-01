@@ -172,10 +172,10 @@ func createConsumeServiceMount(t *testing.T, f *framework.Framework, ctx *framew
 		return err
 	}
 
-	err = e2eutil.WaitForDeployment(t, f.KubeClient, ns, appName, 1, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
+	// err = e2eutil.WaitForDeployment(t, f.KubeClient, ns, appName, 1, retryInterval, timeout)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
