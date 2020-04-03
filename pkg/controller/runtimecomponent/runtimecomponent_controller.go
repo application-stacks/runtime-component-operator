@@ -210,7 +210,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	ok, _ := reconciler.IsGroupVersionSupported(imagev1.SchemeGroupVersion.String())
+	ok, _ := reconciler.IsGroupVersionSupported(imagev1.SchemeGroupVersion.String(), "ImageStream")
 	if ok {
 		c.Watch(
 			&source.Kind{Type: &imagev1.ImageStream{}},
@@ -220,7 +220,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 			})
 	}
 
-	ok, _ = reconciler.IsGroupVersionSupported(routev1.SchemeGroupVersion.String())
+	ok, _ = reconciler.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route")
 	if ok {
 		c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
@@ -228,7 +228,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		}, predSubResource)
 	}
 
-	ok, _ = reconciler.IsGroupVersionSupported(servingv1alpha1.SchemeGroupVersion.String())
+	ok, _ = reconciler.IsGroupVersionSupported(servingv1alpha1.SchemeGroupVersion.String(), "Service")
 	if ok {
 		c.Watch(&source.Kind{Type: &servingv1alpha1.Service{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
@@ -236,7 +236,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		}, predSubResource)
 	}
 
-	ok, _ = reconciler.IsGroupVersionSupported(certmngrv1alpha2.SchemeGroupVersion.String())
+	ok, _ = reconciler.IsGroupVersionSupported(certmngrv1alpha2.SchemeGroupVersion.String(), "Certificate")
 	if ok {
 		c.Watch(&source.Kind{Type: &certmngrv1alpha2.Certificate{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
@@ -244,7 +244,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		}, predSubResource)
 	}
 
-	ok, _ = reconciler.IsGroupVersionSupported(prometheusv1.SchemeGroupVersion.String())
+	ok, _ = reconciler.IsGroupVersionSupported(prometheusv1.SchemeGroupVersion.String(), "ServiceMonitor")
 	if ok {
 		c.Watch(&source.Kind{Type: &prometheusv1.ServiceMonitor{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
@@ -419,7 +419,7 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		}
 	}
 
-	isKnativeSupported, err := r.IsGroupVersionSupported(servingv1alpha1.SchemeGroupVersion.String())
+	isKnativeSupported, err := r.IsGroupVersionSupported(servingv1alpha1.SchemeGroupVersion.String(), "Service")
 	if err != nil {
 		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	} else if !isKnativeSupported {
@@ -570,7 +570,7 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		}
 	}
 
-	if ok, err := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String()); err != nil {
+	if ok, err := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route"); err != nil {
 		reqLogger.Error(err, fmt.Sprintf("Failed to check if %s is supported", routev1.SchemeGroupVersion.String()))
 		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	} else if ok {
@@ -601,8 +601,8 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported", routev1.SchemeGroupVersion.String()))
 	}
 
-	if ok, err := r.IsGroupVersionSupported(prometheusv1.SchemeGroupVersion.String()); err != nil {
-		reqLogger.Error(err, fmt.Sprintf("Failed to check if %s is supported", routev1.SchemeGroupVersion.String()))
+	if ok, err := r.IsGroupVersionSupported(prometheusv1.SchemeGroupVersion.String(), "ServiceMonitor"); err != nil {
+		reqLogger.Error(err, fmt.Sprintf("Failed to check if %s is supported", prometheusv1.SchemeGroupVersion.String()))
 		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	} else if ok {
 		if instance.Spec.Monitoring != nil && (instance.Spec.CreateKnativeService == nil || !*instance.Spec.CreateKnativeService) {
@@ -625,7 +625,7 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		}
 
 	} else {
-		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported", routev1.SchemeGroupVersion.String()))
+		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported", prometheusv1.SchemeGroupVersion.String()))
 	}
 
 	return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)

@@ -192,17 +192,27 @@ func TestIsGroupVersionSupported(t *testing.T) {
 
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 	fakeDiscoveryClient := &fakediscovery.FakeDiscovery{
-		Fake: &coretesting.Fake{Resources: []*metav1.APIResourceList{{GroupVersion: "v1"}}},
+		Fake: &coretesting.Fake{Resources: []*metav1.APIResourceList{
+			{
+				GroupVersion: "abc/v1",
+				APIResources: []metav1.APIResource{
+					{Kind: "Test", Name: "tests", Group: "abc", Version: "v1"},
+				}}}},
 	}
 	r.SetDiscoveryClient(fakeDiscoveryClient)
 
-	_, err := r.IsGroupVersionSupported("v1")
-	if err != nil {
+	ok, err := r.IsGroupVersionSupported("abc/v1", "Test")
+	if err != nil && ok {
 		t.Fatalf("Group version should be supported: (%v)", err)
 	}
 
-	_, err = r.IsGroupVersionSupported("v2")
-	if err == nil {
+	ok, err = r.IsGroupVersionSupported("abc/v1", "Abc")
+	if err == nil && ok {
+		t.Fatalf("Group version should not be supported")
+	}
+
+	ok, err = r.IsGroupVersionSupported("abc/v2", "Test")
+	if err == nil && ok {
 		t.Fatalf("Group version should not be supported")
 	}
 }

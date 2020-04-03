@@ -63,3 +63,9 @@ If the operator is running fine, check the status of the `RuntimeComponent` Cust
   ```console
   $ oc describe runtimecomponent my-app
   ```
+
+
+# Known Issues
+
+Operator might crash on startup when optional CRDs API group (eg. serving.knative.dev/v1alpha1) is 
+available, but actual CRD (Knative Service) is not present.
