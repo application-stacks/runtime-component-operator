@@ -254,14 +254,14 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 }
 
 // IsGroupVersionSupported ...
-func (r *ReconcilerBase) IsGroupVersionSupported(groupVersion string) (bool, error) {
+func (r *ReconcilerBase) IsGroupVersionSupported(groupVersion string, kind string) (bool, error) {
 	cli, err := r.GetDiscoveryClient()
 	if err != nil {
 		log.Error(err, "Failed to return a discovery client for the current reconciler")
 		return false, err
 	}
 
-	_, err = cli.ServerResourcesForGroupVersion(groupVersion)
+	res, err := cli.ServerResourcesForGroupVersion(groupVersion)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return false, nil
@@ -270,7 +270,13 @@ func (r *ReconcilerBase) IsGroupVersionSupported(groupVersion string) (bool, err
 		return false, err
 	}
 
-	return true, nil
+	for _, v := range res.APIResources {
+		if v.Kind == kind {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // UpdateStatus updates the fields corresponding to the status subresource for the object
@@ -528,7 +534,7 @@ func getConsumedByAnnotationKey(ba common.BaseComponent) string {
 // ReconcileCertificate used to manage cert-manager integration
 func (r *ReconcilerBase) ReconcileCertificate(ba common.BaseComponent) (reconcile.Result, error) {
 	owner := ba.(metav1.Object)
-	if ok, err := r.IsGroupVersionSupported(certmngrv1alpha2.SchemeGroupVersion.String()); err != nil {
+	if ok, err := r.IsGroupVersionSupported(certmngrv1alpha2.SchemeGroupVersion.String(), "Certificate"); err != nil {
 		r.ManageError(err, common.StatusConditionTypeReconciled, ba)
 	} else if ok {
 		if ba.GetService() != nil && ba.GetService().GetCertificate() != nil {
@@ -646,7 +652,7 @@ func (r *ReconcilerBase) ReconcileCertificate(ba common.BaseComponent) (reconcil
 
 // IsOpenShift returns true if the operator is running on an OpenShift platform
 func (r *ReconcilerBase) IsOpenShift() bool {
-	isOpenShift, err := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String())
+	isOpenShift, err := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route")
 	if err != nil {
 		return false
 	}
@@ -655,7 +661,7 @@ func (r *ReconcilerBase) IsOpenShift() bool {
 
 // IsApplicationSupported checks if Application
 func (r *ReconcilerBase) IsApplicationSupported() bool {
-	isApplicationSupported, err := r.IsGroupVersionSupported(applicationsv1beta1.SchemeGroupVersion.String())
+	isApplicationSupported, err := r.IsGroupVersionSupported(applicationsv1beta1.SchemeGroupVersion.String(), "Application")
 	if err != nil {
 		return false
 	}
