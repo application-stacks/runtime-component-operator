@@ -2,16 +2,16 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
   annotations:
-    alm-examples: '[{"apiVersion":"app.stacks/v1beta1","kind":"RuntimeComponent","metadata":{"name":"example-runtime-component"},"spec":{"applicationImage":"APPLICATION_IMAGE"}}]'
+    alm-examples: '[{"apiVersion":"app.stacks/v1beta1","kind":"RuntimeComponent","metadata":{"name":"example-runtime-component"},"spec":{"applicationImage":"registry.access.redhat.com/ubi8/nodejs-12:1-27"}}]'
     capabilities: Auto Pilot
     categories: Application Runtime
     certified: 'true'
-    containerImage: applicationstacks/operator:0.4.0
-    createdAt: 2020-03-06 09:00:00
+    containerImage: registry.connect.redhat.com/ibm/runtime-component-operator:0.4.1
+    createdAt: 2020-03-20 09:00:00
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
-  name: runtime-component-operator.v0.4.0
+  name: runtime-component-operator.v0.4.1
 spec:
   customresourcedefinitions:
     owned:
@@ -307,7 +307,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: runtime-component-operator
-                image: applicationstacks/operator:0.4.0
+                image: registry.connect.redhat.com/ibm/runtime-component-operator:0.4.1
                 imagePullPolicy: Always
                 name: runtime-component-operator
                 resources: {}
@@ -349,4 +349,4 @@ spec:
   maturity: beta
   provider:
     name: Community
-  version: 0.4.0
+  version: 0.4.1
