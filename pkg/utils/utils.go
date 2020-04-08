@@ -172,6 +172,37 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	if ba.GetService().GetTargetPort() != nil {
 		svc.Spec.Ports[0].TargetPort = intstr.FromInt(int(*ba.GetService().GetTargetPort()))
 	}
+
+	numOfAdditionalPorts := len(ba.GetService().GetPorts())
+	numOfCurrentPorts := len(svc.Spec.Ports) - 1
+	for i := 0; i < numOfAdditionalPorts; i++ {
+		for numOfCurrentPorts < numOfAdditionalPorts {
+			svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{})
+			numOfCurrentPorts++
+		}
+		for numOfCurrentPorts > numOfAdditionalPorts && len(svc.Spec.Ports) != 0 {
+			svc.Spec.Ports = svc.Spec.Ports[:len(svc.Spec.Ports)-1]
+			numOfCurrentPorts--
+		}
+		svc.Spec.Ports[i+1].Port = ba.GetService().GetPorts()[i].GetAdditionalPort()
+		svc.Spec.Ports[i+1].TargetPort = intstr.FromInt(int(ba.GetService().GetPorts()[i].GetAdditionalPort()))
+
+		if ba.GetService().GetPorts()[i].GetAdditionalPortName() != "" {
+			svc.Spec.Ports[i+1].Name = ba.GetService().GetPorts()[i].GetAdditionalPortName()
+		} else {
+			svc.Spec.Ports[i+1].Name = strconv.Itoa(int(ba.GetService().GetPorts()[i].GetAdditionalPort())) + "-tcp"
+		}
+
+		if ba.GetService().GetPorts()[i].GetAdditionalTargetPort() != nil {
+			svc.Spec.Ports[i].TargetPort = intstr.FromInt(int(*ba.GetService().GetPorts()[i].GetAdditionalTargetPort()))
+		}
+	}
+	if len(ba.GetService().GetPorts()) == 0 {
+		for numOfCurrentPorts > 0 {
+			svc.Spec.Ports = svc.Spec.Ports[:len(svc.Spec.Ports)-1]
+			numOfCurrentPorts--
+		}
+	}
 }
 
 // CustomizeServiceBindingSecret ...
@@ -239,6 +270,36 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	} else {
 		appContainer.Ports[0].Name = strconv.Itoa(int(appContainer.Ports[0].ContainerPort)) + "-tcp"
 	}
+
+	numOfAdditionalPorts := len(ba.GetService().GetPorts())
+	numOfCurrentPorts := len(appContainer.Ports) - 1
+	for i := 0; i < len(ba.GetService().GetPorts()); i++ {
+		for numOfCurrentPorts < numOfAdditionalPorts {
+			appContainer.Ports = append(appContainer.Ports, corev1.ContainerPort{})
+			numOfCurrentPorts++
+		}
+		for numOfCurrentPorts > numOfAdditionalPorts && len(appContainer.Ports) != 0 {
+			appContainer.Ports = appContainer.Ports[:len(appContainer.Ports)-1]
+			numOfCurrentPorts--
+		}
+		if ba.GetService().GetPorts()[i].GetAdditionalTargetPort() != nil {
+			appContainer.Ports[i+1].ContainerPort = *ba.GetService().GetPorts()[i].GetAdditionalTargetPort()
+		} else {
+			appContainer.Ports[i+1].ContainerPort = ba.GetService().GetPorts()[i].GetAdditionalPort()
+		}
+		if ba.GetService().GetPorts()[i].GetAdditionalPortName() != "" {
+			appContainer.Ports[i+1].Name = ba.GetService().GetPorts()[i].GetAdditionalPortName()
+		} else {
+			appContainer.Ports[i+1].Name = strconv.Itoa(int(ba.GetService().GetPorts()[i].GetAdditionalPort())) + "-tcp"
+		}
+	}
+	if numOfAdditionalPorts == 0 {
+		for numOfCurrentPorts > 0 {
+			appContainer.Ports = appContainer.Ports[:len(appContainer.Ports)-1]
+			numOfCurrentPorts--
+		}
+	}
+
 	if ba.GetResourceConstraints() != nil {
 		appContainer.Resources = *ba.GetResourceConstraints()
 	}

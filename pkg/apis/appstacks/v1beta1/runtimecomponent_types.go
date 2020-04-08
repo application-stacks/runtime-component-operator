@@ -77,6 +77,8 @@ type RuntimeComponentService struct {
 
 	PortName string `json:"portName,omitempty"`
 
+	Ports []ServicePorts `json:"ports,omitemptyy"`
+
 	Annotations map[string]string `json:"annotations,omitempty"`
 	// +listType=atomic
 	Consumes []ServiceBindingConsumes `json:"consumes,omitempty"`
@@ -84,6 +86,19 @@ type RuntimeComponentService struct {
 	// +k8s:openapi-gen=true
 	Certificate          *Certificate `json:"certificate,omitempty"`
 	CertificateSecretRef *string      `json:"certificateSecretRef,omitempty"`
+}
+
+// ServicePorts ...
+// +k8s:openapi-gen=true
+type ServicePorts struct {
+	// +kubebuilder:validation:Maximum=65535
+	// +kubebuilder:validation:Minimum=1
+	AdditionalPort int32 `json:"additionalPort,omitempty"`
+	// +kubebuilder:validation:Maximum=65535
+	// +kubebuilder:validation:Minimum=1
+	AdditionalTargetPort *int32 `json:"additionalTargetPort,omitempty"`
+
+	AdditionalPortName string `json:"additionalPortName,omitempty"`
 }
 
 // ServiceBindingProvides represents information about
@@ -434,6 +449,33 @@ func (s *RuntimeComponentService) GetPortName() string {
 // GetType returns service type
 func (s *RuntimeComponentService) GetType() *corev1.ServiceType {
 	return s.Type
+}
+
+// GetPorts returns a list of service ports
+func (s *RuntimeComponentService) GetPorts() []common.ServicePorts {
+	ports := make([]common.ServicePorts, len(s.Ports))
+	for i := range s.Ports {
+		ports[i] = &s.Ports[i]
+	}
+	return ports
+}
+
+// GetAdditionalPort returns extra service ports
+func (s *ServicePorts) GetAdditionalPort() int32 {
+	return s.AdditionalPort
+}
+
+// GetAdditionalTargetPort returns extra target ports
+func (s *ServicePorts) GetAdditionalTargetPort() *int32 {
+	if s.AdditionalTargetPort == nil {
+		return nil
+	}
+	return s.AdditionalTargetPort
+}
+
+// GetAdditionalPortName returns extra port names
+func (s *ServicePorts) GetAdditionalPortName() string {
+	return s.AdditionalPortName
 }
 
 // GetProvides returns service provider configuration

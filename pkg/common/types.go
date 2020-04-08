@@ -75,6 +75,7 @@ type BaseComponentService interface {
 	GetTargetPort() *int32
 	GetPortName() string
 	GetType() *corev1.ServiceType
+	GetPorts() []ServicePorts
 	GetAnnotations() map[string]string
 	GetProvides() ServiceBindingProvides
 	GetConsumes() []ServiceBindingConsumes
@@ -97,6 +98,13 @@ type BaseComponentRoute interface {
 	GetHost() string
 	GetPath() string
 	GetCertificateSecretRef() *string
+}
+
+// ServicePorts represents multiple ports
+type ServicePorts interface {
+	GetAdditionalPort() int32
+	GetAdditionalTargetPort() *int32
+	GetAdditionalPortName() string
 }
 
 // ServiceBindingProvides represents a service to be provided
