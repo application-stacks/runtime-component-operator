@@ -29,6 +29,7 @@ var (
 	createKNS          = true
 	targetCPUPer int32 = 30
 	targetPort int32   = 3333
+	nodePort	int32  = 3011
 	autoscaling        = &appstacksv1beta1.RuntimeComponentAutoScaling{
 		TargetCPUUtilizationPercentage: &targetCPUPer,
 		MinReplicas:                    &replicas,
@@ -132,7 +133,7 @@ func optionalTargetPortFunctionalityTests() []Test {
 
 func optionalNodePortFunctionalityTests() []Test {
 	serviceType := corev1.ServiceTypeNodePort
-	service := &appstacksv1beta1.RuntimeComponentService{Type: &serviceType, Port: 8443, NodePort: 30011}
+	service := &appstacksv1beta1.RuntimeComponentService{Type: &serviceType, Port: 8443, NodePort: &nodePort}
 	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service}
 	svc, runtime := &corev1.Service{}, createRuntimeComponent(name, namespace, spec)
 
@@ -143,7 +144,7 @@ func optionalNodePortFunctionalityTests() []Test {
 		{"Service first exposed target port", intstr.FromInt(int(runtime.Spec.Service.Port)), svc.Spec.Ports[0].TargetPort},
 		{"Service type", *runtime.Spec.Service.Type, svc.Spec.Type},
 		{"Service selector", name, svc.Spec.Selector["app.kubernetes.io/instance"]},
-		{"Service nodePort port", runtime.Spec.Service.NodePort, svc.Spec.Ports[0].NodePort},
+		{"Service nodePort port", *runtime.Spec.Service.NodePort, svc.Spec.Ports[0].NodePort},
 	}
 	return testCS
 }
