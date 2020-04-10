@@ -76,8 +76,8 @@ type RuntimeComponentService struct {
 	TargetPort *int32 `json:"targetPort,omitempty"`
 
 	// +kubebuilder:validation:Maximum=65535
-	// +kubebuilder:validation:Minimum=1
-	NodePort int32 `json:"nodePort,omitempty"`
+	// +kubebuilder:validation:Minimum=0
+	NodePort *int32 `json:"nodePort,omitempty"`
 
 	PortName string `json:"portName,omitempty"`
 
@@ -422,7 +422,10 @@ func (s *RuntimeComponentService) GetPort() int32 {
 }
 
 // GetNodePort returns service nodePort
-func (s *RuntimeComponentService) GetNodePort() int32 {
+func (s *RuntimeComponentService) GetNodePort() *int32 {
+	if s.NodePort == nil {
+		return nil
+	}
 	return s.NodePort
 }
 

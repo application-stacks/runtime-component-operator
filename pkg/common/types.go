@@ -75,7 +75,7 @@ type BaseComponentService interface {
 	GetTargetPort() *int32
 	GetPortName() string
 	GetType() *corev1.ServiceType
-	GetNodePort() int32
+	GetNodePort() *int32
 	GetAnnotations() map[string]string
 	GetProvides() ServiceBindingProvides
 	GetConsumes() []ServiceBindingConsumes
