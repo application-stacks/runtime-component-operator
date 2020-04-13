@@ -27,7 +27,9 @@ func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseComponent) {
 	deploy.Labels = ba.GetLabels()
 	deploy.Annotations = MergeMaps(deploy.Annotations, ba.GetAnnotations())
 
-	deploy.Spec.Replicas = ba.GetReplicas()
+	if ba.GetAutoscaling() == nil {
+		deploy.Spec.Replicas = ba.GetReplicas()
+	}
 
 	if deploy.Spec.Selector == nil {
 		deploy.Spec.Selector = &metav1.LabelSelector{
@@ -46,7 +48,9 @@ func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseCompone
 	statefulSet.Labels = ba.GetLabels()
 	statefulSet.Annotations = MergeMaps(statefulSet.Annotations, ba.GetAnnotations())
 
-	statefulSet.Spec.Replicas = ba.GetReplicas()
+	if ba.GetAutoscaling() == nil {
+		statefulSet.Spec.Replicas = ba.GetReplicas()
+	}
 	statefulSet.Spec.ServiceName = obj.GetName() + "-headless"
 	if statefulSet.Spec.Selector == nil {
 		statefulSet.Spec.Selector = &metav1.LabelSelector{
