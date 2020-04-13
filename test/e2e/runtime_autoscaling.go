@@ -45,7 +45,7 @@ func RuntimeAutoScalingTest(t *testing.T) {
 	// create one replica of the operator deployment in current namespace with provided name
 	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "runtime-component-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
-		t.Fatal(err)
+		util.FailureCleanup(t, f, namespace, err)
 	}
 
 	// Make basic runtime omponent with 1 replica
@@ -71,7 +71,7 @@ func RuntimeAutoScalingTest(t *testing.T) {
 		r.Spec.Autoscaling = setAutoScale(5, 50)
 	})
 	if err != nil {
-		t.Fatal(err)
+		util.FailureCleanup(t, f, namespace, err)
 	}
 
 	// Check the name field that matches
@@ -90,7 +90,7 @@ func RuntimeAutoScalingTest(t *testing.T) {
 
 	err = waitForHPA(hpa, t, 1, 5, 50, f, options)
 	if err != nil {
-		t.Fatal(err)
+		util.FailureCleanup(t, f, namespace, err)
 	}
 
 	updateTest(t, f, runtimeComponent, options, namespace, hpa)
@@ -175,7 +175,7 @@ func updateTest(t *testing.T, f *framework.Framework, runtimeComponent *appstack
 		r.Spec.Autoscaling = setAutoScale(3, 2, 30)
 	})
 	if err != nil {
-		t.Fatal(err)
+		util.FailureCleanup(t, f, namespace, err)
 	}
 
 	timestamp := time.Now().UTC()
@@ -185,7 +185,7 @@ func updateTest(t *testing.T, f *framework.Framework, runtimeComponent *appstack
 
 	err = waitForHPA(hpa, t, 2, 3, 30, f, options)
 	if err != nil {
-		t.Fatal(err)
+		util.FailureCleanup(t, f, namespace, err)
 	}
 }
 
@@ -198,7 +198,7 @@ func minMaxTest(t *testing.T, f *framework.Framework, runtimeComponent *appstack
 		r.Spec.Autoscaling = setAutoScale(1, 6, 10)
 	})
 	if err != nil {
-		t.Fatal(err)
+		util.FailureCleanup(t, f, namespace, err)
 	}
 
 	timestamp := time.Now().UTC()
@@ -208,7 +208,12 @@ func minMaxTest(t *testing.T, f *framework.Framework, runtimeComponent *appstack
 
 	err = waitForHPA(hpa, t, 2, 3, 30, f, options)
 	if err != nil {
-		t.Fatal(err)
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-runtime-autoscaling", 2, retryInterval, timeout)
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
 	}
 }
 
@@ -221,7 +226,7 @@ func minBoundaryTest(t *testing.T, f *framework.Framework, runtimeComponent *app
 		r.Spec.Autoscaling = setAutoScale(4, 0, 20)
 	})
 	if err != nil {
-		t.Fatal(err)
+		util.FailureCleanup(t, f, namespace, err)
 	}
 
 	timestamp := time.Now().UTC()
@@ -231,7 +236,12 @@ func minBoundaryTest(t *testing.T, f *framework.Framework, runtimeComponent *app
 
 	err = waitForHPA(hpa, t, 2, 3, 30, f, options)
 	if err != nil {
-		t.Fatal(err)
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-runtime-autoscaling", 2, retryInterval, timeout)
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
 	}
 }
 
@@ -253,13 +263,13 @@ func incorrectFieldsTest(t *testing.T, f *framework.Framework, ctx *framework.Te
 	// use TestCtx's create helper to create the object and add a cleanup function for the new object
 	err = f.Client.Create(goctx.TODO(), runtimeComponent, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	if err != nil {
-		t.Fatal(err)
+		util.FailureCleanup(t, f, namespace, err)
 	}
 
 	// wait for example-runtime-autoscaling to reach 1 replicas
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-runtime-autoscaling2", 1, retryInterval, timeout)
 	if err != nil {
-		t.Fatal(err)
+		util.FailureCleanup(t, f, namespace, err)
 	}
 
 	// Check the name field that matches
@@ -277,7 +287,7 @@ func incorrectFieldsTest(t *testing.T, f *framework.Framework, ctx *framework.Te
 		r.Spec.Autoscaling = setAutoScale(4)
 	})
 	if err != nil {
-		t.Fatal(err)
+		util.FailureCleanup(t, f, namespace, err)
 	}
 
 	timestamp = time.Now().UTC()
