@@ -97,6 +97,7 @@ func RuntimeAutoScalingTest(t *testing.T) {
 	minMaxTest(t, f, runtimeComponent, options, namespace, hpa)
 	minBoundaryTest(t, f, runtimeComponent, options, namespace, hpa)
 	incorrectFieldsTest(t, f, ctx)
+	replicasTest(t, f, ctx)
 }
 
 func getHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, f *framework.Framework, options *dynclient.ListOptions) *autoscalingv1.HorizontalPodAutoscalerList {
@@ -300,5 +301,65 @@ func incorrectFieldsTest(t *testing.T, f *framework.Framework, ctx *framework.Te
 		t.Log("The mandatory fields were not set so autoscaling is not enabled")
 	} else {
 		t.Fatal("Error: The mandatory fields were not set so autoscaling should not be enabled")
+	}
+}
+
+func replicasTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) {
+	const name = "runtime-autoscaling-replicas"
+	namespace, err := ctx.GetNamespace()
+	if err != nil {
+		t.Fatalf("could not get namespace: %v", err)
+	}
+
+	timestamp := time.Now().UTC()
+	t.Logf("%s - Starting runtime autoscaling test...", timestamp)
+
+	// Make basic runtime omponent with 1 replica
+	replicas := int32(2)
+	runtime := util.MakeBasicRuntimeComponent(t, f, name, namespace, replicas)
+
+	err = f.Client.Create(goctx.TODO(), runtime, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, name, int(replicas), retryInterval, timeout)
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	// check that it prioritizes the HPA's minimum number of replicas over spec replicas
+	target := types.NamespacedName{Namespace: namespace, Name: name}
+	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
+		r.Spec.ResourceConstraints = setResources("0.5")
+		var cpu int32 = 50
+		var min int32 = 3
+		r.Spec.Autoscaling = &appstacksv1beta1.RuntimeComponentAutoScaling{
+			TargetCPUUtilizationPercentage: &cpu,
+			MaxReplicas:                    5,
+			MinReplicas:                    &min,
+		}
+	})
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, name, 3, retryInterval, timeout)
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	// check that it correctly returns to defined replica count after deleting HPA
+	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
+		r.Spec.ResourceConstraints = nil
+		r.Spec.Autoscaling = nil
+	})
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, name, int(replicas), retryInterval, timeout)
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
 	}
 }
