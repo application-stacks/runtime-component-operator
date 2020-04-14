@@ -525,6 +525,7 @@ func CustomizeKnativeService(ksvc *servingv1alpha1.Service, ba common.BaseCompon
 	ksvc.Spec.Template.Spec.Containers[0].VolumeMounts = ba.GetVolumeMounts()
 	ksvc.Spec.Template.Spec.Volumes = ba.GetVolumes()
 	CustomizeConsumedServices(&ksvc.Spec.Template.Spec.PodSpec, ba)
+	CustomizeServiceBinding(&ksvc.Spec.Template.Spec.PodSpec, ba)
 
 	if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
 		ksvc.Spec.Template.Spec.ServiceAccountName = *ba.GetServiceAccountName()
