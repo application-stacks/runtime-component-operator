@@ -10,6 +10,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.2]
+
+### Fixed
+
+- Auto-scaling (HPA) not working as expected ([#72](https://github.com/application-stacks/runtime-component-operator/pull/72))
+- Operator crashes on some cluster due to optional CRDs (Knative Service, ServiceMonitor) not being present ([#67](https://github.com/application-stacks/runtime-component-operator/pull/67))
+- Update the predicates for watching StatefulSet and Deployment sub-resource to check for generation to minimize number of reconciles ([#75](https://github.com/application-stacks/runtime-component-operator/pull/75))
+
 ## [0.4.1]
 
 ### Added
@@ -23,7 +31,8 @@ All notable changes to this project will be documented in this file.
 The initial release of the Runtime Component Operator 🎉
 
 
-[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.4.2
 [0.4.1]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.4.1
 [0.4.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.4.0
 
