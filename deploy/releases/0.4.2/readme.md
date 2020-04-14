@@ -1,4 +1,8 @@
-# Runtime Component Operator v0.4.0
+# Runtime Component Operator v0.4.2
+
+## Changelog
+
+All notable changes are documented in the [Changelog](/CHANGELOG.md#0.4.2).
 
 ## Installation
 
@@ -16,7 +20,7 @@ Appropriate cluster role and binding are required to watch another namespace, wa
 1. Install `RuntimeComponent` Custom Resource Definition (CRD). This needs to be done only ONCE per cluster:
 
     ```console
-    kubectl apply -f https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.4.0/runtime-component-crd.yaml
+    kubectl apply -f https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.4.2/runtime-component-crd.yaml
     ```
 
 2. Install the Runtime Component Operator:
@@ -36,7 +40,7 @@ Appropriate cluster role and binding are required to watch another namespace, wa
     2.2. _Optional_: Install cluster-level role-based access. This step can be skipped if the operator is only watching own namespace:
   
     ```console
-    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.4.0/runtime-component-cluster-rbac.yaml \
+    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.4.2/runtime-component-cluster-rbac.yaml \
       | sed -e "s/RUNTIME_COMPONENT_OPERATOR_NAMESPACE/${OPERATOR_NAMESPACE}/" \
       | kubectl apply -f -
     ```
@@ -44,7 +48,7 @@ Appropriate cluster role and binding are required to watch another namespace, wa
     2.3. Install the operator:
 
     ```console
-    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.4.0/runtime-component-operator.yaml \
+    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.4.2/runtime-component-operator.yaml \
       | sed -e "s/RUNTIME_COMPONENT_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" \
       | kubectl apply -n ${OPERATOR_NAMESPACE} -f -
     ```
@@ -63,8 +67,3 @@ _Deleting the CRD will also delete all `RuntimeComponent` in the cluster_
 - The auto-creation of an application definition by kAppNav is not supported when Knative is enabled.
 - Monitoring feature does not support integration with Knative Service. Prometheus Operator is required to use ServiceMonitor.
 - After the initial deployment of `RuntimeComponent`, any changes to its labels would be applied only when one of the parameters from `spec` is updated.
-
-## Known Issues
-
-- Auto scaling does not work as expected. The changes made to `Deployment` by `HorizontalPodAutoscaler` are reversed. ([#68](https://github.com/application-stacks/runtime-component-operator/issues/68))
-- Operator might crash on startup when optional CRDs API group (eg. serving.knative.dev/v1alpha1) is available, but actual CRD (Knative Service) is not present. ([#66](https://github.com/application-stacks/runtime-component-operator/issues/66))
