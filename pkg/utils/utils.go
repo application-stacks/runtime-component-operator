@@ -287,6 +287,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	pts.Spec.Containers = append([]corev1.Container{appContainer}, ba.GetSidecarContainers()...)
 
 	CustomizeConsumedServices(&pts.Spec, ba)
+	CustomizeServiceBinding(&pts.Spec, ba)
 
 	if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
 		pts.Spec.ServiceAccountName = *ba.GetServiceAccountName()
@@ -299,6 +300,22 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	if len(ba.GetArchitecture()) > 0 {
 		pts.Spec.Affinity = &corev1.Affinity{}
 		CustomizeAffinity(pts.Spec.Affinity, ba)
+	}
+}
+
+// CustomizeServiceBinding ...
+func CustomizeServiceBinding(podSpec *corev1.PodSpec, ba common.BaseComponent) {
+	if len(ba.GetStatus().GetResolvedBindings()) > 0 {
+		appContainer := GetAppContainer(podSpec.Containers)
+		for _, binding := range ba.GetStatus().GetResolvedBindings() {
+			bindingSecret := corev1.EnvFromSource{
+				SecretRef: &corev1.SecretEnvSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: binding,
+					}},
+			}
+			appContainer.EnvFrom = append(appContainer.EnvFrom, bindingSecret)
+		}
 	}
 }
 

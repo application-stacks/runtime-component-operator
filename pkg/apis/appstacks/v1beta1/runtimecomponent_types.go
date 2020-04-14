@@ -49,8 +49,9 @@ type RuntimeComponentSpec struct {
 	InitContainers []corev1.Container `json:"initContainers,omitempty"`
 	// +listType=map
 	// +listMapKey=name
-	SidecarContainers []corev1.Container     `json:"sidecarContainers,omitempty"`
-	Route             *RuntimeComponentRoute `json:"route,omitempty"`
+	SidecarContainers []corev1.Container        `json:"sidecarContainers,omitempty"`
+	Route             *RuntimeComponentRoute    `json:"route,omitempty"`
+	Bindings          *RuntimeComponentBindings `json:"bindings,omitempty"`
 }
 
 // RuntimeComponentAutoScaling ...
@@ -139,13 +140,22 @@ type ServiceBindingAuth struct {
 	Password corev1.SecretKeySelector `json:"password,omitempty"`
 }
 
+// RuntimeComponentBindings represents service binding related parameters
+type RuntimeComponentBindings struct {
+	AutoDetect *bool `json:"autoDetect,omitempty"`
+	// +listType=set
+	Externals []string `json:"externals,omitempty"`
+}
+
 // RuntimeComponentStatus defines the observed state of RuntimeComponent
 // +k8s:openapi-gen=true
 type RuntimeComponentStatus struct {
 	// +listType=atomic
 	Conditions       []StatusCondition       `json:"conditions,omitempty"`
 	ConsumedServices common.ConsumedServices `json:"consumedServices,omitempty"`
-	ImageReference   string                  `json:"imageReference,omitempty"`
+	// +listType=set
+	ResolvedBindings []string `json:"resolvedBindings,omitempty"`
+	ImageReference   string   `json:"imageReference,omitempty"`
 }
 
 // StatusCondition ...
@@ -354,6 +364,24 @@ func (cr *RuntimeComponent) GetRoute() common.BaseComponentRoute {
 	return cr.Spec.Route
 }
 
+// GetBindings returns route configuration for RuntimeComponent
+func (cr *RuntimeComponent) GetBindings() common.BaseComponentBindings {
+	if cr.Spec.Bindings == nil {
+		return nil
+	}
+	return cr.Spec.Bindings
+}
+
+// GetResolvedBindings returns a map of all the service names to be consumed by the application
+func (s *RuntimeComponentStatus) GetResolvedBindings() []string {
+	return s.ResolvedBindings
+}
+
+// SetResolvedBindings sets ConsumedServices
+func (s *RuntimeComponentStatus) SetResolvedBindings(rb []string) {
+	s.ResolvedBindings = rb
+}
+
 // GetConsumedServices returns a map of all the service names to be consumed by the application
 func (s *RuntimeComponentStatus) GetConsumedServices() common.ConsumedServices {
 	if s.ConsumedServices == nil {
@@ -402,7 +430,7 @@ func (s *RuntimeComponentStorage) GetMountPath() string {
 	return s.MountPath
 }
 
-// GetVolumeClaimTemplate returns a template representing requested persitent volume
+// GetVolumeClaimTemplate returns a template representing requested persistent volume
 func (s *RuntimeComponentStorage) GetVolumeClaimTemplate() *corev1.PersistentVolumeClaim {
 	return s.VolumeClaimTemplate
 }
@@ -534,7 +562,7 @@ func (r *RuntimeComponentRoute) GetAnnotations() map[string]string {
 	return r.Annotations
 }
 
-// GetCertificate returns certficate spec for route
+// GetCertificate returns certificate spec for route
 func (r *RuntimeComponentRoute) GetCertificate() common.Certificate {
 	if r.Certificate == nil {
 		return nil
@@ -565,6 +593,16 @@ func (r *RuntimeComponentRoute) GetHost() string {
 // GetPath returns path to use for the route
 func (r *RuntimeComponentRoute) GetPath() string {
 	return r.Path
+}
+
+// GetAutoDetect returns a boolean to specify if the operator should auto-detect ServiceBinding CRs with the same name as the RuntimeComponent CR
+func (r *RuntimeComponentBindings) GetAutoDetect() *bool {
+	return r.AutoDetect
+}
+
+// GetExternals returns a list of ServiceBinding CRs created externally in the same namespace as the RuntimeComponent CR
+func (r *RuntimeComponentBindings) GetExternals() []string {
+	return r.Externals
 }
 
 // Initialize the RuntimeComponent instance

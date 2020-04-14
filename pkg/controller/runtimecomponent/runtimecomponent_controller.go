@@ -415,6 +415,10 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 	if err != nil || result != (reconcile.Result{}) {
 		return result, nil
 	}
+	result, err = r.ReconcileBindings(instance)
+	if err != nil || result != (reconcile.Result{}) {
+		return result, err
+	}
 
 	if instance.Spec.ServiceAccountName == nil || *instance.Spec.ServiceAccountName == "" {
 		serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
