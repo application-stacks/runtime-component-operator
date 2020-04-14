@@ -67,3 +67,8 @@ _Deleting the CRD will also delete all `RuntimeComponent` in the cluster_
 - The auto-creation of an application definition by kAppNav is not supported when Knative is enabled.
 - Monitoring feature does not support integration with Knative Service. Prometheus Operator is required to use ServiceMonitor.
 - After the initial deployment of `RuntimeComponent`, any changes to its labels would be applied only when one of the parameters from `spec` is updated.
+
+## Known Issues
+
+- Auto scaling does not work as expected. The changes made to `Deployment` by `HorizontalPodAutoscaler` are reversed. ([#68](https://github.com/application-stacks/runtime-component-operator/issues/68))
+- Operator might crash on startup when optional CRDs API group (eg. serving.knative.dev/v1alpha1) is available, but actual CRD (Knative Service) is not present. ([#66](https://github.com/application-stacks/runtime-component-operator/issues/66))
