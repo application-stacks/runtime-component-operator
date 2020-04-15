@@ -269,10 +269,8 @@ func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (reconcile.
 		externalBindings = ba.GetBindings().GetExternals()
 	}
 
-	// Only if auto-detect flag is explicitly set to false, skip searching for binding secret.
-	// TODO: Ideally we want to make sure an ServiceBinding CR exists with the same name as the `CR`. But until SBO CRD is more stable, we
-	// don't know what GVK to look for. So we assume as long as we find a secret with the CR name, we consider there is a ServiceBinding CR
-	if ba.GetBindings() == nil || ba.GetBindings().GetAutoDetect() == nil || *ba.GetBindings().GetAutoDetect() == true {
+	// Only if auto-detect flag is explicitly set to true, look for a binding secret with the same name as the `CR`.
+	if ba.GetBindings() != nil && ba.GetBindings().GetAutoDetect() {
 		externalBindings = append(externalBindings, mObj.GetName())
 	}
 
