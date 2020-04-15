@@ -126,7 +126,7 @@ type ServiceBindingAuth interface {
 // BaseComponentBindings represents Service Binding information
 type BaseComponentBindings interface {
 	GetAutoDetect() bool
-	GetExternals() []string
+	GetResourceRef() string
 }
 
 // ServiceBindingCategory ...

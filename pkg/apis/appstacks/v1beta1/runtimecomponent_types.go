@@ -142,9 +142,8 @@ type ServiceBindingAuth struct {
 
 // RuntimeComponentBindings represents service binding related parameters
 type RuntimeComponentBindings struct {
-	AutoDetect bool `json:"autoDetect,omitempty"`
-	// +listType=set
-	Externals []string `json:"externals,omitempty"`
+	AutoDetect  bool   `json:"autoDetect,omitempty"`
+	ResourceRef string `json:"resourceRef,omitempty"`
 }
 
 // RuntimeComponentStatus defines the observed state of RuntimeComponent
@@ -600,9 +599,9 @@ func (r *RuntimeComponentBindings) GetAutoDetect() bool {
 	return r.AutoDetect
 }
 
-// GetExternals returns a list of ServiceBinding CRs created externally in the same namespace as the RuntimeComponent CR
-func (r *RuntimeComponentBindings) GetExternals() []string {
-	return r.Externals
+// GetResourceRef returns name of ServiceBinding CRs created manually in the same namespace as the RuntimeComponent CR
+func (r *RuntimeComponentBindings) GetResourceRef() string {
+	return r.ResourceRef
 }
 
 // Initialize the RuntimeComponent instance

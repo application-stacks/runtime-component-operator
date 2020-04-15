@@ -263,30 +263,31 @@ func (r *ReconcilerBase) ReconcileBindings(ba common.BaseComponent) (reconcile.R
 
 func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (reconcile.Result, error) {
 	mObj := ba.(metav1.Object)
-	var externalBindings, resolvedBindings []string
+	var resolvedBindings []string
 
+	var externalBinding string
+	autoDetectMode := false
 	if ba.GetBindings() != nil {
-		externalBindings = ba.GetBindings().GetExternals()
-	}
-
-	// Only if auto-detect flag is explicitly set to true, look for a binding secret with the same name as the `CR`.
-	if ba.GetBindings() != nil && ba.GetBindings().GetAutoDetect() {
-		externalBindings = append(externalBindings, mObj.GetName())
-	}
-
-	for _, binding := range externalBindings {
-		bindingSecret := &corev1.Secret{}
-		if err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: binding, Namespace: mObj.GetNamespace()}, bindingSecret); err != nil {
-			// When auto detecting a binding, there is no need to log errors if we cannot find the binding secret
-			if binding == mObj.GetName() && kerrors.IsNotFound(err) {
-				continue
-			}
-			err = errors.Wrapf(err, "service binding dependency not satisfied: unable to find service binding secret for external binding %q in namespace %q", binding, mObj.GetNamespace())
-			return r.requeueError(ba, err)
+		if ba.GetBindings().GetResourceRef() != "" {
+			externalBinding = ba.GetBindings().GetResourceRef()
+		} else if ba.GetBindings().GetAutoDetect() {
+			// Only if auto-detect flag is explicitly set to true, look for a binding secret with the same name as the `CR`.
+			externalBinding = mObj.GetName()
+			autoDetectMode = true
 		}
+	}
 
-		if !ContainsString(resolvedBindings, binding) {
-			resolvedBindings = append(resolvedBindings, binding)
+	if externalBinding != "" {
+		bindingSecret := &corev1.Secret{}
+		err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: externalBinding, Namespace: mObj.GetNamespace()}, bindingSecret)
+		if err == nil {
+			resolvedBindings = append(resolvedBindings, externalBinding)
+		} else {
+			// Report error unless we got a "Not Found" error and we are in auto-detect mode (ie resourceRef is empty and autoDetect is true)
+			if !autoDetectMode || !kerrors.IsNotFound(err) {
+				err = errors.Wrapf(err, "service binding dependency not satisfied: unable to find service binding secret for external binding %q in namespace %q", externalBinding, mObj.GetNamespace())
+				return r.requeueError(ba, err)
+			}
 		}
 	}
 
