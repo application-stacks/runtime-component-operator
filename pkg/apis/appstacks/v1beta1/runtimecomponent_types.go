@@ -142,7 +142,7 @@ type ServiceBindingAuth struct {
 
 // RuntimeComponentBindings represents service binding related parameters
 type RuntimeComponentBindings struct {
-	AutoDetect  bool   `json:"autoDetect,omitempty"`
+	AutoDetect  *bool   `json:"autoDetect,omitempty"`
 	ResourceRef string `json:"resourceRef,omitempty"`
 }
 
@@ -595,7 +595,7 @@ func (r *RuntimeComponentRoute) GetPath() string {
 }
 
 // GetAutoDetect returns a boolean to specify if the operator should auto-detect ServiceBinding CRs with the same name as the RuntimeComponent CR
-func (r *RuntimeComponentBindings) GetAutoDetect() bool {
+func (r *RuntimeComponentBindings) GetAutoDetect() *bool {
 	return r.AutoDetect
 }
 

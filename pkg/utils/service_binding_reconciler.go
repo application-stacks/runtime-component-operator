@@ -12,7 +12,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
@@ -265,27 +267,40 @@ func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (reconcile.
 	mObj := ba.(metav1.Object)
 	var resolvedBindings []string
 
-	var externalBinding string
-	autoDetectMode := false
-	if ba.GetBindings() != nil {
-		if ba.GetBindings().GetResourceRef() != "" {
-			externalBinding = ba.GetBindings().GetResourceRef()
-		} else if ba.GetBindings().GetAutoDetect() {
-			// Only if auto-detect flag is explicitly set to true, look for a binding secret with the same name as the `CR`.
-			externalBinding = mObj.GetName()
-			autoDetectMode = true
-		}
-	}
-
-	if externalBinding != "" {
+	if ba.GetBindings() != nil && ba.GetBindings().GetResourceRef() != "" {
+		bindingName := ba.GetBindings().GetResourceRef()
+		key := types.NamespacedName{Name: bindingName, Namespace: mObj.GetNamespace()}
 		bindingSecret := &corev1.Secret{}
-		err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: externalBinding, Namespace: mObj.GetNamespace()}, bindingSecret)
+		err := r.GetClient().Get(context.TODO(), key, bindingSecret)
 		if err == nil {
-			resolvedBindings = append(resolvedBindings, externalBinding)
+			resolvedBindings = append(resolvedBindings, bindingName)
 		} else {
-			// Report error unless we got a "Not Found" error and we are in auto-detect mode (ie resourceRef is empty and autoDetect is true)
-			if !autoDetectMode || !kerrors.IsNotFound(err) {
-				err = errors.Wrapf(err, "service binding dependency not satisfied: unable to find service binding secret for external binding %q in namespace %q", externalBinding, mObj.GetNamespace())
+			err = errors.Wrapf(err, "service binding dependency not satisfied: unable to find service binding secret for external binding %q in namespace %q", bindingName, mObj.GetNamespace())
+			return r.requeueError(ba, err)
+		}
+	} else if ba.GetBindings() == nil || ba.GetBindings().GetAutoDetect() == nil || *ba.GetBindings().GetAutoDetect() {
+		bindingName := mObj.GetName()
+		key := types.NamespacedName{Name: bindingName, Namespace: mObj.GetNamespace()}
+
+		for _, gvk := range getServiceBindingGVK() {
+			// Using a unstructured object to find ServiceBinding CR since GVK might change
+			bindingObj := &unstructured.Unstructured{}
+			bindingObj.SetGroupVersionKind(gvk)
+			err := r.client.Get(context.Background(), key, bindingObj)
+			if err != nil {
+				if !kerrors.IsNotFound(err) {
+					log.Error(errors.Wrapf(err, "failed to find a service binding resource during auto-detect for GVK %q", gvk), "failed to get ServiceBinding CR")
+				}
+				continue
+			}
+
+			bindingSecret := &corev1.Secret{}
+			err = r.GetClient().Get(context.TODO(), key, bindingSecret)
+			if err == nil {
+				resolvedBindings = append(resolvedBindings, bindingName)
+				break
+			} else if err != nil && kerrors.IsNotFound(err) {
+				err = errors.Wrapf(err, "service binding dependency not satisfied: unable to find service binding secret for external binding %q in namespace %q", bindingName, mObj.GetNamespace())
 				return r.requeueError(ba, err)
 			}
 		}
@@ -335,4 +350,22 @@ func equals(sl1, sl2 []string) bool {
 		}
 	}
 	return true
+}
+
+func getServiceBindingGVK() []schema.GroupVersionKind {
+	gvkStringList := strings.Split(common.Config[common.OpConfigSvcBindingGVKs], ",")
+	for i := range gvkStringList {
+		gvkStringList[i] = strings.TrimSpace(gvkStringList[i])
+	}
+
+	gvkList := []schema.GroupVersionKind{}
+	for i := range gvkStringList {
+		gvk, _ := schema.ParseKindArg(gvkStringList[i])
+		if gvk == nil {
+			log.Error(errors.Errorf("failed to parse %q to a valid GroupVersionKind", gvkStringList[i]), "Invalid GroupVersionKind from operator ConfigMap")
+			continue
+		}
+		gvkList = append(gvkList, *gvk)
+	}
+	return gvkList
 }

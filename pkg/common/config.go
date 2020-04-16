@@ -13,6 +13,10 @@ const (
 
 	// OpConfigPropUseClusterIssuer whether to use ClusterIssuer for cert-manager certificate
 	OpConfigPropUseClusterIssuer = "useClusterIssuer"
+
+	// OpConfigSvcBindingGVKs a comma-seperated list of GroupVersionKind values in "<Kind>.<version>.<group>" format.
+	// e.g. "CronTab.v1.stable.example.com"
+	OpConfigSvcBindingGVKs = "serviceBinding.groupVersionKinds"
 )
 
 // Config stores operator configuration
@@ -33,5 +37,6 @@ func DefaultOpConfig() OpConfig {
 	cfg := OpConfig{}
 	cfg[OpConfigPropDefaultIssuer] = "self-signed"
 	cfg[OpConfigPropUseClusterIssuer] = "true"
+	cfg[OpConfigSvcBindingGVKs] = "ServiceBindingRequest.v1alpha1.apps.openshift.io"
 	return cfg
 }
