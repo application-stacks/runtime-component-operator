@@ -17,6 +17,7 @@ import (
 var (
 	ifNotPresentMessage = "Container image \"navidsh/demo-day\" already present on machine"
 	alwaysMessage       = "pulling image \"navidsh/demo-day\""
+	neverMessage        = "Container image \"navidsh/demo-day-fake\" is not present with pull policy of Never"
 )
 
 // RuntimePullPolicyTest checks that the configured pull policy is applied to deployment
@@ -44,6 +45,10 @@ func RuntimePullPolicyTest(t *testing.T) {
 	}
 
 	if err = testPullPolicyIfNotPresent(t, f, namespace, ctx); err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	if err = testPullPolicyNever(t, f, namespace, ctx); err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 }
@@ -120,4 +125,28 @@ func searchEventMessages(t *testing.T, f *framework.Framework, key string, names
 
 	return errors.New("The pull policy was not correctly set")
 
+}
+
+func testPullPolicyNever(t *testing.T, f *framework.Framework, namespace string, ctx *framework.TestCtx) error {
+	replicas := int32(1)
+	policy := corev1.PullNever
+
+	runtimeComponent := util.MakeBasicRuntimeComponent(t, f, "example-runtime-pullpolicy-never", namespace, replicas)
+	runtimeComponent.Spec.PullPolicy = &policy
+	runtimeComponent.Spec.ApplicationImage = "navidsh/demo-day-fake"
+
+	// use TestCtx's create helper to create the object and add a cleanup function for the new object
+	err := f.Client.Create(goctx.TODO(), runtimeComponent, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	for i := 0; i < 5; i++ {
+		time.Sleep(time.Millisecond * 1000)
+	}
+
+	timestamp := time.Now().UTC()
+	t.Logf("%s - Deployment created, verifying pull policy...", timestamp)
+
+	return searchEventMessages(t, f, neverMessage, namespace)
 }
