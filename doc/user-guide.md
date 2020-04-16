@@ -63,9 +63,6 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`. |
 | `service.portName` | The name for the port exposed by the container. |
 | `service.ports` | An array consisting of service ports. |
-| `service.ports[].additionalPort` | Additional port exposed by the container. |
-| `service.ports[].additionalTargetPort` | Additional port that the operator assigns to containers inside pods. |
-| `service.ports[].additionalPortName` | The name for the additional port exposed by the container. |
 | `service.type` | The Kubernetes [Service Type](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types). |
 | `service.annotations` | Annotations to be added to the service. |
 | `service.certificate` | A YAML object representing a [Certificate](https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec). |

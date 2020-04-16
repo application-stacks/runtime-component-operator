@@ -184,17 +184,17 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 			svc.Spec.Ports = svc.Spec.Ports[:len(svc.Spec.Ports)-1]
 			numOfCurrentPorts--
 		}
-		svc.Spec.Ports[i+1].Port = ba.GetService().GetPorts()[i].GetAdditionalPort()
-		svc.Spec.Ports[i+1].TargetPort = intstr.FromInt(int(ba.GetService().GetPorts()[i].GetAdditionalPort()))
+		svc.Spec.Ports[i+1].Port = ba.GetService().GetPorts()[i].Port
+		svc.Spec.Ports[i+1].TargetPort = intstr.FromInt(int(ba.GetService().GetPorts()[i].Port))
 
-		if ba.GetService().GetPorts()[i].GetAdditionalPortName() != "" {
-			svc.Spec.Ports[i+1].Name = ba.GetService().GetPorts()[i].GetAdditionalPortName()
+		if ba.GetService().GetPorts()[i].Name != "" {
+			svc.Spec.Ports[i+1].Name = ba.GetService().GetPorts()[i].Name
 		} else {
-			svc.Spec.Ports[i+1].Name = strconv.Itoa(int(ba.GetService().GetPorts()[i].GetAdditionalPort())) + "-tcp"
+			svc.Spec.Ports[i+1].Name = strconv.Itoa(int(ba.GetService().GetPorts()[i].Port)) + "-tcp"
 		}
 
-		if ba.GetService().GetPorts()[i].GetAdditionalTargetPort() != nil {
-			svc.Spec.Ports[i].TargetPort = intstr.FromInt(int(*ba.GetService().GetPorts()[i].GetAdditionalTargetPort()))
+		if ba.GetService().GetPorts()[i].TargetPort.String() != "" {
+			svc.Spec.Ports[i].TargetPort = intstr.FromInt(ba.GetService().GetPorts()[i].TargetPort.IntValue())
 		}
 	}
 	if len(ba.GetService().GetPorts()) == 0 {
@@ -282,15 +282,15 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 			appContainer.Ports = appContainer.Ports[:len(appContainer.Ports)-1]
 			numOfCurrentPorts--
 		}
-		if ba.GetService().GetPorts()[i].GetAdditionalTargetPort() != nil {
-			appContainer.Ports[i+1].ContainerPort = *ba.GetService().GetPorts()[i].GetAdditionalTargetPort()
+		if ba.GetService().GetPorts()[i].TargetPort.String() != "" {
+			appContainer.Ports[i+1].ContainerPort = int32(ba.GetService().GetPorts()[i].TargetPort.IntValue())
 		} else {
-			appContainer.Ports[i+1].ContainerPort = ba.GetService().GetPorts()[i].GetAdditionalPort()
+			appContainer.Ports[i+1].ContainerPort = ba.GetService().GetPorts()[i].Port
 		}
-		if ba.GetService().GetPorts()[i].GetAdditionalPortName() != "" {
-			appContainer.Ports[i+1].Name = ba.GetService().GetPorts()[i].GetAdditionalPortName()
+		if ba.GetService().GetPorts()[i].Name != "" {
+			appContainer.Ports[i+1].Name = ba.GetService().GetPorts()[i].Name
 		} else {
-			appContainer.Ports[i+1].Name = strconv.Itoa(int(ba.GetService().GetPorts()[i].GetAdditionalPort())) + "-tcp"
+			appContainer.Ports[i+1].Name = strconv.Itoa(int(ba.GetService().GetPorts()[i].Port)) + "-tcp"
 		}
 	}
 	if numOfAdditionalPorts == 0 {

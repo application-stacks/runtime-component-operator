@@ -19,7 +19,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentStatus":      schema_pkg_apis_appstacks_v1beta1_RuntimeComponentStatus(ref),
 		"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingConsumes":      schema_pkg_apis_appstacks_v1beta1_ServiceBindingConsumes(ref),
 		"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingProvides":      schema_pkg_apis_appstacks_v1beta1_ServiceBindingProvides(ref),
-		"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServicePorts":                schema_pkg_apis_appstacks_v1beta1_ServicePorts(ref),
 		"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.StatusCondition":             schema_pkg_apis_appstacks_v1beta1_StatusCondition(ref),
 	}
 }
@@ -200,7 +199,7 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentService(ref common.Refere
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServicePorts"),
+										Ref: ref("k8s.io/api/core/v1.ServicePort"),
 									},
 								},
 							},
@@ -257,7 +256,7 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentService(ref common.Refere
 			},
 		},
 		Dependencies: []string{
-			"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.Certificate", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingConsumes", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingProvides", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServicePorts"},
+			"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.Certificate", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingConsumes", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingProvides", "k8s.io/api/core/v1.ServicePort"},
 	}
 }
 
@@ -634,37 +633,6 @@ func schema_pkg_apis_appstacks_v1beta1_ServiceBindingProvides(ref common.Referen
 		},
 		Dependencies: []string{
 			"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingAuth"},
-	}
-}
-
-func schema_pkg_apis_appstacks_v1beta1_ServicePorts(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "ServicePorts ...",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"additionalPort": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
-					"additionalTargetPort": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
-					"additionalPortName": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
 	}
 }
 
