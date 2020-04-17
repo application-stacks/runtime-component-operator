@@ -2,7 +2,7 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
   annotations:
-    alm-examples: '[{"apiVersion":"app.stacks/v1beta1","kind":"RuntimeComponent","metadata":{"name":"example-runtime-component"},"spec":{"applicationImage":"registry.access.redhat.com/ubi8/nodejs-12:1-27"}}]'
+    alm-examples: '[{"apiVersion":"app.stacks/v1beta1","kind":"RuntimeComponent","metadata":{"name":"example-runtime-component"},"spec":{"applicationImage":"registry.connect.redhat.com/ibm/open-liberty-samples:springPetClinic"}}]'
     capabilities: Auto Pilot
     categories: Application Runtime
     certified: 'true'
