@@ -88,6 +88,15 @@ spec:
                   format: int32
                   type: integer
               type: object
+            bindings:
+              description: RuntimeComponentBindings represents service binding related
+                parameters
+              properties:
+                autoDetect:
+                  type: boolean
+                resourceRef:
+                  type: string
+              type: object
             createAppDefinition:
               type: boolean
             createKnativeService:
@@ -4709,6 +4718,10 @@ spec:
               type: object
             imageReference:
               type: string
+            resolvedBindings:
+              items:
+                type: string
+              type: array
           type: object
   version: v1beta1
   versions:
