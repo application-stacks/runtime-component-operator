@@ -440,11 +440,7 @@ func (s *RuntimeComponentService) GetType() *corev1.ServiceType {
 
 // GetPorts returns a list of service ports
 func (s *RuntimeComponentService) GetPorts() []corev1.ServicePort {
-	ports := make([]corev1.ServicePort, len(s.Ports))
-	for i := range s.Ports {
-		ports[i] = s.Ports[i]
-	}
-	return ports
+	return s.Ports
 }
 
 // GetProvides returns service provider configuration
