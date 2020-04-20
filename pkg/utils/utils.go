@@ -152,18 +152,17 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	svc.Labels = ba.GetLabels()
 	svc.Annotations = MergeMaps(svc.Annotations, ba.GetAnnotations())
 
-	var appSvc = corev1.ServicePort{}
 	if len(svc.Spec.Ports) == 0 {
-		svc.Spec.Ports = append(svc.Spec.Ports, appSvc)
+		svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{})
 	}
 
-	appSvc.Port = ba.GetService().GetPort()
-	appSvc.TargetPort = intstr.FromInt(int(ba.GetService().GetPort()))
+	svc.Spec.Ports[0].Port = ba.GetService().GetPort()
+	svc.Spec.Ports[0].TargetPort = intstr.FromInt(int(ba.GetService().GetPort()))
 
 	if ba.GetService().GetPortName() != "" {
-		appSvc.Name = ba.GetService().GetPortName()
+		svc.Spec.Ports[0].Name = ba.GetService().GetPortName()
 	} else {
-		appSvc.Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+		svc.Spec.Ports[0].Name = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
 	}
 	svc.Spec.Type = *ba.GetService().GetType()
 	svc.Spec.Selector = map[string]string{
@@ -171,11 +170,49 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	}
 
 	if ba.GetService().GetTargetPort() != nil {
-		appSvc.TargetPort = intstr.FromInt(int(*ba.GetService().GetTargetPort()))
+		svc.Spec.Ports[0].TargetPort = intstr.FromInt(int(*ba.GetService().GetTargetPort()))
 	}
 
-	svcPorts := GetServicePorts(ba.GetService().GetPorts(), *ba.GetService().GetType())
-	svc.Spec.Ports = append([]corev1.ServicePort{appSvc}, svcPorts...)
+	numOfAdditionalPorts := len(ba.GetService().GetPorts())
+	numOfCurrentPorts := len(svc.Spec.Ports) - 1
+	for i := 0; i < numOfAdditionalPorts; i++ {
+		for numOfCurrentPorts < numOfAdditionalPorts {
+			svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{})
+			numOfCurrentPorts++
+		}
+		for numOfCurrentPorts > numOfAdditionalPorts && len(svc.Spec.Ports) != 0 {
+			svc.Spec.Ports = svc.Spec.Ports[:len(svc.Spec.Ports)-1]
+			numOfCurrentPorts--
+		}
+		svc.Spec.Ports[i+1].Port = ba.GetService().GetPorts()[i].Port
+		svc.Spec.Ports[i+1].TargetPort = intstr.FromInt(int(ba.GetService().GetPorts()[i].Port))
+
+		if ba.GetService().GetPorts()[i].Name != "" {
+			svc.Spec.Ports[i+1].Name = ba.GetService().GetPorts()[i].Name
+		} else {
+			svc.Spec.Ports[i+1].Name = strconv.Itoa(int(ba.GetService().GetPorts()[i].Port)) + "-tcp"
+		}
+
+		if ba.GetService().GetPorts()[i].TargetPort.String() != "" {
+			svc.Spec.Ports[i+1].TargetPort = intstr.FromInt(ba.GetService().GetPorts()[i].TargetPort.IntValue())
+		}
+
+		if *ba.GetService().GetType() == corev1.ServiceTypeNodePort && 30000 < ba.GetService().GetPorts()[i].NodePort && 32767 > ba.GetService().GetPorts()[i].NodePort {
+			svc.Spec.Ports[i+1].NodePort = ba.GetService().GetPorts()[i].NodePort
+		}
+
+		if *ba.GetService().GetType() == corev1.ServiceTypeClusterIP {
+			svc.Spec.Ports[i+1].NodePort = 0
+		}
+
+	}
+	if len(ba.GetService().GetPorts()) == 0 {
+		for numOfCurrentPorts > 0 {
+			svc.Spec.Ports = svc.Spec.Ports[:len(svc.Spec.Ports)-1]
+			numOfCurrentPorts--
+		}
+	}
+
 }
 
 // CustomizeServiceBindingSecret ...
@@ -827,17 +864,4 @@ func GetAppContainer(containerList []corev1.Container) *corev1.Container {
 		}
 	}
 	return &containerList[0]
-}
-
-// GetServicePorts returns a list of service ports
-func GetServicePorts(portList []corev1.ServicePort, svcType corev1.ServiceType) []corev1.ServicePort {
-	for i := 0; i < len(portList); i++ {
-		if portList[i].Name == "" {
-			portList[i].Name = strconv.Itoa(int(portList[i].Port)) + "-tcp"
-		}
-		if svcType == corev1.ServiceTypeClusterIP {
-			portList[i].NodePort = 0
-		}
-	}
-	return portList
 }
