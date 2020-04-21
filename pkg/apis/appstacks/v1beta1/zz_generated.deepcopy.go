@@ -255,6 +255,11 @@ func (in *RuntimeComponentService) DeepCopyInto(out *RuntimeComponentService) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.NodePort != nil {
+		in, out := &in.NodePort, &out.NodePort
+		*out = new(int32)
+		**out = **in
+	}
 	if in.Annotations != nil {
 		in, out := &in.Annotations, &out.Annotations
 		*out = make(map[string]string, len(*in))

@@ -187,6 +187,12 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentService(ref common.Refere
 							Format: "int32",
 						},
 					},
+					"nodePort": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
 					"portName": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},

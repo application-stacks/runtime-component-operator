@@ -29,6 +29,7 @@ var (
 	createKNS          = true
 	targetCPUPer int32 = 30
 	targetPort int32   = 3333
+	nodePort	int32  = 3011
 	autoscaling        = &appstacksv1beta1.RuntimeComponentAutoScaling{
 		TargetCPUUtilizationPercentage: &targetCPUPer,
 		MinReplicas:                    &replicas,
@@ -108,18 +109,44 @@ func TestCustomizeService(t *testing.T) {
 	verifyTests(testCS, t)
 
 	// Verify behaviour of optional target port functionality
+	verifyTests(optionalTargetPortFunctionalityTests(), t)
+
+	// verify optional nodePort functionality in NodePort service
+	verifyTests(optionalNodePortFunctionalityTests(), t)
+}
+
+func optionalTargetPortFunctionalityTests() []Test {
+	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service}
 	spec.Service.TargetPort = &targetPort
-	svc, runtime = &corev1.Service{}, createRuntimeComponent(name, namespace, spec)
+	svc, runtime := &corev1.Service{}, createRuntimeComponent(name, namespace, spec)
 
 	CustomizeService(svc, runtime)
-	testCS = []Test{
+	testCS := []Test{
 		{"Service number of exposed ports", 1, len(svc.Spec.Ports)},
 		{"Service first exposed port", runtime.Spec.Service.Port, svc.Spec.Ports[0].Port},
 		{"Service first exposed target port", intstr.FromInt(int(*runtime.Spec.Service.TargetPort)), svc.Spec.Ports[0].TargetPort},
 		{"Service type", *runtime.Spec.Service.Type, svc.Spec.Type},
 		{"Service selector", name, svc.Spec.Selector["app.kubernetes.io/instance"]},
 	}
-	verifyTests(testCS, t)
+	return testCS
+}
+
+func optionalNodePortFunctionalityTests() []Test {
+	serviceType := corev1.ServiceTypeNodePort
+	service := &appstacksv1beta1.RuntimeComponentService{Type: &serviceType, Port: 8443, NodePort: &nodePort}
+	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service}
+	svc, runtime := &corev1.Service{}, createRuntimeComponent(name, namespace, spec)
+
+	CustomizeService(svc, runtime)
+	testCS := []Test{
+		{"Service number of exposed ports", 1, len(svc.Spec.Ports)},
+		{"Sercice first exposed port", runtime.Spec.Service.Port, svc.Spec.Ports[0].Port},
+		{"Service first exposed target port", intstr.FromInt(int(runtime.Spec.Service.Port)), svc.Spec.Ports[0].TargetPort},
+		{"Service type", *runtime.Spec.Service.Type, svc.Spec.Type},
+		{"Service selector", name, svc.Spec.Selector["app.kubernetes.io/instance"]},
+		{"Service nodePort port", *runtime.Spec.Service.NodePort, svc.Spec.Ports[0].NodePort},
+	}
+	return testCS
 }
 
 func TestCustomizePodSpec(t *testing.T) {
