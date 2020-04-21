@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+
 	"github.com/application-stacks/runtime-component-operator/pkg/common"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
@@ -655,6 +657,25 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		}
 	} else {
 		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported", routev1.SchemeGroupVersion.String()))
+		if instance.Spec.Expose != nil && *instance.Spec.Expose {
+			ing := &networkingv1beta1.Ingress{ObjectMeta: defaultMeta}
+			err = r.CreateOrUpdate(ing, instance, func() error {
+				appstacksutils.CustomizeIngress(ing, instance)
+				return nil
+			})
+			if err != nil {
+				reqLogger.Error(err, "Failed to reconcile Ingress")
+				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+			}
+		} else {
+			ing := &networkingv1beta1.Ingress{ObjectMeta: defaultMeta}
+			err = r.DeleteResource(ing)
+			if err != nil {
+				reqLogger.Error(err, "Failed to delete Ingress")
+				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+			}
+		}
+
 	}
 
 	if ok, err := r.IsGroupVersionSupported(prometheusv1.SchemeGroupVersion.String(), "ServiceMonitor"); err != nil {
