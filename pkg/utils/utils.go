@@ -187,6 +187,46 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	if ba.GetService().GetTargetPort() != nil {
 		svc.Spec.Ports[0].TargetPort = intstr.FromInt(int(*ba.GetService().GetTargetPort()))
 	}
+
+	numOfAdditionalPorts := len(ba.GetService().GetPorts())
+	numOfCurrentPorts := len(svc.Spec.Ports) - 1
+	for i := 0; i < numOfAdditionalPorts; i++ {
+		for numOfCurrentPorts < numOfAdditionalPorts {
+			svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{})
+			numOfCurrentPorts++
+		}
+		for numOfCurrentPorts > numOfAdditionalPorts && len(svc.Spec.Ports) != 0 {
+			svc.Spec.Ports = svc.Spec.Ports[:len(svc.Spec.Ports)-1]
+			numOfCurrentPorts--
+		}
+		svc.Spec.Ports[i+1].Port = ba.GetService().GetPorts()[i].Port
+		svc.Spec.Ports[i+1].TargetPort = intstr.FromInt(int(ba.GetService().GetPorts()[i].Port))
+
+		if ba.GetService().GetPorts()[i].Name != "" {
+			svc.Spec.Ports[i+1].Name = ba.GetService().GetPorts()[i].Name
+		} else {
+			svc.Spec.Ports[i+1].Name = strconv.Itoa(int(ba.GetService().GetPorts()[i].Port)) + "-tcp"
+		}
+
+		if ba.GetService().GetPorts()[i].TargetPort.String() != "" {
+			svc.Spec.Ports[i+1].TargetPort = intstr.FromInt(ba.GetService().GetPorts()[i].TargetPort.IntValue())
+		}
+
+		if *ba.GetService().GetType() == corev1.ServiceTypeNodePort && 30000 < ba.GetService().GetPorts()[i].NodePort && 32767 > ba.GetService().GetPorts()[i].NodePort {
+			svc.Spec.Ports[i+1].NodePort = ba.GetService().GetPorts()[i].NodePort
+		}
+
+		if *ba.GetService().GetType() == corev1.ServiceTypeClusterIP {
+			svc.Spec.Ports[i+1].NodePort = 0
+		}
+
+	}
+	if len(ba.GetService().GetPorts()) == 0 {
+		for numOfCurrentPorts > 0 {
+			svc.Spec.Ports = svc.Spec.Ports[:len(svc.Spec.Ports)-1]
+			numOfCurrentPorts--
+		}
+	}
 }
 
 // CustomizeServiceBindingSecret ...

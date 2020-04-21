@@ -62,6 +62,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `service.port` | The port exposed by the container. |
 | `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`. |
 | `service.portName` | The name for the port exposed by the container. |
+| `service.ports` | An array consisting of service ports. |
 | `service.type` | The Kubernetes [Service Type](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types). |
 | `service.nodePort` | Node proxies this port into your service. |
 | `service.annotations` | Annotations to be added to the service. |
