@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -328,6 +329,15 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		log.Info("Failed to find runtime-component-operator config map")
 	} else {
 		common.Config.LoadFromConfigMap(configMap)
+	}
+
+	_, err = controllerutil.CreateOrUpdate(context.TODO(), r.GetClient(), configMap, func() error {
+		configMap.Data = common.Config
+		return nil
+	})
+
+	if err != nil {
+		log.Info("Failed to update runtime-component-operator config map")
 	}
 
 	// Fetch the RuntimeComponent instance

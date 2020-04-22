@@ -24,9 +24,10 @@ var Config = OpConfig{}
 
 // LoadFromConfigMap creates a config out of kubernetes config map
 func (oc OpConfig) LoadFromConfigMap(cm *corev1.ConfigMap) {
-	for k := range oc {
-		delete(oc, k)
+	for k, v := range DefaultOpConfig() {
+		oc[k] = v
 	}
+
 	for k, v := range cm.Data {
 		oc[k] = v
 	}
