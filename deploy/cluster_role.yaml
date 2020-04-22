@@ -90,3 +90,10 @@ rules:
   - servicebindingrequests
   verbs:
   - '*'
+- apiGroups:
+  - networking.k8s.io
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - '*'

@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+
 	"github.com/application-stacks/runtime-component-operator/pkg/common"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
@@ -855,4 +857,55 @@ func GetAppContainer(containerList []corev1.Container) *corev1.Container {
 		}
 	}
 	return &containerList[0]
+}
+
+// CustomizeIngress customizes ingress resource
+func CustomizeIngress(ing *networkingv1beta1.Ingress, ba common.BaseComponent) {
+	obj := ba.(metav1.Object)
+	ing.Labels = ba.GetLabels()
+	ing.Annotations = MergeMaps(ing.Annotations, ba.GetAnnotations(), ba.GetRoute().GetAnnotations())
+	servicePort := strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	rt := ba.GetRoute()
+	if ba.GetService().GetPortName() != "" {
+		servicePort = ba.GetService().GetPortName()
+	}
+	ing.Spec.Rules = []networkingv1beta1.IngressRule{
+		{
+			Host: rt.GetHost(),
+			IngressRuleValue: networkingv1beta1.IngressRuleValue{
+				HTTP: &networkingv1beta1.HTTPIngressRuleValue{
+					Paths: []networkingv1beta1.HTTPIngressPath{
+						{
+							Path: rt.GetPath(),
+							Backend: networkingv1beta1.IngressBackend{
+								ServiceName: obj.GetName(),
+								ServicePort: intstr.IntOrString{Type: intstr.String, StrVal: servicePort},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	tlsSecretName := ""
+	if rt.GetCertificate() != nil {
+		tlsSecretName = obj.GetName() + "-route-tls"
+		if rt.GetCertificate().GetSpec().SecretName != "" {
+			tlsSecretName = obj.GetName() + rt.GetCertificate().GetSpec().SecretName
+		}
+	}
+	if rt.GetCertificateSecretRef() != nil && *rt.GetCertificateSecretRef() != "" {
+		tlsSecretName = *rt.GetCertificateSecretRef()
+	}
+	if tlsSecretName != "" {
+		ing.Spec.TLS = []networkingv1beta1.IngressTLS{
+			{
+				Hosts:      []string{rt.GetHost()},
+				SecretName: tlsSecretName,
+			},
+		}
+	} else {
+		ing.Spec.TLS = nil
+	}
 }
