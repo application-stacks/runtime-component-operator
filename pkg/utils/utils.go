@@ -212,14 +212,13 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 			svc.Spec.Ports[i+1].TargetPort = intstr.FromInt(ba.GetService().GetPorts()[i].TargetPort.IntValue())
 		}
 
-		if *ba.GetService().GetType() == corev1.ServiceTypeNodePort && 30000 < ba.GetService().GetPorts()[i].NodePort && 32767 > ba.GetService().GetPorts()[i].NodePort {
+		if *ba.GetService().GetType() == corev1.ServiceTypeNodePort && ba.GetService().GetPorts()[i].NodePort != 0 {
 			svc.Spec.Ports[i+1].NodePort = ba.GetService().GetPorts()[i].NodePort
 		}
 
 		if *ba.GetService().GetType() == corev1.ServiceTypeClusterIP {
 			svc.Spec.Ports[i+1].NodePort = 0
 		}
-
 	}
 	if len(ba.GetService().GetPorts()) == 0 {
 		for numOfCurrentPorts > 0 {
@@ -651,7 +650,7 @@ func requiredFieldMessage(fieldPaths ...string) string {
 }
 
 // CustomizeServiceMonitor ...
-func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComponent, svc *corev1.Service) {
+func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	sm.Labels = ba.GetLabels()
 	sm.Annotations = MergeMaps(sm.Annotations, ba.GetAnnotations())
@@ -665,26 +664,26 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComp
 	if len(sm.Spec.Endpoints) == 0 {
 		sm.Spec.Endpoints = append(sm.Spec.Endpoints, prometheusv1.Endpoint{})
 	}
-	if ba.GetService().GetPortName() != "" {
-		sm.Spec.Endpoints[0].Port = ba.GetService().GetPortName()
-	} else {
-		sm.Spec.Endpoints[0].Port = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
-	}
+	sm.Spec.Endpoints[0].Port = ""
+	sm.Spec.Endpoints[0].TargetPort = nil
 	if len(ba.GetMonitoring().GetEndpoints()) > 0 {
 		port := ba.GetMonitoring().GetEndpoints()[0].Port
 		targetPort := ba.GetMonitoring().GetEndpoints()[0].TargetPort
-		if VerifySvcPorts(port, targetPort, svc.Spec.Ports) {
-			if port != "" && targetPort != nil && port == targetPort.StrVal {
-				sm.Spec.Endpoints[0].Port = port
-				sm.Spec.Endpoints[0].TargetPort = targetPort
-			} else if port != "" && targetPort == nil {
-				sm.Spec.Endpoints[0].Port = port
-			} else if targetPort != nil && (targetPort.StrVal != "" || targetPort.IntVal != 0) {
-				sm.Spec.Endpoints[0].TargetPort = targetPort
-				sm.Spec.Endpoints[0].Port = targetPort.StrVal
-			}
-		} else {
+		if port != "" {
+			sm.Spec.Endpoints[0].Port = port
+		}
+		if targetPort != nil {
+			sm.Spec.Endpoints[0].TargetPort = targetPort
+		}
+		if port != "" && targetPort != nil {
 			sm.Spec.Endpoints[0].TargetPort = nil
+		}
+		if port == "" && targetPort == nil {
+			if ba.GetService().GetPortName() != "" {
+				sm.Spec.Endpoints[0].Port = ba.GetService().GetPortName()
+			} else {
+				sm.Spec.Endpoints[0].Port = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+			}
 		}
 	}
 	if len(ba.GetMonitoring().GetLabels()) > 0 {
@@ -965,20 +964,4 @@ func CustomizeIngress(ing *networkingv1beta1.Ingress, ba common.BaseComponent) {
 	} else {
 		ing.Spec.TLS = nil
 	}
-}
-
-// VerifySvcPorts checks the user gave a valid service port
-func VerifySvcPorts(port string, target *intstr.IntOrString, ports []corev1.ServicePort) bool {
-	for _, i := range ports {
-		if port == i.Name && port != "" && target != nil && target.StrVal == i.Name {
-			return true
-		} else if port == i.Name && port != "" && target == nil {
-			return true
-		} else if target != nil && target.StrVal == i.Name && port == "" {
-			return true
-		} else if target != nil && target.IntVal == i.TargetPort.IntVal && port == "" {
-			return true
-		}
-	}
-	return false
 }
