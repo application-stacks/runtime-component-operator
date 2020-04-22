@@ -327,6 +327,9 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 	configMap, err := r.GetOpConfigMap("runtime-component-operator", ns)
 	if err != nil {
 		log.Info("Failed to find runtime-component-operator config map")
+		common.Config = common.DefaultOpConfig()
+		configMap = &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "runtime-component-operator", Namespace: ns}}
+		configMap.Data = common.Config
 	} else {
 		common.Config.LoadFromConfigMap(configMap)
 	}
