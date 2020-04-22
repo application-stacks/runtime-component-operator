@@ -296,7 +296,6 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	pts.Spec.Containers = append([]corev1.Container{appContainer}, ba.GetSidecarContainers()...)
 
 	CustomizeConsumedServices(&pts.Spec, ba)
-	CustomizeServiceBinding(&pts.Spec, ba)
 
 	if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
 		pts.Spec.ServiceAccountName = *ba.GetServiceAccountName()
@@ -313,18 +312,22 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 }
 
 // CustomizeServiceBinding ...
-func CustomizeServiceBinding(podSpec *corev1.PodSpec, ba common.BaseComponent) {
-	if len(ba.GetStatus().GetResolvedBindings()) > 0 {
+func CustomizeServiceBinding(secret *corev1.Secret, podSpec *corev1.PodSpec, ba common.BaseComponent) {
+	if len(ba.GetStatus().GetResolvedBindings()) != 0 {
 		appContainer := GetAppContainer(podSpec.Containers)
-		for _, binding := range ba.GetStatus().GetResolvedBindings() {
-			bindingSecret := corev1.EnvFromSource{
-				SecretRef: &corev1.SecretEnvSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: binding,
-					}},
-			}
-			appContainer.EnvFrom = append(appContainer.EnvFrom, bindingSecret)
+		binding := ba.GetStatus().GetResolvedBindings()[0]
+		bindingSecret := corev1.EnvFromSource{
+			SecretRef: &corev1.SecretEnvSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: binding,
+				}},
 		}
+		appContainer.EnvFrom = append(appContainer.EnvFrom, bindingSecret)
+
+		secretRev := corev1.EnvVar{
+			Name:  "RESOLVED_BINDING_SECRET_REV",
+			Value: secret.ResourceVersion}
+		appContainer.Env = append(appContainer.Env, secretRev)
 	}
 }
 
@@ -534,7 +537,6 @@ func CustomizeKnativeService(ksvc *servingv1alpha1.Service, ba common.BaseCompon
 	ksvc.Spec.Template.Spec.Containers[0].VolumeMounts = ba.GetVolumeMounts()
 	ksvc.Spec.Template.Spec.Volumes = ba.GetVolumes()
 	CustomizeConsumedServices(&ksvc.Spec.Template.Spec.PodSpec, ba)
-	CustomizeServiceBinding(&ksvc.Spec.Template.Spec.PodSpec, ba)
 
 	if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
 		ksvc.Spec.Template.Spec.ServiceAccountName = *ba.GetServiceAccountName()

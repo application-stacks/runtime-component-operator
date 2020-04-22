@@ -257,6 +257,7 @@ func (r *ReconcilerBase) ReconcileConsumes(ba common.BaseComponent) (reconcile.R
 
 // ReconcileBindings goes through the reconcile logic for service binding
 func (r *ReconcilerBase) ReconcileBindings(ba common.BaseComponent) (reconcile.Result, error) {
+	
 	if res, err := r.reconcileExternals(ba); isRequeue(res, err) {
 		return res, err
 	}
@@ -317,6 +318,21 @@ func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (reconcile.
 	return r.done(ba)
 }
 
+//GetResolvedBindingSecret returns the secret referenced in .status.resolvedBindings
+func (r *ReconcilerBase) GetResolvedBindingSecret(ba common.BaseComponent) (*corev1.Secret, error) {
+	if len(ba.GetStatus().GetResolvedBindings()) == 0 {
+		return nil, nil
+	}
+	mObj := ba.(metav1.Object)
+	secret := &corev1.Secret{}
+	key := types.NamespacedName{Name: ba.GetStatus().GetResolvedBindings()[0], Namespace: mObj.GetNamespace()}
+	err := r.client.Get(context.TODO(), key, secret)
+	if err != nil {
+		return nil, err
+	}
+	return secret, nil
+}
+
 // done when no error happens
 func (r *ReconcilerBase) done(ba common.BaseComponent) (reconcile.Result, error) {
 	return r.ManageSuccess(common.StatusConditionTypeDependenciesSatisfied, ba)
@@ -368,4 +384,14 @@ func getServiceBindingGVK() []schema.GroupVersionKind {
 		gvkList = append(gvkList, *gvk)
 	}
 	return gvkList
+}
+
+// IsSeriveBindingSupported returns true if at least one GVK in the operator ConfigMap's serviceBinding.groupVersionKinds is installed
+func (r *ReconcilerBase) IsSeriveBindingSupported() bool {
+	for _, gvk := range getServiceBindingGVK() {
+		if ok, _ := r.IsGroupVersionSupported(gvk.GroupVersion().String(), gvk.Kind); ok {
+			return true
+		}
+	}
+	return false
 }

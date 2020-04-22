@@ -83,3 +83,9 @@ rules:
   - applications
   verbs:
   - '*'
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - servicebindingrequests
+  verbs:
+  - '*'
