@@ -481,6 +481,7 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 			&appsv1.Deployment{ObjectMeta: defaultMeta},
 			&appsv1.StatefulSet{ObjectMeta: defaultMeta},
 			&autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta},
+			&networkingv1beta1.Ingress{ObjectMeta: defaultMeta},
 		}
 		err = r.DeleteResources(resources)
 		if err != nil {
@@ -510,9 +511,8 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 			}
 			return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)
-		} else {
-			return r.ManageError(errors.New("failed to reconcile Knative service as operator could not find Knative CRDs"), common.StatusConditionTypeReconciled, instance)
 		}
+		return r.ManageError(errors.New("failed to reconcile Knative service as operator could not find Knative CRDs"), common.StatusConditionTypeReconciled, instance)
 	}
 
 	if isKnativeSupported {

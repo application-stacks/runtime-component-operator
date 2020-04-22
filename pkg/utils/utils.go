@@ -863,8 +863,7 @@ func GetAppContainer(containerList []corev1.Container) *corev1.Container {
 func CustomizeIngress(ing *networkingv1beta1.Ingress, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	ing.Labels = ba.GetLabels()
-	ing.Annotations = MergeMaps(ing.Annotations, ba.GetAnnotations())
-	ing.Annotations = MergeMaps(ing.Annotations, ba.GetRoute().GetAnnotations())
+	ing.Annotations = MergeMaps(ing.Annotations, ba.GetAnnotations(), ba.GetRoute().GetAnnotations())
 	servicePort := strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
 	rt := ba.GetRoute()
 	if ba.GetService().GetPortName() != "" {

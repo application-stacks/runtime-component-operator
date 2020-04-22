@@ -91,6 +91,13 @@ rules:
   - servicebindingrequests
   verbs:
   - '*'
+- apiGroups:
+  - networking.k8s.io
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - '*'
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
