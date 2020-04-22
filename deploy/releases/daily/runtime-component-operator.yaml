@@ -88,6 +88,12 @@ rules:
   - applications
   verbs:
   - '*'
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - servicebindingrequests
+  verbs:
+  - '*'
 ---  
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1

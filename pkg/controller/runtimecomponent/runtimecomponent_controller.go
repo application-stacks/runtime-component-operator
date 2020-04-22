@@ -95,6 +95,14 @@ func setup(mgr manager.Manager) {
 		}
 		return nil
 	})
+	mgr.GetFieldIndexer().IndexField(&appstacksv1beta1.RuntimeComponent{}, indexFieldBindingsResourceRef, func(obj runtime.Object) []string {
+		instance := obj.(*appstacksv1beta1.RuntimeComponent)
+
+		if instance.Spec.Bindings != nil && instance.Spec.Bindings.ResourceRef != "" {
+			return []string{instance.Spec.Bindings.ResourceRef}
+		}
+		return nil
+	})
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -226,13 +234,21 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	err = c.Watch(
+		&source.Kind{Type: &corev1.Secret{}},
+		&EnqueueRequestsForCustomIndexField{
+			Matcher: CreateBindingSecretMatcher(mgr.GetClient()),
+		})
+	if err != nil {
+		return err
+	}
+
 	ok, _ := reconciler.IsGroupVersionSupported(imagev1.SchemeGroupVersion.String(), "ImageStream")
 	if ok {
 		c.Watch(
 			&source.Kind{Type: &imagev1.ImageStream{}},
-			&EnqueueRequestsForImageStream{
-				Client:          mgr.GetClient(),
-				WatchNamespaces: watchNamespaces,
+			&EnqueueRequestsForCustomIndexField{
+				Matcher: CreateImageStreamMatcher(mgr.GetClient(), watchNamespaces),
 			})
 	}
 
@@ -415,9 +431,18 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 	if err != nil || result != (reconcile.Result{}) {
 		return result, nil
 	}
-	result, err = r.ReconcileBindings(instance)
-	if err != nil || result != (reconcile.Result{}) {
-		return result, err
+
+	if r.IsSeriveBindingSupported() {
+		result, err = r.ReconcileBindings(instance)
+		if err != nil || result != (reconcile.Result{}) {
+			return result, err
+		}
+	} else if instance.Spec.Bindings != nil {
+		return r.ManageError(errors.New("failed to reconcile as the operator failed to find Service Binding CRDs"), common.StatusConditionTypeReconciled, instance)
+	}
+	resolvedBindingSecret, err := r.GetResolvedBindingSecret(ba)
+	if err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
 	if instance.Spec.ServiceAccountName == nil || *instance.Spec.ServiceAccountName == "" {
@@ -453,7 +478,6 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 			&corev1.Service{ObjectMeta: metav1.ObjectMeta{Name: instance.Name + "-headless", Namespace: instance.Namespace}},
 			&appsv1.Deployment{ObjectMeta: defaultMeta},
 			&appsv1.StatefulSet{ObjectMeta: defaultMeta},
-			&routev1.Route{ObjectMeta: defaultMeta},
 			&autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta},
 		}
 		err = r.DeleteResources(resources)
@@ -462,10 +486,20 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		}
 
+		if r.IsOpenShift() {
+			route := &routev1.Route{ObjectMeta: defaultMeta}
+			err = r.DeleteResource(route)
+			if err != nil {
+				reqLogger.Error(err, "Failed to clean up non-Knative resource Route")
+				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+			}
+		}
+
 		if isKnativeSupported {
 			ksvc := &servingv1alpha1.Service{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(ksvc, instance, func() error {
 				appstacksutils.CustomizeKnativeService(ksvc, instance)
+				appstacksutils.CustomizeServiceBinding(resolvedBindingSecret, &ksvc.Spec.Template.Spec.PodSpec, instance)
 				return nil
 			})
 
@@ -533,6 +567,7 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 			appstacksutils.CustomizeStatefulSet(statefulSet, instance)
 			appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, instance)
 			appstacksutils.CustomizePersistence(statefulSet, instance)
+			appstacksutils.CustomizeServiceBinding(resolvedBindingSecret, &statefulSet.Spec.Template.Spec, instance)
 			return nil
 		})
 		if err != nil {
@@ -561,6 +596,7 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		err = r.CreateOrUpdate(deploy, instance, func() error {
 			appstacksutils.CustomizeDeployment(deploy, instance)
 			appstacksutils.CustomizePodSpec(&deploy.Spec.Template, instance)
+			appstacksutils.CustomizeServiceBinding(resolvedBindingSecret, &deploy.Spec.Template.Spec, instance)
 			return nil
 		})
 		if err != nil {
