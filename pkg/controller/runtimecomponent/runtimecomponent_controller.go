@@ -685,7 +685,7 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		if instance.Spec.Monitoring != nil && (instance.Spec.CreateKnativeService == nil || !*instance.Spec.CreateKnativeService) {
 			sm := &prometheusv1.ServiceMonitor{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(sm, instance, func() error {
-				appstacksutils.CustomizeServiceMonitor(sm, instance)
+				appstacksutils.CustomizeServiceMonitor(sm, instance, svc)
 				return nil
 			})
 			if err != nil {

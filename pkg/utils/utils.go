@@ -651,7 +651,7 @@ func requiredFieldMessage(fieldPaths ...string) string {
 }
 
 // CustomizeServiceMonitor ...
-func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComponent) {
+func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComponent, svc *corev1.Service) {
 	obj := ba.(metav1.Object)
 	sm.Labels = ba.GetLabels()
 	sm.Annotations = MergeMaps(sm.Annotations, ba.GetAnnotations())
@@ -669,6 +669,23 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComp
 		sm.Spec.Endpoints[0].Port = ba.GetService().GetPortName()
 	} else {
 		sm.Spec.Endpoints[0].Port = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	}
+	if len(ba.GetMonitoring().GetEndpoints()) > 0 {
+		port := ba.GetMonitoring().GetEndpoints()[0].Port
+		targetPort := ba.GetMonitoring().GetEndpoints()[0].TargetPort
+		if VerifySvcPorts(port, targetPort, svc.Spec.Ports) {
+			if port != "" && targetPort != nil && port == targetPort.StrVal {
+				sm.Spec.Endpoints[0].Port = port
+				sm.Spec.Endpoints[0].TargetPort = targetPort
+			} else if port != "" && targetPort == nil {
+				sm.Spec.Endpoints[0].Port = port
+			} else if targetPort != nil && (targetPort.StrVal != "" || targetPort.IntVal != 0) {
+				sm.Spec.Endpoints[0].TargetPort = targetPort
+				sm.Spec.Endpoints[0].Port = targetPort.StrVal
+			}
+		} else {
+			sm.Spec.Endpoints[0].TargetPort = nil
+		}
 	}
 	if len(ba.GetMonitoring().GetLabels()) > 0 {
 		for k, v := range ba.GetMonitoring().GetLabels() {
@@ -948,4 +965,20 @@ func CustomizeIngress(ing *networkingv1beta1.Ingress, ba common.BaseComponent) {
 	} else {
 		ing.Spec.TLS = nil
 	}
+}
+
+// VerifySvcPorts checks the user gave a valid service port
+func VerifySvcPorts(port string, target *intstr.IntOrString, ports []corev1.ServicePort) bool {
+	for _, i := range ports {
+		if port == i.Name && port != "" && target != nil && target.StrVal == i.Name {
+			return true
+		} else if port == i.Name && port != "" && target == nil {
+			return true
+		} else if target != nil && target.StrVal == i.Name && port == "" {
+			return true
+		} else if target != nil && target.IntVal == i.TargetPort.IntVal && port == "" {
+			return true
+		}
+	}
+	return false
 }
