@@ -361,6 +361,9 @@ func (r *ReconcilerBase) ReconcileCertificate(ba common.BaseComponent) (reconcil
 				// use routes host if no DNS information provided on certificate
 				if crt.Spec.CommonName == "" {
 					crt.Spec.CommonName = ba.GetRoute().GetHost()
+					if crt.Spec.CommonName == "" && common.Config[common.OpConfigDefaultHostname] != "" {
+						crt.Spec.CommonName = obj.GetName() + "-" + obj.GetNamespace() + "." + common.Config[common.OpConfigDefaultHostname]
+					}
 				}
 				if len(crt.Spec.DNSNames) == 0 {
 					crt.Spec.DNSNames = append(crt.Spec.DNSNames, crt.Spec.CommonName)
