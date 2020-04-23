@@ -10,6 +10,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.0]
+
+### Added
+
+- Added Ingress (vanilla) support ([#79](https://github.com/application-stacks/runtime-component-operator/pull/79))
+- Added support for external service bindings ([#76](https://github.com/application-stacks/runtime-component-operator/pull/76))
+- Added additional service ports support ([#80](https://github.com/application-stacks/runtime-component-operator/pull/80))
+
 ## [0.4.2]
 
 ### Fixed
@@ -31,7 +39,8 @@ All notable changes to this project will be documented in this file.
 The initial release of the Runtime Component Operator 🎉
 
 
-[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.5.0
 [0.4.2]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.4.2
 [0.4.1]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.4.1
 [0.4.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.4.0
