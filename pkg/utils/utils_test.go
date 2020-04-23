@@ -28,8 +28,8 @@ var (
 	expose             = true
 	createKNS          = true
 	targetCPUPer int32 = 30
-	targetPort int32   = 3333
-	nodePort	int32  = 3011
+	targetPort   int32 = 3333
+	nodePort     int32 = 3011
 	autoscaling        = &appstacksv1beta1.RuntimeComponentAutoScaling{
 		TargetCPUUtilizationPercentage: &targetCPUPer,
 		MinReplicas:                    &replicas,
@@ -172,10 +172,10 @@ func TestCustomizePodSpec(t *testing.T) {
 	ptsSAN := pts.Spec.ServiceAccountName
 	// if cond
 	spec = appstacksv1beta1.RuntimeComponentSpec{
-		ApplicationImage:    appImage,
-		Service:             &appstacksv1beta1.RuntimeComponentService{
-			Type: &serviceType,
-			Port: 8443,
+		ApplicationImage: appImage,
+		Service: &appstacksv1beta1.RuntimeComponentService{
+			Type:       &serviceType,
+			Port:       8443,
 			TargetPort: &targetPort,
 		},
 		ResourceConstraints: resourceContraints,
@@ -401,6 +401,7 @@ func TestCustomizeServiceMonitor(t *testing.T) {
 	}
 
 	// Expected values
+	appPort := runtime.Spec.Monitoring.Endpoints[0].Port
 	appScheme := runtime.Spec.Monitoring.Endpoints[0].Scheme
 	appInterval := runtime.Spec.Monitoring.Endpoints[0].Interval
 	appPath := runtime.Spec.Monitoring.Endpoints[0].Path
@@ -413,7 +414,7 @@ func TestCustomizeServiceMonitor(t *testing.T) {
 	testSM := []Test{
 		{"Service Monitor label for app.kubernetes.io/instance", name, sm.Labels["app.kubernetes.io/instance"]},
 		{"Service Monitor selector match labels", labelMatches, sm.Spec.Selector.MatchLabels},
-		{"Service Monitor endpoints port", strconv.Itoa(int(runtime.Spec.Service.Port)) + "-tcp", sm.Spec.Endpoints[0].Port},
+		{"Service Monitor endpoints port", appPort, sm.Spec.Endpoints[0].Port},
 		{"Service Monitor all labels", allSMLabels, sm.Labels},
 		{"Service Monitor endpoints scheme", appScheme, sm.Spec.Endpoints[0].Scheme},
 		{"Service Monitor endpoints interval", appInterval, sm.Spec.Endpoints[0].Interval},

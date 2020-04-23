@@ -199,6 +199,18 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentService(ref common.Refere
 							Format: "",
 						},
 					},
+					"ports": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("k8s.io/api/core/v1.ServicePort"),
+									},
+								},
+							},
+						},
+					},
 					"annotations": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
@@ -250,7 +262,7 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentService(ref common.Refere
 			},
 		},
 		Dependencies: []string{
-			"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.Certificate", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingConsumes", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingProvides"},
+			"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.Certificate", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingConsumes", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingProvides", "k8s.io/api/core/v1.ServicePort"},
 	}
 }
 

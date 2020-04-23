@@ -82,6 +82,8 @@ type RuntimeComponentService struct {
 
 	PortName string `json:"portName,omitempty"`
 
+	Ports []corev1.ServicePort `json:"ports,omitempty"`
+
 	Annotations map[string]string `json:"annotations,omitempty"`
 	// +listType=atomic
 	Consumes []ServiceBindingConsumes `json:"consumes,omitempty"`
@@ -146,7 +148,7 @@ type ServiceBindingAuth struct {
 
 // RuntimeComponentBindings represents service binding related parameters
 type RuntimeComponentBindings struct {
-	AutoDetect  *bool   `json:"autoDetect,omitempty"`
+	AutoDetect  *bool  `json:"autoDetect,omitempty"`
 	ResourceRef string `json:"resourceRef,omitempty"`
 }
 
@@ -473,6 +475,11 @@ func (s *RuntimeComponentService) GetPortName() string {
 // GetType returns service type
 func (s *RuntimeComponentService) GetType() *corev1.ServiceType {
 	return s.Type
+}
+
+// GetPorts returns a list of service ports
+func (s *RuntimeComponentService) GetPorts() []corev1.ServicePort {
+	return s.Ports
 }
 
 // GetProvides returns service provider configuration
