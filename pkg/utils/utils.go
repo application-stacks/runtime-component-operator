@@ -678,12 +678,12 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComp
 		if port != "" && targetPort != nil {
 			sm.Spec.Endpoints[0].TargetPort = nil
 		}
-		if port == "" && targetPort == nil {
-			if ba.GetService().GetPortName() != "" {
-				sm.Spec.Endpoints[0].Port = ba.GetService().GetPortName()
-			} else {
-				sm.Spec.Endpoints[0].Port = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
-			}
+	}
+	if sm.Spec.Endpoints[0].Port == "" && sm.Spec.Endpoints[0].TargetPort == nil {
+		if ba.GetService().GetPortName() != "" {
+			sm.Spec.Endpoints[0].Port = ba.GetService().GetPortName()
+		} else {
+			sm.Spec.Endpoints[0].Port = strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
 		}
 	}
 	if len(ba.GetMonitoring().GetLabels()) > 0 {
