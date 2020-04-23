@@ -110,7 +110,7 @@ spec:
 
     #### Routing
 
-    Expose your application to external users via a single toggle to create an OpenShift Route.
+    Expose your application to external users via a single toggle to create a Route on OpenShift environments or an Ingress on other environments.
     Advanced configuration, such as TLS settings, are also easily enabled.  Expiring Route certificates are re-issued.
 
 
