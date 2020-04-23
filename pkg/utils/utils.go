@@ -97,7 +97,12 @@ func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, c
 	if ba.GetRoute() != nil {
 		rt := ba.GetRoute()
 		route.Annotations = MergeMaps(route.Annotations, rt.GetAnnotations())
-		route.Spec.Host = rt.GetHost()
+
+		host := rt.GetHost()
+		if host == "" && common.Config[common.OpConfigDefaultHostname] != "" {
+			host = obj.GetName() + "-" + obj.GetNamespace() + "." + common.Config[common.OpConfigDefaultHostname]
+		}
+		route.Spec.Host = host
 		route.Spec.Path = rt.GetPath()
 		if ba.GetRoute().GetTermination() != nil {
 			if route.Spec.TLS == nil {
@@ -925,9 +930,13 @@ func CustomizeIngress(ing *networkingv1beta1.Ingress, ba common.BaseComponent) {
 	if ba.GetService().GetPortName() != "" {
 		servicePort = ba.GetService().GetPortName()
 	}
+	host := rt.GetHost()
+	if host == "" && common.Config[common.OpConfigDefaultHostname] != "" {
+		host = obj.GetName() + "-" + obj.GetNamespace() + "." + common.Config[common.OpConfigDefaultHostname]
+	}
 	ing.Spec.Rules = []networkingv1beta1.IngressRule{
 		{
-			Host: rt.GetHost(),
+			Host: host,
 			IngressRuleValue: networkingv1beta1.IngressRuleValue{
 				HTTP: &networkingv1beta1.HTTPIngressRuleValue{
 					Paths: []networkingv1beta1.HTTPIngressPath{
@@ -957,7 +966,7 @@ func CustomizeIngress(ing *networkingv1beta1.Ingress, ba common.BaseComponent) {
 	if tlsSecretName != "" {
 		ing.Spec.TLS = []networkingv1beta1.IngressTLS{
 			{
-				Hosts:      []string{rt.GetHost()},
+				Hosts:      []string{host},
 				SecretName: tlsSecretName,
 			},
 		}

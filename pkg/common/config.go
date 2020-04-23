@@ -17,6 +17,9 @@ const (
 	// OpConfigSvcBindingGVKs a comma-seperated list of GroupVersionKind values in "<Kind>.<version>.<group>" format.
 	// e.g. "CronTab.v1.stable.example.com"
 	OpConfigSvcBindingGVKs = "serviceBinding.groupVersionKinds"
+
+	// OpConfigDefaultHostname a DNS name to be used for hostname generation.
+	OpConfigDefaultHostname = "defaultHostname"
 )
 
 // Config stores operator configuration
@@ -39,5 +42,7 @@ func DefaultOpConfig() OpConfig {
 	cfg[OpConfigPropDefaultIssuer] = "self-signed"
 	cfg[OpConfigPropUseClusterIssuer] = "true"
 	cfg[OpConfigSvcBindingGVKs] = "ServiceBindingRequest.v1alpha1.apps.openshift.io"
+	cfg[OpConfigDefaultHostname] = ""
+
 	return cfg
 }
