@@ -10,6 +10,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.1
+
+### Fixed
+
+- Operator crash when creating Ingress without `spec.route` field defined
+- Do not add `kubectl.kubernetes.io/last-applied-configuration` annotation to created resources to prevent uncessary pod restarts
+
+
 ## [0.5.0]
 
 ### Added

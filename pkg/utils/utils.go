@@ -924,16 +924,30 @@ func GetAppContainer(containerList []corev1.Container) *corev1.Container {
 func CustomizeIngress(ing *networkingv1beta1.Ingress, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	ing.Labels = ba.GetLabels()
-	ing.Annotations = MergeMaps(ing.Annotations, ba.GetAnnotations(), ba.GetRoute().GetAnnotations())
 	servicePort := strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
+	host := ""
+	path := ""
 	rt := ba.GetRoute()
+	if rt != nil {
+		host = rt.GetHost()
+		path = rt.GetPath()
+		ing.Annotations = MergeMaps(ing.Annotations, ba.GetAnnotations(), rt.GetAnnotations())
+	} else {
+		ing.Annotations = MergeMaps(ing.Annotations, ba.GetAnnotations())
+	}
+
 	if ba.GetService().GetPortName() != "" {
 		servicePort = ba.GetService().GetPortName()
 	}
-	host := rt.GetHost()
+
 	if host == "" && common.Config[common.OpConfigDefaultHostname] != "" {
 		host = obj.GetName() + "-" + obj.GetNamespace() + "." + common.Config[common.OpConfigDefaultHostname]
 	}
+	if host == "" {
+		l := log.WithValues("Request.Namespace", obj.GetNamespace(), "Request.Name", obj.GetName())
+		l.Info("No Ingress hostname is provided. Ingress might not function correctly without hostname. It is recommended to set Ingress host or to provide default value through operator's config map.")
+	}
+
 	ing.Spec.Rules = []networkingv1beta1.IngressRule{
 		{
 			Host: host,
@@ -941,7 +955,7 @@ func CustomizeIngress(ing *networkingv1beta1.Ingress, ba common.BaseComponent) {
 				HTTP: &networkingv1beta1.HTTPIngressRuleValue{
 					Paths: []networkingv1beta1.HTTPIngressPath{
 						{
-							Path: rt.GetPath(),
+							Path: path,
 							Backend: networkingv1beta1.IngressBackend{
 								ServiceName: obj.GetName(),
 								ServicePort: intstr.IntOrString{Type: intstr.String, StrVal: servicePort},
@@ -954,16 +968,16 @@ func CustomizeIngress(ing *networkingv1beta1.Ingress, ba common.BaseComponent) {
 	}
 
 	tlsSecretName := ""
-	if rt.GetCertificate() != nil {
+	if rt != nil && rt.GetCertificate() != nil {
 		tlsSecretName = obj.GetName() + "-route-tls"
 		if rt.GetCertificate().GetSpec().SecretName != "" {
 			tlsSecretName = obj.GetName() + rt.GetCertificate().GetSpec().SecretName
 		}
 	}
-	if rt.GetCertificateSecretRef() != nil && *rt.GetCertificateSecretRef() != "" {
+	if rt != nil && rt.GetCertificateSecretRef() != nil && *rt.GetCertificateSecretRef() != "" {
 		tlsSecretName = *rt.GetCertificateSecretRef()
 	}
-	if tlsSecretName != "" {
+	if tlsSecretName != "" && host != "" {
 		ing.Spec.TLS = []networkingv1beta1.IngressTLS{
 			{
 				Hosts:      []string{host},

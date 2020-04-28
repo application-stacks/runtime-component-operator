@@ -715,7 +715,12 @@ func (cr *RuntimeComponent) GetLabels() map[string]string {
 
 // GetAnnotations returns set of annotations to be added to all resources
 func (cr *RuntimeComponent) GetAnnotations() map[string]string {
-	return cr.Annotations
+	annotations := map[string]string{}
+	for k, v := range cr.Annotations {
+		annotations[k] = v
+	}
+	delete(annotations, "kubectl.kubernetes.io/last-applied-configuration")
+	return annotations
 }
 
 // GetType returns status condition type
