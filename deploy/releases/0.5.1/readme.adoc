@@ -1,6 +1,6 @@
-= Runtime Component Operator v0.5.0
+= Runtime Component Operator v0.5.1
 == Changelog
-All notable changes are documented in the link:++/CHANGELOG.md#0.5.0++[Changelog].
+All notable changes are documented in the link:++/CHANGELOG.md#0.5.1++[Changelog].
 
 == Installation
 
@@ -19,7 +19,7 @@ Appropriate cluster role and binding are required to watch another namespace, wa
 
 [source,sh]
 ----
-    kubectl apply -f https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.5.0/runtime-component-crd.yaml
+    kubectl apply -f https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.5.1/runtime-component-crd.yaml
 ----
 
 . Install the Runtime Component Operator:
@@ -42,7 +42,7 @@ NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY
 +
 [source,sh]
 ----
-    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.5.0/runtime-component-cluster-rbac.yaml \
+    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.5.1/runtime-component-cluster-rbac.yaml \
       | sed -e "s/RUNTIME_COMPONENT_OPERATOR_NAMESPACE/${OPERATOR_NAMESPACE}/" \
       | kubectl apply -f -
 ----
@@ -51,7 +51,7 @@ NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY
 +
 [source,sh]
 ----
-    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.5.0/runtime-component-operator.yaml \
+    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.5.1/runtime-component-operator.yaml \
       | sed -e "s/RUNTIME_COMPONENT_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" \
       | kubectl apply -n ${OPERATOR_NAMESPACE} -f -
 ----
@@ -70,8 +70,3 @@ _Deleting the CRD will also delete all `RuntimeComponent` in the cluster_
 * The auto-creation of an application definition by kAppNav is not supported when Knative is enabled.
 * Monitoring feature does not support integration with Knative Service. Prometheus Operator is required to use ServiceMonitor.
 * After the initial deployment of `RuntimeComponent`, any changes to its labels would be applied only when one of the parameters from `spec` is updated.
-
-== Known Issues
-
-* Operator can crash when creating Ingress resource if `spec.expose` is `true` and `spec.route` is not provided. 
-Possible fixes are either to disable Ingress by setting `spec.expose` to `false` or add `spec.route: {}`
