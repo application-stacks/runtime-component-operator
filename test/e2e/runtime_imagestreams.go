@@ -153,6 +153,8 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 	firstImage = runtime.Status.ImageReference
 	// Check if the image the application is pointing to has been changed
 	if firstImage == secondImage {
+		t.Logf("First Image: %s", firstImage)
+		t.Logf("Second Image: %s", secondImage)
 		t.Fatalf("The docker image has not been updated. It is still %s", secondImage)
 	}
 
