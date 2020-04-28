@@ -10,12 +10,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.5.1
+## [0.5.1]
 
 ### Fixed
 
-- Operator crash when creating Ingress without `spec.route` field defined
-- Do not add `kubectl.kubernetes.io/last-applied-configuration` annotation to created resources to prevent uncessary pod restarts
+- Operator crash when Ingress is created without defining spec.route field ([#94](https://github.com/application-stacks/runtime-component-operator/pull/94))
+- Unnecessary pod restarts due to adding kubectl.kubernetes.io/last-applied-configuration to resources created by the operator ([#94](https://github.com/application-stacks/runtime-component-operator/pull/94))
 
 
 ## [0.5.0]
@@ -48,7 +48,8 @@ All notable changes to this project will be documented in this file.
 The initial release of the Runtime Component Operator 🎉
 
 
-[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.5.1
 [0.5.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.5.0
 [0.4.2]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.4.2
 [0.4.1]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.4.1

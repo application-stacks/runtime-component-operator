@@ -74,9 +74,7 @@ If the operator is running fine, check the status of the `RuntimeComponent` Cust
 
 # Known Issues
 
-Operator might crash on startup when optional CRDs API group (eg. serving.knative.dev/v1alpha1) is
-available, but actual CRD (Knative Service) is not present.
-Operator might crash on startup when optional CRDs API group (eg. serving.knative.dev/v1alpha1) is 
+Operator versions < 0.5.0 might crash on startup when optional CRDs API group (eg. serving.knative.dev/v1alpha1) is
 available, but actual CRD (Knative Service) is not present.
 
 Version 0.5.0 of operator can crash when creating Ingress with `spec.expose` is set to `true` and `spec.route` is not provided or set (nil). 
