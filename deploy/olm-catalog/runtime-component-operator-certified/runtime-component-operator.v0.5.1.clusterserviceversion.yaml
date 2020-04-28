@@ -2,16 +2,16 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
   annotations:
-    alm-examples: '[{"apiVersion":"app.stacks/v1beta1","kind":"RuntimeComponent","metadata":{"name":"example-runtime-component"},"spec":{"applicationImage":"APPLICATION_IMAGE"}}]'
+    alm-examples: '[{"apiVersion":"app.stacks/v1beta1","kind":"RuntimeComponent","metadata":{"name":"example-runtime-component"},"spec":{"applicationImage":"registry.connect.redhat.com/ibm/open-liberty-samples:springPetClinic"}}]'
     capabilities: Auto Pilot
     categories: Application Runtime
     certified: 'true'
-    containerImage: applicationstacks/operator:0.4.1
-    createdAt: 2020-03-20 09:00:00
+    containerImage: registry.connect.redhat.com/ibm/runtime-component-operator:0.5.1
+    createdAt: 2020-04-29 09:00:00
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
-  name: runtime-component-operator.v0.4.1
+  name: runtime-component-operator.v0.5.1
 spec:
   customresourcedefinitions:
     owned:
@@ -110,7 +110,7 @@ spec:
 
     #### Routing
 
-    Expose your application to external users via a single toggle to create an OpenShift Route.
+    Expose your application to external users via a single toggle to create a Route on OpenShift or an Ingress on other Kubernetes environments.
     Advanced configuration, such as TLS settings, are also easily enabled.  Expiring Route certificates are re-issued.
 
 
@@ -279,6 +279,19 @@ spec:
           - applications
           verbs:
           - '*'
+        - apiGroups:
+          - apps.openshift.io
+          resources:
+          - servicebindingrequests
+          verbs:
+          - '*'
+        - apiGroups:
+          - networking.k8s.io
+          - extensions
+          resources:
+          - ingresses
+          verbs:
+          - '*'
         serviceAccountName: runtime-component-operator
       deployments:
       - name: runtime-component-operator
@@ -307,7 +320,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: runtime-component-operator
-                image: applicationstacks/operator:0.4.1
+                image: registry.connect.redhat.com/ibm/runtime-component-operator:0.5.1
                 imagePullPolicy: Always
                 name: runtime-component-operator
                 resources: {}
@@ -349,5 +362,5 @@ spec:
   maturity: beta
   provider:
     name: Community
-  replaces: runtime-component-operator.v0.4.0
-  version: 0.4.1
+  replaces: runtime-component-operator.v0.5.0
+  version: 0.5.1

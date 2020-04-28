@@ -6,12 +6,12 @@ metadata:
     capabilities: Auto Pilot
     categories: Application Runtime
     certified: 'true'
-    containerImage: applicationstacks/operator:0.5.0
-    createdAt: 2020-04-23 09:00:00
+    containerImage: applicationstacks/operator:0.5.1
+    createdAt: 2020-04-29 09:00:00
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
-  name: runtime-component-operator.v0.5.0
+  name: runtime-component-operator.v0.5.1
 spec:
   customresourcedefinitions:
     owned:
@@ -320,7 +320,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: runtime-component-operator
-                image: applicationstacks/operator:0.5.0
+                image: applicationstacks/operator:0.5.1
                 imagePullPolicy: Always
                 name: runtime-component-operator
                 resources: {}
@@ -362,5 +362,5 @@ spec:
   maturity: beta
   provider:
     name: Community
-  replaces: runtime-component-operator.v0.4.1
-  version: 0.5.0
+  replaces: runtime-component-operator.v0.5.0
+  version: 0.5.1
