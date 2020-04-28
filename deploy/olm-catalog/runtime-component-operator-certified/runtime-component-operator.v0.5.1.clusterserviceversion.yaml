@@ -7,7 +7,7 @@ metadata:
     categories: Application Runtime
     certified: 'true'
     containerImage: registry.connect.redhat.com/ibm/runtime-component-operator:0.5.1
-    createdAt: 2020-04-23 09:00:00
+    createdAt: 2020-04-29 09:00:00
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
