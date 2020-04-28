@@ -48,6 +48,7 @@ The following table lists configurable parameters of the `RuntimeComponent` CRD.
 
 Each `RuntimeComponent` CR must at least specify the `applicationImage` parameter. Specifying other parameters is optional.
 
+<<<<<<< HEAD:doc/user-guide.adoc
 .Runtime Component Resource Definition
 |===
 | Parameter | Description
@@ -63,6 +64,21 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`.
 | `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference.
 | `bindings.autoDetect` | A boolean to toggle whether the operator should automatically detect and use a `ServiceBindingRequest` resource with the same name as the CR. The default value for this parameter is `true`. |
+=======
+| Parameter | Description |
+|---|---|
+| `version` | The current version of the application. Label `app.kubernetes.io/version` will be added to all resources when the version is defined. |
+| `serviceAccountName` | The name of the OpenShift service account to be used during deployment. |
+| `applicationImage` | The Docker image name to be deployed. On OpenShift, it can also be set to `<project name>/<image stream name>[:<tag>]` to reference an image from an image stream. If `<project name>` and `<tag>` values are not defined, they default to the namespace of the CR and the value of `latest`, respectively. |
+| `applicationName` | The name of the application this resource is part of. If not specified, it defaults to the name of the CR. |
+| `createAppDefinition`   | A boolean to toggle the automatic configuration of Kubernetes resources for the `RuntimeComponent` CR to allow creation of an application definition by [kAppNav](https://kappnav.io/). The default value is `true`. See [Application Navigator](#kubernetes-application-navigator-kappnav-support) for more information. |
+| `pullPolicy` | The policy used when pulling the image.  One of: `Always`, `Never`, and `IfNotPresent`. |
+| `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials. |
+| `initContainers` | The list of [Init Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#container-v1-core) definitions. |
+| `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`. |
+| `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference. |
+| `bindings.autoDetect` | A Boolean data type to toggle automatic detection and use of a `ServiceBindingRequest` resource with the same name as the CR. The default value for this parameter is `true`. |
+>>>>>>> Added user-guide for service binding:doc/user-guide.md
 | `bindings.resourceRef` | The name of a `ServiceBindingRequest` resource created manually in the same namespace as the application. |
 | `service.port` | The port exposed by the container.
 | `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`.
@@ -114,7 +130,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 
 === Basic usage
 
-To deploy a Docker image containing a runtime component to a Kubernetes environment you can use the following CR:
+To deploy a Docker image that contains a runtime component to a Kubernetes environment, you can use the following CR:
 
 [source,yaml]
 ----
@@ -355,7 +371,7 @@ spec:
 
 The link:++https://github.com/redhat-developer/service-binding-operator++[Service Binding Operator] enables application developers to bind applications together with operator-managed backing services. This can be achieved by creating a `ServiceBindingRequest` custom resource.
 
-In order for the Runtime Component Operator to pass the binding information to the application, you can specify the name of the `ServiceBindingRequest` as follows:
+For the Runtime Component Operator to pass the binding information to the application, you can specify the name of the `ServiceBindingRequest` custom resource as follows:
 
 [source,yaml]
 ----
@@ -369,11 +385,11 @@ spec:
     resourceRef: my-binding
 ----
 
-Once the Service Binding Operator processes the `my-binding` custom resource of the type `ServiceBindingRequest`, it creates a `Secret` containing binding information provided by the backing service. The Runtime Component Operator would inject the `Secret` as environment variables into application pods.
+After the Service Binding Operator processes the `my-binding` custom resource of the `ServiceBindingRequest` type, it creates a `Secret` object. The `Secret` resource contains binding information that the backing service provides. The Runtime Component Operator injects the `Secret` resource as environment variables into application pods.
 
-The Runtime Component Operator can also automatically detect if there is a `ServiceBindingRequest` custom resource with the same name as the application in the application namespace. If the operator detects the custom resource, it injects the binding secret into the application container.
+The Runtime Component Operator can also automatically detect if a `ServiceBindingRequest` custom resource with the same name as the application exists in the application namespace. If the operator detects the custom resource, it injects the binding secret into the application container.
 
-Users can turn off the auto-detection mechanism by setting the `bindings.autoDetect` parameter to `false`. The `bindings.resourceRef` parameter takes precedence over the `bindings.autoDetect` parameter. In other words, the Runtime Component Operator, injects secrets from the `my-binding` resource, even if there is a `ServiceBindingRequest` resource named `my-app`:
+Users can turn off the auto-detection mechanism by setting the `bindings.autoDetect` parameter to a value of `false`. The `bindings.resourceRef` parameter takes precedence over the `bindings.autoDetect` parameter. In other words, the Runtime Component Operator, injects secrets from the `my-binding` resource, even if a `ServiceBindingRequest` resource named `my-app` exists:
 
 [source,yaml]
 ----
