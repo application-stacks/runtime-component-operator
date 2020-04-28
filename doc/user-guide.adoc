@@ -48,7 +48,6 @@ The following table lists configurable parameters of the `RuntimeComponent` CRD.
 
 Each `RuntimeComponent` CR must at least specify the `applicationImage` parameter. Specifying other parameters is optional.
 
-<<<<<<< HEAD:doc/user-guide.adoc
 .Runtime Component Resource Definition
 |===
 | Parameter | Description
@@ -63,23 +62,8 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `initContainers` | The list of link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#container-v1-core++[Init Container] definitions.
 | `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`.
 | `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference.
-| `bindings.autoDetect` | A boolean to toggle whether the operator should automatically detect and use a `ServiceBindingRequest` resource with the same name as the CR. The default value for this parameter is `true`. |
-=======
-| Parameter | Description |
-|---|---|
-| `version` | The current version of the application. Label `app.kubernetes.io/version` will be added to all resources when the version is defined. |
-| `serviceAccountName` | The name of the OpenShift service account to be used during deployment. |
-| `applicationImage` | The Docker image name to be deployed. On OpenShift, it can also be set to `<project name>/<image stream name>[:<tag>]` to reference an image from an image stream. If `<project name>` and `<tag>` values are not defined, they default to the namespace of the CR and the value of `latest`, respectively. |
-| `applicationName` | The name of the application this resource is part of. If not specified, it defaults to the name of the CR. |
-| `createAppDefinition`   | A boolean to toggle the automatic configuration of Kubernetes resources for the `RuntimeComponent` CR to allow creation of an application definition by [kAppNav](https://kappnav.io/). The default value is `true`. See [Application Navigator](#kubernetes-application-navigator-kappnav-support) for more information. |
-| `pullPolicy` | The policy used when pulling the image.  One of: `Always`, `Never`, and `IfNotPresent`. |
-| `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials. |
-| `initContainers` | The list of [Init Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#container-v1-core) definitions. |
-| `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`. |
-| `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference. |
-| `bindings.autoDetect` | A Boolean data type to toggle automatic detection and use of a `ServiceBindingRequest` resource with the same name as the CR. The default value for this parameter is `true`. |
->>>>>>> Added user-guide for service binding:doc/user-guide.md
-| `bindings.resourceRef` | The name of a `ServiceBindingRequest` resource created manually in the same namespace as the application. |
+| `bindings.autoDetect` | A boolean to toggle whether the operator should automatically detect and use a `ServiceBindingRequest` resource with the same name as the CR. The default value for this parameter is `true`.
+| `bindings.resourceRef` | The name of a `ServiceBindingRequest` resource created manually in the same namespace as the application.
 | `service.port` | The port exposed by the container.
 | `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`.
 | `service.portName` | The name for the port exposed by the container.
@@ -402,7 +386,7 @@ _This feature is only available if you have Service Binding Operator installed o
 
 ==== Binding to `RuntimeComponent` applications
 
-Runtime Component Operator can be used to help with service binding in a cluster. The operator creates a secret on behalf of the **provider** `RuntimeComponent` and injects the secret into pods of the **consumer** `RuntimeComponent` as either environment variable or mounted files. See [Runtime Component Operator Design for Service Binding](https://docs.google.com/document/d/1riOX0iTnBBJpTKAHcQShYVMlgkaTNKb4m8fY7W1GqMA/edit) for more information on the architecture. At this time, the only supported service binding type is `openapi`.
+Runtime Component Operator can be used to help with service binding in a cluster. The operator creates a secret on behalf of the **provider** `RuntimeComponent` and injects the secret into pods of the **consumer** `RuntimeComponent` as either environment variable or mounted files. See link:++https://docs.google.com/document/d/1riOX0iTnBBJpTKAHcQShYVMlgkaTNKb4m8fY7W1GqMA/edit++[Runtime Component Operator Design for Service Binding] for more information on the architecture. At this time, the only supported service binding type is `openapi`.
 
 The provider lists information about the REST API it provides:
 
