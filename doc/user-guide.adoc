@@ -330,7 +330,7 @@ spec:
           insecureSkipVerify: true
     labels:
       app-monitoring: 'true'
----
+----
 
 === Persistence
 
