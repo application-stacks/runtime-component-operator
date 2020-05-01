@@ -289,6 +289,49 @@ __OR__
   - configure auto-scaling to create (and delete) instances based on resource consumption using the `autoscaling` parameter.
   - Parameters `autoscaling.maxReplicas` and `resourceConstraints.requests.cpu` MUST be specified for auto-scaling.
 
+=== Service ports
+
+Runtime Component Operator allows users to provide multiple service ports in addition to the primary service port. The primary port is exposed from the container running the application and it's values are used to configure the Route (or Ingress), Service biniding and Knative service.
+
+Users can also specify an alternative port for Service Monitor using the `monitoring.endpoints` parameter and specifying either the `port` or `targetPort` field otherwise it defaults to the primary port.
+
+The primary port is under the `service` field and the additional ports can be specified using the `ports` field as shown below.
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: my-app
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  service:
+    type: NodePort
+    port: 3000
+    portName: http
+	targetPort: 3080
+	nodePort: 30008
+    ports:
+      - port: 9080
+        name: https
+   monitoring:
+    endpoints:
+      - basicAuth:
+          password:
+            key: password
+            name: metrics-secret
+          username:
+            key: username
+            name: metrics-secret
+        interval: 5s
+        port: https
+        scheme: HTTPS
+        tlsConfig:
+          insecureSkipVerify: true
+    labels:
+      app-monitoring: 'true'
+---
+
 === Persistence
 
 Runtime Component Operator is capable of creating a `StatefulSet` and `PersistentVolumeClaim` for each pod if storage is specified in the `RuntimeComponent` CR.
@@ -347,27 +390,6 @@ spec:
           requests:
             storage: 1Gi
 ----
-
-=== Service ports
-
-Runtime Component Operator allows users to provide multiple service ports in addition to the primary service port. The primary port is under the `service` field and the additional ports can be specified using the `ports` field as shown below.
-
-[source,yaml]
-----
-apiVersion: app.stacks/v1beta1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  service:
-    type: ClusterIP
-    port: 3000
-    portName: https
-    ports:
-      - port: 9080
-        name: http
----
 
 === Service binding
 
