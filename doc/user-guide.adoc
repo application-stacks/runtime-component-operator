@@ -309,12 +309,12 @@ spec:
     type: NodePort
     port: 3000
     portName: http
-	targetPort: 3080
-	nodePort: 30008
+    targetPort: 3080
+    nodePort: 30008
     ports:
       - port: 9080
         name: https
-   monitoring:
+  monitoring:
     endpoints:
       - basicAuth:
           password:
