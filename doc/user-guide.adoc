@@ -291,9 +291,10 @@ __OR__
 
 === Service ports
 
-Runtime Component Operator allows users to provide multiple service ports in addition to the primary service port. The primary port is exposed from the container running the application and it's values are used to configure the Route (or Ingress), Service biniding and Knative service.
+Runtime Component Operator allows you to provide multiple service ports in addition to the primary service port. The primary port is exposed from the container running the application and it's values are used to configure the Route (or Ingress), Service binding and Knative service.
+The primary service port can be configured using `service.port`, `service.targetPort`, `service.portName`, and `service.nodePort` parameters.
 
-Users can also specify an alternative port for Service Monitor using the `monitoring.endpoints` parameter and specifying either the `port` or `targetPort` field otherwise it defaults to the primary port.
+You can also specify an alternative port for Service Monitor using the `monitoring.endpoints` parameter and specifying either the `port` or `targetPort` field, otherwise it defaults to the primary port.
 
 The primary port is under the `service` field and the additional ports can be specified using the `ports` field as shown below.
 
@@ -307,12 +308,12 @@ spec:
   applicationImage: quay.io/my-repo/my-app:1.0
   service:
     type: NodePort
-    port: 3000
+    port: 9080
     portName: http
-    targetPort: 3080
+    targetPort: 9080
     nodePort: 30008
     ports:
-      - port: 9080
+      - port: 9443
         name: https
   monitoring:
     endpoints:
