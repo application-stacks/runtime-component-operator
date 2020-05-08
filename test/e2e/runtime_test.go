@@ -55,6 +55,7 @@ func testAdvancedFeatures(t *testing.T) {
 	// which makes them less ideal for quick minikube tests
 	t.Run("RuntimeServiceMonitorTest", RuntimeServiceMonitorTest)
 	t.Run("RuntimeKnativeTest", RuntimeKnativeTest)
+	t.Run("RuntimeServiceBindingTest", RuntimeServiceBindingTest)
 	t.Run("RuntimeCertManagerTest", RuntimeCertManagerTest)
 }
 

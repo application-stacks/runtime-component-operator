@@ -2,6 +2,7 @@ package util
 
 import (
 	goctx "context"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -270,4 +271,18 @@ func UpdateApplication(f *framework.Framework, target types.NamespacedName, upda
 	})
 
 	return err
+}
+
+// CommandError : Reports back an error if a command fails to execute
+func CommandError(t *testing.T, err error, out []byte) error {
+	if err != nil {
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			t.Log(exiterr.Error())
+			return exiterr
+		}
+		t.Log("unknown error occurred, see below")
+		t.Log(err.Error())
+		return err
+	}
+	return nil
 }
