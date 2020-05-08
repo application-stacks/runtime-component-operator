@@ -67,8 +67,9 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `service.port` | The port exposed by the container.
 | `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`.
 | `service.portName` | The name for the port exposed by the container.
+| `service.ports` | An array consisting of service ports.
 | `service.type` | The Kubernetes link:++https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types++[Service Type].
-| `service.nodePort` | Node proxies this port into your service.
+| `service.nodePort` | Node proxies this port into your service. Please note once this port is set to a non-zero value it cannot be reset to zero.
 | `service.annotations` | Annotations to be added to the service.
 | `service.certificate` | A YAML object representing a link:++https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec++[Certificate].
 | `service.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.
@@ -289,6 +290,50 @@ __OR__
 
   - configure auto-scaling to create (and delete) instances based on resource consumption using the `autoscaling` parameter.
   - Parameters `autoscaling.maxReplicas` and `resourceConstraints.requests.cpu` MUST be specified for auto-scaling.
+
+=== Service ports
+
+Runtime Component Operator allows you to provide multiple service ports in addition to the primary service port. The primary port is exposed from the container running the application and it's values are used to configure the Route (or Ingress), Service binding and Knative service.
+The primary service port can be configured using `service.port`, `service.targetPort`, `service.portName`, and `service.nodePort` parameters.
+
+You can also specify an alternative port for Service Monitor using the `monitoring.endpoints` parameter and specifying either the `port` or `targetPort` field, otherwise it defaults to the primary port.
+
+The primary port is under the `service` field and the additional ports can be specified using the `ports` field as shown below.
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: my-app
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  service:
+    type: NodePort
+    port: 9080
+    portName: http
+    targetPort: 9080
+    nodePort: 30008
+    ports:
+      - port: 9443
+        name: https
+  monitoring:
+    endpoints:
+      - basicAuth:
+          password:
+            key: password
+            name: metrics-secret
+          username:
+            key: username
+            name: metrics-secret
+        interval: 5s
+        port: https
+        scheme: HTTPS
+        tlsConfig:
+          insecureSkipVerify: true
+    labels:
+      app-monitoring: 'true'
+----
 
 === Persistence
 
