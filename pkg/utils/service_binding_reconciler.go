@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"sort"
@@ -18,7 +19,18 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
+)
+
+// String constants
+const (
+	APIVersion = "apiVersion"
+	Kind       = "kind"
+	Metadata   = "metadata"
+	Spec       = "spec"
 )
 
 // SyncSecretAcrossNamespace syncs up the secret data across a namespace
@@ -257,7 +269,12 @@ func (r *ReconcilerBase) ReconcileConsumes(ba common.BaseComponent) (reconcile.R
 
 // ReconcileBindings goes through the reconcile logic for service binding
 func (r *ReconcilerBase) ReconcileBindings(ba common.BaseComponent) (reconcile.Result, error) {
-	
+	if ba.GetBindings() != nil && ba.GetBindings().GetEmbedded() != nil {
+		if res, err := r.reconcileEmbedded(ba); isRequeue(res, err) {
+			return res, err
+		}
+		return r.done(ba)
+	}
 	if res, err := r.reconcileExternals(ba); isRequeue(res, err) {
 		return res, err
 	}
@@ -394,4 +411,125 @@ func (r *ReconcilerBase) IsSeriveBindingSupported() bool {
 		}
 	}
 	return false
+}
+
+func (r *ReconcilerBase) reconcileEmbedded(ba common.BaseComponent) (reconcile.Result, error) {
+	mObj := ba.(metav1.Object)
+	object, err := r.toJSONFromRaw(ba.GetBindings().GetEmbedded())
+	if err != nil {
+		err = errors.Wrapf(err, "failed: unable marshalling to JSON")
+		return r.requeueError(ba, err)
+	}
+
+	embedded := &unstructured.Unstructured{}
+	embedded.SetUnstructuredContent(object)
+	err = r.updateEmbeddedObject(object, embedded, ba)
+	if err != nil {
+		err = errors.Wrapf(err, "failed: cannot add required fields to the embedded Service Binding")
+		return r.requeueError(ba, err)
+	}
+
+	apiVersion, kind := embedded.GetAPIVersion(), embedded.GetKind()
+	ok, err := r.IsGroupVersionSupported(apiVersion, kind)
+	if !ok {
+		err = errors.Wrapf(err, "failed: embedded Service Binding CRD with GroupVersion %q and Kind %q is not supported on the cluster", apiVersion, kind)
+		return r.requeueError(ba, err)
+	}
+
+	err = r.createOrUpdateEmbedded(embedded, ba)
+	if err != nil {
+		return r.requeueError(ba, errors.Wrapf(err, "failed: cannot create or update embedded Service Binding resource %q in namespace %q", mObj.GetName(), mObj.GetNamespace()))
+	}
+
+	return r.done(ba)
+}
+
+func (r *ReconcilerBase) createOrUpdateEmbedded(embedded *unstructured.Unstructured, ba common.BaseComponent) error {
+	mObj := ba.(metav1.Object)
+	existing := &unstructured.Unstructured{}
+	existing.SetAPIVersion(embedded.GetAPIVersion())
+	existing.SetKind(embedded.GetKind())
+	key := types.NamespacedName{Name: mObj.GetName(), Namespace: mObj.GetNamespace()}
+	err := r.client.Get(context.TODO(), key, existing)
+	if err != nil {
+		if kerrors.IsNotFound(err) {
+			err = r.client.Create(context.TODO(), embedded)
+			if err != nil {
+				return err
+			}
+
+			// add watcher
+			err = r.controller.Watch(&source.Kind{Type: existing}, &handler.EnqueueRequestForOwner{
+				IsController: true,
+				OwnerType:    ba.(runtime.Object),
+			})
+			if err != nil {
+				return errors.Wrap(err, "Cannot add watcher")
+			}
+		} else {
+			return err
+		}
+	} else {
+		// Update the found object and write the result back if there are any changes
+		if !reflect.DeepEqual(embedded.Object[Spec], existing.Object[Spec]) {
+			existing.Object[Spec] = embedded.Object[Spec]
+			err = r.client.Update(context.TODO(), existing)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (r *ReconcilerBase) toJSONFromRaw(content *runtime.RawExtension) (map[string]interface{}, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal(content.Raw, &data); err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func (r *ReconcilerBase) updateEmbeddedObject(object map[string]interface{}, embedded *unstructured.Unstructured, ba common.BaseComponent) error {
+	mObj := ba.(metav1.Object)
+
+	if _, ok := object[Spec]; !ok {
+		return errors.New("failed: embedded Service Binding is missing a 'spec' section")
+	}
+
+	if _, ok := object[Metadata]; ok {
+		return errors.New("failed: embedded Service Binding must not have a 'metadata' section")
+	}
+	embedded.SetName(mObj.GetName())
+	embedded.SetNamespace(mObj.GetNamespace())
+	embedded.SetLabels(mObj.GetLabels())
+	embedded.SetAnnotations(mObj.GetAnnotations())
+
+	if err := controllerutil.SetControllerReference(mObj, embedded, r.scheme); err != nil {
+		return errors.Wrap(err, "SetControllerReference returned error")
+	}
+
+	apiVersion, okAPIVersion := object[APIVersion]
+	kind, okKind := object[Kind]
+
+	// If either API Version or Kind is not set, try getting it from the Operator ConfigMap
+	var defaultGVK schema.GroupVersionKind
+	if !okAPIVersion || !okKind {
+		cmGVK := getServiceBindingGVK()
+		if len(cmGVK) == 0 {
+			return errors.New("failed: embedded Service Binding does not specify 'apiVersion' or 'kind' and there is no default GVK defined in the operator ConfigMap")
+		}
+		defaultGVK = cmGVK[0]
+	}
+	if !okAPIVersion {
+		apiVersion = defaultGVK.GroupVersion().String()
+	}
+	if !okKind {
+		kind = defaultGVK.Kind
+	}
+
+	embedded.SetKind(kind.(string))
+	embedded.SetAPIVersion(apiVersion.(string))
+	return nil
 }

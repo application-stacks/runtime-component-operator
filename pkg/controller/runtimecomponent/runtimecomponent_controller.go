@@ -119,6 +119,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	reconciler.SetController(c)
+
 	watchNamespaces, err := appstacksutils.GetWatchNamespaces()
 	if err != nil {
 		log.Error(err, "Failed to get watch namespace")
