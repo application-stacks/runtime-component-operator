@@ -136,8 +136,6 @@ func testKnIsTrueAndTurnOff(t *testing.T, f *framework.Framework, ctx *framework
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
-	dep = &appsv1.Deployment{}
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: applicationName, Namespace: namespace}, dep)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			util.FailureCleanup(t, f, namespace, errors.New("deployment not found when updating the Knative service to false"))
