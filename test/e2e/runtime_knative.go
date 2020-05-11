@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 	"time"
-
+	
 	"github.com/application-stacks/runtime-component-operator/test/util"
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
@@ -136,7 +136,7 @@ func testKnIsTrueAndTurnOff(t *testing.T, f *framework.Framework, ctx *framework
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
-	
+
 	// ksvc should also be deleted
 	isDeployed, err := util.IsKnativeServiceDeployed(t, f, namespace, applicationName)
 	if err != nil {
