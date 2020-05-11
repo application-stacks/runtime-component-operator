@@ -136,13 +136,6 @@ func testKnIsTrueAndTurnOff(t *testing.T, f *framework.Framework, ctx *framework
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			util.FailureCleanup(t, f, namespace, errors.New("deployment not found when updating the Knative service to false"))
-		} else {
-			util.FailureCleanup(t, f, namespace, err)
-		}
-	}
 	
 	// ksvc should also be deleted
 	isDeployed, err := util.IsKnativeServiceDeployed(t, f, namespace, applicationName)
