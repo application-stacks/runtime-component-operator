@@ -172,6 +172,7 @@ func WaitForKnativeDeployment(t *testing.T, f *framework.Framework, ns, n string
 	return err
 }
 
+// IsKnativeServiceDeployed : Check if the Knative service is deployed.
 func IsKnativeServiceDeployed(t *testing.T, f *framework.Framework, ns, n string) (bool, error) {
 	err := servingv1alpha1.AddToScheme(f.Scheme)
 	if err != nil {
@@ -184,7 +185,6 @@ func IsKnativeServiceDeployed(t *testing.T, f *framework.Framework, ns, n string
 		if apierrors.IsNotFound(lerr) {
 			return false, nil
 		}
-		// issue retrieving ksvc
 		return false, lerr
 	}
 
