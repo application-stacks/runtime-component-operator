@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 	"time"
-	
+
 	"github.com/application-stacks/runtime-component-operator/test/util"
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
@@ -16,7 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// RuntimeKnativeTest : two KnativeService-related E2E tests.
+// RuntimeKnativeTest consists of two KnativeService-related E2E tests.
 // One is to verify the state correctness if Spec.CreateKnativeService is false.
 // Another is to verify the state correctness if Spec.CreateKnativeService is true,
 func RuntimeKnativeTest(t *testing.T) {
