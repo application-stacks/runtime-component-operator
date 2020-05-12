@@ -110,7 +110,7 @@ func (r *ReconcilerBase) CreateOrUpdate(obj metav1.Object, owner metav1.Object, 
 	var gvk schema.GroupVersionKind
 	gvk, err = apiutil.GVKForObject(runtimeObj, r.scheme)
 	if err == nil {
-		log.Info("Reconciled", "Kind", gvk.Kind, "Name", obj.GetName(), "Status", result)
+		log.Info("Reconciled", "Kind", gvk.Kind, "Namespace", obj.GetNamespace(), "Name", obj.GetName(), "Status", result)
 	}
 
 	return err

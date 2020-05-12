@@ -449,7 +449,7 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 		return result, nil
 	}
 
-	if r.IsSeriveBindingSupported() {
+	if r.IsServiceBindingSupported() {
 		result, err = r.ReconcileBindings(instance)
 		if err != nil || result != (reconcile.Result{}) {
 			return result, err

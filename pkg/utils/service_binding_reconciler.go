@@ -275,13 +275,16 @@ func (r *ReconcilerBase) ReconcileBindings(ba common.BaseComponent) (reconcile.R
 		}
 		return r.done(ba)
 	}
+	if err := r.cleanUpEmbeddedBindings(ba); err != nil {
+		return r.requeueError(ba, err)
+	}
 	if res, err := r.reconcileExternals(ba); isRequeue(res, err) {
 		return res, err
 	}
 	return r.done(ba)
 }
 
-func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (reconcile.Result, error) {
+func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (retRes reconcile.Result, retErr error) {
 	mObj := ba.(metav1.Object)
 	var resolvedBindings []string
 
@@ -300,14 +303,14 @@ func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (reconcile.
 		bindingName := mObj.GetName()
 		key := types.NamespacedName{Name: bindingName, Namespace: mObj.GetNamespace()}
 
-		for _, gvk := range getServiceBindingGVK() {
+		for _, gvk := range r.getServiceBindingGVK() {
 			// Using a unstructured object to find ServiceBinding CR since GVK might change
 			bindingObj := &unstructured.Unstructured{}
 			bindingObj.SetGroupVersionKind(gvk)
 			err := r.client.Get(context.Background(), key, bindingObj)
 			if err != nil {
 				if !kerrors.IsNotFound(err) {
-					log.Error(errors.Wrapf(err, "failed to find a service binding resource during auto-detect for GVK %q", gvk), "failed to get ServiceBinding CR")
+					log.Error(errors.Wrapf(err, "failed to find a service binding resource during auto-detect for GVK %q", gvk), "failed to get Service Binding CR")
 				}
 				continue
 			}
@@ -324,15 +327,13 @@ func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (reconcile.
 		}
 	}
 
-	if !equals(resolvedBindings, ba.GetStatus().GetResolvedBindings()) {
-		sort.Strings(resolvedBindings)
-		ba.GetStatus().SetResolvedBindings(resolvedBindings)
-		if err := r.UpdateStatus(ba.(runtime.Object)); err != nil {
-			return r.requeueError(ba, errors.Wrapf(err, "unable to update status with resolved service binding information"))
+	retRes, retErr = r.done(ba)
+	defer func() {
+		if res, err := r.updateBindingStatus(resolvedBindings, ba); isRequeue(res, err) {
+			retRes, retErr = res, err
 		}
-	}
-
-	return r.done(ba)
+	}()
+	return
 }
 
 //GetResolvedBindingSecret returns the secret referenced in .status.resolvedBindings
@@ -385,7 +386,7 @@ func equals(sl1, sl2 []string) bool {
 	return true
 }
 
-func getServiceBindingGVK() []schema.GroupVersionKind {
+func getOpConfigServiceBindingGVKs() []schema.GroupVersionKind {
 	gvkStringList := strings.Split(common.Config[common.OpConfigSvcBindingGVKs], ",")
 	for i := range gvkStringList {
 		gvkStringList[i] = strings.TrimSpace(gvkStringList[i])
@@ -403,18 +404,44 @@ func getServiceBindingGVK() []schema.GroupVersionKind {
 	return gvkList
 }
 
-// IsSeriveBindingSupported returns true if at least one GVK in the operator ConfigMap's serviceBinding.groupVersionKinds is installed
-func (r *ReconcilerBase) IsSeriveBindingSupported() bool {
-	for _, gvk := range getServiceBindingGVK() {
+func (r *ReconcilerBase) getServiceBindingGVK() (gvkList []schema.GroupVersionKind) {
+	for _, gvk := range getOpConfigServiceBindingGVKs() {
 		if ok, _ := r.IsGroupVersionSupported(gvk.GroupVersion().String(), gvk.Kind); ok {
-			return true
+			gvkList = append(gvkList, gvk)
 		}
 	}
-	return false
+	return gvkList
 }
 
-func (r *ReconcilerBase) reconcileEmbedded(ba common.BaseComponent) (reconcile.Result, error) {
+// IsServiceBindingSupported returns true if at least one GVK in the operator ConfigMap's serviceBinding.groupVersionKinds is installed
+func (r *ReconcilerBase) IsServiceBindingSupported() bool {
+	return len(r.getServiceBindingGVK()) > 0
+}
+
+// cleanUpEmbeddedBindings deletes Service Binding resources owned by current CR based having the same name as CR
+func (r *ReconcilerBase) cleanUpEmbeddedBindings(ba common.BaseComponent) error {
 	mObj := ba.(metav1.Object)
+	for _, gvk := range r.getServiceBindingGVK() {
+		bindingObj := &unstructured.Unstructured{}
+		bindingObj.SetGroupVersionKind(gvk)
+		key := types.NamespacedName{Name: mObj.GetName(), Namespace: mObj.GetNamespace()}
+		err := r.client.Get(context.Background(), key, bindingObj)
+		if err == nil && metav1.IsControlledBy(bindingObj, mObj) {
+			err = r.client.Delete(context.Background(), bindingObj)
+			if client.IgnoreNotFound(err) != nil {
+				return err
+			}
+		} else if client.IgnoreNotFound(err) != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *ReconcilerBase) reconcileEmbedded(ba common.BaseComponent) (retRes reconcile.Result, retErr error) {
+	mObj := ba.(metav1.Object)
+	var resolvedBindings []string
+
 	object, err := r.toJSONFromRaw(ba.GetBindings().GetEmbedded())
 	if err != nil {
 		err = errors.Wrapf(err, "failed: unable marshalling to JSON")
@@ -425,7 +452,7 @@ func (r *ReconcilerBase) reconcileEmbedded(ba common.BaseComponent) (reconcile.R
 	embedded.SetUnstructuredContent(object)
 	err = r.updateEmbeddedObject(object, embedded, ba)
 	if err != nil {
-		err = errors.Wrapf(err, "failed: cannot add required fields to the embedded Service Binding")
+		err = errors.Wrapf(err, "failed: cannot add missing information to the embedded Service Binding")
 		return r.requeueError(ba, err)
 	}
 
@@ -441,6 +468,34 @@ func (r *ReconcilerBase) reconcileEmbedded(ba common.BaseComponent) (reconcile.R
 		return r.requeueError(ba, errors.Wrapf(err, "failed: cannot create or update embedded Service Binding resource %q in namespace %q", mObj.GetName(), mObj.GetNamespace()))
 	}
 
+	// Get binding secret and add it to status field. If binding hasn't been successful, secret won't be created and it keeps trying
+	key := types.NamespacedName{Name: mObj.GetName(), Namespace: mObj.GetNamespace()}
+	bindingSecret := &corev1.Secret{}
+	err = r.GetClient().Get(context.TODO(), key, bindingSecret)
+	if err == nil {
+		resolvedBindings = append(resolvedBindings, mObj.GetName())
+	} else {
+		err = errors.Wrapf(err, "service binding dependency not satisfied: unable to find service binding secret for embedded binding %q in namespace %q", mObj.GetName(), mObj.GetNamespace())
+		return r.requeueError(ba, err)
+	}
+
+	retRes, retErr = r.done(ba)
+	defer func() {
+		if res, err := r.updateBindingStatus(resolvedBindings, ba); isRequeue(res, err) {
+			retRes, retErr = res, err
+		}
+	}()
+	return
+}
+
+func (r *ReconcilerBase) updateBindingStatus(bindings []string, ba common.BaseComponent) (reconcile.Result, error) {
+	if !equals(bindings, ba.GetStatus().GetResolvedBindings()) {
+		sort.Strings(bindings)
+		ba.GetStatus().SetResolvedBindings(bindings)
+		if err := r.UpdateStatus(ba.(runtime.Object)); err != nil {
+			return r.requeueError(ba, errors.Wrapf(err, "unable to update status with resolved service binding information"))
+		}
+	}
 	return r.done(ba)
 }
 
@@ -516,7 +571,7 @@ func (r *ReconcilerBase) updateEmbeddedObject(object map[string]interface{}, emb
 	// If either API Version or Kind is not set, try getting it from the Operator ConfigMap
 	var defaultGVK schema.GroupVersionKind
 	if !okAPIVersion || !okKind {
-		cmGVK := getServiceBindingGVK()
+		cmGVK := getOpConfigServiceBindingGVKs()
 		if len(cmGVK) == 0 {
 			return errors.New("failed: embedded Service Binding does not specify 'apiVersion' or 'kind' and there is no default GVK defined in the operator ConfigMap")
 		}
