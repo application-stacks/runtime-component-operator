@@ -172,6 +172,25 @@ func WaitForKnativeDeployment(t *testing.T, f *framework.Framework, ns, n string
 	return err
 }
 
+// IsKnativeServiceDeployed : Check if the Knative service is deployed.
+func IsKnativeServiceDeployed(t *testing.T, f *framework.Framework, ns, n string) (bool, error) {
+	err := servingv1alpha1.AddToScheme(f.Scheme)
+	if err != nil {
+		return false, err
+	}
+
+	ksvc := &servingv1alpha1.ServiceList{}
+	lerr := f.Client.Get(goctx.TODO(), types.NamespacedName{Name: n, Namespace: ns}, ksvc)
+	if lerr != nil {
+		if apierrors.IsNotFound(lerr) {
+			return false, nil
+		}
+		return false, lerr
+	}
+
+	return true, nil
+}
+
 func IsCertManagerInstalled(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) bool {
 	certmngrv1alpha2.AddToScheme(f.Scheme)
 

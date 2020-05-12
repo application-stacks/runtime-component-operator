@@ -2,17 +2,25 @@ package e2e
 
 import (
 	goctx "context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/application-stacks/runtime-component-operator/test/util"
+	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 )
 
-// RuntimeKnativeTest : Create application with knative service enabled to verify feature
+// RuntimeKnativeTest consists of two KnativeService-related E2E tests.
+// One is to verify the state correctness if Spec.CreateKnativeService is false.
+// Another is to verify the state correctness if Spec.CreateKnativeService is true,
 func RuntimeKnativeTest(t *testing.T) {
+	// standard initialization
 	ctx, err := util.InitializeContext(t, cleanupTimeout, retryInterval)
 	if err != nil {
 		t.Fatal(err)
@@ -33,26 +41,16 @@ func RuntimeKnativeTest(t *testing.T) {
 		return
 	}
 
+	// wait for the operator to be deployed
 	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "runtime-component-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
-	knativeBool := true
-	applicationName := "example-runtime-knative"
 
-	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, applicationName, namespace, 1)
-	exampleRuntime.Spec.CreateKnativeService = &knativeBool
+	// start the two cases
+	testKnIsFalse(t, f, ctx, namespace)
+	testKnIsTrueAndTurnOff(t, f, ctx, namespace)
 
-	// Create application deployment and wait
-	err = f.Client.Create(goctx.TODO(), exampleRuntime, &framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
-	if err != nil {
-		util.FailureCleanup(t, f, namespace, err)
-	}
-
-	err = util.WaitForKnativeDeployment(t, f, namespace, applicationName, retryInterval, timeout)
-	if err != nil {
-		util.FailureCleanup(t, f, namespace, err)
-	}
 }
 
 func isKnativeInstalled(t *testing.T, f *framework.Framework) bool {
@@ -67,4 +65,85 @@ func isKnativeInstalled(t *testing.T, f *framework.Framework) bool {
 		}
 	}
 	return false
+}
+
+func testKnIsFalse(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, namespace string) {
+	knativeBool := false
+	applicationName := "example-runtime-knative-0"
+	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, applicationName, namespace, 1)
+	exampleRuntime.Spec.CreateKnativeService = &knativeBool
+
+	// create application deployment and wait
+	err := f.Client.Create(goctx.TODO(), exampleRuntime, &framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, applicationName, 1, retryInterval, operatorTimeout)
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	// Knative service should not be deployed.
+	isDeployed, err := util.IsKnativeServiceDeployed(t, f, namespace, applicationName)
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+	if isDeployed {
+		util.FailureCleanup(t, f, namespace, 
+			errors.New("knative service is deployed when CreateKnativeService is set to false"))
+	}
+}
+
+func testKnIsTrueAndTurnOff(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, namespace string) {
+	knativeBool := true
+	applicationName := "example-runtime-knative-1"
+	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, applicationName, namespace, 1)
+	exampleRuntime.Spec.CreateKnativeService = &knativeBool
+
+	// create application deployment and wait
+	err := f.Client.Create(goctx.TODO(), exampleRuntime, &framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	err = util.WaitForKnativeDeployment(t, f, namespace, applicationName, retryInterval, timeout)
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	// If deployment not cleared, test fails.
+	dep := &appsv1.Deployment{}
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: applicationName, Namespace: namespace}, dep)
+	if err != nil {
+		if !apierrors.IsNotFound(err) {
+			util.FailureCleanup(t, f, namespace, err)
+		}
+	}
+
+	// turn the runtime component off / set CreateKnativeService to false.
+	target := types.NamespacedName{Name: applicationName, Namespace: namespace}
+	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
+		knativeBool = false
+		r.Spec.CreateKnativeService = &knativeBool
+	})
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	// wait for the change to take effect and verify the state
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, applicationName, 1, retryInterval, operatorTimeout)
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	// ksvc should also be deleted
+	isDeployed, err := util.IsKnativeServiceDeployed(t, f, namespace, applicationName)
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+	if isDeployed {
+		util.FailureCleanup(t, f, namespace, 
+			errors.New("knative service is deployed when CreateKnativeService is set to false"))
+	}
 }
