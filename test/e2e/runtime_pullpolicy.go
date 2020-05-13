@@ -16,7 +16,7 @@ import (
 
 var (
 	ifNotPresentMessage = "Container image \"navidsh/demo-day\" already present on machine"
-	alwaysMessage       = "pulling image \"navidsh/demo-day\""
+	alwaysMessage       = "Pulling image \"navidsh/demo-day\""
 	neverMessage        = "Container image \"navidsh/demo-day-fake\" is not present with pull policy of Never"
 )
 
