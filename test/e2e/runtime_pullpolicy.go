@@ -115,7 +115,7 @@ func searchEventMessages(t *testing.T, f *framework.Framework, key string, names
 	t.Logf("***** Logging events in namespace: %s", namespace)
 	for i := len(eventlist.Items) - 1; i >= 0; i-- {
 		if strings.Contains(eventlist.Items[i].Message, "navidsh/demo-day") {
-			if eventlist.Items[i].Message == key {
+			if strings.ToLower(eventlist.Items[i].Message) == strings.ToLower(key) {
 				return nil
 			}
 		}
