@@ -62,6 +62,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `initContainers` | The list of link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#container-v1-core++[Init Container] definitions.
 | `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`.
 | `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference.
+| `bindings.embedded` | A YAML object representing a `ServiceBindingRequest` resource.
 | `bindings.autoDetect` | A boolean to toggle whether the operator should automatically detect and use a `ServiceBindingRequest` resource with the same name as the CR. The default value for this parameter is `true`.
 | `bindings.resourceRef` | The name of a `ServiceBindingRequest` resource created manually in the same namespace as the application.
 | `service.port` | The port exposed by the container.
@@ -400,7 +401,43 @@ spec:
 
 The link:++https://github.com/redhat-developer/service-binding-operator++[Service Binding Operator] enables application developers to bind applications together with operator-managed backing services. This can be achieved by creating a `ServiceBindingRequest` custom resource.
 
-For the Runtime Component Operator to pass the binding information to the application, you can specify the name of the `ServiceBindingRequest` custom resource as follows:
+
+For the Runtime Component Operator to pass the binding information to the application, you need to define your `ServiceBindingRequest` in one of the following two ways:
+
+. Define the `ServiceBindingRequest` custom resource YAML within the `bindings.embedded` parameter in your `RuntimeComponent` custom resource.
+. Create the `ServiceBindingRequest` manually and either refer to it explicitly in your `RuntimeComponent` custom resource or let the operator detect it automatically.
+
+===== Embedding the Service Binding resource
+
+In this approach, you should define your `ServiceBindingRequest` custom resource within your `RuntimeComponent` custom resource:
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: my-app
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  bindings:
+    embedded:
+      apiVersion: apps.openshift.io/v1alpha1
+      kind: ServiceBindingRequest
+      spec:
+        backingServiceSelectors:
+          - group: kafka.strimzi.io
+            kind: Kafka
+            resourceRef: my-cluster
+            version: v1beta1
+----
+
+After the Runtime Component Operator processes the `RuntimeComponent` custom resource above, it creates a `ServiceBindingRequest` custom resource named `my-app`.
+
+Once the Service Binding Operator processes the `my-app` custom resource of the `ServiceBindingRequest` type, it creates a `Secret` object. The `Secret` resource contains binding information that the backing service provides. The Runtime Component Operator injects the `Secret` resource as environment variables into application pods.
+
+===== Creating the Service Binding resource externally
+
+In this approach, you must create your `ServiceBindingRequest` custom resource in a separate YAML definition and then refer to the resource within your `RuntimeComponent` custom resource:
 
 [source,yaml]
 ----
@@ -414,9 +451,9 @@ spec:
     resourceRef: my-binding
 ----
 
-After the Service Binding Operator processes the `my-binding` custom resource of the `ServiceBindingRequest` type, it creates a `Secret` object. The `Secret` resource contains binding information that the backing service provides. The Runtime Component Operator injects the `Secret` resource as environment variables into application pods.
+Similar to what was described above, after the Service Binding Operator processes the `my-binding` custom resource of the `ServiceBindingRequest` type, it creates a `Secret` object. The `Secret` resource contains binding information that the backing service provides. The Runtime Component Operator injects the `Secret` resource as environment variables into application pods.
 
-The Runtime Component Operator can also automatically detect if a `ServiceBindingRequest` custom resource with the same name as the application exists in the application namespace. If the operator detects the custom resource, it injects the binding secret into the application container.
+The Runtime Component Operator can also _automatically detect_ if a `ServiceBindingRequest` custom resource with the same name as the application exists in the application namespace. If the operator detects the custom resource, it injects the binding secret into the application container.
 
 Users can turn off the auto-detection mechanism by setting the `bindings.autoDetect` parameter to a value of `false`. The `bindings.resourceRef` parameter takes precedence over the `bindings.autoDetect` parameter. In other words, the Runtime Component Operator, injects secrets from the `my-binding` resource, even if a `ServiceBindingRequest` resource named `my-app` exists:
 
