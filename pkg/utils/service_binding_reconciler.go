@@ -501,6 +501,7 @@ func (r *ReconcilerBase) updateBindingStatus(bindings []string, ba common.BaseCo
 
 func (r *ReconcilerBase) createOrUpdateEmbedded(embedded *unstructured.Unstructured, ba common.BaseComponent) error {
 	mObj := ba.(metav1.Object)
+	result := controllerutil.OperationResultNone
 	existing := &unstructured.Unstructured{}
 	existing.SetAPIVersion(embedded.GetAPIVersion())
 	existing.SetKind(embedded.GetKind())
@@ -512,7 +513,7 @@ func (r *ReconcilerBase) createOrUpdateEmbedded(embedded *unstructured.Unstructu
 			if err != nil {
 				return err
 			}
-
+			result = controllerutil.OperationResultCreated
 			// add watcher
 			err = r.controller.Watch(&source.Kind{Type: existing}, &handler.EnqueueRequestForOwner{
 				IsController: true,
@@ -532,9 +533,11 @@ func (r *ReconcilerBase) createOrUpdateEmbedded(embedded *unstructured.Unstructu
 			if err != nil {
 				return err
 			}
+			result = controllerutil.OperationResultUpdated
 		}
 	}
 
+	log.Info("Reconciled", "Kind", embedded.GetKind(), "Namespace", mObj.GetNamespace(), "Name", mObj.GetName(), "Status", result)
 	return nil
 }
 
