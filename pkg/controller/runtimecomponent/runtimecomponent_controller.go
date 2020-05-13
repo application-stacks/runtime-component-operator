@@ -242,7 +242,9 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	err = c.Watch(
 		&source.Kind{Type: &corev1.Secret{}},
 		&EnqueueRequestsForCustomIndexField{
-			Matcher: CreateBindingSecretMatcher(mgr.GetClient()),
+			Matcher: &BindingSecretMatcher{
+				klient: mgr.GetClient(),
+			},
 		})
 	if err != nil {
 		return err
@@ -253,7 +255,10 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		c.Watch(
 			&source.Kind{Type: &imagev1.ImageStream{}},
 			&EnqueueRequestsForCustomIndexField{
-				Matcher: CreateImageStreamMatcher(mgr.GetClient(), watchNamespaces),
+				Matcher: &ImageStreamMatcher{
+					klient:          mgr.GetClient(),
+					watchNamespaces: watchNamespaces,
+				},
 			})
 	}
 
