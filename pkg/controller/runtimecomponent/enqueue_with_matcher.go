@@ -95,6 +95,7 @@ func (i *ImageStreamMatcher) Match(imageStreamTag metav1.Object) ([]appstacksv1b
 		}
 		apps = append(apps, appList.Items...)
 	}
+
 	return apps, nil
 }
 
@@ -122,11 +123,10 @@ func (b *BindingSecretMatcher) Match(secret metav1.Object) ([]appstacksv1beta1.R
 	// If we are able to find an app with the secret name, add the app. This is to cover the autoDetect scenario
 	app := &appstacksv1beta1.RuntimeComponent{}
 	err = b.klient.Get(context.Background(), types.NamespacedName{Name: secret.GetName(), Namespace: secret.GetNamespace()}, app)
-	if err != nil {
-		if !kerrors.IsNotFound(err) {
-			return nil, err
-		}
+	if err == nil {
+		apps = append(apps, *app)
+	} else if !kerrors.IsNotFound(err) {
+		return nil, err
 	}
-	apps = append(apps, *app)
 	return apps, nil
 }
