@@ -517,15 +517,15 @@ _This feature is only available if you are running on OKD or OpenShift._
 
 ==== Non-Knative deployment (Ingress)
 
-To expose your service, first your cluster needs to have one of available Ingress Controllers, such as Nginx or Traefik, installed.
+Before you can use the Ingress resource to expose your cluster, you must install an ingress controller, such a Nginx or Traeik..
 
-_Ingress will be created only if `Route` resource is not available._
-
-
-To use Ingress it is recommended to set the value of `defaultHostName` (eg. mycompany.com) in `runtime-component-operator` ConfigMap.
+_The Ingress resource is created only if the `Route` resource is not available._
 
 
-===== Simple Ingress using `defaultHostName` and no `TLS`:
+To use the Ingress resource, set the `defaultHostName` variable in the runtime-component-operator ConfigMap object to a host name such as mycomp.com
+
+
+===== Simple Ingress that uses `defaultHostName` and no `TLS`:
 
 [source,yaml]
 ----
@@ -539,12 +539,12 @@ spec:
   expose: true
 ----
 
-With default hostname of mycompany.com Application will be available at http://my-app-backend.mycompany.com
+With default hostname of mycompany.com, the application is available at the http://my-app-backend.mycompany.com URL.
 
 
-===== Enable TLS and generate certificate using cert-manager:
+===== Enable TLS and generate a certificate by using the cert-manager controller:
 
-_Note: To generate custom certificate automaitcally for Ingress cert-manager installation is required._
+_Note: You must install the cert-manager controller to automatically generate a custom certificate for the ingress controller._
 
 [source,yaml]
 ----
@@ -562,9 +562,9 @@ spec:
 
 ===== Advanced Ingress configuration:
 
-Most of the Ingress configuraiton is achieved through annotations. Those annotations will be specific to the ingress controller implementation suchas Nginx, HAProxy, Traefik, and others.
+Most of the Ingress configuraiton is achieved through annotations. Annotations such as Nginx, HAProxy, Traefik, and others are specific to the ingress controller implementation.
 
-It is possible to provide exisitng TLS secret to be used as well as set custom hostname.
+You can provide an existing TLS secret and set a custom hostname.
 
 [source,yaml]
 ----
@@ -578,20 +578,20 @@ spec:
   expose: true
   route:
     annotations:
-      # this annotation can be used to specify name of ingress controller to use
-      # there could be multiple installed for different types of incoming traffic (external DNS, internal DNS, etc)
+      # You can use this annotation to specify the name of the ingress controller to use.
+      # You can install multiple ingress controllers to address different types of incoming traffic such as an external or internal DNS.
       kubernetes.io/ingress.class: "nginx" 
       
-      # nginx ingress specific annotations, enbled secure pod connection
+      # The following nginx annotation enables a secure pod connection:
       nginx.ingress.kubernetes.io/ssl-redirect: true
       nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 
-      # traefik specific annotations, enbled secure pod connection
+      # The following traefik annotation enables a secure pod connection:
       traefik.ingress.kubernetes.io/service.serversscheme: https
 
-    #use custom hostname for this Ingress
+    # Use a custom hostname for the Ingress
     host: app-v1.mycompany.com
-    #reference pre-existing TLS sercret
+    # Reference a pre-existing TLS secret:
     certificateSecretRef: mycompany-tls
 ----
 
