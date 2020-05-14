@@ -141,6 +141,15 @@ const (
 	ServiceBindingCategoryOpenAPI ServiceBindingCategory = "openapi"
 )
 
+// BaseComponentAffinity describes deployment and pod affinity
+type BaseComponentAffinity interface {
+	GetNodeAffinity() *corev1.NodeAffinity
+	GetPodAffinity() *corev1.PodAffinity
+	GetPodAntiAffinity() *corev1.PodAntiAffinity
+	GetArchitecture() []string
+	GetNodeAffinityLabels() map[string]string
+}
+
 // BaseComponent represents basic kubernetes application
 type BaseComponent interface {
 	GetApplicationImage() string
@@ -173,6 +182,7 @@ type BaseComponent interface {
 	GetGroupName() string
 	GetRoute() BaseComponentRoute
 	GetBindings() BaseComponentBindings
+	GetAffinity() BaseComponentAffinity
 }
 
 // Certificate returns cert-manager CertificateSpec
