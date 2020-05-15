@@ -30,7 +30,7 @@ const (
 // the modified resource
 type EnqueueRequestsForCustomIndexField struct {
 	handler.Funcs
-	Matcher CustomMatcher
+	Matcher  CustomMatcher
 }
 
 // Update implements EventHandler
@@ -67,28 +67,28 @@ type CustomMatcher interface {
 
 // ImageStreamMatcher implements CustomMatcher for Image Streams
 type ImageStreamMatcher struct {
-	klient          client.Client
-	watchNamespaces []string
+	Klient          client.Client
+	WatchNamespaces []string
 }
 
 // Match returns all applications using the input ImageStreamTag
 func (i *ImageStreamMatcher) Match(imageStreamTag metav1.Object) ([]appstacksv1beta1.RuntimeComponent, error) {
 	apps := []appstacksv1beta1.RuntimeComponent{}
 	var namespaces []string
-	if appstacksutils.IsClusterWide(i.watchNamespaces) {
+	if appstacksutils.IsClusterWide(i.WatchNamespaces) {
 		nsList := &corev1.NamespaceList{}
-		if err := i.klient.List(context.Background(), nsList, client.InNamespace("")); err != nil {
+		if err := i.Klient.List(context.Background(), nsList, client.InNamespace("")); err != nil {
 			return nil, err
 		}
 		for _, ns := range nsList.Items {
 			namespaces = append(namespaces, ns.Name)
 		}
 	} else {
-		namespaces = watchNamespaces
+		namespaces = i.WatchNamespaces
 	}
 	for _, ns := range namespaces {
 		appList := &appstacksv1beta1.RuntimeComponentList{}
-		err := i.klient.List(context.Background(),
+		err := i.Klient.List(context.Background(),
 			appList,
 			client.InNamespace(ns),
 			client.MatchingFields{indexFieldImageStreamName: imageStreamTag.GetNamespace() + "/" + imageStreamTag.GetName()})

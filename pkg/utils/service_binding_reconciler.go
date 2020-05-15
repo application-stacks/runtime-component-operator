@@ -308,8 +308,10 @@ func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (retRes rec
 			bindingObj := &unstructured.Unstructured{}
 			bindingObj.SetGroupVersionKind(gvk)
 			err := r.client.Get(context.Background(), key, bindingObj)
-			if client.IgnoreNotFound(err) != nil {
-				log.Error(errors.Wrapf(err, "failed to find a service binding resource during auto-detect for GVK %q", gvk), "failed to get Service Binding CR")
+			if err != nil {
+				if !kerrors.IsNotFound(err) {
+					log.Error(errors.Wrapf(err, "failed to find a service binding resource during auto-detect for GVK %q", gvk), "failed to get Service Binding CR")
+				}
 				continue
 			}
 
@@ -590,5 +592,5 @@ func (r *ReconcilerBase) updateEmbeddedObject(object map[string]interface{}, emb
 }
 
 func getDefaultServiceBindingName(ba common.BaseComponent) string {
-	return (ba.(metav1.Object)).GetName() + "-bindings"
+	return (ba.(metav1.Object)).GetName() + "-binding"
 }

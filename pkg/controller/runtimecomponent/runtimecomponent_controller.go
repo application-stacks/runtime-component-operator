@@ -256,8 +256,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 			&source.Kind{Type: &imagev1.ImageStream{}},
 			&EnqueueRequestsForCustomIndexField{
 				Matcher: &ImageStreamMatcher{
-					klient:          mgr.GetClient(),
-					watchNamespaces: watchNamespaces,
+					Klient:          mgr.GetClient(),
+					WatchNamespaces: watchNamespaces,
 				},
 			})
 	}
