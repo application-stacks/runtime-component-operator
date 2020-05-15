@@ -49,6 +49,14 @@ func RuntimeProbeTest(t *testing.T) {
 	if err = probeTest(t, f, ctx, libertyProbe); err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
+
+	if err = editProbeTest(t, f, ctx); err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
+	if err = deleteProbeTest(t, f, ctx); err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
 }
 
 func probeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, probe corev1.Handler) error {
@@ -72,14 +80,10 @@ func probeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, pro
 	if err != nil {
 		return err
 	}
-
-	if err = editProbeTest(t, f, ctx, exampleRuntime); err != nil {
-		return err
-	}
 	return nil
 }
 
-func editProbeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, app *appstacksv1beta1.RuntimeComponent) error {
+func editProbeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		return err
@@ -96,5 +100,26 @@ func editProbeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func deleteProbeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
+	namespace, err := ctx.GetNamespace()
+	if err != nil {
+		return err
+	}
+
+	target := types.NamespacedName{Namespace: namespace, Name: "example-runtime-readiness"}
+
+	util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
+		r.Spec.LivenessProbe = nil
+		r.Spec.ReadinessProbe = nil
+	})
+
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-runtime-readiness", 1, retryInterval, timeout)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
