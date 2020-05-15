@@ -11,12 +11,14 @@ import (
 
 	"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
+	"github.com/application-stacks/runtime-component-operator/pkg/common"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -47,7 +49,9 @@ var (
 	serviceType              = corev1.ServiceTypeClusterIP
 	serviceType2             = corev1.ServiceTypeNodePort
 	provides                 = appstacksv1beta1.ServiceBindingProvides{Context: "/path", Protocol: "TCP"}
-	service                  = &appstacksv1beta1.RuntimeComponentService{Type: &serviceType, Port: 8443, Provides: &provides}
+	consumes                 = appstacksv1beta1.ServiceBindingConsumes{Name: "consumes"}
+	consume                  = []appstacksv1beta1.ServiceBindingConsumes{consumes}
+	service                  = &appstacksv1beta1.RuntimeComponentService{Type: &serviceType, Port: 8443, Provides: &provides, Consumes: consume}
 	svcPortName              = "myservice"
 	targetHelper       int32 = 9000
 	ports                    = []corev1.ServicePort{corev1.ServicePort{Name: "https", Port: 9080, TargetPort: intstr.FromInt(9000)}, corev1.ServicePort{Port: targetPort}}
@@ -424,6 +428,63 @@ func TestCustomizePodSpec(t *testing.T) {
 
 }
 
+func TestCustomizeServiceBinding(t *testing.T) {
+	logf.SetLogger(logf.ZapLogger(true))
+	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service}
+	runtime := createRuntimeComponent(name, namespace, spec, labels, annotations)
+	resolvedBindings := []string{"binding1", "binding2"}
+	runtime.GetStatus().SetResolvedBindings(resolvedBindings)
+	secret := &corev1.Secret{}
+	container := &corev1.Container{}
+	containers := []corev1.Container{*container}
+	ps := &corev1.PodSpec{Containers: containers}
+
+	CustomizeServiceBinding(secret, ps, runtime)
+
+	testCS := []Test{
+		{"Pod Spec EnvFrom", "binding1", ps.Containers[0].EnvFrom[0].SecretRef.Name},
+		{"Pod Spec Env", secret.ResourceVersion, ps.Containers[0].Env[0].Value},
+		{"Pod Spec Env", "RESOLVED_BINDING_SECRET_REV", ps.Containers[0].Env[0].Name},
+	}
+
+	verifyTests(testCS, t)
+}
+
+func TestCustomizeConsumedServices(t *testing.T) {
+	logf.SetLogger(logf.ZapLogger(true))
+	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service}
+	runtime := createRuntimeComponent(name, namespace, spec, labels, annotations)
+	consumed := []string{"consumed1", namespace + "-consumes"}
+	svcbindingCategory := common.ConsumedServices{common.ServiceBindingCategoryOpenAPI: consumed}
+	runtime.GetStatus().SetConsumedServices(svcbindingCategory)
+	container := &corev1.Container{}
+	containers := []corev1.Container{*container}
+	ps := &corev1.PodSpec{Containers: containers}
+
+	CustomizeConsumedServices(ps, runtime)
+
+	testCS := []Test{
+		{"Pod Spec Env Name", "CONSUMES_USERNAME", ps.Containers[0].Env[0].Name},
+		{"Pod Spec Env SecretKeyRef Key", "username", ps.Containers[0].Env[0].ValueFrom.SecretKeyRef.Key},
+		{"Pod Spec Env SecretKeyRef Option", true, *ps.Containers[0].Env[0].ValueFrom.SecretKeyRef.Optional},
+	}
+
+	verifyTests(testCS, t)
+
+	runtime.Spec.Service.Consumes[0].MountPath = "myPath"
+	CustomizeConsumedServices(ps, runtime)
+
+	testCS = []Test{
+		{"Pod Spec Volume Mounts Name", ps.Containers[0].VolumeMounts[0].Name, "runtime-consumes"},
+		{"Pod Spec Volume Mounts Mount Path", ps.Containers[0].VolumeMounts[0].MountPath, "myPath//consumes"},
+		{"Pod Spec Volume Mounts Read Only", ps.Containers[0].VolumeMounts[0].ReadOnly, true},
+		{"Pod Spec Volume Name", ps.Volumes[0].Name, "runtime-consumes"},
+		{"Pod Spec Volume Mounts Mount Path", ps.Volumes[0].VolumeSource.Secret.SecretName, "runtime-consumes"},
+	}
+
+	verifyTests(testCS, t)
+}
+
 func TestCustomizePersistence(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
@@ -562,6 +623,55 @@ func TestCustomizeHPA(t *testing.T) {
 	verifyTests(testCHPA, t)
 }
 
+func TestValidate(t *testing.T) {
+	logf.SetLogger(logf.ZapLogger(true))
+	storage2 := &appstacksv1beta1.RuntimeComponentStorage{}
+	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service, Storage: storage2}
+	runtime := createRuntimeComponent(name, namespace, spec, labels, annotations)
+
+	result, err := Validate(runtime)
+
+	testCS := []Test{
+		{"Error response", false, result},
+		{"Error response", errors.New("validation failed: must set the field(s): spec.storage.size"), err},
+	}
+
+	verifyTests(testCS, t)
+
+	storage2 = &appstacksv1beta1.RuntimeComponentStorage{Size: "size"}
+	runtime.Spec.Storage = storage2
+
+	result, err = Validate(runtime)
+
+	testCS = []Test{
+		{"Error response", false, result},
+		{"Error response", errors.New("validation failed: cannot parse 'size': quantities must match the regular expression '^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$'"), err},
+	}
+
+	verifyTests(testCS, t)
+
+	runtime.Spec.Storage = &storage
+
+	result, err = Validate(runtime)
+
+	testCS = []Test{
+		{"Result", true, result},
+		{"Error response", nil, err},
+	}
+
+	verifyTests(testCS, t)
+}
+
+func TestCreateValidationError(t *testing.T) {
+	result := createValidationError("Test Error")
+
+	testCS := []Test{
+		{"Validation error message", errors.New("validation failed: Test Error"), result},
+	}
+
+	verifyTests(testCS, t)
+}
+
 func TestCustomizeServiceMonitor(t *testing.T) {
 
 	logf.SetLogger(logf.ZapLogger(true))
@@ -571,6 +681,7 @@ func TestCustomizeServiceMonitor(t *testing.T) {
 		"params": []string{"param1", "param2"},
 	}
 
+	portValue := intstr.FromString("web")
 	// Endpoint for runtime
 	endpointApp := &prometheusv1.Endpoint{
 		Port:            "web",
@@ -582,6 +693,7 @@ func TestCustomizeServiceMonitor(t *testing.T) {
 		Params:          params,
 		ScrapeTimeout:   "myScrapeTimeout",
 		BearerTokenFile: "myBearerTokenFile",
+		TargetPort:      &portValue,
 	}
 	endpointsApp := make([]prometheusv1.Endpoint, 1)
 	endpointsApp[0] = *endpointApp
@@ -635,6 +747,7 @@ func TestCustomizeServiceMonitor(t *testing.T) {
 	}
 
 	verifyTests(testSM, t)
+
 }
 
 func TestGetCondition(t *testing.T) {
@@ -650,6 +763,11 @@ func TestGetCondition(t *testing.T) {
 	conditionType := appstacksv1beta1.StatusConditionTypeReconciled
 	cond := GetCondition(conditionType, status)
 	testGC := []Test{{"Set status condition", status.Conditions[0].Status, cond.Status}}
+	verifyTests(testGC, t)
+
+	status = &appstacksv1beta1.RuntimeComponentStatus{}
+	cond = GetCondition(conditionType, status)
+	testGC = []Test{{"Set status condition", 0, len(status.Conditions)}}
 	verifyTests(testGC, t)
 }
 
@@ -768,6 +886,171 @@ func TestUpdateAppDefinition(t *testing.T) {
 	}
 	verifyTests(appDefinitionTests, t)
 
+}
+
+func TestContainsString(t *testing.T) {
+	fullString := []string{"string1", "string2"}
+	subString := ""
+
+	result := ContainsString(fullString, subString)
+
+	testCS := []Test{
+		{"Testing when string is not present", false, result},
+	}
+
+	verifyTests(testCS, t)
+
+	subString = "string2"
+	result = ContainsString(fullString, subString)
+
+	testCS = []Test{
+		{"Testing when string is present", true, result},
+	}
+
+	verifyTests(testCS, t)
+}
+
+func TestAppendIfNotSubstring(t *testing.T) {
+	listOfStrings := ""
+	result := AppendIfNotSubstring("append", listOfStrings)
+
+	testCS := []Test{
+		{"No list of strings", "append", result},
+	}
+
+	verifyTests(testCS, t)
+
+	listOfStrings = "string1,string2"
+	result = AppendIfNotSubstring("append", listOfStrings)
+
+	testCS = []Test{
+		{"List of strings", listOfStrings + ",append", result},
+	}
+
+	verifyTests(testCS, t)
+}
+
+func TestGetConnectToAnnotation(t *testing.T) {
+	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service}
+	runtime := createRuntimeComponent(name, namespace, spec, labels, annotations)
+	runtime.Spec.Service.Consumes[0].Namespace = namespace
+
+	result := GetConnectToAnnotation(runtime)
+
+	annos := map[string]string{
+		"app.openshift.io/connects-to": "consumes",
+	}
+	testCS := []Test{
+		{"Annotations", annos, result},
+	}
+	verifyTests(testCS, t)
+}
+
+func TestGetOpenShiftAnnotations(t *testing.T) {
+	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service}
+	runtime := createRuntimeComponent(name, namespace, spec, labels, annotations)
+
+	annos := map[string]string{
+		"image.opencontainers.org/source": "source",
+	}
+	runtime.Annotations = annos
+
+	result := GetOpenShiftAnnotations(runtime)
+
+	annos = map[string]string{
+		"app.openshift.io/vcs-uri": "source",
+	}
+	testCS := []Test{
+		{"OpenShiftAnnotations", annos["app.openshift.io/vcs-uri"], result["app.openshift.io/vcs-uri"]},
+	}
+
+	verifyTests(testCS, t)
+}
+
+func TestIsClusterWide(t *testing.T) {
+	namespaces := []string{"namespace"}
+	result := IsClusterWide(namespaces)
+
+	testCS := []Test{
+		{"One namespace", false, result},
+	}
+
+	verifyTests(testCS, t)
+
+	namespaces = []string{""}
+	result = IsClusterWide(namespaces)
+
+	testCS = []Test{
+		{"All namespaces", true, result},
+	}
+
+	verifyTests(testCS, t)
+
+	namespaces = []string{"namespace1", "namespace2"}
+	result = IsClusterWide(namespaces)
+
+	testCS = []Test{
+		{"Two namespaces", false, result},
+	}
+
+	verifyTests(testCS, t)
+}
+
+func TestCustomizeIngress(t *testing.T) {
+	logf.SetLogger(logf.ZapLogger(true))
+	ing := networkingv1beta1.Ingress{}
+	cert := v1beta1.Certificate{}
+	certSecretRef := "my-ref"
+	route := appstacksv1beta1.RuntimeComponentRoute{Host: "routeHost", Path: "myPath"}
+	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service, Route: &route}
+	runtime := createRuntimeComponent(name, namespace, spec, labels, annotations)
+
+	CustomizeIngress(&ing, runtime)
+
+	testCS := []Test{
+		{"Ingress Labels", labels["key1"], ing.Labels["key1"]},
+		{"Ingress Annotations", annotations, ing.Annotations},
+		{"Ingress Route Host", "routeHost", ing.Spec.Rules[0].Host},
+		{"Ingress Route Path", "myPath", ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Path},
+		{"Ingress Route ServiceName", name, ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServiceName},
+		{"Ingress Route ServicePort", "myservice", ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServicePort.StrVal},
+		{"Ingress TLS", 0, len(ing.Spec.TLS)},
+	}
+
+	verifyTests(testCS, t)
+
+	route = appstacksv1beta1.RuntimeComponentRoute{Host: "routeHost", Path: "myPath", Certificate: &cert}
+	runtime.Spec.Route = &route
+
+	CustomizeIngress(&ing, runtime)
+
+	testCS = []Test{
+		{"Ingress TLS Host", "routeHost", ing.Spec.TLS[0].Hosts[0]},
+		{"Ingress TLS SecretName", name + "-route-tls", ing.Spec.TLS[0].SecretName},
+	}
+
+	verifyTests(testCS, t)
+
+	cert = v1beta1.Certificate{SecretName: "my-secret"}
+	route = appstacksv1beta1.RuntimeComponentRoute{Host: "routeHost", Path: "myPath", Certificate: &cert}
+
+	CustomizeIngress(&ing, runtime)
+
+	testCS = []Test{
+		{"Ingress TLS SecretName", name + "my-secret", ing.Spec.TLS[0].SecretName},
+	}
+
+	verifyTests(testCS, t)
+
+	route = appstacksv1beta1.RuntimeComponentRoute{Host: "routeHost", Path: "myPath", CertificateSecretRef: &certSecretRef}
+
+	CustomizeIngress(&ing, runtime)
+
+	testCS = []Test{
+		{"Ingress TLS SecretName", certSecretRef, ing.Spec.TLS[0].SecretName},
+	}
+
+	verifyTests(testCS, t)
 }
 
 // Helper Functions
