@@ -2,6 +2,7 @@ package runtimecomponent
 
 import (
 	"context"
+	"strings"
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	appstacksutils "github.com/application-stacks/runtime-component-operator/pkg/utils"
@@ -22,6 +23,7 @@ var _ handler.EventHandler = &EnqueueRequestsForCustomIndexField{}
 const (
 	indexFieldImageStreamName     = "spec.applicationImage"
 	indexFieldBindingsResourceRef = "spec.bindings.resourceRef"
+	bindingSecretSuffix           = "-binding"
 )
 
 // EnqueueRequestsForCustomIndexField enqueues reconcile Requests Runtime Components if the app is relying on
@@ -120,13 +122,17 @@ func (b *BindingSecretMatcher) Match(secret metav1.Object) ([]appstacksv1beta1.R
 	}
 	apps = append(apps, appList.Items...)
 
-	// If we are able to find an app with the secret name, add the app. This is to cover the autoDetect scenario
-	app := &appstacksv1beta1.RuntimeComponent{}
-	err = b.klient.Get(context.Background(), types.NamespacedName{Name: secret.GetName(), Namespace: secret.GetNamespace()}, app)
-	if err == nil {
-		apps = append(apps, *app)
-	} else if !kerrors.IsNotFound(err) {
-		return nil, err
+	if strings.HasSuffix(secret.GetName(), bindingSecretSuffix) {
+		appName := strings.TrimSuffix(secret.GetName(), bindingSecretSuffix)
+		// If we are able to find an app with the secret name, add the app. This is to cover the autoDetect scenario
+		app := &appstacksv1beta1.RuntimeComponent{}
+		err = b.klient.Get(context.Background(), types.NamespacedName{Name: appName, Namespace: secret.GetNamespace()}, app)
+		if err == nil {
+			apps = append(apps, *app)
+		} else if !kerrors.IsNotFound(err) {
+			return nil, err
+		}
 	}
+
 	return apps, nil
 }

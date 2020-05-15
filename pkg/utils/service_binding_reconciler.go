@@ -300,7 +300,7 @@ func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (retRes rec
 			return r.requeueError(ba, err)
 		}
 	} else if ba.GetBindings() == nil || ba.GetBindings().GetAutoDetect() == nil || *ba.GetBindings().GetAutoDetect() {
-		bindingName := mObj.GetName()
+		bindingName := getDefaultServiceBindingName(ba)
 		key := types.NamespacedName{Name: bindingName, Namespace: mObj.GetNamespace()}
 
 		for _, gvk := range r.getServiceBindingGVK() {
@@ -308,10 +308,8 @@ func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (retRes rec
 			bindingObj := &unstructured.Unstructured{}
 			bindingObj.SetGroupVersionKind(gvk)
 			err := r.client.Get(context.Background(), key, bindingObj)
-			if err != nil {
-				if !kerrors.IsNotFound(err) {
-					log.Error(errors.Wrapf(err, "failed to find a service binding resource during auto-detect for GVK %q", gvk), "failed to get Service Binding CR")
-				}
+			if client.IgnoreNotFound(err) != nil {
+				log.Error(errors.Wrapf(err, "failed to find a service binding resource during auto-detect for GVK %q", gvk), "failed to get Service Binding CR")
 				continue
 			}
 
@@ -320,7 +318,7 @@ func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (retRes rec
 			if err == nil {
 				resolvedBindings = append(resolvedBindings, bindingName)
 				break
-			} else if err != nil && kerrors.IsNotFound(err) {
+			} else {
 				err = errors.Wrapf(err, "service binding dependency not satisfied: unable to find service binding secret for external binding %q in namespace %q", bindingName, mObj.GetNamespace())
 				return r.requeueError(ba, err)
 			}
@@ -424,7 +422,7 @@ func (r *ReconcilerBase) cleanUpEmbeddedBindings(ba common.BaseComponent) error 
 	for _, gvk := range r.getServiceBindingGVK() {
 		bindingObj := &unstructured.Unstructured{}
 		bindingObj.SetGroupVersionKind(gvk)
-		key := types.NamespacedName{Name: mObj.GetName(), Namespace: mObj.GetNamespace()}
+		key := types.NamespacedName{Name: getDefaultServiceBindingName(ba), Namespace: mObj.GetNamespace()}
 		err := r.client.Get(context.Background(), key, bindingObj)
 		if err == nil && metav1.IsControlledBy(bindingObj, mObj) {
 			err = r.client.Delete(context.Background(), bindingObj)
@@ -438,8 +436,8 @@ func (r *ReconcilerBase) cleanUpEmbeddedBindings(ba common.BaseComponent) error 
 	return nil
 }
 
+// reconcileEmbedded reconciles embedded blob in bindings.embedded to create or update Service Binding resource
 func (r *ReconcilerBase) reconcileEmbedded(ba common.BaseComponent) (retRes reconcile.Result, retErr error) {
-	mObj := ba.(metav1.Object)
 	var resolvedBindings []string
 
 	object, err := r.toJSONFromRaw(ba.GetBindings().GetEmbedded())
@@ -465,17 +463,17 @@ func (r *ReconcilerBase) reconcileEmbedded(ba common.BaseComponent) (retRes reco
 
 	err = r.createOrUpdateEmbedded(embedded, ba)
 	if err != nil {
-		return r.requeueError(ba, errors.Wrapf(err, "failed: cannot create or update embedded Service Binding resource %q in namespace %q", mObj.GetName(), mObj.GetNamespace()))
+		return r.requeueError(ba, errors.Wrapf(err, "failed: cannot create or update embedded Service Binding resource %q in namespace %q", embedded.GetName(), embedded.GetNamespace()))
 	}
 
 	// Get binding secret and add it to status field. If binding hasn't been successful, secret won't be created and it keeps trying
-	key := types.NamespacedName{Name: mObj.GetName(), Namespace: mObj.GetNamespace()}
+	key := types.NamespacedName{Name: embedded.GetName(), Namespace: embedded.GetNamespace()}
 	bindingSecret := &corev1.Secret{}
 	err = r.GetClient().Get(context.TODO(), key, bindingSecret)
 	if err == nil {
-		resolvedBindings = append(resolvedBindings, mObj.GetName())
+		resolvedBindings = append(resolvedBindings, embedded.GetName())
 	} else {
-		err = errors.Wrapf(err, "service binding dependency not satisfied: unable to find service binding secret for embedded binding %q in namespace %q", mObj.GetName(), mObj.GetNamespace())
+		err = errors.Wrapf(err, "service binding dependency not satisfied: unable to find service binding secret for embedded binding %q in namespace %q", embedded.GetName(), embedded.GetNamespace())
 		return r.requeueError(ba, err)
 	}
 
@@ -500,12 +498,11 @@ func (r *ReconcilerBase) updateBindingStatus(bindings []string, ba common.BaseCo
 }
 
 func (r *ReconcilerBase) createOrUpdateEmbedded(embedded *unstructured.Unstructured, ba common.BaseComponent) error {
-	mObj := ba.(metav1.Object)
 	result := controllerutil.OperationResultNone
 	existing := &unstructured.Unstructured{}
 	existing.SetAPIVersion(embedded.GetAPIVersion())
 	existing.SetKind(embedded.GetKind())
-	key := types.NamespacedName{Name: mObj.GetName(), Namespace: mObj.GetNamespace()}
+	key := types.NamespacedName{Name: embedded.GetName(), Namespace: embedded.GetNamespace()}
 	err := r.client.Get(context.TODO(), key, existing)
 	if err != nil {
 		if kerrors.IsNotFound(err) {
@@ -537,7 +534,7 @@ func (r *ReconcilerBase) createOrUpdateEmbedded(embedded *unstructured.Unstructu
 		}
 	}
 
-	log.Info("Reconciled", "Kind", embedded.GetKind(), "Namespace", mObj.GetNamespace(), "Name", mObj.GetName(), "Status", result)
+	log.Info("Reconciled", "Kind", embedded.GetKind(), "Namespace", embedded.GetNamespace(), "Name", embedded.GetName(), "Status", result)
 	return nil
 }
 
@@ -559,7 +556,7 @@ func (r *ReconcilerBase) updateEmbeddedObject(object map[string]interface{}, emb
 	if _, ok := object[Metadata]; ok {
 		return errors.New("failed: embedded Service Binding must not have a 'metadata' section")
 	}
-	embedded.SetName(mObj.GetName())
+	embedded.SetName(getDefaultServiceBindingName(ba))
 	embedded.SetNamespace(mObj.GetNamespace())
 	embedded.SetLabels(mObj.GetLabels())
 	embedded.SetAnnotations(mObj.GetAnnotations())
@@ -590,4 +587,8 @@ func (r *ReconcilerBase) updateEmbeddedObject(object map[string]interface{}, emb
 	embedded.SetKind(kind.(string))
 	embedded.SetAPIVersion(apiVersion.(string))
 	return nil
+}
+
+func getDefaultServiceBindingName(ba common.BaseComponent) string {
+	return (ba.(metav1.Object)).GetName() + "-bindings"
 }
