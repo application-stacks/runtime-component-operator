@@ -517,12 +517,12 @@ _This feature is only available if you are running on OKD or OpenShift._
 
 ==== Non-Knative deployment (Ingress)
 
-Before you can use the Ingress resource to expose your cluster, you must install an ingress controller, such a Nginx or Traeik..
+Before you can use the Ingress resource to expose your cluster, you must install an ingress controller, such a Nginx or Traefik.
 
 _The Ingress resource is created only if the `Route` resource is not available._
 
 
-To use the Ingress resource, set the `defaultHostName` variable in the runtime-component-operator ConfigMap object to a host name such as mycomp.com
+To use the Ingress resource, set the `defaultHostName` variable in the _runtime-component-operator_ ConfigMap object to a host name such as _mycompany.com_
 
 
 ===== Simple Ingress that uses `defaultHostName` and no `TLS`:
@@ -539,7 +539,7 @@ spec:
   expose: true
 ----
 
-With default hostname of mycompany.com, the application is available at the http://my-app-backend.mycompany.com URL.
+With default hostname of _mycompany.com_, the application is available at the http://my-app-backend.mycompany.com URL.
 
 
 ===== Enable TLS and generate a certificate by using the cert-manager controller:
