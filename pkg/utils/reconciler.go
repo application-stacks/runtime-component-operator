@@ -26,6 +26,7 @@ import (
 	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -38,6 +39,7 @@ type ReconcilerBase struct {
 	recorder   record.EventRecorder
 	restConfig *rest.Config
 	discovery  discovery.DiscoveryInterface
+	controller controller.Controller
 }
 
 //NewReconcilerBase creates a new ReconcilerBase
@@ -48,6 +50,16 @@ func NewReconcilerBase(client client.Client, scheme *runtime.Scheme, restConfig 
 		recorder:   recorder,
 		restConfig: restConfig,
 	}
+}
+
+// GetController returns controller
+func (r *ReconcilerBase) GetController() controller.Controller {
+	return r.controller
+}
+
+// SetController sets controller
+func (r *ReconcilerBase) SetController(c controller.Controller) {
+	r.controller = c
 }
 
 // GetClient returns client
@@ -98,7 +110,7 @@ func (r *ReconcilerBase) CreateOrUpdate(obj metav1.Object, owner metav1.Object, 
 	var gvk schema.GroupVersionKind
 	gvk, err = apiutil.GVKForObject(runtimeObj, r.scheme)
 	if err == nil {
-		log.Info("Reconciled", "Kind", gvk.Kind, "Name", obj.GetName(), "Status", result)
+		log.Info("Reconciled", "Kind", gvk.Kind, "Namespace", obj.GetNamespace(), "Name", obj.GetName(), "Status", result)
 	}
 
 	return err

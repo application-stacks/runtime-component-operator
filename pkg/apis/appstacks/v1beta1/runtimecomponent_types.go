@@ -8,6 +8,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -148,8 +149,9 @@ type ServiceBindingAuth struct {
 
 // RuntimeComponentBindings represents service binding related parameters
 type RuntimeComponentBindings struct {
-	AutoDetect  *bool  `json:"autoDetect,omitempty"`
-	ResourceRef string `json:"resourceRef,omitempty"`
+	AutoDetect  *bool                 `json:"autoDetect,omitempty"`
+	ResourceRef string                `json:"resourceRef,omitempty"`
+	Embedded    *runtime.RawExtension `json:"embedded,omitempty"`
 }
 
 // RuntimeComponentStatus defines the observed state of RuntimeComponent
@@ -621,6 +623,11 @@ func (r *RuntimeComponentBindings) GetAutoDetect() *bool {
 // GetResourceRef returns name of ServiceBinding CRs created manually in the same namespace as the RuntimeComponent CR
 func (r *RuntimeComponentBindings) GetResourceRef() string {
 	return r.ResourceRef
+}
+
+// GetEmbedded returns the embedded underlying Service Binding resource
+func (r *RuntimeComponentBindings) GetEmbedded() *runtime.RawExtension {
+	return r.Embedded
 }
 
 // Initialize the RuntimeComponent instance
