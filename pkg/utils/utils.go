@@ -294,19 +294,23 @@ func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 			if len(nodeSelector.NodeSelectorTerms) == 0 {
 				nodeSelector.NodeSelectorTerms = append(nodeSelector.NodeSelectorTerms, corev1.NodeSelectorTerm{})
 			}
-			for label, value := range ba.GetAffinity().GetNodeAffinityLabels() {
-				values := strings.Split(value, ",")
-				for i := range values {
-					values[i] = strings.TrimSpace(values[i])
-				}
 
-				requirement := corev1.NodeSelectorRequirement{
-					Key:      label,
-					Operator: corev1.NodeSelectorOpIn,
-					Values:   values,
-				}
+			for i := range nodeSelector.NodeSelectorTerms {
 
-				nodeSelector.NodeSelectorTerms[0].MatchExpressions = append(nodeSelector.NodeSelectorTerms[0].MatchExpressions, requirement)
+				for label, value := range ba.GetAffinity().GetNodeAffinityLabels() {
+					values := strings.Split(value, ",")
+					for i := range values {
+						values[i] = strings.TrimSpace(values[i])
+					}
+
+					requirement := corev1.NodeSelectorRequirement{
+						Key:      label,
+						Operator: corev1.NodeSelectorOpIn,
+						Values:   values,
+					}
+
+					nodeSelector.NodeSelectorTerms[i].MatchExpressions = append(nodeSelector.NodeSelectorTerms[i].MatchExpressions, requirement)
+				}
 
 			}
 		}
@@ -326,13 +330,15 @@ func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 			nodeSelector.NodeSelectorTerms = append(nodeSelector.NodeSelectorTerms, corev1.NodeSelectorTerm{})
 		}
 
-		nodeSelector.NodeSelectorTerms[0].MatchExpressions = append(nodeSelector.NodeSelectorTerms[0].MatchExpressions,
-			corev1.NodeSelectorRequirement{
-				Key:      "kubernetes.io/arch",
-				Operator: corev1.NodeSelectorOpIn,
-				Values:   archs,
-			},
-		)
+		for i := range nodeSelector.NodeSelectorTerms {
+			nodeSelector.NodeSelectorTerms[i].MatchExpressions = append(nodeSelector.NodeSelectorTerms[i].MatchExpressions,
+				corev1.NodeSelectorRequirement{
+					Key:      "kubernetes.io/arch",
+					Operator: corev1.NodeSelectorOpIn,
+					Values:   archs,
+				},
+			)
+		}
 
 		for i := range archs {
 			term := corev1.PreferredSchedulingTerm{
