@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -294,17 +295,24 @@ func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 			if len(nodeSelector.NodeSelectorTerms) == 0 {
 				nodeSelector.NodeSelectorTerms = append(nodeSelector.NodeSelectorTerms, corev1.NodeSelectorTerm{})
 			}
+			labels := ba.GetAffinity().GetNodeAffinityLabels()
+
+			keys := make([]string, 0, len(labels))
+			for k := range labels {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
 
 			for i := range nodeSelector.NodeSelectorTerms {
 
-				for label, value := range ba.GetAffinity().GetNodeAffinityLabels() {
-					values := strings.Split(value, ",")
+				for _, key := range keys {
+					values := strings.Split(labels[key], ",")
 					for i := range values {
 						values[i] = strings.TrimSpace(values[i])
 					}
 
 					requirement := corev1.NodeSelectorRequirement{
-						Key:      label,
+						Key:      key,
 						Operator: corev1.NodeSelectorOpIn,
 						Values:   values,
 					}
