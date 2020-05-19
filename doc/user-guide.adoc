@@ -575,7 +575,7 @@ _This feature is only available if you have Knative installed on your cluster._
 
 === Exposing service externally
 
-==== Non-Knative deployment
+==== Non-Knative deployment (Route)
 
 To expose your application externally, set `expose` to `true`:
 
@@ -595,6 +595,87 @@ By setting this parameter, the operator creates an unsecured route based on your
 To create a secured HTTPS route, see the link:++#certificate-manager-integration++[Certificate Manager Integration] section for more information.
 
 _This feature is only available if you are running on OKD or OpenShift._
+
+
+==== Non-Knative deployment (Ingress)
+
+Before you can use the Ingress resource to expose your cluster, you must install an ingress controller, such a Nginx or Traefik.
+
+_The Ingress resource is created only if the `Route` resource is not available._
+
+
+To use the Ingress resource, set the `defaultHostName` variable in the _runtime-component-operator_ ConfigMap object to a host name such as _mycompany.com_
+
+
+===== Simple Ingress that uses `defaultHostName` and no `TLS`:
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: my-app
+  namespace: backend
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  expose: true
+----
+
+With default hostname of _mycompany.com_, the application is available at the http://my-app-backend.mycompany.com URL.
+
+
+===== Enable TLS and generate a certificate by using the cert-manager controller:
+
+_Note: You must install the cert-manager controller to automatically generate a custom certificate for the ingress controller._
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: my-app
+  namespace: backend
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  expose: true
+  route:
+    certificate: {}
+----
+
+===== Advanced Ingress configuration:
+
+Most of the Ingress configuraiton is achieved through annotations. Annotations such as Nginx, HAProxy, Traefik, and others are specific to the ingress controller implementation.
+
+You can provide an existing TLS secret and set a custom hostname.
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: my-app
+  namespace: backend
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  expose: true
+  route:
+    annotations:
+      # You can use this annotation to specify the name of the ingress controller to use.
+      # You can install multiple ingress controllers to address different types of incoming traffic such as an external or internal DNS.
+      kubernetes.io/ingress.class: "nginx" 
+      
+      # The following nginx annotation enables a secure pod connection:
+      nginx.ingress.kubernetes.io/ssl-redirect: true
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+
+      # The following traefik annotation enables a secure pod connection:
+      traefik.ingress.kubernetes.io/service.serversscheme: https
+
+    # Use a custom hostname for the Ingress
+    host: app-v1.mycompany.com
+    # Reference a pre-existing TLS secret:
+    certificateSecretRef: mycompany-tls
+----
 
 ==== Knative deployment
 
