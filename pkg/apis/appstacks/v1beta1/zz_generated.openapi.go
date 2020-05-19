@@ -11,15 +11,16 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponent":            schema_pkg_apis_appstacks_v1beta1_RuntimeComponent(ref),
-		"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentAutoScaling": schema_pkg_apis_appstacks_v1beta1_RuntimeComponentAutoScaling(ref),
-		"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentRoute":       schema_pkg_apis_appstacks_v1beta1_RuntimeComponentRoute(ref),
-		"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentService":     schema_pkg_apis_appstacks_v1beta1_RuntimeComponentService(ref),
-		"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentSpec":        schema_pkg_apis_appstacks_v1beta1_RuntimeComponentSpec(ref),
-		"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentStatus":      schema_pkg_apis_appstacks_v1beta1_RuntimeComponentStatus(ref),
-		"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingConsumes":      schema_pkg_apis_appstacks_v1beta1_ServiceBindingConsumes(ref),
-		"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingProvides":      schema_pkg_apis_appstacks_v1beta1_ServiceBindingProvides(ref),
-		"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.StatusCondition":             schema_pkg_apis_appstacks_v1beta1_StatusCondition(ref),
+		"./pkg/apis/appstacks/v1beta1.RuntimeComponent":            schema_pkg_apis_appstacks_v1beta1_RuntimeComponent(ref),
+		"./pkg/apis/appstacks/v1beta1.RuntimeComponentAffinity":    schema_pkg_apis_appstacks_v1beta1_RuntimeComponentAffinity(ref),
+		"./pkg/apis/appstacks/v1beta1.RuntimeComponentAutoScaling": schema_pkg_apis_appstacks_v1beta1_RuntimeComponentAutoScaling(ref),
+		"./pkg/apis/appstacks/v1beta1.RuntimeComponentRoute":       schema_pkg_apis_appstacks_v1beta1_RuntimeComponentRoute(ref),
+		"./pkg/apis/appstacks/v1beta1.RuntimeComponentService":     schema_pkg_apis_appstacks_v1beta1_RuntimeComponentService(ref),
+		"./pkg/apis/appstacks/v1beta1.RuntimeComponentSpec":        schema_pkg_apis_appstacks_v1beta1_RuntimeComponentSpec(ref),
+		"./pkg/apis/appstacks/v1beta1.RuntimeComponentStatus":      schema_pkg_apis_appstacks_v1beta1_RuntimeComponentStatus(ref),
+		"./pkg/apis/appstacks/v1beta1.ServiceBindingConsumes":      schema_pkg_apis_appstacks_v1beta1_ServiceBindingConsumes(ref),
+		"./pkg/apis/appstacks/v1beta1.ServiceBindingProvides":      schema_pkg_apis_appstacks_v1beta1_ServiceBindingProvides(ref),
+		"./pkg/apis/appstacks/v1beta1.StatusCondition":             schema_pkg_apis_appstacks_v1beta1_StatusCondition(ref),
 	}
 }
 
@@ -51,19 +52,81 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponent(ref common.ReferenceCall
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentSpec"),
+							Ref: ref("./pkg/apis/appstacks/v1beta1.RuntimeComponentSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentStatus"),
+							Ref: ref("./pkg/apis/appstacks/v1beta1.RuntimeComponentStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentSpec", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"./pkg/apis/appstacks/v1beta1.RuntimeComponentSpec", "./pkg/apis/appstacks/v1beta1.RuntimeComponentStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentAffinity(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "RuntimeComponentAffinity deployment affinity settings",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"nodeAffinity": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/core/v1.NodeAffinity"),
+						},
+					},
+					"podAffinity": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/core/v1.PodAffinity"),
+						},
+					},
+					"podAntiAffinity": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/core/v1.PodAntiAffinity"),
+						},
+					},
+					"architecture": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+					"nodeAffinityLabels": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.NodeAffinity", "k8s.io/api/core/v1.PodAffinity", "k8s.io/api/core/v1.PodAntiAffinity"},
 	}
 }
 
@@ -133,7 +196,7 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentRoute(ref common.Referenc
 					},
 					"certificate": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.Certificate"),
+							Ref: ref("./pkg/apis/appstacks/v1beta1.Certificate"),
 						},
 					},
 					"certificateSecretRef": {
@@ -158,7 +221,7 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentRoute(ref common.Referenc
 			},
 		},
 		Dependencies: []string{
-			"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.Certificate"},
+			"./pkg/apis/appstacks/v1beta1.Certificate"},
 	}
 }
 
@@ -236,7 +299,7 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentService(ref common.Refere
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingConsumes"),
+										Ref: ref("./pkg/apis/appstacks/v1beta1.ServiceBindingConsumes"),
 									},
 								},
 							},
@@ -244,12 +307,12 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentService(ref common.Refere
 					},
 					"provides": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingProvides"),
+							Ref: ref("./pkg/apis/appstacks/v1beta1.ServiceBindingProvides"),
 						},
 					},
 					"certificate": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.Certificate"),
+							Ref: ref("./pkg/apis/appstacks/v1beta1.Certificate"),
 						},
 					},
 					"certificateSecretRef": {
@@ -262,7 +325,7 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentService(ref common.Refere
 			},
 		},
 		Dependencies: []string{
-			"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.Certificate", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingConsumes", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingProvides", "k8s.io/api/core/v1.ServicePort"},
+			"./pkg/apis/appstacks/v1beta1.Certificate", "./pkg/apis/appstacks/v1beta1.ServiceBindingConsumes", "./pkg/apis/appstacks/v1beta1.ServiceBindingProvides", "k8s.io/api/core/v1.ServicePort"},
 	}
 }
 
@@ -293,7 +356,7 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentSpec(ref common.Reference
 					},
 					"autoscaling": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentAutoScaling"),
+							Ref: ref("./pkg/apis/appstacks/v1beta1.RuntimeComponentAutoScaling"),
 						},
 					},
 					"pullPolicy": {
@@ -360,7 +423,7 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentSpec(ref common.Reference
 					},
 					"service": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentService"),
+							Ref: ref("./pkg/apis/appstacks/v1beta1.RuntimeComponentService"),
 						},
 					},
 					"expose": {
@@ -430,7 +493,7 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentSpec(ref common.Reference
 					},
 					"storage": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentStorage"),
+							Ref: ref("./pkg/apis/appstacks/v1beta1.RuntimeComponentStorage"),
 						},
 					},
 					"createKnativeService": {
@@ -441,7 +504,7 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentSpec(ref common.Reference
 					},
 					"monitoring": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentMonitoring"),
+							Ref: ref("./pkg/apis/appstacks/v1beta1.RuntimeComponentMonitoring"),
 						},
 					},
 					"createAppDefinition": {
@@ -494,12 +557,17 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentSpec(ref common.Reference
 					},
 					"route": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentRoute"),
+							Ref: ref("./pkg/apis/appstacks/v1beta1.RuntimeComponentRoute"),
 						},
 					},
 					"bindings": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentBindings"),
+							Ref: ref("./pkg/apis/appstacks/v1beta1.RuntimeComponentBindings"),
+						},
+					},
+					"affinity": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("./pkg/apis/appstacks/v1beta1.RuntimeComponentAffinity"),
 						},
 					},
 				},
@@ -507,7 +575,7 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentSpec(ref common.Reference
 			},
 		},
 		Dependencies: []string{
-			"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentAutoScaling", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentBindings", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentMonitoring", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentRoute", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentService", "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.RuntimeComponentStorage", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.EnvFromSource", "k8s.io/api/core/v1.EnvVar", "k8s.io/api/core/v1.Probe", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.Volume", "k8s.io/api/core/v1.VolumeMount"},
+			"./pkg/apis/appstacks/v1beta1.RuntimeComponentAffinity", "./pkg/apis/appstacks/v1beta1.RuntimeComponentAutoScaling", "./pkg/apis/appstacks/v1beta1.RuntimeComponentBindings", "./pkg/apis/appstacks/v1beta1.RuntimeComponentMonitoring", "./pkg/apis/appstacks/v1beta1.RuntimeComponentRoute", "./pkg/apis/appstacks/v1beta1.RuntimeComponentService", "./pkg/apis/appstacks/v1beta1.RuntimeComponentStorage", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.EnvFromSource", "k8s.io/api/core/v1.EnvVar", "k8s.io/api/core/v1.Probe", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.Volume", "k8s.io/api/core/v1.VolumeMount"},
 	}
 }
 
@@ -529,7 +597,7 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentStatus(ref common.Referen
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.StatusCondition"),
+										Ref: ref("./pkg/apis/appstacks/v1beta1.StatusCondition"),
 									},
 								},
 							},
@@ -584,7 +652,7 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeComponentStatus(ref common.Referen
 			},
 		},
 		Dependencies: []string{
-			"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.StatusCondition"},
+			"./pkg/apis/appstacks/v1beta1.StatusCondition"},
 	}
 }
 
@@ -653,7 +721,7 @@ func schema_pkg_apis_appstacks_v1beta1_ServiceBindingProvides(ref common.Referen
 					},
 					"auth": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingAuth"),
+							Ref: ref("./pkg/apis/appstacks/v1beta1.ServiceBindingAuth"),
 						},
 					},
 				},
@@ -661,7 +729,7 @@ func schema_pkg_apis_appstacks_v1beta1_ServiceBindingProvides(ref common.Referen
 			},
 		},
 		Dependencies: []string{
-			"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1.ServiceBindingAuth"},
+			"./pkg/apis/appstacks/v1beta1.ServiceBindingAuth"},
 	}
 }
 

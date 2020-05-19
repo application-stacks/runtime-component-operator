@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -268,6 +269,104 @@ func CustomizeServiceBindingSecret(secret *corev1.Secret, auth map[string]string
 	secret.Data = secretdata
 }
 
+// CustomizeAffinity ...
+func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
+
+	archs := ba.GetArchitecture()
+
+	if ba.GetAffinity() != nil {
+		affinity.NodeAffinity = ba.GetAffinity().GetNodeAffinity()
+		affinity.PodAffinity = ba.GetAffinity().GetPodAffinity()
+		affinity.PodAntiAffinity = ba.GetAffinity().GetPodAntiAffinity()
+
+		if len(archs) == 0 {
+			archs = ba.GetAffinity().GetArchitecture()
+		}
+
+		if len(ba.GetAffinity().GetNodeAffinityLabels()) > 0 {
+			if affinity.NodeAffinity == nil {
+				affinity.NodeAffinity = &corev1.NodeAffinity{}
+			}
+			if affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
+				affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = &corev1.NodeSelector{}
+			}
+			nodeSelector := affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution
+
+			if len(nodeSelector.NodeSelectorTerms) == 0 {
+				nodeSelector.NodeSelectorTerms = append(nodeSelector.NodeSelectorTerms, corev1.NodeSelectorTerm{})
+			}
+			labels := ba.GetAffinity().GetNodeAffinityLabels()
+
+			keys := make([]string, 0, len(labels))
+			for k := range labels {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+
+			for i := range nodeSelector.NodeSelectorTerms {
+
+				for _, key := range keys {
+					values := strings.Split(labels[key], ",")
+					for i := range values {
+						values[i] = strings.TrimSpace(values[i])
+					}
+
+					requirement := corev1.NodeSelectorRequirement{
+						Key:      key,
+						Operator: corev1.NodeSelectorOpIn,
+						Values:   values,
+					}
+
+					nodeSelector.NodeSelectorTerms[i].MatchExpressions = append(nodeSelector.NodeSelectorTerms[i].MatchExpressions, requirement)
+				}
+
+			}
+		}
+	}
+
+	if len(archs) > 0 {
+		if affinity.NodeAffinity == nil {
+			affinity.NodeAffinity = &corev1.NodeAffinity{}
+		}
+		if affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
+			affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = &corev1.NodeSelector{}
+		}
+
+		nodeSelector := affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution
+
+		if len(nodeSelector.NodeSelectorTerms) == 0 {
+			nodeSelector.NodeSelectorTerms = append(nodeSelector.NodeSelectorTerms, corev1.NodeSelectorTerm{})
+		}
+
+		for i := range nodeSelector.NodeSelectorTerms {
+			nodeSelector.NodeSelectorTerms[i].MatchExpressions = append(nodeSelector.NodeSelectorTerms[i].MatchExpressions,
+				corev1.NodeSelectorRequirement{
+					Key:      "kubernetes.io/arch",
+					Operator: corev1.NodeSelectorOpIn,
+					Values:   archs,
+				},
+			)
+		}
+
+		for i := range archs {
+			term := corev1.PreferredSchedulingTerm{
+				Weight: int32(len(archs)) - int32(i),
+				Preference: corev1.NodeSelectorTerm{
+					MatchExpressions: []corev1.NodeSelectorRequirement{
+						{
+							Key:      "kubernetes.io/arch",
+							Operator: corev1.NodeSelectorOpIn,
+							Values:   []string{archs[i]},
+						},
+					},
+				},
+			}
+			affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution, term)
+		}
+	}
+
+}
+
 // CustomizePodSpec ...
 func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
@@ -351,9 +450,11 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	pts.Spec.RestartPolicy = corev1.RestartPolicyAlways
 	pts.Spec.DNSPolicy = corev1.DNSClusterFirst
 
-	if len(ba.GetArchitecture()) > 0 {
+	if len(ba.GetArchitecture()) > 0 || ba.GetAffinity() != nil {
 		pts.Spec.Affinity = &corev1.Affinity{}
 		CustomizeAffinity(pts.Spec.Affinity, ba)
+	} else {
+		pts.Spec.Affinity = nil
 	}
 }
 
@@ -494,43 +595,6 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent)
 		} else {
 			sa.ImagePullSecrets[0].Name = *ba.GetPullSecret()
 		}
-	}
-}
-
-// CustomizeAffinity ...
-func CustomizeAffinity(a *corev1.Affinity, ba common.BaseComponent) {
-	a.NodeAffinity = &corev1.NodeAffinity{
-		RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
-			NodeSelectorTerms: []corev1.NodeSelectorTerm{
-				{
-					MatchExpressions: []corev1.NodeSelectorRequirement{
-						{
-							Operator: corev1.NodeSelectorOpIn,
-							Values:   ba.GetArchitecture(),
-							Key:      "beta.kubernetes.io/arch",
-						},
-					},
-				},
-			},
-		},
-	}
-
-	archs := len(ba.GetArchitecture())
-	for i := range ba.GetArchitecture() {
-		arch := ba.GetArchitecture()[i]
-		term := corev1.PreferredSchedulingTerm{
-			Weight: int32(archs - i),
-			Preference: corev1.NodeSelectorTerm{
-				MatchExpressions: []corev1.NodeSelectorRequirement{
-					{
-						Operator: corev1.NodeSelectorOpIn,
-						Values:   []string{arch},
-						Key:      "beta.kubernetes.io/arch",
-					},
-				},
-			},
-		}
-		a.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(a.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution, term)
 	}
 }
 
@@ -726,6 +790,13 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComp
 		if endpoints[0].BearerTokenFile != "" {
 			sm.Spec.Endpoints[0].BearerTokenFile = endpoints[0].BearerTokenFile
 		}
+		sm.Spec.Endpoints[0].BearerTokenSecret = endpoints[0].BearerTokenSecret
+		sm.Spec.Endpoints[0].ProxyURL = endpoints[0].ProxyURL
+		sm.Spec.Endpoints[0].RelabelConfigs = endpoints[0].RelabelConfigs
+		sm.Spec.Endpoints[0].MetricRelabelConfigs = endpoints[0].MetricRelabelConfigs
+		sm.Spec.Endpoints[0].HonorTimestamps = endpoints[0].HonorTimestamps
+		sm.Spec.Endpoints[0].HonorLabels = endpoints[0].HonorLabels
+
 	}
 
 }

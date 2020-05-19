@@ -53,6 +53,18 @@ type RuntimeComponentSpec struct {
 	SidecarContainers []corev1.Container        `json:"sidecarContainers,omitempty"`
 	Route             *RuntimeComponentRoute    `json:"route,omitempty"`
 	Bindings          *RuntimeComponentBindings `json:"bindings,omitempty"`
+	Affinity          *RuntimeComponentAffinity `json:"affinity,omitempty"`
+}
+
+// RuntimeComponentAffinity deployment affinity settings
+// +k8s:openapi-gen=true
+type RuntimeComponentAffinity struct {
+	NodeAffinity    *corev1.NodeAffinity    `json:"nodeAffinity,omitempty"`
+	PodAffinity     *corev1.PodAffinity     `json:"podAffinity,omitempty"`
+	PodAntiAffinity *corev1.PodAntiAffinity `json:"podAntiAffinity,omitempty"`
+	// +listType=set
+	Architecture       []string          `json:"architecture,omitempty"`
+	NodeAffinityLabels map[string]string `json:"nodeAffinityLabels,omitempty"`
 }
 
 // RuntimeComponentAutoScaling ...
@@ -379,6 +391,14 @@ func (cr *RuntimeComponent) GetBindings() common.BaseComponentBindings {
 	return cr.Spec.Bindings
 }
 
+// GetAffinity returns deployment's node and pod affinity settings
+func (cr *RuntimeComponent) GetAffinity() common.BaseComponentAffinity {
+	if cr.Spec.Affinity == nil {
+		return nil
+	}
+	return cr.Spec.Affinity
+}
+
 // GetResolvedBindings returns a map of all the service names to be consumed by the application
 func (s *RuntimeComponentStatus) GetResolvedBindings() []string {
 	return s.ResolvedBindings
@@ -628,6 +648,31 @@ func (r *RuntimeComponentBindings) GetResourceRef() string {
 // GetEmbedded returns the embedded underlying Service Binding resource
 func (r *RuntimeComponentBindings) GetEmbedded() *runtime.RawExtension {
 	return r.Embedded
+}
+
+// GetNodeAffinity returns node affinity
+func (a *RuntimeComponentAffinity) GetNodeAffinity() *corev1.NodeAffinity {
+	return a.NodeAffinity
+}
+
+// GetPodAffinity returns pod affinity
+func (a *RuntimeComponentAffinity) GetPodAffinity() *corev1.PodAffinity {
+	return a.PodAffinity
+}
+
+// GetPodAntiAffinity returns pod anti-affinity
+func (a *RuntimeComponentAffinity) GetPodAntiAffinity() *corev1.PodAntiAffinity {
+	return a.PodAntiAffinity
+}
+
+// GetArchitecture returns list of architecture names
+func (a *RuntimeComponentAffinity) GetArchitecture() []string {
+	return a.Architecture
+}
+
+// GetNodeAffinityLabels returns list of architecture names
+func (a *RuntimeComponentAffinity) GetNodeAffinityLabels() map[string]string {
+	return a.NodeAffinityLabels
 }
 
 // Initialize the RuntimeComponent instance
