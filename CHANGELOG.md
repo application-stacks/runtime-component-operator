@@ -10,6 +10,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added support for embedding service bindings into a custom resource ([#111](https://github.com/application-stacks/runtime-component-operator/pull/111))
+
+### Changed
+
+- **Breaking change:** In order for the operator to detect Service Binding custom resources automatically ("auto-detect" functionality), the name of the binding resource must follow the `<CR_NAME>-binding` format (e.g. `my-app-binding`) ([#111](https://github.com/application-stacks/runtime-component-operator/pull/111))
+
 ## [0.5.1]
 
 ### Fixed
