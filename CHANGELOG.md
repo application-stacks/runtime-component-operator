@@ -10,13 +10,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.0]
+
 ### Added
 
 - Added support for embedding service bindings into a custom resource ([#111](https://github.com/application-stacks/runtime-component-operator/pull/111))
+- Added support for affinity settings such as _nodeAffinity, podAffinity_ and _podAntiAffinity_ ([#116](https://github.com/application-stacks/runtime-component-operator/pull/116))
 
 ### Changed
 
 - **Breaking change:** In order for the operator to detect Service Binding custom resources automatically ("auto-detect" functionality), the name of the binding resource must follow the `<CR_NAME>-binding` format (e.g. `my-app-binding`) ([#111](https://github.com/application-stacks/runtime-component-operator/pull/111))
+
+### Fixed
+
+- Some monitoring configurations such as `bearerTokenSecret` are not propagated to the created `ServiceMonitor` ([#157](https://github.com/OpenLiberty/open-liberty-operator/issues/157), [#116](https://github.com/application-stacks/runtime-component-operator/pull/116))
 
 ## [0.5.1]
 
@@ -56,7 +63,8 @@ All notable changes to this project will be documented in this file.
 The initial release of the Runtime Component Operator 🎉
 
 
-[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.6.0
 [0.5.1]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.5.1
 [0.5.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.5.0
 [0.4.2]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.4.2
