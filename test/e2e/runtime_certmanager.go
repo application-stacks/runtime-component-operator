@@ -238,7 +238,7 @@ func runtimeExistingCertTest(t *testing.T, f *framework.Framework, ctx *framewor
 	}
 	if route.Spec.TLS.Certificate != "faketlscrt" ||
 		route.Spec.TLS.CACertificate != "fakecacrt" ||
-		route.Spec.TLS.Key != "faketlskey" {
+		route.Spec.TLS.Key != "faketlskey" ||
 		route.Spec.TLS.DestinationCACertificate != "fakedestca" {
 		return errors.New("route.Spec.TLS fields are not set correctly")
 	}
