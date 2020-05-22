@@ -7,11 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
+	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	"github.com/application-stacks/runtime-component-operator/test/util"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
+	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -66,28 +68,17 @@ func RuntimeCertManagerTest(t *testing.T) {
 func runtimePodCertTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
 	const name = "example-runtime-pod-cert"
 
-	ns, err := ctx.GetNamespace()
+	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		return fmt.Errorf("could not get namespace: %v", err)
 	}
 
-	runtime := util.MakeBasicRuntimeComponent(t, f, name, ns, 1)
-	runtime.Spec.Service.Certificate = &v1beta1.Certificate{}
+	runtime := util.MakeBasicRuntimeComponent(t, f, name, namespace, 1)
+	runtime.Spec.Service.Certificate = &appstacksv1beta1.Certificate{}
 
-	timestamp := time.Now().UTC()
-	t.Logf("%s - Creating cert-manager pod test...", timestamp)
-	err = f.Client.Create(goctx.TODO(), runtime,
-		&framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
-	if err != nil {
-		return err
-	}
-
-	err = e2eutil.WaitForDeployment(t, f.KubeClient, ns, name, 1, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
-
-	err = util.WaitForCertificate(t, f, ns, fmt.Sprintf("%s-svc-crt", name), retryInterval, timeout)
+	certName := fmt.Sprintf("%s-svc-crt", name)
+	err = deployAndWaitForCertificate("Creating cert-manager pod test",
+			t, f, ctx, runtime, name, namespace, certName)
 	if err != nil {
 		return err
 	}
@@ -98,38 +89,48 @@ func runtimePodCertTest(t *testing.T, f *framework.Framework, ctx *framework.Tes
 func runtimeRouteCertTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
 	const name = "example-runtime-route-cert"
 
-	ns, err := ctx.GetNamespace()
+	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		return fmt.Errorf("could not get namespace %v", err)
 	}
 
-	runtime := util.MakeBasicRuntimeComponent(t, f, name, ns, 1)
+	runtime := util.MakeBasicRuntimeComponent(t, f, name, namespace, 1)
 	terminationPolicy := routev1.TLSTerminationReencrypt
 	expose := true
 	runtime.Spec.Expose = &expose
-	runtime.Spec.Route = &v1beta1.RuntimeComponentRoute{
+	runtime.Spec.Route = &appstacksv1beta1.RuntimeComponentRoute{
 		Host:        "myapp.mycompany.com",
 		Termination: &terminationPolicy,
-		Certificate: &v1beta1.Certificate{},
+		Certificate: &appstacksv1beta1.Certificate{},
 	}
 
-	timestamp := time.Now().UTC()
-	t.Logf("%s - Creating cert-manager route test...", timestamp)
-
-	err = f.Client.Create(goctx.TODO(), runtime,
-		&framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
+	certName := fmt.Sprintf("%s-route-crt", name)
+	err = deployAndWaitForCertificate("Creating cert-manager route test",
+			t, f, ctx, runtime, name, namespace, certName)
 	if err != nil {
 		return err
 	}
 
-	err = e2eutil.WaitForDeployment(t, f.KubeClient, ns, name, 1, retryInterval, timeout)
+	target := types.NamespacedName{Name: name, Namespace: namespace}
+	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
+		r.Spec.Route = nil
+	})
 	if err != nil {
 		return err
 	}
 
-	err = util.WaitForCertificate(t, f, ns, fmt.Sprintf("%s-route-crt", name), retryInterval, timeout)
+	// wait for the change to take effect and verify the state
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, name, 1, retryInterval, operatorTimeout)
 	if err != nil {
 		return err
+	}
+
+	certExists, certErr := certificateExists(f, fmt.Sprintf("%s-route-crt", name), namespace) 
+	if certErr != nil {
+		return certErr
+	}
+	if certExists {
+		return errors.New("certificate persists when runtime.Spec.Route is nil")
 	}
 
 	return nil
@@ -137,7 +138,7 @@ func runtimeRouteCertTest(t *testing.T, f *framework.Framework, ctx *framework.T
 
 func runtimeCustomIssuerTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
 	const name = "example-custom-issuer-cert"
-	ns, err := ctx.GetNamespace()
+	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		return fmt.Errorf("could not get namespace %v", err)
 	}
@@ -147,7 +148,7 @@ func runtimeCustomIssuerTest(t *testing.T, f *framework.Framework, ctx *framewor
 		return err
 	}
 
-	runtime := util.MakeBasicRuntimeComponent(t, f, name, ns, 1)
+	runtime := util.MakeBasicRuntimeComponent(t, f, name, namespace, 1)
 	terminationPolicy := routev1.TLSTerminationReencrypt
 	expose := true
 	var durationTime time.Duration = 10 * time.Minute
@@ -155,10 +156,10 @@ func runtimeCustomIssuerTest(t *testing.T, f *framework.Framework, ctx *framewor
 		Duration: durationTime,
 	}
 	runtime.Spec.Expose = &expose
-	runtime.Spec.Route = &v1beta1.RuntimeComponentRoute{
+	runtime.Spec.Route = &appstacksv1beta1.RuntimeComponentRoute{
 		Host:        "myapp.mycompany.com",
 		Termination: &terminationPolicy,
-		Certificate: &v1beta1.Certificate{
+		Certificate: &appstacksv1beta1.Certificate{
 			Duration:     &duration,
 			Organization: []string{"My Company"},
 			IssuerRef: cmmeta.ObjectReference{
@@ -168,21 +169,9 @@ func runtimeCustomIssuerTest(t *testing.T, f *framework.Framework, ctx *framewor
 		},
 	}
 
-	timestamp := time.Now().UTC()
-	t.Logf("%s - Creating cert-manager custom issuer test...", timestamp)
-
-	err = f.Client.Create(goctx.TODO(), runtime,
-		&framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
-	if err != nil {
-		return err
-	}
-
-	err = e2eutil.WaitForDeployment(t, f.KubeClient, ns, name, 1, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
-
-	err = util.WaitForCertificate(t, f, ns, fmt.Sprintf("%s-route-crt", name), retryInterval, timeout)
+	certName := fmt.Sprintf("%s-route-crt", name)
+	err = deployAndWaitForCertificate("Creating cert-manager custom issuer test",
+			t, f, ctx, runtime, name, namespace, certName)
 	if err != nil {
 		return err
 	}
@@ -192,31 +181,30 @@ func runtimeCustomIssuerTest(t *testing.T, f *framework.Framework, ctx *framewor
 
 
 func runtimeExistingCertTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
-	
 	const name = "example-existing-cert"
-	ns, err := ctx.GetNamespace()
+	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		return fmt.Errorf("could not get namespace %v", err)
 	}
 	secretRefName := "my-app-rt-tls"
-	secret := makeCertSecret(secretRefName, ns)
+	secret := makeCertSecret(secretRefName, namespace)
 	err = f.Client.Create(goctx.TODO(), secret,
 		&framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
 	if err != nil {
 		return err
 	}
 
-	runtime := util.MakeBasicRuntimeComponent(t, f, name, ns, 1)
+	runtime := util.MakeBasicRuntimeComponent(t, f, name, namespace, 1)
 	terminationPolicy := routev1.TLSTerminationReencrypt
 	expose := true
 	
 	runtime.Spec.Expose = &expose
-	runtime.Spec.Route = &v1beta1.RuntimeComponentRoute{
+	runtime.Spec.Route = &appstacksv1beta1.RuntimeComponentRoute{
 		Host:        "myapp.mycompany.com",
 		Termination: &terminationPolicy,
 		CertificateSecretRef: &secretRefName,
 	}
-	
+
 	timestamp := time.Now().UTC()
 	t.Logf("%s - Creating cert-manager existing certificate test...", timestamp)
 
@@ -226,13 +214,13 @@ func runtimeExistingCertTest(t *testing.T, f *framework.Framework, ctx *framewor
 		return err
 	}
 
-	err = e2eutil.WaitForDeployment(t, f.KubeClient, ns, name, 1, retryInterval, timeout)
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, name, 1, retryInterval, timeout)
 	if err != nil {
 		return err
 	}
 	routev1.AddToScheme(f.Scheme)
 	route := &routev1.Route{}
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: name, Namespace: ns}, route)
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, route)
 	if err != nil {
 		return err
 	}
@@ -247,6 +235,29 @@ func runtimeExistingCertTest(t *testing.T, f *framework.Framework, ctx *framewor
 }
 
 /* Helper Functions Below */
+func deployAndWaitForCertificate (msg string, t *testing.T, f *framework.Framework, ctx *framework.TestCtx, 
+		runtime *appstacksv1beta1.RuntimeComponent, n string, ns string, certName string) error {
+	timestamp := time.Now().UTC()
+	t.Logf("%s - %s...", timestamp, msg)
+	err := f.Client.Create(goctx.TODO(), runtime,
+		&framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
+	if err != nil {
+		return err
+	}
+
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, ns, n, 1, retryInterval, timeout)
+	if err != nil {
+		return err
+	}
+
+	err = util.WaitForCertificate(t, f, ns, certName, retryInterval, timeout)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func makeCertSecret(n string, ns string) *corev1.Secret {
 	data := map[string][]byte{
 		"ca.crt": []byte("fakecacrt"),
@@ -263,4 +274,16 @@ func makeCertSecret(n string, ns string) *corev1.Secret {
 		Data: data,
 	}
 	return &secret
+}
+
+func certificateExists(f *framework.Framework, n string, ns string) (bool, error) {
+	cert := &certmngrv1alpha2.Certificate{}
+	certErr := f.Client.Get(goctx.TODO(), types.NamespacedName{Name:n, Namespace: ns}, cert)
+	if certErr != nil {
+		if apierrors.IsNotFound(certErr) {
+			return false, nil
+		}
+		return false, certErr
+	}
+	return true, nil
 }
