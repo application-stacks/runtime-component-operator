@@ -6,19 +6,20 @@ import (
 	"errors"
 	"testing"
 	"time"
-
+	"net/http"
+	
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
-	"github.com/application-stacks/runtime-component-operator/test/util"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
+	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
+	"github.com/application-stacks/runtime-component-operator/test/util"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	// "k8s.io/apimachinery/pkg/runtime"
 )
 
 // RuntimeCertManagerTest : ...
@@ -48,19 +49,25 @@ func RuntimeCertManagerTest(t *testing.T) {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	if err = runtimePodCertTest(t, f, ctx); err != nil {
-		util.FailureCleanup(t, f, namespace, err)
-	}
+	
+	routev1.AddToScheme(f.Scheme)
+	// if err = runtimePodCertTest(t, f, ctx); err != nil {
+	// 	util.FailureCleanup(t, f, namespace, err)
+	// }
 
-	if err = runtimeRouteCertTest(t, f, ctx); err != nil {
-		util.FailureCleanup(t, f, namespace, err)
-	}
+	// if err = runtimeRouteCertTest(t, f, ctx); err != nil {
+	// 	util.FailureCleanup(t, f, namespace, err)
+	// }
 
-	if err = runtimeCustomIssuerTest(t, f, ctx); err != nil {
-		util.FailureCleanup(t, f, namespace, err)
-	}
+	// if err = runtimeCustomIssuerTest(t, f, ctx); err != nil {
+	// 	util.FailureCleanup(t, f, namespace, err)
+	// }
 
-	if err = runtimeExistingCertTest(t, f, ctx); err != nil {
+	// if err = runtimeExistingCertTest(t, f, ctx); err != nil {
+	// 	util.FailureCleanup(t, f, namespace, err)
+	// }
+
+	if err = runtimeOpenShiftCATest(t, f, ctx); err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 }
@@ -179,25 +186,23 @@ func runtimeCustomIssuerTest(t *testing.T, f *framework.Framework, ctx *framewor
 	return nil
 }
 
-
 func runtimeExistingCertTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
 	const name = "example-existing-cert"
+	secretRefName := "myapp-rt-tls"
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		return fmt.Errorf("could not get namespace %v", err)
 	}
-	secretRefName := "my-app-rt-tls"
 	secret := makeCertSecret(secretRefName, namespace)
 	err = f.Client.Create(goctx.TODO(), secret,
 		&framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
 	if err != nil {
-		return err
+		util.FailureCleanup(t, f, namespace, err)
 	}
-
 	runtime := util.MakeBasicRuntimeComponent(t, f, name, namespace, 1)
 	terminationPolicy := routev1.TLSTerminationReencrypt
 	expose := true
-	
+
 	runtime.Spec.Expose = &expose
 	runtime.Spec.Route = &appstacksv1beta1.RuntimeComponentRoute{
 		Host:        "myapp.mycompany.com",
@@ -218,7 +223,7 @@ func runtimeExistingCertTest(t *testing.T, f *framework.Framework, ctx *framewor
 	if err != nil {
 		return err
 	}
-	routev1.AddToScheme(f.Scheme)
+	
 	route := &routev1.Route{}
 	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, route)
 	if err != nil {
@@ -231,6 +236,68 @@ func runtimeExistingCertTest(t *testing.T, f *framework.Framework, ctx *framewor
 		return errors.New("route.Spec.TLS fields are not set correctly")
 	}
 
+	return nil
+}
+
+func runtimeOpenShiftCATest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
+	const name = "example-oc-cert"
+	secretRefName := "openshift-generated-secret"
+	namespace, err := ctx.GetNamespace()
+	if err != nil {
+		return fmt.Errorf("could not get namespace %v", err)
+	}
+
+	runtime := util.MakeBasicRuntimeComponent(t, f, name, namespace, 1)
+	terminationPolicy := routev1.TLSTerminationReencrypt
+	expose := true
+
+	runtime.Spec.Expose = &expose
+	annotations := map[string]string {
+		"service.alpha.openshift.io/serving-cert-secret-name": secretRefName,
+	}
+	runtime.Spec.Service = &appstacksv1beta1.RuntimeComponentService {
+		Annotations: annotations,
+		CertificateSecretRef: &secretRefName,
+		Port: 3000,
+	}
+	// Mount secret as volume.
+
+	insecureEdgeTerminationPolicy := routev1.InsecureEdgeTerminationPolicyRedirect
+	runtime.Spec.Route = &appstacksv1beta1.RuntimeComponentRoute{
+		Termination: &terminationPolicy,
+		InsecureEdgeTerminationPolicy: &insecureEdgeTerminationPolicy,
+	}
+
+	timestamp := time.Now().UTC()
+	t.Logf("%s - Creating cert-manager existing certificate test...", timestamp)
+
+	err = f.Client.Create(goctx.TODO(), runtime,
+		&framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
+	if err != nil {
+		return err
+	}
+
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, name, 1, retryInterval, timeout)
+	if err != nil {
+		return err
+	}
+	
+	// Check if the secret is automatically generated.
+	secret := &corev1.Secret{}
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: secretRefName, Namespace: namespace}, secret)
+	if err != nil {
+		return err
+	}
+	//time.Sleep(time.Minute * 3)
+	route := &routev1.Route{}
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, route)
+	if err != nil {
+		return err
+	}
+	t.Log(route.Spec.Host)
+	
+	resp, _ := http.Get(route.Spec.Host)
+	t.Log(resp)
 	return nil
 }
 
