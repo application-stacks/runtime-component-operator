@@ -255,12 +255,12 @@ func runtimeOpenShiftCATest(t *testing.T, f *framework.Framework, ctx *framework
 	annotations := map[string]string {
 		"service.alpha.openshift.io/serving-cert-secret-name": secretRefName,
 	}
+	runtime.Spec.ApplicationImage = "inftkm/demo-day-tls"
 	runtime.Spec.Service = &appstacksv1beta1.RuntimeComponentService {
 		Annotations: annotations,
 		CertificateSecretRef: &secretRefName,
-		Port: 3000,
+		Port: 3443,
 	}
-	// Mount secret as volume.
 
 	insecureEdgeTerminationPolicy := routev1.InsecureEdgeTerminationPolicyRedirect
 	runtime.Spec.Route = &appstacksv1beta1.RuntimeComponentRoute{
@@ -269,7 +269,7 @@ func runtimeOpenShiftCATest(t *testing.T, f *framework.Framework, ctx *framework
 	}
 
 	timestamp := time.Now().UTC()
-	t.Logf("%s - Creating cert-manager existing certificate test...", timestamp)
+	t.Logf("%s - Creating cert-manager OpenShift CA test...", timestamp)
 
 	err = f.Client.Create(goctx.TODO(), runtime,
 		&framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
@@ -288,16 +288,23 @@ func runtimeOpenShiftCATest(t *testing.T, f *framework.Framework, ctx *framework
 	if err != nil {
 		return err
 	}
-	//time.Sleep(time.Minute * 3)
+	
 	route := &routev1.Route{}
 	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, route)
 	if err != nil {
 		return err
 	}
 	t.Log(route.Spec.Host)
-	
-	resp, _ := http.Get(route.Spec.Host)
-	t.Log(resp)
+	resp, err := http.Get("https://" + route.Spec.Host)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		t.Logf("The response is: %v", resp)
+		return errors.New("status code outside of 200 range upon initiating https request")
+	}
+
 	return nil
 }
 
