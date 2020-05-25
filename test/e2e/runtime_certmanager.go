@@ -148,7 +148,8 @@ func runtimeRouteCertTest(t *testing.T, f *framework.Framework, ctx *framework.T
 		return err
 	}
 
-	certExists, certErr := certificateExists(f, fmt.Sprintf("%s-route-crt", name), namespace) 
+	namespacedName := types.NamespacedName{Name: fmt.Sprintf("%s-route-crt", name), Namespace: namespace}
+	certExists, certErr := certificateExists(f, namespacedName) 
 	if certErr != nil {
 		return certErr
 	}
@@ -375,9 +376,9 @@ func makeCertSecret(n string, ns string) *corev1.Secret {
 }
 
 // certificateExists checks if the certificate, named `n`, exists in the namespace `ns`.
-func certificateExists(f *framework.Framework, n string, ns string) (bool, error) {
+func certificateExists(f *framework.Framework, namespacedName types.NamespacedName) (bool, error) {
 	cert := &certmngrv1alpha2.Certificate{}
-	certErr := f.Client.Get(goctx.TODO(), types.NamespacedName{Name:n, Namespace: ns}, cert)
+	certErr := f.Client.Get(goctx.TODO(), namespacedName, cert)
 	if certErr != nil {
 		if apierrors.IsNotFound(certErr) {
 			return false, nil
