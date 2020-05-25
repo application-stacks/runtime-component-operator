@@ -401,7 +401,7 @@ func makeHTTPSRequest(t *testing.T, f *framework.Framework, ctx *framework.TestC
 
 		resp, err := http.Get("https://" + route.Spec.Host)
 		if err != nil {
-			return false, err
+			return true, err
 		}
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 			return false, errors.New("status code outside of 200 range upon initiating https request")
