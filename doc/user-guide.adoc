@@ -17,6 +17,8 @@ The Runtime Component Operator can be installed to:
 
 Appropriate cluster roles and bindings are required to watch another namespace, watch multiple namespaces or watch all namespaces.
 
+NOTE: The Runtime Component Operator can only interact with resources it is given permission to interact through link:++https://kubernetes.io/docs/reference/access-authn-authz/rbac/++[Role-based access control (RBAC)]. Some of the operator features described in this document require interacting with resources in other namespaces. In that case, the operator must be installed with correct `ClusterRole` definitions.
+
 == Overview
 
 The architecture of the Runtime Component Operator follows the basic controller pattern:  the Operator container with the controller is deployed into a Pod and listens for incoming resources with `Kind: RuntimeComponent`. Creating a `RuntimeComponent` custom resource (CR) triggers the Runtime Component Operator to create, update or delete Kubernetes resources needed by the application to run on your cluster.
@@ -163,9 +165,11 @@ The Operator tries to find an image stream name first with the `<project name>/<
 
 _This feature is only available if you are running on OKD or OpenShift._
 
+NOTE: The operator requires `ClusterRole` permissions if the image stream resource is in another namespace.
+
 === Service account
 
-The operator can create a `ServiceAccount` resource when deploying a runtime omponent. If `serviceAccountName` is not specified in a CR, the operator creates a service account with the same name as the CR (e.g. `my-app`).
+The operator can create a `ServiceAccount` resource when deploying a `RuntimeComponent` custom resource (CR). If `serviceAccountName` is not specified in a CR, the operator creates a service account with the same name as the CR (e.g. `my-app`).
 
 Users can also specify `serviceAccountName` when they want to create a service account manually.
 
@@ -534,6 +538,8 @@ If the `namespace` is not provided in the above example under `consumes`, then t
 
 If consumer's CR does not include `mountPath`, the secret will be bound to environment variables with the pattern `<NAMESPACE>_<SERVICE-NAME>_<KEY>`, and the value of that env var is the key’s value. Due to syntax restrictions for Kubernetes environment variables, the string representing the namespace and the string representing the service name will have to be normalized by turning any non-`[azAZ09]` characters to become an underscore `(_)` character.
 
+NOTE: The operator requires `ClusterRole` permissions if the provider application is in another namespace.
+
 === Monitoring
 
 Runtime Component Operator can create a `ServiceMonitor` resource to integrate with `Prometheus Operator`.
@@ -751,6 +757,8 @@ If it fails to find any, it searches the whole cluster to find `Application` CRs
 After the operator finds any `Application` CRs in the previous steps, it adds labels to the `RuntimeComponent` CR. These labels are listed in the `spec.selector.matchLabels` parameter. However, if the operator fails to find any `Application` CRs, and if the `createAppDefinition` parameter is not set to `false`, the operator configures the Kubernetes resources it generates. These Kubernetes resources are configured to allow automatic creation of an `Application` definition.
 
 _This feature is only available if you have kAppNav installed on your cluster. Auto creation of an application definition is not supported when Knative service is created_
+
+NOTE: The operator requires `ClusterRole` permissions when joining an existing `Application` custom resource in another namespace.
 
 === Certificate Manager Integration
 
