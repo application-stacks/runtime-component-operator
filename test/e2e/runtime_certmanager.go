@@ -6,6 +6,7 @@ import (
 	"errors"
 	"testing"
 	"time"
+	"wait"
 	"net/http"
 	
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
@@ -272,6 +273,7 @@ func runtimeOpenShiftCATest(t *testing.T, f *framework.Framework, ctx *framework
 	if err != nil {
 		return fmt.Errorf("could not get namespace %v", err)
 	}
+	namespacedName := types.NamespacedName{Name: name, Namespace: namespace}
 	secretRefName := "openshift-generated-secret-"+namespace	// use a non-existent name
 
 	// configure the runtime
@@ -318,20 +320,11 @@ func runtimeOpenShiftCATest(t *testing.T, f *framework.Framework, ctx *framework
 	}
 
 	// try to initialize https connection
-	route := &routev1.Route{}
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, route)
+	err = makeHTTPSRequest(t, f, ctx, namespacedName)
 	if err != nil {
 		return err
 	}
-	resp, err := http.Get("https://" + route.Spec.Host)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		t.Logf("The response is: %v", resp)
-		return errors.New("status code outside of 200 range upon initiating https request")
-	}
+	
 
 	return nil
 }
@@ -392,4 +385,30 @@ func certificateExists(f *framework.Framework, n string, ns string) (bool, error
 		return false, certErr
 	}
 	return true, nil
+}
+
+// makeHttpsRequest tries to make a GET call to the deployment's route via https protocal.
+// The expected result is a response with 200 status code.
+// Return error if the status code is outside of the 200 range.
+func makeHTTPSRequest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
+		namespacedName types.NamespacedName) error {
+	err := wait.Poll(retryInterval, timeout, func(done bool, err error) () {
+		route := &routev1.Route{}
+		err := f.Client.Get(goctx.TODO(), namespacedName, route)
+		if err != nil {
+			return true, err
+		}
+
+		resp, err := http.Get("https://" + route.Spec.Host)
+		if err != nil {
+			return false, err
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
