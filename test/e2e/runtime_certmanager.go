@@ -388,7 +388,7 @@ func certificateExists(f *framework.Framework, namespacedName types.NamespacedNa
 	return true, nil
 }
 
-// makeHttpsRequest tries to make a GET call to the deployment's route via https protocal.
+// makeHttpsRequest tries to poll a GET call to the deployment's route via https protocol.
 // The expected result is a response with 200 status code.
 // Return error if the status code is outside of the 200 range.
 func makeHTTPSRequest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
