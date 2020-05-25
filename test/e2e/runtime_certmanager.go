@@ -6,7 +6,6 @@ import (
 	"errors"
 	"testing"
 	"time"
-	"wait"
 	"net/http"
 	
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
@@ -20,6 +19,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -392,9 +392,9 @@ func certificateExists(f *framework.Framework, n string, ns string) (bool, error
 // Return error if the status code is outside of the 200 range.
 func makeHTTPSRequest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 		namespacedName types.NamespacedName) error {
-	err := wait.Poll(retryInterval, timeout, func(done bool, err error) () {
+	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 		route := &routev1.Route{}
-		err := f.Client.Get(goctx.TODO(), namespacedName, route)
+		err = f.Client.Get(goctx.TODO(), namespacedName, route)
 		if err != nil {
 			return true, err
 		}
@@ -402,6 +402,9 @@ func makeHTTPSRequest(t *testing.T, f *framework.Framework, ctx *framework.TestC
 		resp, err := http.Get("https://" + route.Spec.Host)
 		if err != nil {
 			return false, err
+		}
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			return false, errors.New("status code outside of 200 range upon initiating https request")
 		}
 
 		return true, nil
