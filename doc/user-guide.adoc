@@ -114,6 +114,11 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `route.insecureEdgeTerminationPolicy`   | HTTP traffic policy with TLS enabled. Can be one of `Allow`, `Redirect` and `None`.
 | `route.certificate`  | A YAML object representing a link:++https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec++[Certificate].
 | `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
+| `affinity.nodeAffinity` | A YAML object representing a link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#nodeaffinity-v1-core++[NodeAffinity].
+| `affinity.nodeAffinityLabels` | A YAML object containing set of required labels and their values.
+| `affinity.podAffinity` | A YAML object representing a link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podaffinity-v1-core++[PodAffinity].
+| `affinity.podAntiAffinity` | A YAML object representing a link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podantiaffinity-v1-core++[PodAntiAffinity].
+
 |===
 
 === Basic usage
@@ -911,6 +916,107 @@ data:
     Pod/Service certificate Certificate Authority (base64). Might be required when using reencrypt termination policy.
 type: kubernetes.io/tls
 ----
+
+=== Affinity
+
+==== Node Affinity
+
+===== Basic node affinity
+
+Using `nodeAffinityLabels` field it is possible to set required labels for pod scheduling on specific nodes:
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: my-app
+  namespace: test
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  affinity:
+    nodeAffinityLabels:
+      customNodeLabel: label1, label2
+      customNodeLabel2: label3
+----
+
+===== Advanced node affinity example:
+
+Require a large node type and prefer zone A and zone B
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: my-app
+  namespace: test
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key:  node.kubernetes.io/instance-type
+            operator: In
+            values:
+            - large
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 60
+        preference:
+          matchExpressions:
+          - key: failure-domain.beta.kubernetes.io/zone
+            operator: In
+            values:
+            - zoneA
+      - weight: 20
+        preference:
+          matchExpressions:
+          - key: failure-domain.beta.kubernetes.io/zone
+            operator: In
+            values:
+            - zoneB
+----
+
+==== Pod Affinity and Anti-Affinity
+
+Pod affinity and anti-affinity allow you to constrain which nodes your pod is eligible to be scheduled based on labels on pods that are already running on the node rather than based on labels on node.
+
+Bellow example shows required pod affinity where pod for service A and B should be co-located in the same zone. Additionally, it is preferred not to schedule on hosts that are running service C.
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: Service-B
+  namespace: test
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: service
+            operator: In
+            values:
+            - Service-A
+        topologyKey: failure-domain.beta.kubernetes.io/zone
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: service
+              operator: In
+              values:
+              - Service-C
+          topologyKey: kubernetes.io/hostname
+----
+
 
 === Troubleshooting
 
