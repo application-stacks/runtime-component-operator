@@ -410,9 +410,6 @@ func makeHTTPSRequest(t *testing.T, f *framework.Framework, ctx *framework.TestC
 
 		return true, nil
 	})
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
