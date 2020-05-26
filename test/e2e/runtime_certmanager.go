@@ -100,11 +100,7 @@ func runtimePodCertTest(t *testing.T, f *framework.Framework, ctx *framework.Tes
 	certName := fmt.Sprintf("%s-svc-crt", name)
 	err = deployAndWaitForCertificate("Creating cert-manager pod test",
 			t, f, ctx, runtime, name, namespace, certName)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err	// implicitly return nil if no error occurs
 }
 
 // Test behaviour when specifying runtime.Spec.Route and then set it to nil.
@@ -201,11 +197,7 @@ func runtimeCustomIssuerTest(t *testing.T, f *framework.Framework, ctx *framewor
 	certName := fmt.Sprintf("%s-route-crt", name)
 	err = deployAndWaitForCertificate("Creating cert-manager custom issuer test",
 			t, f, ctx, runtime, name, namespace, certName)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err	// implicitly return nil if no error occurs
 }
 
 // Test using an existing certificate for TLS connection.
@@ -322,12 +314,7 @@ func runtimeOpenShiftCATest(t *testing.T, f *framework.Framework, ctx *framework
 
 	// try to initialize https connection
 	err = makeHTTPSRequest(t, f, ctx, namespacedName)
-	if err != nil {
-		return err
-	}
-	
-
-	return nil
+	return err	// implicitly return nil if no error occurs
 }
 
 /* Helper Functions Below */
@@ -349,11 +336,7 @@ func deployAndWaitForCertificate (msg string, t *testing.T, f *framework.Framewo
 	}
 
 	err = util.WaitForCertificate(t, f, ns, certName, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err	// implicitly return nil if no error occurs
 }
 
 // makeCertSecret returns a pointer to a simple Secret object with fake values inside.
@@ -411,5 +394,5 @@ func makeHTTPSRequest(t *testing.T, f *framework.Framework, ctx *framework.TestC
 		return true, nil
 	})
 
-	return err
+	return err	// implicitly return nil if no error occurs
 }
