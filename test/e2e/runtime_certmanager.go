@@ -277,7 +277,7 @@ func runtimeOpenShiftCATest(t *testing.T, f *framework.Framework, ctx *framework
 	annotations := map[string]string {
 		"service.alpha.openshift.io/serving-cert-secret-name": secretRefName,
 	}	// important step: add the annotation
-	runtime.Spec.ApplicationImage = "inftkm/demo-day-tls"	// simple nodejs app with https enabled
+	runtime.Spec.ApplicationImage = "navidsh/e2e-app-ssl"	// simple nodejs app with https enabled
 	runtime.Spec.Service = &appstacksv1beta1.RuntimeComponentService {
 		Annotations: annotations,
 		CertificateSecretRef: &secretRefName,
