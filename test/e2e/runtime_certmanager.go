@@ -61,7 +61,10 @@ func RuntimeCertManagerTest(t *testing.T) {
 	}
 
 	// required to get route details later
-	routev1.AddToScheme(f.Scheme)
+	if err = routev1.AddToScheme(f.Scheme); err != nil {
+		t.Logf("Unable to add route scheme: (%v)", err)
+		util.FailureCleanup(t, f, namespace, err)
+	}
 
 	// start the five tests
 	if err = runtimePodCertTest(t, f, ctx); err != nil {
