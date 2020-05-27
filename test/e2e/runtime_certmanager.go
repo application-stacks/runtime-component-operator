@@ -379,6 +379,7 @@ func certificateExists(f *framework.Framework, namespacedName types.NamespacedNa
 // Return error if the status code is outside of the 200 range.
 func makeHTTPSRequest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 		namespacedName types.NamespacedName) error {
+	testFailed := false
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 		route := &routev1.Route{}
 		err = f.Client.Get(goctx.TODO(), namespacedName, route)
@@ -391,11 +392,21 @@ func makeHTTPSRequest(t *testing.T, f *framework.Framework, ctx *framework.TestC
 			return true, err
 		}
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-			return false, errors.New("status code outside of 200 range upon initiating https request")
+			testFailed = true
+			t.Log("Retrying to make https connection ...")
+			return false, nil
 		}
-
+		testFailed = false
 		return true, nil
 	})
 
-	return err	// implicitly return nil if no error occurs
+	if err != nil {
+		return err
+	}
+
+	if testFailed {
+		return errors.New("status code outside of 200 range upon initiating https request")
+	}
+
+	return nil
 }
