@@ -171,7 +171,10 @@ func runtimeCustomIssuerTest(t *testing.T, f *framework.Framework, ctx *framewor
 	// Create a custom issuer, named 'custom-issuer'.
 	err = util.CreateCertificateIssuer(t, f, ctx, "custom-issuer")
 	if err != nil {
-		return err
+		issuerExists := err.Error() == "clusterissuers.cert-manager.io \"custom-issuer\" already exists"
+		if !issuerExists {
+			return err
+		}
 	}
 
 	// configure the runtime's spec
@@ -379,7 +382,6 @@ func certificateExists(f *framework.Framework, namespacedName types.NamespacedNa
 // Return error if the status code is outside of the 200 range.
 func makeHTTPSRequest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 		namespacedName types.NamespacedName) error {
-	testFailed := false
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 		route := &routev1.Route{}
 		err = f.Client.Get(goctx.TODO(), namespacedName, route)
@@ -392,21 +394,15 @@ func makeHTTPSRequest(t *testing.T, f *framework.Framework, ctx *framework.TestC
 			return true, err
 		}
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-			testFailed = true
 			t.Log("Retrying to make https connection ...")
 			return false, nil
 		}
-		testFailed = false
 		return true, nil
 	})
 
-	if err != nil {
-		return err
-	}
-
-	if testFailed {
+	if errors.Is(err, wait.ErrWaitTimeout) {
 		return errors.New("status code outside of 200 range upon initiating https request")
 	}
 
-	return nil
+	return err	// implicitly return nil if no errors
 }
