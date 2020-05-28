@@ -217,7 +217,7 @@ func getCurrImageRef(f *framework.Framework, ctx *framework.TestCtx,
 	return runtime.Status.ImageReference, nil
 }
 
-// Poll wait for the target's image reference to be updated to the imageRef.
+// Polling wait for the target's image reference to be updated to the imageRef.
 func waitImageRefUpdated(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 		target types.NamespacedName, imageRef string) error {
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
