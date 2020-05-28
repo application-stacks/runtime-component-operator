@@ -907,7 +907,7 @@ data:
     Route public certificate...(base64)
   tls.key: >-
     Route private key...(base64)
-  destCA: >-
+  destCA.crt: >-
     Pod/Service certificate Certificate Authority (base64). Might be required when using reencrypt termination policy.
 type: kubernetes.io/tls
 ----

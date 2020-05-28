@@ -98,6 +98,7 @@ func testKnIsFalse(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 func testKnIsTrueAndTurnOff(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, namespace string) {
 	knativeBool := true
 	applicationName := "example-runtime-knative-1"
+	target := types.NamespacedName{Name: applicationName, Namespace: namespace}
 	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, applicationName, namespace, 1)
 	exampleRuntime.Spec.CreateKnativeService = &knativeBool
 
@@ -114,7 +115,7 @@ func testKnIsTrueAndTurnOff(t *testing.T, f *framework.Framework, ctx *framework
 
 	// If deployment not cleared, test fails.
 	dep := &appsv1.Deployment{}
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: applicationName, Namespace: namespace}, dep)
+	err = f.Client.Get(goctx.TODO(), target, dep)
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			util.FailureCleanup(t, f, namespace, err)
@@ -122,7 +123,6 @@ func testKnIsTrueAndTurnOff(t *testing.T, f *framework.Framework, ctx *framework
 	}
 
 	// turn the runtime component off / set CreateKnativeService to false.
-	target := types.NamespacedName{Name: applicationName, Namespace: namespace}
 	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		knativeBool = false
 		r.Spec.CreateKnativeService = &knativeBool
