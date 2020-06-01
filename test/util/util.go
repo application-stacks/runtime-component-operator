@@ -8,6 +8,7 @@ import (
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
+	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	corev1 "k8s.io/api/core/v1"
@@ -290,6 +291,79 @@ func UpdateApplication(f *framework.Framework, target types.NamespacedName, upda
 	})
 
 	return err
+}
+
+// WaitForApplicationDelete wait for kappnav to delete the generated application
+func WaitForApplicationDelete(t *testing.T, f *framework.Framework, target types.NamespacedName) error {
+	retryInterval := time.Second * 5
+	timeout := time.Second * 30
+	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
+		application := &applicationsv1beta1.Application{}
+
+		if err := f.Client.Get(goctx.TODO(), target, application); err != nil {
+			if apierrors.IsNotFound(err) {
+				return true, nil
+			}
+			return true, err
+		}
+
+		t.Logf("application '%s' not deleted, waiting...", target.Name)
+		return false, nil
+	})
+
+	return err
+}
+
+// WaitForApplicationCreated wait for kappnav to create the generated application
+func WaitForApplicationCreated(t *testing.T, f *framework.Framework, target types.NamespacedName) error {
+	retryInterval := time.Second * 5
+	timeout := time.Second * 30
+	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
+		application := &applicationsv1beta1.Application{}
+
+		if err := f.Client.Get(goctx.TODO(), target, application); err != nil {
+			if apierrors.IsNotFound(err) {
+				t.Logf("application '%s' not found, waiting...", target.Name)
+				return false, nil
+			}
+			return true, err
+		}
+
+		return true, nil
+	})
+
+	return err
+}
+
+func CreateApplicationTarget(f *framework.Framework, ctx *framework.TestCtx, target types.NamespacedName, l map[string]string) error {
+	ns, err := ctx.GetNamespace()
+	if err != nil {
+		return err
+	}
+
+	application := &applicationsv1beta1.Application{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: target.Name,
+			Namespace: target.Namespace,
+			Annotations: map[string]string{
+				"kappnav.component.namespaces": ns,
+			},
+		},
+		Spec: applicationsv1beta1.ApplicationSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: l,
+			},
+		},
+	}
+	timeout := time.Second * 30
+	retryInterval := time.Second * 1
+
+	err = f.Client.Create(goctx.TODO(), application, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // CommandError : Reports back an error if a command fails to execute
