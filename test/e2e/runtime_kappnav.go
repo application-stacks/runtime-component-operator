@@ -157,8 +157,6 @@ func useExistingApplications(t *testing.T, f *framework.Framework, ctx *framewor
 	target := types.NamespacedName{Namespace: ns, Name: name}
 
 	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
-		createApp := false
-		r.Spec.CreateAppDefinition = &createApp
 		r.Spec.ApplicationName = existingAppName
 	})
 	if err != nil {
