@@ -157,9 +157,9 @@ func TestCustomizeAffinity(t *testing.T) {
 			{
 				MatchExpressions: []corev1.NodeSelectorRequirement{
 					{
-						Key: "node.kubernetes.io/instance-type",
-						Operator: corev1.NodeSelectorOpIn,
-						Values: []string{"large"},
+						Key: "key",
+						Operator: corev1.NodeSelectorOpNotIn,
+						Values: []string{"large", "medium"},
 					},
 				},
 			},
@@ -180,9 +180,7 @@ func TestCustomizeAffinity(t *testing.T) {
 		},
 	}
 	labels := map[string]string{
-		"a": "b",
-		"c": "d",
-		"node.kubernetes.io/instance-type": "large,small",
+		"customNodeLabel": "label1, label2",
 	}
 	affinityConfig := appstacksv1beta1.RuntimeComponentAffinity{
 		NodeAffinity: &corev1.NodeAffinity{
@@ -193,20 +191,25 @@ func TestCustomizeAffinity(t *testing.T) {
 	}
 	spec := appstacksv1beta1.RuntimeComponentSpec{
 		ApplicationImage: appImage,
-		Service: service,
 		Affinity: &affinityConfig,
 	}
 	affinity, runtime := &corev1.Affinity{}, createRuntimeComponent(name, namespace, spec)
 	
 	CustomizeAffinity(affinity, runtime)
-	t.Log(affinity)
+	expectedMatchExpressions := []corev1.NodeSelectorRequirement{
+		rDSIDE.NodeSelectorTerms[0].MatchExpressions[0],
+		{
+			Key: "customNodeLabel",
+			Operator: corev1.NodeSelectorOpIn,
+			Values: []string{"label1", "label2"},
+		},
+	}
 	testCA := []Test{
-		{"Node Affinity - Match Key", rDSIDE.NodeSelectorTerms[0].MatchExpressions[0].Key, 
-			affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Key},
-		{"Node Affinity - Match Operator", rDSIDE.NodeSelectorTerms[0].MatchExpressions[0].Operator, 
-			affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Operator},
-		{"Node Affinity - Match Value", rDSIDE.NodeSelectorTerms[0].MatchExpressions[0].Values[0], 
-			affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Values[0]},
+		{"Node Affinity - Required Match Expressions", expectedMatchExpressions, 
+			affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions},
+		{"Node Affinity - Prefered Match Expressions", 
+			pDSIDE[0].Preference.MatchExpressions, 
+			affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].Preference.MatchExpressions},
 	}
 	verifyTests(testCA, t)
 }
