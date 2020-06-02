@@ -205,14 +205,14 @@ func partialTestCustomizeNodeAffinity(t *testing.T) {
 			Values: []string{"label1", "label2"},
 		},
 	}
-	testCA := []Test{
+	testCNA := []Test{
 		{"Node Affinity - Required Match Expressions", expectedMatchExpressions, 
 			affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions},
 		{"Node Affinity - Prefered Match Expressions", 
 			pDSIDE[0].Preference.MatchExpressions, 
 			affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].Preference.MatchExpressions},
 	}
-	verifyTests(testCA, t)
+	verifyTests(testCNA, t)
 }
 
 // Partial test for unittest TestCustomizeAffinity bewlow
@@ -247,13 +247,13 @@ func partialTestCustomizePodAffinity(t *testing.T) {
 	affinity, runtime := &corev1.Affinity{}, createRuntimeComponent(name, namespace, spec)
 	CustomizeAffinity(affinity, runtime)
 
-	testCA := []Test{
+	testCPA := []Test{
 		{"Pod Affinity - Required Affinity Term", rDSIDE, 
 			affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution},
 		{"Pod AntiAffinity - Preferred Affinity Term", pDSIDE, 
 			affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution},
 	}
-	verifyTests(testCA, t)
+	verifyTests(testCPA, t)
 }
 
 func TestCustomizeAffinity(t *testing.T) {
