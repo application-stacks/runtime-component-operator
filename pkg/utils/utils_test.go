@@ -149,9 +149,8 @@ func optionalNodePortFunctionalityTests() []Test {
 	return testCS
 }
 
-func TestCustomizeAffinity(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
-
+// Partial test for unittest TestCustomizeAffinity bewlow
+func partialTestCustomizeNodeAffinity(t *testing.T) {
 	rDSIDE :=  corev1.NodeSelector{
 		NodeSelectorTerms: []corev1.NodeSelectorTerm{
 			{
@@ -194,8 +193,8 @@ func TestCustomizeAffinity(t *testing.T) {
 		Affinity: &affinityConfig,
 	}
 	affinity, runtime := &corev1.Affinity{}, createRuntimeComponent(name, namespace, spec)
-	
 	CustomizeAffinity(affinity, runtime)
+
 	expectedMatchExpressions := []corev1.NodeSelectorRequirement{
 		rDSIDE.NodeSelectorTerms[0].MatchExpressions[0],
 		{
@@ -212,6 +211,51 @@ func TestCustomizeAffinity(t *testing.T) {
 			affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].Preference.MatchExpressions},
 	}
 	verifyTests(testCA, t)
+}
+
+// Partial test for unittest TestCustomizeAffinity bewlow
+func partialTestCustomizePodAffinity(t *testing.T) {
+	selectorA := makeInLabelSelector("service", []string{"Service-A"})
+	selectorB := makeInLabelSelector("service", []string{"Service-B"})
+	rDSIDE := []corev1.PodAffinityTerm{
+		{LabelSelector: &selectorA, TopologyKey: "failure-domain.beta.kubernetes.io/zone",},
+	}
+	pDSIDE := []corev1.WeightedPodAffinityTerm{
+		{
+			Weight: int32(20),
+			PodAffinityTerm: corev1.PodAffinityTerm{
+				LabelSelector: &selectorB, TopologyKey: "kubernetes.io/hostname",
+			},
+		},
+	}
+	affinityConfig := appstacksv1beta1.RuntimeComponentAffinity{
+		PodAffinity: &corev1.PodAffinity{
+			RequiredDuringSchedulingIgnoredDuringExecution: rDSIDE,
+		},
+		PodAntiAffinity: &corev1.PodAntiAffinity{
+			PreferredDuringSchedulingIgnoredDuringExecution: pDSIDE,
+		},
+	}
+	spec := appstacksv1beta1.RuntimeComponentSpec{
+		ApplicationImage: appImage,
+		Affinity: &affinityConfig,
+	}
+	affinity, runtime := &corev1.Affinity{}, createRuntimeComponent(name, namespace, spec)
+	CustomizeAffinity(affinity, runtime)
+
+	testCA := []Test{
+		{"Pod Affinity - Required Affinity Term", rDSIDE, 
+			affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution},
+		{"Pod AntiAffinity - Preferred Affinity Term", pDSIDE, 
+			affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution},
+	}
+	verifyTests(testCA, t)
+}
+
+func TestCustomizeAffinity(t *testing.T) {
+	logf.SetLogger(logf.ZapLogger(true))
+	partialTestCustomizeNodeAffinity(t)
+	partialTestCustomizePodAffinity(t)
 }
 
 func TestCustomizePodSpec(t *testing.T) {
@@ -639,6 +683,19 @@ func createRuntimeComponent(n, ns string, spec appstacksv1beta1.RuntimeComponent
 		Spec:       spec,
 	}
 	return app
+}
+
+// Used in TestCustomizeAffinity to make an IN selector with paramenters key and values.
+func makeInLabelSelector(key string, values []string) metav1.LabelSelector {
+	return metav1.LabelSelector{
+		MatchExpressions: []metav1.LabelSelectorRequirement{
+			{
+				Key: key,
+				Operator: metav1.LabelSelectorOpIn,
+				Values: values,
+			},
+		},
+	}
 }
 
 func verifyTests(tests []Test, t *testing.T) {
