@@ -1,0 +1,28 @@
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: coffeeshop-frontend
+spec:
+  applicationImage: 'k8s.gcr.io/pause:2.0'
+  replicas: 2
+  affinity:
+    nodeAffinityLabels:
+      disktype: ssd
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                  - coffeeshop-frontend
+          topologyKey: kubernetes.io/hostname
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                  - coffeeshop-backend
+          topologyKey: kubernetes.io/hostname
