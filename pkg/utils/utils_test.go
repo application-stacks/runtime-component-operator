@@ -149,6 +149,68 @@ func optionalNodePortFunctionalityTests() []Test {
 	return testCS
 }
 
+func TestCustomizeAffinity(t *testing.T) {
+	logf.SetLogger(logf.ZapLogger(true))
+
+	rDSIDE :=  corev1.NodeSelector{
+		NodeSelectorTerms: []corev1.NodeSelectorTerm{
+			{
+				MatchExpressions: []corev1.NodeSelectorRequirement{
+					{
+						Key: "node.kubernetes.io/instance-type",
+						Operator: corev1.NodeSelectorOpIn,
+						Values: []string{"large"},
+					},
+				},
+			},
+		},
+	}
+	pDSIDE := []corev1.PreferredSchedulingTerm{
+		{
+			Weight: int32(20),
+			Preference: corev1.NodeSelectorTerm{
+				MatchExpressions: []corev1.NodeSelectorRequirement{
+					{
+						Key: "failure-domain.beta.kubernetes.io/zone",
+						Operator: corev1.NodeSelectorOpIn,
+						Values: []string{"zoneB"},
+					},
+				},
+			},
+		},
+	}
+	labels := map[string]string{
+		"a": "b",
+		"c": "d",
+		"node.kubernetes.io/instance-type": "large,small",
+	}
+	affinityConfig := appstacksv1beta1.RuntimeComponentAffinity{
+		NodeAffinity: &corev1.NodeAffinity{
+			RequiredDuringSchedulingIgnoredDuringExecution: &rDSIDE,
+			PreferredDuringSchedulingIgnoredDuringExecution: pDSIDE,
+		},
+		NodeAffinityLabels: labels,
+	}
+	spec := appstacksv1beta1.RuntimeComponentSpec{
+		ApplicationImage: appImage,
+		Service: service,
+		Affinity: &affinityConfig,
+	}
+	affinity, runtime := &corev1.Affinity{}, createRuntimeComponent(name, namespace, spec)
+	
+	CustomizeAffinity(affinity, runtime)
+	t.Log(affinity)
+	testCA := []Test{
+		{"Node Affinity - Match Key", rDSIDE.NodeSelectorTerms[0].MatchExpressions[0].Key, 
+			affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Key},
+		{"Node Affinity - Match Operator", rDSIDE.NodeSelectorTerms[0].MatchExpressions[0].Operator, 
+			affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Operator},
+		{"Node Affinity - Match Value", rDSIDE.NodeSelectorTerms[0].MatchExpressions[0].Values[0], 
+			affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Values[0]},
+	}
+	verifyTests(testCA, t)
+}
+
 func TestCustomizePodSpec(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
