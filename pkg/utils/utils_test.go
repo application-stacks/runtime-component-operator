@@ -151,6 +151,7 @@ func optionalNodePortFunctionalityTests() []Test {
 
 // Partial test for unittest TestCustomizeAffinity bewlow
 func partialTestCustomizeNodeAffinity(t *testing.T) {
+	// required during scheduling ignored during execution
 	rDSIDE :=  corev1.NodeSelector{
 		NodeSelectorTerms: []corev1.NodeSelectorTerm{
 			{
@@ -164,6 +165,7 @@ func partialTestCustomizeNodeAffinity(t *testing.T) {
 			},
 		},
 	}
+	// preferred during scheduling ignored during execution
 	pDSIDE := []corev1.PreferredSchedulingTerm{
 		{
 			Weight: int32(20),
@@ -217,9 +219,11 @@ func partialTestCustomizeNodeAffinity(t *testing.T) {
 func partialTestCustomizePodAffinity(t *testing.T) {
 	selectorA := makeInLabelSelector("service", []string{"Service-A"})
 	selectorB := makeInLabelSelector("service", []string{"Service-B"})
+	// required during scheduling ignored during execution
 	rDSIDE := []corev1.PodAffinityTerm{
 		{LabelSelector: &selectorA, TopologyKey: "failure-domain.beta.kubernetes.io/zone",},
 	}
+	// preferred during scheduling ignored during execution
 	pDSIDE := []corev1.WeightedPodAffinityTerm{
 		{
 			Weight: int32(20),
