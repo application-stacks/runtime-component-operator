@@ -61,7 +61,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `createAppDefinition`   | A boolean to toggle the automatic configuration of Kubernetes resources for the `RuntimeComponent` CR to allow creation of an application definition by link:++https://kappnav.io++[kAppNav]. The default value is `true`. See link:++#kubernetes-application-navigator-kappnav-support++[Application Navigator] for more information.
 | `pullPolicy` | The policy used when pulling the image.  One of: `Always`, `Never`, and `IfNotPresent`.
 | `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials.
-| `initContainers` | The list of link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#container-v1-core++[Init Container] definitions.
+| `initContainers` | The list of link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#container-v1-core++[Init Container] definitions.
 | `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`.
 | `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference.
 | `bindings.embedded` | A YAML object that represents a `ServiceBindingRequest` custom resource.
@@ -79,8 +79,8 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `service.provides.category` | Service binding type to be provided by this CR. At this time, the only allowed value is `openapi`.
 | `service.provides.protocol` | Protocol of the provided service. Defauts to `http`.
 | `service.provides.context` | Specifies context root of the service.
-| `service.provides.auth.username` | Optional value to specify username as link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#secretkeyselector-v1-core++[SecretKeySelector].
-| `service.provides.auth.password` | Optional value to specify password as link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#secretkeyselector-v1-core++[SecretKeySelector].
+| `service.provides.auth.username` | Optional value to specify username as link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core++[SecretKeySelector].
+| `service.provides.auth.password` | Optional value to specify password as link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core++[SecretKeySelector].
 | `service.consumes` | An array consisting of services to be consumed by the `RuntimeComponent`.
 | `service.consumes[].category` | The type of service binding to be consumed. At this time, the only allowed value is `openapi`.
 | `service.consumes[].name` | The name of the service to be consumed. If binding to a `RuntimeComponent`, then this would be the provider's CR name.
@@ -114,10 +114,10 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `route.insecureEdgeTerminationPolicy`   | HTTP traffic policy with TLS enabled. Can be one of `Allow`, `Redirect` and `None`.
 | `route.certificate`  | A YAML object representing a link:++https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec++[Certificate].
 | `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
-| `affinity.nodeAffinity` | A YAML object representing a link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#nodeaffinity-v1-core++[NodeAffinity].
-| `affinity.nodeAffinityLabels` | A YAML object containing set of required labels and their values.
-| `affinity.podAffinity` | A YAML object representing a link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podaffinity-v1-core++[PodAffinity].
-| `affinity.podAntiAffinity` | A YAML object representing a link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podantiaffinity-v1-core++[PodAntiAffinity].
+| `affinity.nodeAffinity` | A YAML object representing a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#nodeaffinity-v1-core++[NodeAffinity].
+| `affinity.nodeAffinityLabels` | A YAML object that contains set of required labels and their values.
+| `affinity.podAffinity` | A YAML object representing a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podaffinity-v1-core++[PodAffinity].
+| `affinity.podAntiAffinity` | A YAML object representing a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podantiaffinity-v1-core++[PodAntiAffinity].
 
 |===
 
@@ -919,11 +919,14 @@ type: kubernetes.io/tls
 
 === Affinity
 
+Using affinity you can constrain a Pod to only be able to run on particular Node(s), or to prefer to run on particular nodes.
+
 ==== Node Affinity
+
 
 ===== Basic node affinity
 
-Using `nodeAffinityLabels` field it is possible to set required labels for pod scheduling on specific nodes:
+Use `nodeAffinityLabels` field to set required labels for pod scheduling on specific nodes:
 
 [source,yaml]
 ----
@@ -942,7 +945,7 @@ spec:
 
 ===== Advanced node affinity example:
 
-Require a large node type and prefer zone A and zone B
+The following example requires a node type of Large and preferences for two zones, which are named zoneA and zoneB
 
 [source,yaml]
 ----
@@ -983,7 +986,7 @@ spec:
 
 Pod affinity and anti-affinity allow you to constrain which nodes your pod is eligible to be scheduled based on labels on pods that are already running on the node rather than based on labels on node.
 
-Bellow example shows required pod affinity where pod for service A and B should be co-located in the same zone. Additionally, it is preferred not to schedule on hosts that are running service C.
+The following example shows that pod affinity is required and that the pods for service A and service B must be in the same zone. Through pod anti-affinity, it is preferred not to schedule services B and C on the same host.
 
 [source,yaml]
 ----
