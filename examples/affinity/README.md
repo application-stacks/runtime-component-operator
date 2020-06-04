@@ -22,6 +22,19 @@ You can verify labels specified on nodes by re-running the following command and
 oc get nodes --show-labels
 ```
 
+The output the command would look like the following output. As you can see, the only nodes that are labeled with `disktype=ssd` are `worker0` and `worker1` nodes.
+
+```console
+oc get nodes --show-labels
+NAME                             STATUS   ROLES    AGE   VERSION   LABELS
+master0.shames.os.fyre.ibm.com   Ready    master   26d   v1.16.2   beta.kubernetes.io/arch=amd64,...
+master1.shames.os.fyre.ibm.com   Ready    master   26d   v1.16.2   beta.kubernetes.io/arch=amd64,...
+master2.shames.os.fyre.ibm.com   Ready    master   26d   v1.16.2   beta.kubernetes.io/arch=amd64,...
+worker0.shames.os.fyre.ibm.com   Ready    worker   26d   v1.16.2   disktype=ssd,beta.kubernetes.io/arch=amd64...
+worker1.shames.os.fyre.ibm.com   Ready    worker   26d   v1.16.2   disktype=ssd,beta.kubernetes.io/arch=amd64...
+worker2.shames.os.fyre.ibm.com   Ready    worker   26d   v1.16.2   beta.kubernetes.io/arch=amd64,...
+```
+
 In this cluster, we want the `coffeeshop-frontend` and `coffeeshop-backend` applications to be co-located on the same nodes with SSD storage types.
 
 Here is a YAML snippet of the `RuntimeComponent` custom resource (CR) for the `coffeeshop-backend` application with two replicas. The custom resource has `.spec.affinity.podAntiAffinity` configured to ensure the scheduler does not co-locate pods for the application on a single node. As described in the [user guide](https://github.com/application-stacks/runtime-component-operator/blob/master/doc/user-guide.adoc#labels), the application pods are labelled with `app.kubernetes.io/instance: metadata.name`.
@@ -83,7 +96,7 @@ spec:
           topologyKey: kubernetes.io/hostname
 ```
 
-To see where the which nodes the pods are running, run the following command:
+To verify which nodes the pods are scheduled on, run the following command:
 
 ```console
 oc get pods -o wide
@@ -99,4 +112,6 @@ coffeeshop-frontend-789c585488-5k7sh   1/1     Running   0          5m52s   10.2
 coffeeshop-frontend-789c585488-9m529   1/1     Running   0          5m52s   10.254.20.172   worker0.shames.os.fyre.ibm.com
 ```
 
-In this example, you saw how to use the [Affinity](https://github.com/application-stacks/runtime-component-operator/blob/master/doc/user-guide.adoc#affinity) feature in the Runtime Component Operator to assign pods to certain nodes within a cluster.
+As you can see in the output, no more than one pod per application is running on a single node. Also, the pods for the two applications are co-located on a same node.
+
+This scenario illustrated how to use the [Affinity](https://github.com/application-stacks/runtime-component-operator/blob/master/doc/user-guide.adoc#affinity) feature in the Runtime Component Operator to assign pods to certain nodes within a cluster.
