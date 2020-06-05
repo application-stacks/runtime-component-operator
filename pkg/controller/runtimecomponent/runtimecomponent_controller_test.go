@@ -71,40 +71,13 @@ func TestRuntimeController(t *testing.T) {
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
 
 	// Add third party resrouces to scheme
-	if err := servingv1alpha1.AddToScheme(s); err != nil {
-		t.Fatalf("Unable to add servingv1alpha1 scheme: (%v)", err)
-	}
-
-	if err := routev1.AddToScheme(s); err != nil {
-		t.Fatalf("Unable to add route scheme: (%v)", err)
-	}
-
-	if err := imagev1.AddToScheme(s); err != nil {
-		t.Fatalf("Unable to add image scheme: (%v)", err)
-	}
-
-	if err := applicationsv1beta1.AddToScheme(s); err != nil {
-		t.Fatalf("Unable to add image scheme: (%v)", err)
-	}
-
-	if err := certmngrv1alpha2.AddToScheme(s); err != nil {
-		t.Fatalf("Unable to add cert-manager scheme: (%v)", err)
-	}
-
-	if err := prometheusv1.AddToScheme(s); err != nil {
-		t.Fatalf("Unable to add prometheus scheme: (%v)", err)
-	}
-
-	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
-	s.AddKnownTypes(certmngrv1alpha2.SchemeGroupVersion, &certmngrv1alpha2.Certificate{})
-	s.AddKnownTypes(prometheusv1.SchemeGroupVersion, &prometheusv1.ServiceMonitor{})
+	addResourcesToScheme(t, s, runtimecomponent)
 
 	// Create a fake client to mock API calls.
 	cl := fakeclient.NewFakeClient(objs...)
 
-	rb := appstacksutils.NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
-
 	// Create a ReconcileRuntimeComponent object
+	rb := appstacksutils.NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 	r := &ReconcileRuntimeComponent{ReconcilerBase: rb}
 	r.SetDiscoveryClient(createFakeDiscoveryClient())
 
@@ -122,11 +95,7 @@ func TestRuntimeController(t *testing.T) {
 		if err:= testFunc(t, r, rb); err != nil {
 			t.Fatalf("%v", err)
 		}
-	}
-
-	
-
-	
+	}	
 }
 
 func testBasicReconcile(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
@@ -372,7 +341,35 @@ func testServiceMonitoring(t *testing.T, r *ReconcileRuntimeComponent, rb appsta
 	return nil
 }
 
+func addResourcesToScheme(t *testing.T, s *runtime.Scheme, runtimecomponent *appstacksv1beta1.RuntimeComponent)  {
+	if err := servingv1alpha1.AddToScheme(s); err != nil {
+		t.Fatalf("Unable to add servingv1alpha1 scheme: (%v)", err)
+	}
 
+	if err := routev1.AddToScheme(s); err != nil {
+		t.Fatalf("Unable to add route scheme: (%v)", err)
+	}
+
+	if err := imagev1.AddToScheme(s); err != nil {
+		t.Fatalf("Unable to add image scheme: (%v)", err)
+	}
+
+	if err := applicationsv1beta1.AddToScheme(s); err != nil {
+		t.Fatalf("Unable to add image scheme: (%v)", err)
+	}
+
+	if err := certmngrv1alpha2.AddToScheme(s); err != nil {
+		t.Fatalf("Unable to add cert-manager scheme: (%v)", err)
+	}
+
+	if err := prometheusv1.AddToScheme(s); err != nil {
+		t.Fatalf("Unable to add prometheus scheme: (%v)", err)
+	}
+
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
+	s.AddKnownTypes(certmngrv1alpha2.SchemeGroupVersion, &certmngrv1alpha2.Certificate{})
+	s.AddKnownTypes(prometheusv1.SchemeGroupVersion, &prometheusv1.ServiceMonitor{})
+}
 // Helper Functions
 func makeRuntimeAndReq() (*appstacksv1beta1.RuntimeComponent, reconcile.Request){
 	spec := appstacksv1beta1.RuntimeComponentSpec{}
