@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"strconv"
+	"fmt"
 	"testing"
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
@@ -38,6 +39,7 @@ var (
 	namespace                  = "runtimecomponent"
 	appImage                   = "my-image"
 	ksvcAppImage               = "ksvc-image"
+	defaultMeta                = metav1.ObjectMeta{Name: name, Namespace: namespace}
 	replicas             int32 = 3
 	autoscaling                = &appstacksv1beta1.RuntimeComponentAutoScaling{MaxReplicas: 3}
 	pullPolicy                 = corev1.PullAlways
@@ -106,23 +108,54 @@ func TestRuntimeController(t *testing.T) {
 	r := &ReconcileRuntimeComponent{ReconcilerBase: rb}
 	r.SetDiscoveryClient(createFakeDiscoveryClient())
 
+	testFuncs := []func(*testing.T, *ReconcileRuntimeComponent, appstacksutils.ReconcilerBase)error{
+		testBasicReconcile,
+		testStorage,
+		testKnativeService,
+		testExposeRoute,
+		testAutoscaling,
+		testServiceAccount,
+		testServiceMonitoring,
+	}
+
+	for _, testFunc := range testFuncs {
+		if err:= testFunc(t, r, rb); err != nil {
+			t.Fatalf("%v", err)
+		}
+	}
+
+	
+
+	
+}
+
+func testBasicReconcile(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
 	// Mock request to simulate Reconcile being called on an event for a watched resource
 	// then ensure reconcile is successful and does not return an empty result
 	req := createReconcileRequest(name, namespace)
 	res, err := r.Reconcile(req)
-	verifyReconcile(res, err, t)
+	if err = verifyReconcile(res, err); err != nil {
+		return err
+	}
 
 	// Check if deployment has been created
 	dep := &appsv1.Deployment{}
 	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, dep); err != nil {
-		t.Fatalf("Get Deployment: (%v)", err)
+		return fmt.Errorf("Get Deployment: (%v)", err)
 	}
 
 	depTests := []Test{
-		{"service account name", "app", dep.Spec.Template.Spec.ServiceAccountName},
+		{"Basic Reconcile", "app", dep.Spec.Template.Spec.ServiceAccountName},
 	}
-	verifyTests("dep", depTests, t)
+	if err = verifyTests(depTests); err != nil {
+		return err
+	}
 
+	return nil
+}
+
+func testStorage(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
+	runtimecomponent, req := makeRuntimeAndReq() 
 	// Update runtimecomponentwith values for StatefulSet
 	// Update ServiceAccountName for empty case
 	runtimecomponent.Spec = appstacksv1beta1.RuntimeComponentSpec{
@@ -133,8 +166,10 @@ func TestRuntimeController(t *testing.T) {
 	updateRuntimeComponent(r, runtimecomponent, t)
 
 	// Reconcile again to check for the StatefulSet and updated resources
-	res, err = r.Reconcile(req)
-	verifyReconcile(res, err, t)
+	res, err := r.Reconcile(req)
+	if err = verifyReconcile(res, err); err != nil {
+		return err
+	}
 
 	// Check if StatefulSet has been created
 	statefulSet := &appsv1.StatefulSet{}
@@ -143,6 +178,7 @@ func TestRuntimeController(t *testing.T) {
 	}
 
 	// Storage is enabled so the deployment should be deleted
+	dep := &appsv1.Deployment{}
 	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, dep); err == nil {
 		t.Fatalf("Deployment was not deleted")
 	}
@@ -154,8 +190,15 @@ func TestRuntimeController(t *testing.T) {
 		{"pull policy", name, statefulSet.Spec.Template.Spec.ServiceAccountName},
 		{"service account name", statefulSetSN, statefulSet.Spec.ServiceName},
 	}
-	verifyTests("statefulSet", ssTests, t)
+	if err = verifyTests(ssTests); err != nil {
+		return err
+	}
 
+	return nil
+}
+
+func testKnativeService(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
+	runtimecomponent, req := makeRuntimeAndReq()
 	// Enable CreateKnativeService
 	runtimecomponent.Spec = appstacksv1beta1.RuntimeComponentSpec{
 		CreateKnativeService: &createKnativeService,
@@ -165,8 +208,8 @@ func TestRuntimeController(t *testing.T) {
 	updateRuntimeComponent(r, runtimecomponent, t)
 
 	// Reconcile again to check for the KNativeService and updated resources
-	res, err = r.Reconcile(req)
-	verifyReconcile(res, err, t)
+	res, err := r.Reconcile(req)
+	verifyReconcile(res, err)
 
 	// Create KnativeService
 	ksvc := &servingv1alpha1.Service{
@@ -180,7 +223,8 @@ func TestRuntimeController(t *testing.T) {
 	}
 
 	// KnativeService is enabled so non-Knative resources should be deleted
-	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, statefulSet); err == nil {
+	statefulset := &appsv1.StatefulSet{}
+	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, statefulset); err == nil {
 		t.Fatalf("StatefulSet was not deleted")
 	}
 
@@ -190,19 +234,28 @@ func TestRuntimeController(t *testing.T) {
 		{"pull policy", pullPolicy, ksvc.Spec.Template.Spec.Containers[0].ImagePullPolicy},
 		{"service account name", name, ksvc.Spec.Template.Spec.ServiceAccountName},
 	}
-	verifyTests("ksvc", ksvcTests, t)
+	if err = verifyTests(ksvcTests); err != nil {
+		return err
+	}
+	return nil
+}
 
-	// Disable Knative and enable Expose to test route
-	runtimecomponent.Spec = appstacksv1beta1.RuntimeComponentSpec{Expose: &expose}
+func testExposeRoute(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
+	runtimecomponent, req := makeRuntimeAndReq()
+
+	expose := true
+	runtimecomponent.Spec = appstacksv1beta1.RuntimeComponentSpec{
+		Expose: &expose,
+	}
 	updateRuntimeComponent(r, runtimecomponent, t)
 
-	// Reconcile again to check for the route and updated resources
-	res, err = r.Reconcile(req)
-	verifyReconcile(res, err, t)
+	res, err := r.Reconcile(req)
+	if err = verifyReconcile(res, err); err != nil {
+		return err
+	}
 
-	// Create Route
 	route := &routev1.Route{
-		TypeMeta: metav1.TypeMeta{APIVersion: "route.openshift.io/v1", Kind: "Route"},
+		// TypeMeta: metav1.TypeMeta{APIVersion: "route.openshift.io/v1", Kind: "Route"},
 	}
 	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, route); err != nil {
 		t.Fatalf("Get Route: (%v)", err)
@@ -210,60 +263,124 @@ func TestRuntimeController(t *testing.T) {
 
 	// Check updated values in Route
 	routeTests := []Test{{"target port", intstr.FromString(strconv.Itoa(int(service.Port)) + "-tcp"), route.Spec.Port.TargetPort}}
-	verifyTests("route", routeTests, t)
+	if err = verifyTests(routeTests); err != nil {
+		return err
+	}
+	return nil
+}
 
-	// Disable Route/Expose and enable Autoscaling
+func testAutoscaling(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
+	runtimecomponent, req := makeRuntimeAndReq()
 	runtimecomponent.Spec = appstacksv1beta1.RuntimeComponentSpec{
 		Autoscaling: autoscaling,
 	}
 	updateRuntimeComponent(r, runtimecomponent, t)
 
 	// Reconcile again to check for hpa and updated resources
-	res, err = r.Reconcile(req)
-	verifyReconcile(res, err, t)
+	res, err := r.Reconcile(req)
+	if err = verifyReconcile(res, err); err != nil {
+		return err
+	}
 
 	// Create HorizontalPodAutoscaler
 	hpa := &autoscalingv1.HorizontalPodAutoscaler{}
 	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, hpa); err != nil {
-		t.Fatalf("Get HPA: (%v)", err)
+		return fmt.Errorf("Get HPA: (%v)", err)
 	}
 
-	// Expose is disabled so route should be deleted
+	// verify that the route has been deleted now that expose is disabled
+	route := &routev1.Route{}
 	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, route); err == nil {
-		t.Fatal("Route was not deleted")
+		return fmt.Errorf("Failed to delete Route")
 	}
 
 	// Check updated values in hpa
 	hpaTests := []Test{{"max replicas", autoscaling.MaxReplicas, hpa.Spec.MaxReplicas}}
-	verifyTests("hpa", hpaTests, t)
-
-	// Remove autoscaling to ensure hpa is deleted
-	runtimecomponent.Spec.Autoscaling = nil
-	updateRuntimeComponent(r, runtimecomponent, t)
-
-	res, err = r.Reconcile(req)
-	verifyReconcile(res, err, t)
-
-	// Autoscaling is disabled so hpa should be deleted
-	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, hpa); err == nil {
-		t.Fatal("hpa was not deleted")
+	if err = verifyTests(hpaTests); err != nil {
+		return err
 	}
-
-	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, runtimecomponent); err != nil {
-		t.Fatalf("Get runtimecomponent: (%v)", err)
-	}
-
-	// Update runtimecomponentto ensure it requeues
-	runtimecomponent.SetGeneration(1)
-	updateRuntimeComponent(r, runtimecomponent, t)
-
-	res, err = r.Reconcile(req)
-	if err != nil {
-		t.Fatalf("reconcile: (%v)", err)
-	}
+	return nil
 }
 
+func testServiceAccount(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
+	runtimecomponent, req := makeRuntimeAndReq()
+	updateRuntimeComponent(r, runtimecomponent, t)
+	res, err := r.Reconcile(req)
+	if err = verifyReconcile(res, err); err != nil {
+		return err
+	}
+	serviceaccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
+	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, serviceaccount); err != nil {
+		return err
+	}
+
+	runtimecomponent.Spec = appstacksv1beta1.RuntimeComponentSpec{
+		ServiceAccountName: &serviceAccountName,
+	}
+	updateRuntimeComponent(r, runtimecomponent, t)
+
+	// check that the default service account was deleted
+	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, serviceaccount); err == nil {
+		return err
+	}
+	return nil
+}
+
+func testServiceMonitoring(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
+	runtimecomponent, req := makeRuntimeAndReq()
+
+	// Test with monitoring specified
+	runtimecomponent.Spec.Monitoring = &appstacksv1beta1.RuntimeComponentMonitoring{}
+	updateRuntimeComponent(r, runtimecomponent, t)
+	res, err := r.Reconcile(req)
+	if err = verifyReconcile(res, err); err != nil {
+		return err
+	}
+
+	svc := &corev1.Service{ObjectMeta: defaultMeta}
+	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, svc); err != nil {
+		return err
+	}
+
+	monitorTests := []Test{
+		{"Monitor label assigned", "true", svc.Labels["monitor."+runtimecomponent.GetGroupName()+"/enabled"]},
+	}
+	if err = verifyTests(monitorTests); err != nil {
+		return err
+	}
+
+	// Test without monitoring on
+	runtimecomponent.Spec.Monitoring = nil
+	updateRuntimeComponent(r, runtimecomponent, t)
+	res, err = r.Reconcile(req)
+	if err = verifyReconcile(res, err); err != nil {
+		return err
+	}
+
+	svc = &corev1.Service{ObjectMeta: defaultMeta}
+	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, svc); err != nil {
+		return err
+	}
+
+	monitorTests = []Test{
+		{"Monitor label unassigned", "", svc.Labels["app."+runtimecomponent.GetGroupName()+"/monitor"]},
+	}
+	if err = verifyTests(monitorTests); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
 // Helper Functions
+func makeRuntimeAndReq() (*appstacksv1beta1.RuntimeComponent, reconcile.Request){
+	spec := appstacksv1beta1.RuntimeComponentSpec{}
+	runtimecomponent := createRuntimeComponent(name, namespace, spec)
+	req := createReconcileRequest(name, namespace)
+	return runtimecomponent, req
+}
+
 func createRuntimeComponent(n, ns string, spec appstacksv1beta1.RuntimeComponentSpec) *appstacksv1beta1.RuntimeComponent {
 	app := &appstacksv1beta1.RuntimeComponent{
 		ObjectMeta: metav1.ObjectMeta{Name: n, Namespace: ns},
@@ -331,22 +448,25 @@ func createConfigMap(n, ns string, data map[string]string) *corev1.ConfigMap {
 	return app
 }
 
-func verifyReconcile(res reconcile.Result, err error, t *testing.T) {
+func verifyReconcile(res reconcile.Result, err error) error {
 	if err != nil {
-		t.Fatalf("reconcile: (%v)", err)
+		return fmt.Errorf("reconcile: (%v)", err)
 	}
 
 	if res != (reconcile.Result{}) {
-		t.Errorf("reconcile did not return an empty result (%v)", res)
+		return fmt.Errorf("reconcile did not return an empty result (%v)", res)
 	}
+
+	return nil
 }
 
-func verifyTests(n string, tests []Test, t *testing.T) {
+func verifyTests(tests []Test) error {
 	for _, tt := range tests {
 		if tt.actual != tt.expected {
-			t.Errorf("%s %s test expected: (%v) actual: (%v)", n, tt.test, tt.expected, tt.actual)
+			return fmt.Errorf("%s test expected: (%v) actual: (%v)", tt.test, tt.expected, tt.actual)
 		}
 	}
+	return nil
 }
 
 func updateRuntimeComponent(r *ReconcileRuntimeComponent, runtimecomponent *appstacksv1beta1.RuntimeComponent, t *testing.T) {
