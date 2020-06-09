@@ -149,6 +149,119 @@ func optionalNodePortFunctionalityTests() []Test {
 	return testCS
 }
 
+// Partial test for unittest TestCustomizeAffinity bewlow
+func partialTestCustomizeNodeAffinity(t *testing.T) {
+	// required during scheduling ignored during execution
+	rDSIDE :=  corev1.NodeSelector{
+		NodeSelectorTerms: []corev1.NodeSelectorTerm{
+			{
+				MatchExpressions: []corev1.NodeSelectorRequirement{
+					{
+						Key: "key",
+						Operator: corev1.NodeSelectorOpNotIn,
+						Values: []string{"large", "medium"},
+					},
+				},
+			},
+		},
+	}
+	// preferred during scheduling ignored during execution
+	pDSIDE := []corev1.PreferredSchedulingTerm{
+		{
+			Weight: int32(20),
+			Preference: corev1.NodeSelectorTerm{
+				MatchExpressions: []corev1.NodeSelectorRequirement{
+					{
+						Key: "failure-domain.beta.kubernetes.io/zone",
+						Operator: corev1.NodeSelectorOpIn,
+						Values: []string{"zoneB"},
+					},
+				},
+			},
+		},
+	}
+	labels := map[string]string{
+		"customNodeLabel": "label1, label2",
+	}
+	affinityConfig := appstacksv1beta1.RuntimeComponentAffinity{
+		NodeAffinity: &corev1.NodeAffinity{
+			RequiredDuringSchedulingIgnoredDuringExecution: &rDSIDE,
+			PreferredDuringSchedulingIgnoredDuringExecution: pDSIDE,
+		},
+		NodeAffinityLabels: labels,
+	}
+	spec := appstacksv1beta1.RuntimeComponentSpec{
+		ApplicationImage: appImage,
+		Affinity: &affinityConfig,
+	}
+	affinity, runtime := &corev1.Affinity{}, createRuntimeComponent(name, namespace, spec)
+	CustomizeAffinity(affinity, runtime)
+
+	expectedMatchExpressions := []corev1.NodeSelectorRequirement{
+		rDSIDE.NodeSelectorTerms[0].MatchExpressions[0],
+		{
+			Key: "customNodeLabel",
+			Operator: corev1.NodeSelectorOpIn,
+			Values: []string{"label1", "label2"},
+		},
+	}
+	testCNA := []Test{
+		{"Node Affinity - Required Match Expressions", expectedMatchExpressions, 
+			affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions},
+		{"Node Affinity - Prefered Match Expressions", 
+			pDSIDE[0].Preference.MatchExpressions, 
+			affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].Preference.MatchExpressions},
+	}
+	verifyTests(testCNA, t)
+}
+
+// Partial test for unittest TestCustomizeAffinity bewlow
+func partialTestCustomizePodAffinity(t *testing.T) {
+	selectorA := makeInLabelSelector("service", []string{"Service-A"})
+	selectorB := makeInLabelSelector("service", []string{"Service-B"})
+	// required during scheduling ignored during execution
+	rDSIDE := []corev1.PodAffinityTerm{
+		{LabelSelector: &selectorA, TopologyKey: "failure-domain.beta.kubernetes.io/zone",},
+	}
+	// preferred during scheduling ignored during execution
+	pDSIDE := []corev1.WeightedPodAffinityTerm{
+		{
+			Weight: int32(20),
+			PodAffinityTerm: corev1.PodAffinityTerm{
+				LabelSelector: &selectorB, TopologyKey: "kubernetes.io/hostname",
+			},
+		},
+	}
+	affinityConfig := appstacksv1beta1.RuntimeComponentAffinity{
+		PodAffinity: &corev1.PodAffinity{
+			RequiredDuringSchedulingIgnoredDuringExecution: rDSIDE,
+		},
+		PodAntiAffinity: &corev1.PodAntiAffinity{
+			PreferredDuringSchedulingIgnoredDuringExecution: pDSIDE,
+		},
+	}
+	spec := appstacksv1beta1.RuntimeComponentSpec{
+		ApplicationImage: appImage,
+		Affinity: &affinityConfig,
+	}
+	affinity, runtime := &corev1.Affinity{}, createRuntimeComponent(name, namespace, spec)
+	CustomizeAffinity(affinity, runtime)
+
+	testCPA := []Test{
+		{"Pod Affinity - Required Affinity Term", rDSIDE, 
+			affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution},
+		{"Pod AntiAffinity - Preferred Affinity Term", pDSIDE, 
+			affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution},
+	}
+	verifyTests(testCPA, t)
+}
+
+func TestCustomizeAffinity(t *testing.T) {
+	logf.SetLogger(logf.ZapLogger(true))
+	partialTestCustomizeNodeAffinity(t)
+	partialTestCustomizePodAffinity(t)
+}
+
 func TestCustomizePodSpec(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
@@ -574,6 +687,19 @@ func createRuntimeComponent(n, ns string, spec appstacksv1beta1.RuntimeComponent
 		Spec:       spec,
 	}
 	return app
+}
+
+// Used in TestCustomizeAffinity to make an IN selector with paramenters key and values.
+func makeInLabelSelector(key string, values []string) metav1.LabelSelector {
+	return metav1.LabelSelector{
+		MatchExpressions: []metav1.LabelSelectorRequirement{
+			{
+				Key: key,
+				Operator: metav1.LabelSelectorOpIn,
+				Values: values,
+			},
+		},
+	}
 }
 
 func verifyTests(tests []Test, t *testing.T) {
