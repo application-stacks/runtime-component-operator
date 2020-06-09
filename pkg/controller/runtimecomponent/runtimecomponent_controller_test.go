@@ -9,29 +9,31 @@ import (
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	appstacksutils "github.com/application-stacks/runtime-component-operator/pkg/utils"
-	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
-
-	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	imagev1 "github.com/openshift/api/image/v1"
+	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
+
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	coretesting "k8s.io/client-go/testing"
 	corev1 "k8s.io/api/core/v1"
+	fakediscovery "k8s.io/client-go/discovery/fake"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/discovery"
-	fakediscovery "k8s.io/client-go/discovery/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	coretesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
+
 	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 var (
@@ -81,6 +83,7 @@ func TestRuntimeController(t *testing.T) {
 	r := &ReconcileRuntimeComponent{ReconcilerBase: rb}
 	r.SetDiscoveryClient(createFakeDiscoveryClient())
 
+	// Put test functions in slice
 	testFuncs := []func(*testing.T, *ReconcileRuntimeComponent, appstacksutils.ReconcilerBase)error{
 		testBasicReconcile,
 		testStorage,
@@ -89,13 +92,15 @@ func TestRuntimeController(t *testing.T) {
 		testAutoscaling,
 		testServiceAccount,
 		testServiceMonitoring,
+		// testTemp,
 	}
 
+	// Execute the tests in order
 	for _, testFunc := range testFuncs {
 		if err:= testFunc(t, r, rb); err != nil {
 			t.Fatalf("%v", err)
 		}
-	}	
+	}
 }
 
 func testBasicReconcile(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
@@ -278,15 +283,20 @@ func testServiceAccount(t *testing.T, r *ReconcileRuntimeComponent, rb appstacks
 	if err = verifyReconcile(res, err); err != nil {
 		return err
 	}
+
 	serviceaccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
 	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, serviceaccount); err != nil {
 		return err
 	}
-
 	runtimecomponent.Spec = appstacksv1beta1.RuntimeComponentSpec{
 		ServiceAccountName: &serviceAccountName,
 	}
 	updateRuntimeComponent(r, runtimecomponent, t)
+
+	res, err = r.Reconcile(req)
+	if err = verifyReconcile(res, err); err != nil {
+		return err
+	}
 
 	// check that the default service account was deleted
 	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, serviceaccount); err == nil {
@@ -370,6 +380,7 @@ func addResourcesToScheme(t *testing.T, s *runtime.Scheme, runtimecomponent *app
 	s.AddKnownTypes(certmngrv1alpha2.SchemeGroupVersion, &certmngrv1alpha2.Certificate{})
 	s.AddKnownTypes(prometheusv1.SchemeGroupVersion, &prometheusv1.ServiceMonitor{})
 }
+
 // Helper Functions
 func makeRuntimeAndReq() (*appstacksv1beta1.RuntimeComponent, reconcile.Request){
 	spec := appstacksv1beta1.RuntimeComponentSpec{}
