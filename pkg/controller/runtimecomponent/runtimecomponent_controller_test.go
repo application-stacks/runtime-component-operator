@@ -92,7 +92,6 @@ func TestRuntimeController(t *testing.T) {
 		testAutoscaling,
 		testServiceAccount,
 		testServiceMonitoring,
-		// testTemp,
 	}
 
 	// Execute the tests in order
@@ -298,7 +297,7 @@ func testServiceAccount(t *testing.T, r *ReconcileRuntimeComponent, rb appstacks
 		return err
 	}
 
-	// check that the default service account was deleted
+	// Check that the default service account was deleted
 	if err = r.GetClient().Get(context.TODO(), req.NamespacedName, serviceaccount); err == nil {
 		return err
 	}

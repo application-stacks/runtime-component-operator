@@ -150,7 +150,7 @@ func testSettingRuntimeServiceMonitor(t *testing.T, f *framework.Framework, name
 
 	err := util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		params := map[string][]string{
-			"params": []string{"param1", "param2"},
+			"params": {"param1", "param2"},
 		}
 		username := v1.SecretKeySelector{Key: "username"}
 		password := v1.SecretKeySelector{Key: "password"}

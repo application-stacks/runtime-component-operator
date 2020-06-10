@@ -296,10 +296,10 @@ func testGetRouteTLSValues(t *testing.T) {
 
 	// Verify the result
 	testRTV := []Test{
-		{"TLS Value - Key", key, tlsKey},
-		{"TLS Value - Cert", cert, tlsCrt},
-		{"TLS Value - CA Cert", ca, caCrt},
-		{"TLS Value - Dest CA Cert", destCa, destCACrt},
+		{"Route TLS Value - Key", key, tlsKey},
+		{"Route TLS Value - Cert", cert, tlsCrt},
+		{"Route TLS Value - CA Cert", ca, caCrt},
+		{"Route TLS Value - Dest CA Cert", destCa, destCACrt},
 	}
 	verifyTests(testRTV, t)
 }
@@ -341,7 +341,7 @@ func TestGetSelectorLabelsFromApplications(t *testing.T) {
 	// Create the fake client and the reconciler
 	cl := fakeclient.NewFakeClient()
 	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
-	
+
 	// Deploy the application
 	err := cl.Create(context.TODO(), application)
 	if err != nil {
