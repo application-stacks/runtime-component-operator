@@ -61,7 +61,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `createAppDefinition`   | A boolean to toggle the automatic configuration of Kubernetes resources for the `RuntimeComponent` CR to allow creation of an application definition by link:++https://kappnav.io++[kAppNav]. The default value is `true`. See link:++#kubernetes-application-navigator-kappnav-support++[Application Navigator] for more information.
 | `pullPolicy` | The policy used when pulling the image.  One of: `Always`, `Never`, and `IfNotPresent`.
 | `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials.
-| `initContainers` | The list of link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#container-v1-core++[Init Container] definitions.
+| `initContainers` | The list of link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#container-v1-core++[Init Container] definitions.
 | `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`.
 | `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference.
 | `bindings.embedded` | A YAML object that represents a `ServiceBindingRequest` custom resource.
@@ -74,13 +74,13 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `service.type` | The Kubernetes link:++https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types++[Service Type].
 | `service.nodePort` | Node proxies this port into your service. Please note once this port is set to a non-zero value it cannot be reset to zero.
 | `service.annotations` | Annotations to be added to the service.
-| `service.certificate` | A YAML object representing a link:++https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec++[Certificate].
+| `service.certificate` | A YAML object that represents a link:++https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec++[Certificate].
 | `service.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.
 | `service.provides.category` | Service binding type to be provided by this CR. At this time, the only allowed value is `openapi`.
 | `service.provides.protocol` | Protocol of the provided service. Defauts to `http`.
 | `service.provides.context` | Specifies context root of the service.
-| `service.provides.auth.username` | Optional value to specify username as link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#secretkeyselector-v1-core++[SecretKeySelector].
-| `service.provides.auth.password` | Optional value to specify password as link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#secretkeyselector-v1-core++[SecretKeySelector].
+| `service.provides.auth.username` | Optional value to specify username as link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core++[SecretKeySelector].
+| `service.provides.auth.password` | Optional value to specify password as link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core++[SecretKeySelector].
 | `service.consumes` | An array consisting of services to be consumed by the `RuntimeComponent`.
 | `service.consumes[].category` | The type of service binding to be consumed. At this time, the only allowed value is `openapi`.
 | `service.consumes[].name` | The name of the service to be consumed. If binding to a `RuntimeComponent`, then this would be the provider's CR name.
@@ -100,11 +100,11 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `envFrom`   | An array of references to `ConfigMap` or `Secret` resources containing environment variables. Keys from `ConfigMap` or `Secret` resources become environment variable names in your container. See link:++#environment-variables++[Environment variables] for more info.
 | `readinessProbe`   | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#define-readiness-probes++[Kubernetes readiness probe] that controls when the pod is ready to receive traffic.
 | `livenessProbe` | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#define-a-liveness-http-request++[Kubernetes liveness probe] that controls when Kubernetes needs to restart the pod.
-| `volumes` | A YAML object representing a link:++https://kubernetes.io/docs/concepts/storage/volumes++[pod volume].
-| `volumeMounts` | A YAML object representing a link:++https://kubernetes.io/docs/concepts/storage/volumes/++[pod volumeMount].
+| `volumes` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/storage/volumes++[pod volume].
+| `volumeMounts` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/storage/volumes/++[pod volumeMount].
 | `storage.size` | A convenient field to set the size of the persisted storage. Can be overridden by the `storage.volumeClaimTemplate` property.
 | `storage.mountPath` | The directory inside the container where this persisted storage will be bound to.
-| `storage.volumeClaimTemplate` | A YAML object representing a link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components++[volumeClaimTemplate] component of a `StatefulSet`.
+| `storage.volumeClaimTemplate` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components++[volumeClaimTemplate] component of a `StatefulSet`.
 | `monitoring.labels` | Labels to set on link:++https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitor++[ServiceMonitor].
 | `monitoring.endpoints` | A YAML snippet representing an array of link:++https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#endpoint++[Endpoint] component from ServiceMonitor.
 | `route.annotations` | Annotations to be added to the Route.
@@ -112,8 +112,13 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `route.path`   | Path to be used for Route.
 | `route.termination`   | TLS termination policy. Can be one of `edge`, `reencrypt` and `passthrough`.
 | `route.insecureEdgeTerminationPolicy`   | HTTP traffic policy with TLS enabled. Can be one of `Allow`, `Redirect` and `None`.
-| `route.certificate`  | A YAML object representing a link:++https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec++[Certificate].
+| `route.certificate`  | A YAML object that represents a link:++https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec++[Certificate].
 | `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
+| `affinity.nodeAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#nodeaffinity-v1-core++[NodeAffinity].
+| `affinity.nodeAffinityLabels` | A YAML object that contains set of required labels and their values.
+| `affinity.podAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podaffinity-v1-core++[PodAffinity].
+| `affinity.podAntiAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podantiaffinity-v1-core++[PodAntiAffinity].
+
 |===
 
 === Basic usage
@@ -911,6 +916,111 @@ data:
     Pod/Service certificate Certificate Authority (base64). Might be required when using reencrypt termination policy.
 type: kubernetes.io/tls
 ----
+
+=== Affinity
+
+Using affinity you can constrain a Pod to only be able to run on particular Node(s), or to prefer to run on particular nodes.
+
+==== Node Affinity
+
+
+===== Basic node affinity
+
+Use `nodeAffinityLabels` field to set required labels for pod scheduling on specific nodes:
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: my-app
+  namespace: test
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  affinity:
+    nodeAffinityLabels:
+      customNodeLabel: label1, label2
+      customNodeLabel2: label3
+----
+
+===== Advanced node affinity example:
+
+The following example requires a node type of _Large_ and preferences for two zones, which are named _zoneA_ and _zoneB_
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: my-app
+  namespace: test
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key:  node.kubernetes.io/instance-type
+            operator: In
+            values:
+            - large
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 60
+        preference:
+          matchExpressions:
+          - key: failure-domain.beta.kubernetes.io/zone
+            operator: In
+            values:
+            - zoneA
+      - weight: 20
+        preference:
+          matchExpressions:
+          - key: failure-domain.beta.kubernetes.io/zone
+            operator: In
+            values:
+            - zoneB
+----
+
+==== Pod Affinity and Anti-Affinity
+
+Pod affinity and anti-affinity allow you to constrain which nodes your pod is eligible to be scheduled based on labels on pods that are already running on the node rather than based on labels on node.
+
+The following example shows that pod affinity is required and that the pods for _Service-A_ and _Service-B_ must be in the same zone. Through pod anti-affinity, it is preferred not to schedule _Service_B_ and _Service_C_ on the same host.
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: Service-B
+  namespace: test
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: service
+            operator: In
+            values:
+            - Service-A
+        topologyKey: failure-domain.beta.kubernetes.io/zone
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: service
+              operator: In
+              values:
+              - Service-C
+          topologyKey: kubernetes.io/hostname
+----
+
+See link:++https://github.com/application-stacks/runtime-component-operator/blob/master/examples/affinity/README.adocd++[Affinity Example] for more details
 
 === Troubleshooting
 
