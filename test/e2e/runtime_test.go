@@ -3,10 +3,11 @@ package e2e
 import (
 	"os"
 	"testing"
-
-	"github.com/application-stacks/runtime-component-operator/pkg/apis"
+	
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
+	"github.com/application-stacks/runtime-component-operator/pkg/apis"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

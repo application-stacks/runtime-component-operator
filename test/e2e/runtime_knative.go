@@ -6,13 +6,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/application-stacks/runtime-component-operator/test/util"
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+	"github.com/application-stacks/runtime-component-operator/test/util"
+
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -113,7 +114,7 @@ func testKnIsTrueAndTurnOff(t *testing.T, f *framework.Framework, ctx *framework
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	// If deployment not cleared, test fails.
+	// if deployment not cleared, test fails.
 	dep := &appsv1.Deployment{}
 	err = f.Client.Get(goctx.TODO(), target, dep)
 	if err != nil {

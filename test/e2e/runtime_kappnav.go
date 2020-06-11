@@ -7,13 +7,14 @@ import (
 	"time"
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
+	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+	framework "github.com/operator-framework/operator-sdk/pkg/test"
+	"github.com/application-stacks/runtime-component-operator/test/util"
+
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
-	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
 
-	"github.com/application-stacks/runtime-component-operator/test/util"
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
-	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
 )
 
 var appName string = "test-app"
@@ -39,7 +40,7 @@ func RuntimeKappNavTest(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Wait for the operator as the following configmaps won't exist until it has deployed
+	// wait for the operator as the following configmaps won't exist until it has deployed
 	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "runtime-component-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
@@ -74,7 +75,7 @@ func createKappNavApplication(t *testing.T, f *framework.Framework, ctx *framewo
 		return err
 	}
 
-	// Verify readiness of created resource
+	// verify readiness of created resource
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, ns, name, 1, retryInterval, timeout)
 	if err != nil {
 		return err
@@ -142,7 +143,7 @@ func useExistingApplications(t *testing.T, f *framework.Framework, ctx *framewor
 
 	const name string = "example-runtime-kappnav"
 	var existingAppName string = "existing-app"
-	// Add selector labels to verify that app was actually found
+	// add selector labels to verify that app was actually found
 	selectMatchLabels := map[string]string{
 		"test-key": "test-value",
 	}

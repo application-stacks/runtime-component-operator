@@ -6,13 +6,13 @@ import (
 	"time"
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"github.com/application-stacks/runtime-component-operator/test/util"
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+	framework "github.com/operator-framework/operator-sdk/pkg/test"
+	"github.com/application-stacks/runtime-component-operator/test/util"
+	
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // RuntimeProbeTest make sure user defined liveness/readiness probes reach ready state.

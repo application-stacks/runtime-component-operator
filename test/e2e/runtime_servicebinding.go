@@ -8,16 +8,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
-	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
-	"github.com/application-stacks/runtime-component-operator/test/util"
-
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
+	"github.com/application-stacks/runtime-component-operator/test/util"
+	"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
