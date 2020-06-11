@@ -7,13 +7,13 @@ import (
 	"time"
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
+	"github.com/application-stacks/runtime-component-operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
-	"github.com/application-stacks/runtime-component-operator/test/util"
 
 	appsv1 "k8s.io/api/apps/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -91,7 +91,7 @@ func testKnIsFalse(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 		util.FailureCleanup(t, f, namespace, err)
 	}
 	if isDeployed {
-		util.FailureCleanup(t, f, namespace, 
+		util.FailureCleanup(t, f, namespace,
 			errors.New("knative service is deployed when CreateKnativeService is set to false"))
 	}
 }
@@ -144,7 +144,7 @@ func testKnIsTrueAndTurnOff(t *testing.T, f *framework.Framework, ctx *framework
 		util.FailureCleanup(t, f, namespace, err)
 	}
 	if isDeployed {
-		util.FailureCleanup(t, f, namespace, 
+		util.FailureCleanup(t, f, namespace,
 			errors.New("knative service is deployed when CreateKnativeService is set to false"))
 	}
 }

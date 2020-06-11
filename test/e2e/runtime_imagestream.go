@@ -9,14 +9,14 @@ import (
 	"time"
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
-	imagev1 "github.com/openshift/api/image/v1"
 	"github.com/application-stacks/runtime-component-operator/test/util"
+	imagev1 "github.com/openshift/api/image/v1"
+	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -210,7 +210,7 @@ func waitForImageStream(f *framework.Framework, ctx *framework.TestCtx, imgstrea
 
 // Get the target's current image reference.
 func getCurrImageRef(f *framework.Framework, ctx *framework.TestCtx,
-		target types.NamespacedName) (string, error) {
+	target types.NamespacedName) (string, error) {
 	runtime := appstacksv1beta1.RuntimeComponent{}
 	err := f.Client.Get(goctx.TODO(), target, &runtime)
 	if err != nil {
@@ -221,11 +221,11 @@ func getCurrImageRef(f *framework.Framework, ctx *framework.TestCtx,
 
 // Polling wait for the target's image reference to be updated to the imageRef.
 func waitImageRefUpdated(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
-		target types.NamespacedName, imageRef string) error {
+	target types.NamespacedName, imageRef string) error {
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 		currImage, err := getCurrImageRef(f, ctx, target)
 		if err != nil {
-			return true, err	// if error, stop polling and return err
+			return true, err // if error, stop polling and return err
 		}
 
 		// check if the image the application is pointing to has been changed
@@ -241,5 +241,5 @@ func waitImageRefUpdated(t *testing.T, f *framework.Framework, ctx *framework.Te
 		return errors.New("image reference not updated")
 	}
 
-	return err	// implicitly return nil if no errors
+	return err // implicitly return nil if no errors
 }

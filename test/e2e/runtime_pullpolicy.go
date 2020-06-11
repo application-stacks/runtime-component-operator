@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/application-stacks/runtime-component-operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
-	"github.com/application-stacks/runtime-component-operator/test/util"
 
 	corev1 "k8s.io/api/core/v1"
-	
+
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
