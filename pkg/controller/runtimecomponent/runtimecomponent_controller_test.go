@@ -19,14 +19,14 @@ import (
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	fakediscovery "k8s.io/client-go/discovery/fake"
-	coretesting "k8s.io/client-go/testing"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/discovery"
+	fakediscovery "k8s.io/client-go/discovery/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	coretesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
 
 	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
@@ -52,7 +52,7 @@ var (
 	storage                    = appstacksv1beta1.RuntimeComponentStorage{Size: "10Mi", MountPath: "/mnt/data", VolumeClaimTemplate: volumeCT}
 	createKnativeService       = true
 	statefulSetSN              = name + "-headless"
-	req						   = reconcile.Request{
+	req                        = reconcile.Request{
 		NamespacedName: types.NamespacedName{Name: name, Namespace: namespace},
 	}
 )
