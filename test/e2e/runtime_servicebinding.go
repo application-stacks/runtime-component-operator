@@ -18,6 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	// "k8s.io/apimachinery/pkg/util/wait"
 
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -181,13 +182,13 @@ func setUpMounting(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 		util.FailureCleanup(t, f, ns, err)
 	}
 
-	// Create service with namespace under consumes
+	// create service with namespace under consumes
 	err = createConsumeServiceMount(t, f, ctx, ns, runtimeProvider, runtimeConsumer, true)
 	if err != nil {
 		util.FailureCleanup(t, f, ns, err)
 	}
 
-	// Create service without namespace under consumes
+	// create service without namespace under consumes
 	err = createConsumeServiceMount(t, f, ctx, ns, runtimeProvider, runtimeConsumer2, false)
 	if err != nil {
 		util.FailureCleanup(t, f, ns, err)
@@ -198,14 +199,14 @@ func setUpMounting(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 
 func mountingTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, ns string, userValue string, passValue string, con string) error {
 
-	// Get consumer pod
+	// get consumer pod
 	pods, err := getPods(f, ctx, runtimeConsumer, ns)
 	if err != nil {
 		util.FailureCleanup(t, f, ns, err)
 	}
 	podName := pods.Items[0].GetName()
 
-	// Go inside the pod the pod for Consume service and check values are set
+	// go inside the pod the pod for Consume service and check values are set
 	out, err := exec.Command("kubectl", "exec", "-n", ns, "-it", podName, "--", "ls", "../"+mount+"/"+ns+"/"+runtimeProvider).Output()
 	err = util.CommandError(t, err, out)
 	if err != nil {
@@ -214,7 +215,7 @@ func mountingTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, 
 	directories := strings.Split(string(out), "\n")
 	t.Log(directories)
 
-	// Set values to check
+	// set values to check
 	valuePairs := map[string]string{
 		"context":  con,
 		"hostname": runtimeProvider + "." + ns + ".svc.cluster.local",
@@ -229,14 +230,14 @@ func mountingTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, 
 		checkSecret(t, f, ns, podName, directories[i], valuePairs, true)
 	}
 
-	// Get consumer pod
+	// get consumer pod
 	pods, err = getPods(f, ctx, runtimeConsumer2, ns)
 	if err != nil {
 		util.FailureCleanup(t, f, ns, err)
 	}
 	podName = pods.Items[0].GetName()
 
-	// Go inside the pod the pod for Consume service and check values are set
+	// go inside the pod the pod for Consume service and check values are set
 	out, err = exec.Command("kubectl", "exec", "-n", ns, "-it", podName, "--", "ls", "../"+mount+"/"+runtimeProvider).Output()
 	err = util.CommandError(t, err, out)
 	if err != nil {
@@ -276,6 +277,30 @@ func checkSecret(t *testing.T, f *framework.Framework, ns string, podName string
 		time.Sleep(5000 * time.Millisecond)
 	}
 	t.Fatal("The values were not set correctly.")
+	// waitErr := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
+	// 	out, err := []byte(""), errors.New("")
+	// 	if setNamespace == true {
+	// 		out, err = exec.Command("kubectl", "exec", "-n", ns, "-it", podName, "--", "cat", "../"+mount+"/"+ns+"/"+runtimeProvider+"/"+directory).Output()
+	// 	} else if setNamespace == false {
+	// 		out, err = exec.Command("kubectl", "exec", "-n", ns, "-it", podName, "--", "cat", "../"+mount+"/"+runtimeProvider+"/"+directory).Output()
+	// 	}
+	// 	err = util.CommandError(t, err, out)
+	// 	if err != nil {
+	// 		t.Log(directory + " is not set")
+	// 		return false, nil
+	// 	}
+
+	// 	if valuePairs[directory] != string(out) {
+	// 		t.Logf("The value is not set correctly. Expected: %s. Actual: %s", valuePairs[directory], string(out))
+	// 		return false, nil
+	// 	}
+	// 	t.Logf("The value is set correctly. %s", string(out))
+	// 	return true, nil
+	// })
+
+	// if errors.Is(waitErr, wait.ErrWaitTimeout) {
+	// 	t.Fatal("The values were not set correctly.")
+	// }
 }
 
 func getPods(f *framework.Framework, ctx *framework.TestCtx, target string, ns string) (*corev1.PodList, error) {
@@ -321,20 +346,20 @@ func createConsumeServiceEnv(t *testing.T, f *framework.Framework, ctx *framewor
 
 func envTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, ns string) error {
 
-	// Create service with namespace under consumes
+	// create service with namespace under consumes
 	err := createConsumeServiceEnv(t, f, ctx, ns, runtimeProvider, runtimeConsumerEnv)
 	if err != nil {
 		util.FailureCleanup(t, f, ns, err)
 	}
 
-	// Get consumer pod
+	// get consumer pod
 	pods, err := getPods(f, ctx, runtimeConsumerEnv, ns)
 	if err != nil {
 		util.FailureCleanup(t, f, ns, err)
 	}
 	podEnv := pods.Items[0].Spec.Containers[0].Env
 
-	// Check the values are set correctly
+	// check the values are set correctly
 	err = searchValues(t, ns, podEnv)
 	if err != nil {
 		util.FailureCleanup(t, f, ns, err)
@@ -369,7 +394,7 @@ func updateProviderTest(t *testing.T, f *framework.Framework, ctx *framework.Tes
 		util.FailureCleanup(t, f, ns, err)
 	}
 
-	// Update provider application
+	// update provider application
 	target := types.NamespacedName{Name: runtimeProvider, Namespace: ns}
 	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		r.Spec.Service.Provides = &v1beta1.ServiceBindingProvides{

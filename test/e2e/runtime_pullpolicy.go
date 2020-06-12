@@ -143,9 +143,7 @@ func testPullPolicyNever(t *testing.T, f *framework.Framework, namespace string,
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	for i := 0; i < 5; i++ {
-		time.Sleep(time.Millisecond * 1000)
-	}
+	time.Sleep(5 * time.Second)
 
 	timestamp := time.Now().UTC()
 	t.Logf("%s - Deployment created, verifying pull policy...", timestamp)

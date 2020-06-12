@@ -16,6 +16,7 @@ import (
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -110,15 +111,16 @@ func getHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, f *fra
 }
 
 func waitForHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, minReplicas int32, maxReplicas int32, utiliz int32, f *framework.Framework, options *dynclient.ListOptions) error {
-	for counter := 0; counter < 10; counter++ {
-		time.Sleep(6000 * time.Millisecond)
+	var hpaErr error
+	wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 		hpa = getHPA(hpa, t, f, options)
-		if checkValues(hpa, t, minReplicas, maxReplicas, utiliz) == nil {
-			return nil
+		hpaErr = checkValues(hpa, t, minReplicas, maxReplicas, utiliz)
+		if hpaErr != nil {
+			return false, nil
 		}
-	}
-	return checkValues(hpa, t, minReplicas, maxReplicas, utiliz)
-
+		return true, nil
+	})
+	return hpaErr
 }
 
 func setResources(cpu string) *corev1.ResourceRequirements {

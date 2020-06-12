@@ -102,7 +102,7 @@ func RuntimePersistenceTest(t *testing.T) {
 		corev1.ResourceStorage: resource.MustParse("1Gi"),
 	}
 
-	// Create PVC and mount for our statefulset.
+	// create PVC and mount for our statefulset.
 	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, "example-runtime-persistence", namespace, 1)
 	exampleRuntime.Spec.Storage = &appstacksv1beta1.RuntimeComponentStorage{
 		VolumeClaimTemplate: &corev1.PersistentVolumeClaim{

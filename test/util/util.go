@@ -8,9 +8,9 @@ import (
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
-	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
+
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,6 +18,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
+
+	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -343,7 +345,7 @@ func CreateApplicationTarget(f *framework.Framework, ctx *framework.TestCtx, tar
 
 	application := &applicationsv1beta1.Application{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: target.Name,
+			Name:      target.Name,
 			Namespace: target.Namespace,
 			Annotations: map[string]string{
 				"kappnav.component.namespaces": ns,

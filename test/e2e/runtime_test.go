@@ -27,7 +27,7 @@ func TestRuntimeComponent(t *testing.T) {
 		t.Fatalf("Failed to add CR scheme to framework: %v", err)
 	}
 
-	// Basic tests that are runnable locally in minishift/kube
+	// basic tests that are runnable locally in minishift/kube
 	t.Run("RuntimePullPolicyTest", RuntimePullPolicyTest)
 	t.Run("RuntimeBasicTest", RuntimeBasicTest)
 	t.Run("RuntimeProbeTest", RuntimeProbeTest)
