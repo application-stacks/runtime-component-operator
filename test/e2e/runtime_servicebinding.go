@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
-	"time"
+	// "time"
 
 	"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
@@ -18,7 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
-	// "k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -254,31 +254,9 @@ func mountingTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, 
 }
 
 func checkSecret(t *testing.T, f *framework.Framework, ns string, podName string, directory string, valuePairs map[string]string, setNamespace bool) {
-	out, err := []byte(""), errors.New("")
+	// out, err := []byte(""), errors.New("")
 
-	for i := 0; i < 20; i++ {
-		if setNamespace == true {
-			out, err = exec.Command("kubectl", "exec", "-n", ns, "-it", podName, "--", "cat", "../"+mount+"/"+ns+"/"+runtimeProvider+"/"+directory).Output()
-		} else if setNamespace == false {
-			out, err = exec.Command("kubectl", "exec", "-n", ns, "-it", podName, "--", "cat", "../"+mount+"/"+runtimeProvider+"/"+directory).Output()
-		}
-		err = util.CommandError(t, err, out)
-		if err != nil {
-			t.Log(directory + " is not set")
-		}
-
-		if valuePairs[directory] != string(out) {
-			t.Logf("The value is not set correctly. Expected: %s. Actual: %s", valuePairs[directory], string(out))
-		} else {
-			t.Logf("The value is set correctly. %s", string(out))
-			return
-		}
-		// Wait for updates
-		time.Sleep(5000 * time.Millisecond)
-	}
-	t.Fatal("The values were not set correctly.")
-	// waitErr := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
-	// 	out, err := []byte(""), errors.New("")
+	// for i := 0; i < 20; i++ {
 	// 	if setNamespace == true {
 	// 		out, err = exec.Command("kubectl", "exec", "-n", ns, "-it", podName, "--", "cat", "../"+mount+"/"+ns+"/"+runtimeProvider+"/"+directory).Output()
 	// 	} else if setNamespace == false {
@@ -287,20 +265,42 @@ func checkSecret(t *testing.T, f *framework.Framework, ns string, podName string
 	// 	err = util.CommandError(t, err, out)
 	// 	if err != nil {
 	// 		t.Log(directory + " is not set")
-	// 		return false, nil
 	// 	}
 
 	// 	if valuePairs[directory] != string(out) {
 	// 		t.Logf("The value is not set correctly. Expected: %s. Actual: %s", valuePairs[directory], string(out))
-	// 		return false, nil
+	// 	} else {
+	// 		t.Logf("The value is set correctly. %s", string(out))
+	// 		return
 	// 	}
-	// 	t.Logf("The value is set correctly. %s", string(out))
-	// 	return true, nil
-	// })
-
-	// if errors.Is(waitErr, wait.ErrWaitTimeout) {
-	// 	t.Fatal("The values were not set correctly.")
+	// 	// Wait for updates
+	// 	time.Sleep(5000 * time.Millisecond)
 	// }
+	// t.Fatal("The values were not set correctly.")
+	waitErr := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
+		out, err := []byte(""), errors.New("")
+		if setNamespace == true {
+			out, err = exec.Command("kubectl", "exec", "-n", ns, "-it", podName, "--", "cat", "../"+mount+"/"+ns+"/"+runtimeProvider+"/"+directory).Output()
+		} else if setNamespace == false {
+			out, err = exec.Command("kubectl", "exec", "-n", ns, "-it", podName, "--", "cat", "../"+mount+"/"+runtimeProvider+"/"+directory).Output()
+		}
+		err = util.CommandError(t, err, out)
+		if err != nil {
+			t.Log(directory + " is not set")
+			return false, nil
+		}
+
+		if valuePairs[directory] != string(out) {
+			t.Logf("The value is not set correctly. Expected: %s. Actual: %s", valuePairs[directory], string(out))
+			return false, nil
+		}
+		t.Logf("The value is set correctly. %s", string(out))
+		return true, nil
+	})
+
+	if errors.Is(waitErr, wait.ErrWaitTimeout) {
+		t.Fatal("The values were not set correctly.")
+	}
 }
 
 func getPods(f *framework.Framework, ctx *framework.TestCtx, target string, ns string) (*corev1.PodList, error) {
