@@ -6,7 +6,6 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
-	// "time"
 
 	"github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
@@ -254,29 +253,6 @@ func mountingTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, 
 }
 
 func checkSecret(t *testing.T, f *framework.Framework, ns string, podName string, directory string, valuePairs map[string]string, setNamespace bool) {
-	// out, err := []byte(""), errors.New("")
-
-	// for i := 0; i < 20; i++ {
-	// 	if setNamespace == true {
-	// 		out, err = exec.Command("kubectl", "exec", "-n", ns, "-it", podName, "--", "cat", "../"+mount+"/"+ns+"/"+runtimeProvider+"/"+directory).Output()
-	// 	} else if setNamespace == false {
-	// 		out, err = exec.Command("kubectl", "exec", "-n", ns, "-it", podName, "--", "cat", "../"+mount+"/"+runtimeProvider+"/"+directory).Output()
-	// 	}
-	// 	err = util.CommandError(t, err, out)
-	// 	if err != nil {
-	// 		t.Log(directory + " is not set")
-	// 	}
-
-	// 	if valuePairs[directory] != string(out) {
-	// 		t.Logf("The value is not set correctly. Expected: %s. Actual: %s", valuePairs[directory], string(out))
-	// 	} else {
-	// 		t.Logf("The value is set correctly. %s", string(out))
-	// 		return
-	// 	}
-	// 	// Wait for updates
-	// 	time.Sleep(5000 * time.Millisecond)
-	// }
-	// t.Fatal("The values were not set correctly.")
 	waitErr := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 		out, err := []byte(""), errors.New("")
 		if setNamespace == true {
@@ -345,7 +321,6 @@ func createConsumeServiceEnv(t *testing.T, f *framework.Framework, ctx *framewor
 }
 
 func envTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, ns string) error {
-
 	// create service with namespace under consumes
 	err := createConsumeServiceEnv(t, f, ctx, ns, runtimeProvider, runtimeConsumerEnv)
 	if err != nil {
