@@ -263,7 +263,6 @@ func checkSecret(t *testing.T, f *framework.Framework, ns string, podName string
 		err = util.CommandError(t, err, out)
 		if err != nil {
 			t.Log(directory + " is not set")
-			return false, nil
 		}
 
 		if valuePairs[directory] != string(out) {
