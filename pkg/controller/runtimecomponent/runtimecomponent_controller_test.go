@@ -52,6 +52,9 @@ var (
 	storage                    = appstacksv1beta1.RuntimeComponentStorage{Size: "10Mi", MountPath: "/mnt/data", VolumeClaimTemplate: volumeCT}
 	createKnativeService       = true
 	statefulSetSN              = name + "-headless"
+	req						   = reconcile.Request{
+		NamespacedName: types.NamespacedName{Name: name, Namespace: namespace},
+	}
 )
 
 type Test struct {
@@ -65,8 +68,7 @@ func TestRuntimeController(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 	os.Setenv("WATCH_NAMESPACE", namespace)
 
-	spec := appstacksv1beta1.RuntimeComponentSpec{}
-	runtimecomponent := createRuntimeComponent(name, namespace, spec)
+	runtimecomponent := makeBasicRuntimeComponent(name, namespace)
 
 	// Set objects to track in the fake client and register operator types with the runtime scheme.
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
@@ -104,7 +106,6 @@ func TestRuntimeController(t *testing.T) {
 func testBasicReconcile(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
 	// Mock request to simulate Reconcile being called on an event for a watched resource
 	// then ensure reconcile is successful and does not return an empty result
-	req := createReconcileRequest(name, namespace)
 	res, err := r.Reconcile(req)
 	if err = verifyReconcile(res, err); err != nil {
 		return err
@@ -127,7 +128,7 @@ func testBasicReconcile(t *testing.T, r *ReconcileRuntimeComponent, rb appstacks
 }
 
 func testStorage(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
-	runtimecomponent, req := makeRuntimeAndReq()
+	runtimecomponent := makeBasicRuntimeComponent(name, namespace)
 	// Update runtimecomponentwith values for StatefulSet
 	// Update ServiceAccountName for empty case
 	runtimecomponent.Spec = appstacksv1beta1.RuntimeComponentSpec{
@@ -170,7 +171,7 @@ func testStorage(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.R
 }
 
 func testKnativeService(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
-	runtimecomponent, req := makeRuntimeAndReq()
+	runtimecomponent := makeBasicRuntimeComponent(name, namespace)
 	// Enable CreateKnativeService
 	runtimecomponent.Spec = appstacksv1beta1.RuntimeComponentSpec{
 		CreateKnativeService: &createKnativeService,
@@ -213,7 +214,7 @@ func testKnativeService(t *testing.T, r *ReconcileRuntimeComponent, rb appstacks
 }
 
 func testExposeRoute(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
-	runtimecomponent, req := makeRuntimeAndReq()
+	runtimecomponent := makeBasicRuntimeComponent(name, namespace)
 
 	expose := true
 	runtimecomponent.Spec = appstacksv1beta1.RuntimeComponentSpec{
@@ -242,7 +243,7 @@ func testExposeRoute(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksuti
 }
 
 func testAutoscaling(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
-	runtimecomponent, req := makeRuntimeAndReq()
+	runtimecomponent := makeBasicRuntimeComponent(name, namespace)
 	runtimecomponent.Spec = appstacksv1beta1.RuntimeComponentSpec{
 		Autoscaling: autoscaling,
 	}
@@ -275,7 +276,7 @@ func testAutoscaling(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksuti
 }
 
 func testServiceAccount(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
-	runtimecomponent, req := makeRuntimeAndReq()
+	runtimecomponent := makeBasicRuntimeComponent(name, namespace)
 	updateRuntimeComponent(r, runtimecomponent, t)
 	res, err := r.Reconcile(req)
 	if err = verifyReconcile(res, err); err != nil {
@@ -304,7 +305,7 @@ func testServiceAccount(t *testing.T, r *ReconcileRuntimeComponent, rb appstacks
 }
 
 func testServiceMonitoring(t *testing.T, r *ReconcileRuntimeComponent, rb appstacksutils.ReconcilerBase) error {
-	runtimecomponent, req := makeRuntimeAndReq()
+	runtimecomponent := makeBasicRuntimeComponent(name, namespace)
 
 	// Test with monitoring specified
 	runtimecomponent.Spec.Monitoring = &appstacksv1beta1.RuntimeComponentMonitoring{}
@@ -380,19 +381,13 @@ func addResourcesToScheme(t *testing.T, s *runtime.Scheme, runtimecomponent *app
 }
 
 // Helper Functions
-func makeRuntimeAndReq() (*appstacksv1beta1.RuntimeComponent, reconcile.Request) {
+func makeBasicRuntimeComponent(n, ns string) *appstacksv1beta1.RuntimeComponent {
 	spec := appstacksv1beta1.RuntimeComponentSpec{}
-	runtimecomponent := createRuntimeComponent(name, namespace, spec)
-	req := createReconcileRequest(name, namespace)
-	return runtimecomponent, req
-}
-
-func createRuntimeComponent(n, ns string, spec appstacksv1beta1.RuntimeComponentSpec) *appstacksv1beta1.RuntimeComponent {
-	app := &appstacksv1beta1.RuntimeComponent{
+	runtime := &appstacksv1beta1.RuntimeComponent{
 		ObjectMeta: metav1.ObjectMeta{Name: n, Namespace: ns},
 		Spec:       spec,
 	}
-	return app
+	return runtime
 }
 
 func createFakeDiscoveryClient() discovery.DiscoveryInterface {
@@ -437,13 +432,6 @@ func createFakeDiscoveryClient() discovery.DiscoveryInterface {
 	}
 
 	return fakeDiscoveryClient
-}
-
-func createReconcileRequest(n, ns string) reconcile.Request {
-	req := reconcile.Request{
-		NamespacedName: types.NamespacedName{Name: n, Namespace: ns},
-	}
-	return req
 }
 
 func createConfigMap(n, ns string, data map[string]string) *corev1.ConfigMap {
