@@ -473,7 +473,7 @@ func TestCustomizeServiceMonitor(t *testing.T) {
 	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service}
 
 	params := map[string][]string{
-		"params": []string{"param1", "param2"},
+		"params": {"param1", "param2"},
 	}
 
 	// Endpoint for runtime

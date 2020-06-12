@@ -10,6 +10,7 @@ import (
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
+	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -32,6 +33,13 @@ var (
 		Namespace: "runtimecomponent",
 	}
 	spec = appstacksv1beta1.RuntimeComponentSpec{}
+)
+
+const (
+	tlsCrt = "faketlscrt"
+	tlsKey = "faketlskey"
+	caCrt = "fakecacrt"
+	destCACrt = "fakedestcacrt"
 )
 
 func TestGetDiscoveryClient(t *testing.T) {
@@ -217,6 +225,143 @@ func TestIsGroupVersionSupported(t *testing.T) {
 	}
 }
 
+// testGetSvcTLSValues test part of the function GetRouteTLSValues in reconciler.go.
+func testGetSvcTLSValues(t *testing.T) {
+	// Configure the runtime component
+	runtimecomponent := createRuntimeComponent(name, namespace, spec)
+	expose := true
+	runtimecomponent.Spec.Expose = &expose
+	runtimecomponent.Spec.Service = &appstacksv1beta1.RuntimeComponentService{
+		Certificate: &appstacksv1beta1.Certificate{},
+		Port: 3000,
+	}
+
+	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
+
+	// Deploy the expected secret
+	cl := fakeclient.NewFakeClient(objs...)
+	secret := makeCertSecret("my-app-svc-tls", namespace)
+	if err := cl.Create(context.TODO(), secret); err != nil {
+		t.Fatal(err)
+	}
+
+	// Use the reconciler to retrieve the secret
+	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
+	key, cert, ca, destCa, err := r.GetRouteTLSValues(runtimecomponent)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify the results where only destCa should be retrieved.
+	testSTV := []Test{
+		{"Svc TLS Value - Key", "", key},
+		{"Svc TLS Value - Cert", "", cert},
+		{"Svc TLS Value - CA Cert", "", ca},
+		{"Svc TLS Value - Dest CA Cert", caCrt, destCa},
+	}
+	verifyTests(testSTV, t)
+}
+
+// testGetRouteTLSValues test the function GetRouteTLSValues in reconciler.go.
+func testGetRouteTLSValues(t *testing.T) {
+	// Configure the rumtime component
+	runtimecomponent := createRuntimeComponent(name, namespace, spec)
+	terminationPolicy := routev1.TLSTerminationReencrypt
+	secretRefName := "my-app-route-tls"
+	runtimecomponent.Spec.Expose = &expose
+	runtimecomponent.Spec.Route = &appstacksv1beta1.RuntimeComponentRoute{
+		Host:        "myapp.mycompany.com",
+		Termination: &terminationPolicy,
+		CertificateSecretRef: &secretRefName,
+	}
+	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
+	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
+
+	// Create a fake client and a reconciler
+	cl := fakeclient.NewFakeClient(objs...)
+	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
+	
+	// Make and deploy the secret for later retrieval
+	secret := makeCertSecret(secretRefName, namespace)
+	if err := cl.Create(context.TODO(), secret); err != nil {
+		t.Fatal(err)
+	}
+	
+	// Use the reconciler to retrieve the secret
+	key, cert, ca, destCa, err := r.GetRouteTLSValues(runtimecomponent)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify the result
+	testRTV := []Test{
+		{"Route TLS Value - Key", key, tlsKey},
+		{"Route TLS Value - Cert", cert, tlsCrt},
+		{"Route TLS Value - CA Cert", ca, caCrt},
+		{"Route TLS Value - Dest CA Cert", destCa, destCACrt},
+	}
+	verifyTests(testRTV, t)
+}
+
+func TestGetRouteTLSValues(t *testing.T) {
+	logf.SetLogger(logf.ZapLogger(true))
+	// Test two scenarios: retrieving secret from service and retrieving secret from route
+	testGetSvcTLSValues(t)
+	testGetRouteTLSValues(t)
+}
+
+func TestGetSelectorLabelsFromApplications(t *testing.T) {
+	logf.SetLogger(logf.ZapLogger(true))
+
+	// Setup scheme
+	s := scheme.Scheme
+	s.AddKnownTypes(applicationsv1beta1.SchemeGroupVersion, &applicationsv1beta1.Application{})
+	s.AddKnownTypes(applicationsv1beta1.SchemeGroupVersion, &applicationsv1beta1.ApplicationList{})
+
+	// Configure the application
+	labelMap := map[string]string {
+		"test-key": "test-value",
+	}
+	application := &applicationsv1beta1.Application{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+			Namespace: namespace,
+			Annotations: map[string]string{
+				"kappnav.component.namespaces": namespace,
+			},
+		},
+		Spec: applicationsv1beta1.ApplicationSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labelMap,
+			},
+		},
+	}
+
+	// Create the fake client and the reconciler
+	cl := fakeclient.NewFakeClient()
+	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
+
+	// Deploy the application
+	err := cl.Create(context.TODO(), application)
+	if err != nil {
+		t.Fatal(err)
+	}
+	
+	// Get selector labels
+	runtimecomponent := createRuntimeComponent(name, namespace, spec)
+	returnedLabelMap, err := r.GetSelectorLabelsFromApplications(runtimecomponent)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify the result
+	testMS := []Test{
+		{"SelectorLabels", labelMap, returnedLabelMap},
+	}
+	verifyTests(testMS, t)
+}
+
 func createFakeDiscoveryClient() discovery.DiscoveryInterface {
 	fakeDiscoveryClient := &fakediscovery.FakeDiscovery{Fake: &coretesting.Fake{}}
 	fakeDiscoveryClient.Resources = []*metav1.APIResourceList{
@@ -235,4 +380,22 @@ func createFakeDiscoveryClient() discovery.DiscoveryInterface {
 	}
 
 	return fakeDiscoveryClient
+}
+// makeCertSecret returns a pointer to a simple Secret object with fake values inside.
+func makeCertSecret(n string, ns string) *corev1.Secret {
+	data := map[string][]byte{
+		"ca.crt": []byte(caCrt),
+		"tls.crt": []byte(tlsCrt),
+		"tls.key": []byte(tlsKey),
+		"destCA.crt": []byte(destCACrt),
+	}
+	secret := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: n,
+			Namespace: ns,
+		},
+		Type: "kubernetes.io/tls",
+		Data: data,
+	}
+	return &secret
 }
