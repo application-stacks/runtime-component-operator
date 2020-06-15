@@ -95,8 +95,5 @@ func runtimeUpdateScaleTest(t *testing.T, f *framework.Framework, namespace stri
 
 	// wait for example-memcached to reach 2 replicas
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-runtime", 2, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
-	return err
+	return err // implicitly return nil if no error
 }

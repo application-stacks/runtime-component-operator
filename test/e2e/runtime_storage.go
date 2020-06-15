@@ -77,10 +77,7 @@ func updateStorageConfig(t *testing.T, f *framework.Framework, ctx *framework.Te
 	}
 
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, app.Name, 1, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err // implicitly return nil if no error
 }
 
 // RuntimePersistenceTest Verify the volume persistence claims.

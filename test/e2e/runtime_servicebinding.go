@@ -82,7 +82,6 @@ func RuntimeServiceBindingTest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 }
 
 func createSecret(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, ns string, n string, userValue string, passValue string) error {
@@ -99,11 +98,7 @@ func createSecret(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, 
 	}
 
 	err := f.Client.Create(goctx.TODO(), &secret, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err // implicitly return nil if no error
 }
 
 func createProviderService(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, ns string, con string) error {
@@ -129,11 +124,7 @@ func createProviderService(t *testing.T, f *framework.Framework, ctx *framework.
 	}
 
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, ns, runtimeProvider, 1, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err // implicitly return nil if no error
 }
 
 func createConsumeServiceMount(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, ns string, n string, appName string, set bool) error {
@@ -163,11 +154,7 @@ func createConsumeServiceMount(t *testing.T, f *framework.Framework, ctx *framew
 	}
 
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, ns, appName, 1, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err // implicitly return nil if no error
 }
 
 func setUpMounting(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, ns string) error {
@@ -312,11 +299,7 @@ func createConsumeServiceEnv(t *testing.T, f *framework.Framework, ctx *framewor
 	}
 
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, ns, appName, 1, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err // implicitly return nil if no error
 }
 
 func envTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, ns string) error {

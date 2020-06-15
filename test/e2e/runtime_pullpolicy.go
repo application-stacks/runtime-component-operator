@@ -126,7 +126,6 @@ func searchEventMessages(t *testing.T, f *framework.Framework, key string, names
 	}
 
 	return errors.New("The pull policy was not correctly set")
-
 }
 
 func testPullPolicyNever(t *testing.T, f *framework.Framework, namespace string, ctx *framework.TestCtx) error {

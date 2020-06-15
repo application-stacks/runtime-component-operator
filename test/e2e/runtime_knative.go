@@ -51,7 +51,6 @@ func RuntimeKnativeTest(t *testing.T) {
 	// start the two cases
 	testKnIsFalse(t, f, ctx, namespace)
 	testKnIsTrueAndTurnOff(t, f, ctx, namespace)
-
 }
 
 func isKnativeInstalled(t *testing.T, f *framework.Framework) bool {

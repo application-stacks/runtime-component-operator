@@ -164,7 +164,7 @@ func useExistingApplications(t *testing.T, f *framework.Framework, ctx *framewor
 		return err
 	}
 
-	t.Log("waiting 100 seconds")
+	t.Log("waiting 5 seconds")
 	time.Sleep(5 * time.Second)
 
 	runtime := &appstacksv1beta1.RuntimeComponent{}
