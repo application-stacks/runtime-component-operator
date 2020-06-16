@@ -11,9 +11,11 @@ import (
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+
 	k "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -33,7 +35,7 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 	t.Logf("Namespace: %s", namespace)
 	f := framework.Global
 
-	// Adds the prometheus resources to the scheme
+	// adds the prometheus resources to the scheme
 	if err = prometheusv1.AddToScheme(f.Scheme); err != nil {
 		t.Logf("Unable to add prometheus scheme: (%v)", err)
 		util.FailureCleanup(t, f, namespace, err)
@@ -48,7 +50,7 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 	helper := int32(1)
 	runtime := util.MakeBasicRuntimeComponent(t, f, "example-runtime-sm", namespace, helper)
 
-	// Create application deployment and wait
+	// create application deployment and wait
 	err = f.Client.Create(goctx.TODO(), runtime, &framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
@@ -59,7 +61,7 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	// Returns a list of the service monitor with the specified label
+	// returns a list of the service monitor with the specified label
 	m := map[string]string{"apps-prometheus": ""}
 	l := labels.Set(m)
 	selec := l.AsSelector()
@@ -67,7 +69,7 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 	smList := &prometheusv1.ServiceMonitorList{}
 	options := k.ListOptions{LabelSelector: selec}
 
-	// If there are no service monitors deployed an error will be thrown below
+	// if there are no service monitors deployed an error will be thrown below
 	err = f.Client.List(goctx.TODO(), smList, &options)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
@@ -75,12 +77,12 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 
 	target := types.NamespacedName{Name: "example-runtime-sm", Namespace: namespace}
 	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
-		// Adds the mandatory label to the application so it will be picked up by the prometheus operator
+		// adds the mandatory label to the application so it will be picked up by the prometheus operator
 		label := map[string]string{"apps-prometheus": ""}
 		monitor := &appstacksv1beta1.RuntimeComponentMonitoring{Labels: label}
 		r.Spec.Monitoring = monitor
 
-		// Updates the application so the operator is reconciled
+		// updates the application so the operator is reconciled
 		helper = int32(2)
 		r.Spec.Replicas = &helper
 	})
@@ -93,13 +95,13 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	// If there are no service monitors deployed an error will be thrown below
+	// if there are no service monitors deployed an error will be thrown below
 	err = f.Client.List(goctx.TODO(), smList, &options)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	// Gets the service monitor
+	// gets the service monitor
 	sm := smList.Items[0]
 
 	smPath := sm.Spec.Endpoints[0].Path
@@ -155,7 +157,7 @@ func testSettingRuntimeServiceMonitor(t *testing.T, f *framework.Framework, name
 		username := v1.SecretKeySelector{Key: "username"}
 		password := v1.SecretKeySelector{Key: "password"}
 
-		// Creates the endpoint fields the user can customize
+		// creates the endpoint fields the user can customize
 		endpoint := prometheusv1.Endpoint{
 			Path:            "/path",
 			Scheme:          "myScheme",
@@ -169,12 +171,12 @@ func testSettingRuntimeServiceMonitor(t *testing.T, f *framework.Framework, name
 
 		endpoints := []prometheusv1.Endpoint{endpoint}
 
-		// Adds the mandatory label to the application so it will be picked up by the prometheus operator
+		// adds the mandatory label to the application so it will be picked up by the prometheus operator
 		label := map[string]string{"apps-prometheus": ""}
 		monitor := &appstacksv1beta1.RuntimeComponentMonitoring{Labels: label, Endpoints: endpoints}
 		r.Spec.Monitoring = monitor
 
-		// Updates the application so the operator is reconciled
+		// updates the application so the operator is reconciled
 		helper := int32(3)
 		r.Spec.Replicas = &helper
 	})
@@ -195,13 +197,13 @@ func testSettingRuntimeServiceMonitor(t *testing.T, f *framework.Framework, name
 	smList := &prometheusv1.ServiceMonitorList{}
 	options := k.ListOptions{LabelSelector: selec}
 
-	// If there are no service monitors deployed an error will be thrown below
+	// if there are no service monitors deployed an error will be thrown below
 	err = f.Client.List(goctx.TODO(), smList, &options)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	// Gets the service monitor
+	// gets the service monitor
 	sm := smList.Items[0]
 
 	smPath := sm.Spec.Endpoints[0].Path

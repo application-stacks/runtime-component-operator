@@ -9,11 +9,11 @@ import (
 	"github.com/application-stacks/runtime-component-operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
-	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/apimachinery/pkg/types"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // RuntimeBasicStorageTest check that when persistence is configured that a statefulset is deployed
@@ -77,10 +77,7 @@ func updateStorageConfig(t *testing.T, f *framework.Framework, ctx *framework.Te
 	}
 
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, app.Name, 1, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err // implicitly return nil if no error
 }
 
 // RuntimePersistenceTest Verify the volume persistence claims.
@@ -102,7 +99,7 @@ func RuntimePersistenceTest(t *testing.T) {
 		corev1.ResourceStorage: resource.MustParse("1Gi"),
 	}
 
-	// Create PVC and mount for our statefulset.
+	// create PVC and mount for our statefulset.
 	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, "example-runtime-persistence", namespace, 1)
 	exampleRuntime.Spec.Storage = &appstacksv1beta1.RuntimeComponentStorage{
 		VolumeClaimTemplate: &corev1.PersistentVolumeClaim{

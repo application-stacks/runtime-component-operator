@@ -10,7 +10,9 @@ import (
 	"github.com/application-stacks/runtime-component-operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+
 	corev1 "k8s.io/api/core/v1"
+
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -124,7 +126,6 @@ func searchEventMessages(t *testing.T, f *framework.Framework, key string, names
 	}
 
 	return errors.New("The pull policy was not correctly set")
-
 }
 
 func testPullPolicyNever(t *testing.T, f *framework.Framework, namespace string, ctx *framework.TestCtx) error {
@@ -141,9 +142,7 @@ func testPullPolicyNever(t *testing.T, f *framework.Framework, namespace string,
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	for i := 0; i < 5; i++ {
-		time.Sleep(time.Millisecond * 1000)
-	}
+	time.Sleep(5 * time.Second)
 
 	timestamp := time.Now().UTC()
 	t.Logf("%s - Deployment created, verifying pull policy...", timestamp)

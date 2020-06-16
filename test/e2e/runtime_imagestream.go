@@ -13,9 +13,11 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
-	"k8s.io/apimachinery/pkg/util/wait"
+
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
+
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -34,7 +36,7 @@ func RuntimeImageStreamTest(t *testing.T) {
 		t.Fatalf("Couldn't get namespace: %v", err)
 	}
 
-	// Adds the imagestream resources to the scheme
+	// adds the imagestream resources to the scheme
 	if err = imagev1.AddToScheme(f.Scheme); err != nil {
 		t.Logf("Unable to add image scheme: (%v)", err)
 		util.FailureCleanup(t, f, namespace, err)
@@ -68,7 +70,7 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 	t.Logf("Namespace: %s", ns)
 	target := types.NamespacedName{Name: name, Namespace: ns}
 
-	// Create the imagestream
+	// create the imagestream
 	out, err := exec.Command("oc", "import-image", imgstreamName, "--from=navidsh/demo-day:v0.1.0", "-n", ns, "--confirm").Output()
 	if err != nil {
 		t.Fatalf("Creating the imagestream failed: %s", out)
@@ -79,7 +81,7 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 		return err
 	}
 
-	// Make an appplication that points to the imagestream
+	// make an appplication that points to the imagestream
 	runtime := util.MakeBasicRuntimeComponent(t, f, name, ns, 1)
 	runtime.Spec.ApplicationImage = imgstreamName
 
@@ -100,14 +102,14 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 	if err != nil {
 		return err
 	}
-	// Update the imagestreamtag
+	// update the imagestreamtag
 	tag := `{"tag":{"from":{"name": "navidsh/demo-day:v0.2.0"}}}`
 	out, err = exec.Command("oc", "patch", "imagestreamtag", imgstreamName+":latest", "-n", ns, "-p", tag).Output()
 	if err != nil {
 		t.Fatalf("Updating the imagestreamtag failed: %s", out)
 	}
 
-	// Return err if the image reference is not updated successfully
+	// return err if the image reference is not updated successfully
 	err = waitImageRefUpdated(t, f, ctx, target, previousImage)
 	if err != nil {
 		return err
@@ -117,14 +119,14 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 	if err != nil {
 		return err
 	}
-	// Update the imagestreamtag again
+	// update the imagestreamtag again
 	tag = `{"tag":{"from":{"name": "navidsh/demo-day:v0.1.0"}}}`
 	out, err = exec.Command("oc", "patch", "imagestreamtag", imgstreamName+":latest", "-n", ns, "-p", tag).Output()
 	if err != nil {
 		t.Fatalf("Updating the imagestreamtag failed: %s", out)
 	}
 
-	// Return err if the image reference is not updated successfully
+	// return err if the image reference is not updated successfully
 	err = waitImageRefUpdated(t, f, ctx, target, previousImage)
 	if err != nil {
 		return err
@@ -176,7 +178,7 @@ func testRemoveImageStream(t *testing.T, f *framework.Framework, ctx *framework.
 /* Helper Functions Below */
 // Wait for the ImageStreamList contains at least one item.
 func waitForImageStream(f *framework.Framework, ctx *framework.TestCtx, imgstreamName string, ns string) error {
-	// Check the name field that matches
+	// check the name field that matches
 	key := map[string]string{"metadata.name": imgstreamName}
 
 	options := &dynclient.ListOptions{
@@ -208,7 +210,7 @@ func waitForImageStream(f *framework.Framework, ctx *framework.TestCtx, imgstrea
 
 // Get the target's current image reference.
 func getCurrImageRef(f *framework.Framework, ctx *framework.TestCtx,
-		target types.NamespacedName) (string, error) {
+	target types.NamespacedName) (string, error) {
 	runtime := appstacksv1beta1.RuntimeComponent{}
 	err := f.Client.Get(goctx.TODO(), target, &runtime)
 	if err != nil {
@@ -219,14 +221,14 @@ func getCurrImageRef(f *framework.Framework, ctx *framework.TestCtx,
 
 // Polling wait for the target's image reference to be updated to the imageRef.
 func waitImageRefUpdated(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
-		target types.NamespacedName, imageRef string) error {
+	target types.NamespacedName, imageRef string) error {
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 		currImage, err := getCurrImageRef(f, ctx, target)
 		if err != nil {
-			return true, err	// if error, stop polling and return err
+			return true, err // if error, stop polling and return err
 		}
 
-		// Check if the image the application is pointing to has been changed
+		// check if the image the application is pointing to has been changed
 		if currImage == imageRef {
 			// keep polling if the image ref is not updated
 			t.Log("Waiting for the image reference to be updated ...")
@@ -239,5 +241,5 @@ func waitImageRefUpdated(t *testing.T, f *framework.Framework, ctx *framework.Te
 		return errors.New("image reference not updated")
 	}
 
-	return err	// implicitly return nil if no errors
+	return err // implicitly return nil if no errors
 }

@@ -10,17 +10,20 @@ import (
 	"github.com/application-stacks/runtime-component-operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
+
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // RuntimeAutoScalingTest : More indepth testing of autoscaling
 func RuntimeAutoScalingTest(t *testing.T) {
-
+	// standard initialization
 	ctx, err := util.InitializeContext(t, cleanupTimeout, retryInterval)
 	if err != nil {
 		t.Fatal(err)
@@ -33,7 +36,7 @@ func RuntimeAutoScalingTest(t *testing.T) {
 		t.Fatalf("could not get namespace: %v", err)
 	}
 
-	// Wait for the operator as the following configmaps won't exist until it has deployed
+	// wait for the operator as the following configmaps won't exist until it has deployed
 	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "runtime-component-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
@@ -48,7 +51,7 @@ func RuntimeAutoScalingTest(t *testing.T) {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	// Make basic runtime omponent with 1 replica
+	// make basic runtime omponent with 1 replica
 	replicas := int32(1)
 	runtimeComponent := util.MakeBasicRuntimeComponent(t, f, "example-runtime-autoscaling", namespace, replicas)
 
@@ -64,7 +67,7 @@ func RuntimeAutoScalingTest(t *testing.T) {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	// Update autoscaler
+	// update autoscaler
 	target := types.NamespacedName{Name: "example-runtime-autoscaling", Namespace: namespace}
 	err = util.UpdateApplication(f, target, func(r *appstacksv1beta1.RuntimeComponent) {
 		r.Spec.ResourceConstraints = setResources("0.2")
@@ -108,15 +111,16 @@ func getHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, f *fra
 }
 
 func waitForHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, minReplicas int32, maxReplicas int32, utiliz int32, f *framework.Framework, options *dynclient.ListOptions) error {
-	for counter := 0; counter < 10; counter++ {
-		time.Sleep(6000 * time.Millisecond)
+	var hpaErr error
+	wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 		hpa = getHPA(hpa, t, f, options)
-		if checkValues(hpa, t, minReplicas, maxReplicas, utiliz) == nil {
-			return nil
+		hpaErr = checkValues(hpa, t, minReplicas, maxReplicas, utiliz)
+		if hpaErr != nil {
+			return false, nil
 		}
-	}
-	return checkValues(hpa, t, minReplicas, maxReplicas, utiliz)
-
+		return true, nil
+	})
+	return hpaErr
 }
 
 func setResources(cpu string) *corev1.ResourceRequirements {
@@ -148,7 +152,6 @@ func setAutoScale(values ...int32) *appstacksv1beta1.RuntimeComponentAutoScaling
 }
 
 func checkValues(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, minReplicas int32, maxReplicas int32, utiliz int32) error {
-
 	if hpa.Items[0].Spec.MaxReplicas != maxReplicas {
 		t.Logf("Max replicas is set to: %d", hpa.Items[0].Spec.MaxReplicas)
 		return errors.New("Error: Max replicas is not correctly set")
@@ -257,7 +260,7 @@ func incorrectFieldsTest(t *testing.T, f *framework.Framework, ctx *framework.Te
 	timestamp := time.Now().UTC()
 	t.Logf("%s - Starting runtime autoscaling test...", timestamp)
 
-	// Make basic runtime omponent with 1 replica
+	// make basic runtime component with 1 replica
 	replicas := int32(1)
 	runtimeComponent := util.MakeBasicRuntimeComponent(t, f, "example-runtime-autoscaling2", namespace, replicas)
 
@@ -273,7 +276,7 @@ func incorrectFieldsTest(t *testing.T, f *framework.Framework, ctx *framework.Te
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	// Check the name field that matches
+	// check the name field that matches
 	key := map[string]string{"metadata.name": "example-runtime-autoscaling2"}
 
 	options := &dynclient.ListOptions{
@@ -314,7 +317,7 @@ func replicasTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) 
 	timestamp := time.Now().UTC()
 	t.Logf("%s - Starting runtime autoscaling test...", timestamp)
 
-	// Make basic runtime omponent with 1 replica
+	// make basic runtime omponent with 1 replica
 	replicas := int32(2)
 	runtime := util.MakeBasicRuntimeComponent(t, f, name, namespace, replicas)
 

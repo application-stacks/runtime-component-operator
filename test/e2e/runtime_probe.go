@@ -6,13 +6,13 @@ import (
 	"time"
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	"github.com/application-stacks/runtime-component-operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // RuntimeProbeTest make sure user defined liveness/readiness probes reach ready state.
@@ -77,10 +77,7 @@ func probeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, pro
 	}
 
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-runtime-readiness", 1, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err // implicitly return nil if no error
 }
 
 func editProbeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
@@ -97,10 +94,7 @@ func editProbeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx)
 	})
 
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-runtime-readiness", 1, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err // implicitly return nil if no error
 }
 
 func deleteProbeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
@@ -117,9 +111,5 @@ func deleteProbeTest(t *testing.T, f *framework.Framework, ctx *framework.TestCt
 	})
 
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-runtime-readiness", 1, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err // implicitly return nil if no error
 }

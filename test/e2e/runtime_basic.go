@@ -7,10 +7,10 @@ import (
 	"time"
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
-
 	"github.com/application-stacks/runtime-component-operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -62,7 +62,7 @@ func runtimeBasicScaleTest(t *testing.T, f *framework.Framework, ctx *framework.
 
 	timestamp := time.Now().UTC()
 	t.Logf("%s - Creating basic runtime component for scaling test...", timestamp)
-	// Create application deployment and wait
+	// create application deployment and wait
 	err = f.Client.Create(goctx.TODO(), exampleRuntime, &framework.CleanupOptions{TestContext: ctx, Timeout: time.Second, RetryInterval: time.Second})
 	if err != nil {
 		return err
@@ -95,8 +95,5 @@ func runtimeUpdateScaleTest(t *testing.T, f *framework.Framework, namespace stri
 
 	// wait for example-memcached to reach 2 replicas
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-runtime", 2, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
-	return err
+	return err // implicitly return nil if no error
 }
