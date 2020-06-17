@@ -116,6 +116,7 @@ func waitForHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, mi
 		hpa = getHPA(hpa, t, f, options)
 		hpaErr = checkValues(hpa, t, minReplicas, maxReplicas, utiliz)
 		if hpaErr != nil {
+			t.Log("Waiting for the AutoScaler to reach the correct values ...")
 			return false, nil
 		}
 		return true, nil

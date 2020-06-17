@@ -76,7 +76,7 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 		t.Fatalf("Creating the imagestream failed: %s", out)
 	}
 
-	err = waitForImageStream(f, ctx, imgstreamName, ns)
+	err = waitForImageStream(t, f, ctx, imgstreamName, ns)
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func testRemoveImageStream(t *testing.T, f *framework.Framework, ctx *framework.
 
 /* Helper Functions Below */
 // Wait for the ImageStreamList contains at least one item.
-func waitForImageStream(f *framework.Framework, ctx *framework.TestCtx, imgstreamName string, ns string) error {
+func waitForImageStream(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, imgstreamName string, ns string) error {
 	// check the name field that matches
 	key := map[string]string{"metadata.name": imgstreamName}
 
@@ -195,6 +195,7 @@ func waitForImageStream(f *framework.Framework, ctx *framework.TestCtx, imgstrea
 		}
 
 		if len(imageStreamList.Items) == 0 {
+			t.Log("Waiting for the image stream to be created ...")
 			return false, nil
 		}
 
