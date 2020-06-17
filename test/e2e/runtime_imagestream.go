@@ -219,9 +219,9 @@ func getCurrImageRef(f *framework.Framework, ctx *framework.TestCtx,
 	return runtime.Status.ImageReference, nil
 }
 
-// Polling wait for the target's image reference to be updated to the imageRef.
+// Polling wait for the target's image reference to be updated to a new one.
 func waitImageRefUpdated(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
-	target types.NamespacedName, imageRef string) error {
+	target types.NamespacedName, oldImageRef string) error {
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 		currImage, err := getCurrImageRef(f, ctx, target)
 		if err != nil {
@@ -229,7 +229,7 @@ func waitImageRefUpdated(t *testing.T, f *framework.Framework, ctx *framework.Te
 		}
 
 		// check if the image the application is pointing to has been changed
-		if currImage == imageRef {
+		if currImage == oldImageRef {
 			// keep polling if the image ref is not updated
 			t.Log("Waiting for the image reference to be updated ...")
 			return false, nil

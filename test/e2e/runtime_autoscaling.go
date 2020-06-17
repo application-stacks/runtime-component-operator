@@ -77,7 +77,7 @@ func RuntimeAutoScalingTest(t *testing.T) {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	// Check the name field that matches
+	// check the name field that matches
 	key := map[string]string{"metadata.name": "example-runtime-autoscaling"}
 
 	options := &dynclient.ListOptions{
