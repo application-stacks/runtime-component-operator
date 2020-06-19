@@ -40,7 +40,7 @@ func RuntimeBasicTest(t *testing.T) {
 	f := framework.Global
 
 	// create one replica of the operator deployment in current namespace with provided name
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "runtime-component-operator", 1, retryInterval, operatorTimeout)
+	err = util.WaitForOperator(t, ctx, f.KubeClient, 1)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}

@@ -44,7 +44,7 @@ func RuntimeImageStreamTest(t *testing.T) {
 
 	t.Logf("Namespace: %s", namespace)
 
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "runtime-component-operator", 1, retryInterval, timeout)
+	err = util.WaitForOperator(t, ctx, f.KubeClient, 1)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}
