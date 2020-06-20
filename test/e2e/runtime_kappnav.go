@@ -13,7 +13,6 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
-
 	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
 )
 

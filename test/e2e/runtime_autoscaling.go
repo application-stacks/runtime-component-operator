@@ -17,7 +17,6 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 

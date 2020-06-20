@@ -12,7 +12,6 @@ import (
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 
 	corev1 "k8s.io/api/core/v1"
-
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 

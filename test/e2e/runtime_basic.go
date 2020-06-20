@@ -10,7 +10,6 @@ import (
 	"github.com/application-stacks/runtime-component-operator/test/util"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
-
 	"k8s.io/apimachinery/pkg/types"
 )
 
