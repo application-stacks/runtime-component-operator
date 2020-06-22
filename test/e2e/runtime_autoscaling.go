@@ -17,7 +17,6 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -77,7 +76,7 @@ func RuntimeAutoScalingTest(t *testing.T) {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	// Check the name field that matches
+	// check the name field that matches
 	key := map[string]string{"metadata.name": "example-runtime-autoscaling"}
 
 	options := &dynclient.ListOptions{
@@ -116,6 +115,7 @@ func waitForHPA(hpa *autoscalingv1.HorizontalPodAutoscalerList, t *testing.T, mi
 		hpa = getHPA(hpa, t, f, options)
 		hpaErr = checkValues(hpa, t, minReplicas, maxReplicas, utiliz)
 		if hpaErr != nil {
+			t.Log("Waiting for the AutoScaler to reach the correct values ...")
 			return false, nil
 		}
 		return true, nil

@@ -17,7 +17,6 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -76,7 +75,7 @@ func runtimeImageStreamTest(t *testing.T, f *framework.Framework, ctx *framework
 		t.Fatalf("Creating the imagestream failed: %s", out)
 	}
 
-	err = waitForImageStream(f, ctx, imgstreamName, ns)
+	err = waitForImageStream(t, f, ctx, imgstreamName, ns)
 	if err != nil {
 		return err
 	}
@@ -177,7 +176,7 @@ func testRemoveImageStream(t *testing.T, f *framework.Framework, ctx *framework.
 
 /* Helper Functions Below */
 // Wait for the ImageStreamList contains at least one item.
-func waitForImageStream(f *framework.Framework, ctx *framework.TestCtx, imgstreamName string, ns string) error {
+func waitForImageStream(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, imgstreamName string, ns string) error {
 	// check the name field that matches
 	key := map[string]string{"metadata.name": imgstreamName}
 
@@ -195,6 +194,7 @@ func waitForImageStream(f *framework.Framework, ctx *framework.TestCtx, imgstrea
 		}
 
 		if len(imageStreamList.Items) == 0 {
+			t.Log("Waiting for the image stream to be created ...")
 			return false, nil
 		}
 
@@ -219,9 +219,9 @@ func getCurrImageRef(f *framework.Framework, ctx *framework.TestCtx,
 	return runtime.Status.ImageReference, nil
 }
 
-// Polling wait for the target's image reference to be updated to the imageRef.
+// Polling wait for the target's image reference to be updated to a new one.
 func waitImageRefUpdated(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
-	target types.NamespacedName, imageRef string) error {
+	target types.NamespacedName, oldImageRef string) error {
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 		currImage, err := getCurrImageRef(f, ctx, target)
 		if err != nil {
@@ -229,7 +229,7 @@ func waitImageRefUpdated(t *testing.T, f *framework.Framework, ctx *framework.Te
 		}
 
 		// check if the image the application is pointing to has been changed
-		if currImage == imageRef {
+		if currImage == oldImageRef {
 			// keep polling if the image ref is not updated
 			t.Log("Waiting for the image reference to be updated ...")
 			return false, nil

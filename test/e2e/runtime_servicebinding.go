@@ -18,7 +18,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -129,7 +128,7 @@ func createProviderService(t *testing.T, f *framework.Framework, ctx *framework.
 
 func createConsumeServiceMount(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, ns string, n string, appName string, set bool) error {
 	runtime := util.MakeBasicRuntimeComponent(t, f, appName, ns, 1)
-	if set == true {
+	if set {
 		runtime.Spec.Service.Consumes = []v1beta1.ServiceBindingConsumes{
 			v1beta1.ServiceBindingConsumes{
 				Name:      n,
@@ -138,7 +137,7 @@ func createConsumeServiceMount(t *testing.T, f *framework.Framework, ctx *framew
 				MountPath: "/" + mount,
 			},
 		}
-	} else if set == false {
+	} else {
 		runtime.Spec.Service.Consumes = []v1beta1.ServiceBindingConsumes{
 			v1beta1.ServiceBindingConsumes{
 				Name:      n,
@@ -242,9 +241,9 @@ func mountingTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, 
 func checkSecret(t *testing.T, f *framework.Framework, ns string, podName string, directory string, valuePairs map[string]string, setNamespace bool) {
 	waitErr := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 		out, err := []byte(""), errors.New("")
-		if setNamespace == true {
+		if setNamespace {
 			out, err = exec.Command("kubectl", "exec", "-n", ns, "-it", podName, "--", "cat", "../"+mount+"/"+ns+"/"+runtimeProvider+"/"+directory).Output()
-		} else if setNamespace == false {
+		} else {
 			out, err = exec.Command("kubectl", "exec", "-n", ns, "-it", podName, "--", "cat", "../"+mount+"/"+runtimeProvider+"/"+directory).Output()
 		}
 		err = util.CommandError(t, err, out)
