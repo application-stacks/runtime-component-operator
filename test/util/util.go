@@ -401,6 +401,7 @@ func WaitForOperator(t *testing.T, ctx *framework.TestCtx, kc kubernetes.Interfa
 		t.Log("operator failed to deploy, retrying...")
 		ctx.Cleanup()
 		InitializeContext(t, time.Second*15, time.Second*2)
+		tries++
 	}
 
 	return err
