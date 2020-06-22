@@ -383,6 +383,7 @@ func CommandError(t *testing.T, err error, out []byte) error {
 	return nil
 }
 
+// WaitForOperator - wait for the operator and force restart on failures
 func WaitForOperator(t *testing.T, ctx *framework.TestCtx, kc kubernetes.Interface, replicas int) error {
 	const name = "runtime-component-operator"
 	ns, err := ctx.GetNamespace()
@@ -393,13 +394,13 @@ func WaitForOperator(t *testing.T, ctx *framework.TestCtx, kc kubernetes.Interfa
 	tries := 0
 
 	for tries < 5 {
-		err = e2eutil.WaitForOperatorDeployment(t, kc, ns, name, 1, time.Second*5, time.Second*15)
+		err = e2eutil.WaitForOperatorDeployment(t, kc, ns, name, 1, time.Second*1, time.Second*5)
 		if err == nil {
 			break
 		}
 		t.Log("operator failed to deploy, retrying...")
 		ctx.Cleanup()
-		InitializeContext(t, time.Second * 30, time.Second * 5)
+		InitializeContext(t, time.Second*15, time.Second*2)
 	}
 
 	return err
