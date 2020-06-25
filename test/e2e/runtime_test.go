@@ -28,12 +28,7 @@ func TestRuntimeComponent(t *testing.T) {
 	}
 
 	// basic tests that are runnable locally in minishift/kube
-	t.Run("RuntimePullPolicyTest", RuntimePullPolicyTest)
-	t.Run("RuntimeBasicTest", RuntimeBasicTest)
-	t.Run("RuntimeProbeTest", RuntimeProbeTest)
-	t.Run("RuntimeAutoScalingTest", RuntimeAutoScalingTest)
-	t.Run("RuntimeStorageTest", RuntimeBasicStorageTest)
-	t.Run("RuntimePersistenceTest", RuntimePersistenceTest)
+	go testBasicFeatures(t)
 
 	if cluster != "local" {
 		// only test non-OCP features on minikube
@@ -49,6 +44,14 @@ func TestRuntimeComponent(t *testing.T) {
 			testOCPFeatures(t)
 		}
 	}
+}
+func testBasicFeatures(t *testing.T) {
+	t.Run("RuntimePullPolicyTest", RuntimePullPolicyTest)
+	t.Run("RuntimeBasicTest", RuntimeBasicTest)
+	t.Run("RuntimeProbeTest", RuntimeProbeTest)
+	t.Run("RuntimeAutoScalingTest", RuntimeAutoScalingTest)
+	t.Run("RuntimeStorageTest", RuntimeBasicStorageTest)
+	t.Run("RuntimePersistenceTest", RuntimePersistenceTest)
 }
 
 func testAdvancedFeatures(t *testing.T) {
