@@ -31,6 +31,7 @@ var advancedTests []Test = []Test{
 	{"RuntimeCertManagerTest", RuntimeCertManagerTest},
 	{"RuntimeKnativeTest", RuntimeKnativeTest},
 	{"RuntimeServiceMonitorTest", RuntimeServiceMonitorTest},
+	{"RuntimeKappNavTest", RuntimeKappNavTest},
 }
 
 var ocpTests []Test = []Test{
