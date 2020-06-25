@@ -37,7 +37,7 @@ func RuntimeAutoScalingTest(t *testing.T) {
 	}
 
 	// wait for the operator as the following configmaps won't exist until it has deployed
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "runtime-operator", 1, retryInterval, operatorTimeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "runtime-component-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}

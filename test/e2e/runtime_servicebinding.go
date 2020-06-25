@@ -56,7 +56,7 @@ func RuntimeServiceBindingTest(t *testing.T) {
 
 	f := framework.Global
 
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, ns, "runtime-operator", 1, retryInterval, operatorTimeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, ns, "runtime-component-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, ns, err)
 	}
