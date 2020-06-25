@@ -66,7 +66,7 @@ func RuntimeServiceMonitorTest(t *testing.T) {
 	selec := l.AsSelector()
 
 	smList := &prometheusv1.ServiceMonitorList{}
-	options := k.ListOptions{LabelSelector: selec}
+	options := k.ListOptions{LabelSelector: selec, Namespace: namespace}
 
 	// if there are no service monitors deployed an error will be thrown below
 	err = f.Client.List(goctx.TODO(), smList, &options)
@@ -194,7 +194,7 @@ func testSettingRuntimeServiceMonitor(t *testing.T, f *framework.Framework, name
 	selec := l.AsSelector()
 
 	smList := &prometheusv1.ServiceMonitorList{}
-	options := k.ListOptions{LabelSelector: selec}
+	options := k.ListOptions{LabelSelector: selec, Namespace: namespace}
 
 	// if there are no service monitors deployed an error will be thrown below
 	err = f.Client.List(goctx.TODO(), smList, &options)

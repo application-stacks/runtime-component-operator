@@ -55,7 +55,7 @@ func RuntimeServiceBindingTest(t *testing.T) {
 
 	f := framework.Global
 
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, ns, "runtime-component-operator", 1, retryInterval, timeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, ns, "runtime-component-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, ns, err)
 	}
@@ -130,7 +130,7 @@ func createConsumeServiceMount(t *testing.T, f *framework.Framework, ctx *framew
 	runtime := util.MakeBasicRuntimeComponent(t, f, appName, ns, 1)
 	if set {
 		runtime.Spec.Service.Consumes = []v1beta1.ServiceBindingConsumes{
-			v1beta1.ServiceBindingConsumes{
+			{
 				Name:      n,
 				Namespace: ns,
 				Category:  "openapi",
@@ -139,7 +139,7 @@ func createConsumeServiceMount(t *testing.T, f *framework.Framework, ctx *framew
 		}
 	} else {
 		runtime.Spec.Service.Consumes = []v1beta1.ServiceBindingConsumes{
-			v1beta1.ServiceBindingConsumes{
+			{
 				Name:      n,
 				Category:  "openapi",
 				MountPath: "/" + mount,
@@ -285,7 +285,7 @@ func getPods(f *framework.Framework, ctx *framework.TestCtx, target string, ns s
 func createConsumeServiceEnv(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, ns string, n string, appName string) error {
 	runtime := util.MakeBasicRuntimeComponent(t, f, appName, ns, 1)
 	runtime.Spec.Service.Consumes = []v1beta1.ServiceBindingConsumes{
-		v1beta1.ServiceBindingConsumes{
+		{
 			Name:      n,
 			Namespace: ns,
 			Category:  "openapi",

@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/application-stacks/runtime-component-operator/pkg/apis"
@@ -11,6 +12,37 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type Test struct {
+	Name string
+	Test func(*testing.T)
+}
+
+var basicTests []Test = []Test{
+	{"RuntimePullPolicyTest", RuntimePullPolicyTest},
+	{"RuntimeBasicTest", RuntimeBasicTest},
+	{"RuntimeProbeTest", RuntimeProbeTest},
+	{"RuntimeAutoScalingTest", RuntimeAutoScalingTest},
+	{"RuntimeBasicStorageTest", RuntimeBasicStorageTest},
+	{"RuntimePersistenceTest", RuntimePersistenceTest},
+}
+
+var advancedTests []Test = []Test{
+	{"RuntimeServiceBindingTest", RuntimeServiceBindingTest},
+	{"RuntimeCertManagerTest", RuntimeCertManagerTest},
+	{"RuntimeKnativeTest", RuntimeKnativeTest},
+	{"RuntimeServiceMonitorTest", RuntimeServiceMonitorTest},
+	{"RuntimeKappNavTest", RuntimeKappNavTest},
+}
+
+var ocpTests []Test = []Test{
+	{"RuntimeImageStreamTest", RuntimeImageStreamTest},
+}
+
+// TODO: add tests independant of OpenShift
+var independantTests []Test = []Test{}
+
+// NOTE: on the use of goroutines, concurrency puts a strain on the 3.11 cluster
+// in particular on the docker registry. Otherwise each test could run at the same time.
 // TestRuntimeComponent ... end to end tests
 func TestRuntimeComponent(t *testing.T) {
 	runtimeComponentList := &appstacksv1beta1.RuntimeComponentList{
@@ -19,53 +51,55 @@ func TestRuntimeComponent(t *testing.T) {
 		},
 	}
 
-	cluster := os.Getenv("CLUSTER_ENV")
+	cluster, found := os.LookupEnv("CLUSTER_ENV")
+	if !found {
+		cluster = "minikube"
+	}
 	t.Logf("running e2e tests as '%s'", cluster)
 
 	err := framework.AddToFrameworkScheme(apis.AddToScheme, runtimeComponentList)
 	if err != nil {
 		t.Fatalf("Failed to add CR scheme to framework: %v", err)
 	}
+	// sync up the test completion so that they all actually finish
+	var wg sync.WaitGroup
 
-	// basic tests that are runnable locally in minishift/kube
-	t.Run("RuntimePullPolicyTest", RuntimePullPolicyTest)
-	t.Run("RuntimeBasicTest", RuntimeBasicTest)
-	t.Run("RuntimeProbeTest", RuntimeProbeTest)
-	t.Run("RuntimeAutoScalingTest", RuntimeAutoScalingTest)
-	t.Run("RuntimeStorageTest", RuntimeBasicStorageTest)
-	t.Run("RuntimePersistenceTest", RuntimePersistenceTest)
+	// basic tests that are capable of running in a freshly create cluster
+	for _, test := range basicTests {
+		wg.Add(1)
+		go RuntimeTestRunner(&wg, t, test)
+	}
 
-	if cluster != "local" {
-		// only test non-OCP features on minikube
-		if cluster == "minikube" {
-			testIndependantFeatures(t)
-			return
-		}
-
-		// test all features that require some configuration
-		testAdvancedFeatures(t)
-		// test featurest hat require OCP
-		if cluster == "ocp" {
-			testOCPFeatures(t)
+	// tests for features that will require cluster configuration
+	// i.e. knative requires installations
+	if cluster != "minikube" {
+		for _, test := range advancedTests {
+			wg.Add(1)
+			go RuntimeTestRunner(&wg, t, test)
 		}
 	}
+
+	// tests for features NOT expected to run in OpenShift
+	// i.e. Ingress
+	if cluster == "minikube" || cluster == "kubernetes" {
+		for _, test := range independantTests {
+			wg.Add(1)
+			go RuntimeTestRunner(&wg, t, test)
+		}
+	}
+
+	// tests for features that ONLY exist in OpenShift
+	// i.e. image streams are only in OpenShift
+	if cluster == "ocp" {
+		for _, test := range ocpTests {
+			wg.Add(1)
+			go RuntimeTestRunner(&wg, t, test)
+		}
+	}
+	wg.Wait()
 }
 
-func testAdvancedFeatures(t *testing.T) {
-	// These features require a bit of configuration
-	// which makes them less ideal for quick minikube tests
-	t.Run("RuntimeServiceMonitorTest", RuntimeServiceMonitorTest)
-	t.Run("RuntimeKnativeTest", RuntimeKnativeTest)
-	t.Run("RuntimeServiceBindingTest", RuntimeServiceBindingTest)
-	t.Run("RuntimeCertManagerTest", RuntimeCertManagerTest)
-}
-
-// Verify functionality that is tied to OCP
-func testOCPFeatures(t *testing.T) {
-	t.Run("RuntimeImageStreamTest", RuntimeImageStreamTest)
-}
-
-// Verify functionality that is not expected to run on OCP
-func testIndependantFeatures(t *testing.T) {
-	// TODO: implement test for ingress
+func RuntimeTestRunner(wg *sync.WaitGroup, t *testing.T, test Test) {
+	defer wg.Done()
+	t.Run(test.Name, test.Test)
 }

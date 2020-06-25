@@ -95,6 +95,11 @@ func RuntimePersistenceTest(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "runtime-component-operator", 1, retryInterval, operatorTimeout)
+	if err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
+
 	RequestLimits := map[corev1.ResourceName]resource.Quantity{
 		corev1.ResourceStorage: resource.MustParse("1Gi"),
 	}
@@ -103,20 +108,20 @@ func RuntimePersistenceTest(t *testing.T) {
 	exampleRuntime := util.MakeBasicRuntimeComponent(t, f, "example-runtime-persistence", namespace, 1)
 	exampleRuntime.Spec.Storage = &appstacksv1beta1.RuntimeComponentStorage{
 		VolumeClaimTemplate: &corev1.PersistentVolumeClaim{
-			metav1.TypeMeta{},
-			metav1.ObjectMeta{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "pvc",
 			},
-			corev1.PersistentVolumeClaimSpec{
+			Spec: corev1.PersistentVolumeClaimSpec{
 				AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
 				Resources: corev1.ResourceRequirements{
 					Requests: RequestLimits,
 				},
 			},
-			corev1.PersistentVolumeClaimStatus{},
+			Status: corev1.PersistentVolumeClaimStatus{},
 		},
 	}
-	exampleRuntime.Spec.VolumeMounts = []corev1.VolumeMount{corev1.VolumeMount{
+	exampleRuntime.Spec.VolumeMounts = []corev1.VolumeMount{{
 		Name:      "pvc",
 		MountPath: "/data",
 	}}
