@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/application-stacks/runtime-component-operator/pkg/apis"
@@ -42,9 +43,10 @@ func TestRuntimeComponent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to add CR scheme to framework: %v", err)
 	}
+	var wg sync.WaitGroup
 
 	// basic tests that are runnable locally in minishift/kube
-	go testBasicFeatures(t)
+	go testBasicFeatures(&wg, t)
 
 	if cluster != "local" {
 		// only test non-OCP features on minikube
@@ -54,7 +56,7 @@ func TestRuntimeComponent(t *testing.T) {
 		}
 
 		// test all features that require some configuration
-		testAdvancedFeatures(t)
+		testAdvancedFeatures(&wg, t)
 		// test featurest hat require OCP
 		if cluster == "ocp" {
 			testOCPFeatures(t)
@@ -66,26 +68,21 @@ func TestRuntimeComponent(t *testing.T) {
 // ServiceBindingTest - 258
 // AutoScalingTest - 163
 // CertManager - 93
-func testBasicFeatures(t *testing.T) {
-	// t.Run("RuntimePullPolicyTest", RuntimePullPolicyTest)
-	// t.Run("RuntimeBasicTest", RuntimeBasicTest)
-	// t.Run("RuntimeProbeTest", RuntimeProbeTest)
-	// // This test is long, create go routine
-	// go t.Run("RuntimeAutoScalingTest", RuntimeAutoScalingTest)
-	// t.Run("RuntimeStorageTest", RuntimeBasicStorageTest)
-	// t.Run("RuntimePersistenceTest", RuntimePersistenceTest)
+func testBasicFeatures(wg *sync.WaitGroup, t *testing.T) {
 	for _, test := range tests {
-		go t.Run(test.Name, test.Test)
+		wg.Add(1)
+		go RuntimeTestRunner(wg, t, test)
 	}
 }
 
-func testAdvancedFeatures(t *testing.T) {
+func testAdvancedFeatures(wg *sync.WaitGroup, t *testing.T) {
 	// These features require a bit of configuration
 	// which makes them less ideal for quick minikube tests
 
 	// create routines for the longest tests
-	go t.Run("RuntimeServiceBindingTest", RuntimeServiceBindingTest)
-	go t.Run("RuntimeCertManagerTest", RuntimeCertManagerTest)
+	wg.Add(2)
+	go RuntimeTestRunner(wg, t, Test{Name: "RuntimeServiceBidningTest", Test: RuntimeServiceBindingTest})
+	go RuntimeTestRunner(wg, t, Test{Name: "RuntimeCertManagerTest", Test: RuntimeCertManagerTest})
 
 	t.Run("RuntimeKnativeTest", RuntimeKnativeTest)
 	t.Run("RuntimeServiceMonitorTest", RuntimeServiceMonitorTest)
@@ -99,4 +96,9 @@ func testOCPFeatures(t *testing.T) {
 // Verify functionality that is not expected to run on OCP
 func testIndependantFeatures(t *testing.T) {
 	// TODO: implement test for ingress
+}
+
+func RuntimeTestRunner(wg *sync.WaitGroup, t *testing.T, test Test) {
+	defer wg.Done()
+	t.Run(test.Name, test.Test)
 }
