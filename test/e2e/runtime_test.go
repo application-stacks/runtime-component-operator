@@ -57,8 +57,13 @@ func testBasicFeatures(t *testing.T) {
 func testAdvancedFeatures(t *testing.T) {
 	// These features require a bit of configuration
 	// which makes them less ideal for quick minikube tests
-	t.Run("RuntimeServiceMonitorTest", RuntimeServiceMonitorTest)
-	t.Run("RuntimeKnativeTest", RuntimeKnativeTest)
+
+	// split tests in half to reduce build time.
+	go func() {
+		t.Run("RuntimeServiceMonitorTest", RuntimeServiceMonitorTest)
+		t.Run("RuntimeKnativeTest", RuntimeKnativeTest)
+	}()
+
 	t.Run("RuntimeServiceBindingTest", RuntimeServiceBindingTest)
 	t.Run("RuntimeCertManagerTest", RuntimeCertManagerTest)
 }
