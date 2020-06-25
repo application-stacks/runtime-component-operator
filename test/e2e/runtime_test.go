@@ -62,6 +62,7 @@ func TestRuntimeComponent(t *testing.T) {
 			testOCPFeatures(t)
 		}
 	}
+	wg.Wait()
 }
 
 // Long running tests that should be in routines:
