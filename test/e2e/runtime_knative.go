@@ -43,7 +43,7 @@ func RuntimeKnativeTest(t *testing.T) {
 	}
 
 	// wait for the operator to be deployed
-	err = util.WaitForOperator(t, ctx, f.KubeClient, 1)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "runtime-operator", 1, retryInterval, operatorTimeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
 	}

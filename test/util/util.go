@@ -10,7 +10,6 @@ import (
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
-	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -381,28 +380,4 @@ func CommandError(t *testing.T, err error, out []byte) error {
 		return err
 	}
 	return nil
-}
-
-// WaitForOperator - wait for the operator and force restart on failures
-func WaitForOperator(t *testing.T, ctx *framework.TestCtx, kc kubernetes.Interface, replicas int) error {
-	const name = "runtime-component-operator"
-	ns, err := ctx.GetNamespace()
-	if err != nil {
-		return err
-	}
-
-	tries := 0
-
-	for tries < 5 {
-		err = e2eutil.WaitForOperatorDeployment(t, kc, ns, name, 1, time.Second*1, time.Second*5)
-		if err == nil {
-			break
-		}
-		t.Log("operator failed to deploy, retrying...")
-		ctx.Cleanup()
-		InitializeContext(t, time.Second*15, time.Second*2)
-		tries++
-	}
-
-	return err
 }
