@@ -1,0 +1,124 @@
+= Assigning Pods to Nodes
+
+== Introduction
+
+This scenario illustrates how to deploy applications by using the Runtime Component Operator and by assigning application pods to specific nodes in a Kubernetes cluster.
+
+You will deploy instances of two applications, `coffeeshop-frontend` and `coffeeshop-backend`, co-located on the same nodes with an SSD storage type.
+
+This scenario is inspired by examples from the link:++https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node++[Assigning Pods to Nodes] Kubernetes tutorial.
+
+== Affinity
+
+For this example, a multi-node cluster has a mix of nodes. Some of the nodes use SSD storage. The nodes that use SSD storage are labeled with `disktype: ssd`. You can use the following command to label nodes:
+
+[source]
+----
+oc label nodes <node-name> <label-key>=<label-value>
+----
+
+You can verify labels that are specified on nodes by rerunning the following command and checking that the node now has a label:
+
+[source]
+----
+oc get nodes --show-labels
+----
+
+The following example shows what the output of the command looks like. The only nodes that are labeled with `disktype=ssd` are the `worker0` and `worker1` nodes.
+
+[source]
+----
+oc get nodes --show-labels
+NAME                             STATUS   ROLES    AGE   VERSION   LABELS
+master0.shames.os.fyre.ibm.com   Ready    master   26d   v1.16.2   beta.kubernetes.io/arch=amd64,...
+master1.shames.os.fyre.ibm.com   Ready    master   26d   v1.16.2   beta.kubernetes.io/arch=amd64,...
+master2.shames.os.fyre.ibm.com   Ready    master   26d   v1.16.2   beta.kubernetes.io/arch=amd64,...
+worker0.shames.os.fyre.ibm.com   Ready    worker   26d   v1.16.2   disktype=ssd,beta.kubernetes.io/arch=amd64...
+worker1.shames.os.fyre.ibm.com   Ready    worker   26d   v1.16.2   disktype=ssd,beta.kubernetes.io/arch=amd64...
+worker2.shames.os.fyre.ibm.com   Ready    worker   26d   v1.16.2   beta.kubernetes.io/arch=amd64,...
+----
+
+In this cluster, the `coffeeshop-frontend` and `coffeeshop-backend` applications are co-located on the same nodes with the SSD storage types.
+
+The following YAML snippet consists of the `RuntimeComponent` custom resource (CR) for the `coffeeshop-backend` application with two replicas. The custom resource has the `.spec.affinity.podAntiAffinity` field configured to ensure that the scheduler does not co-locate pods for the application on a single node. As described in the link:++https://github.com/application-stacks/runtime-component-operator/blob/master/doc/user-guide.adoc#labels++[user guide], the application pods are labeled with `app.kubernetes.io/instance: metadata.name`.
+
+The custom resource also has the `spec.affinity.nodeAffinityLabels` field configured to ensure that the pods run on nodes with the `disktype: ssd` label.
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: coffeeshop-backend
+spec:
+  applicationImage: 'k8s.gcr.io/pause:2.0'
+  replicas: 2
+  affinity:
+    nodeAffinityLabels:
+      disktype: ssd
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                  - coffeeshop-backend
+          topologyKey: kubernetes.io/hostname
+----
+
+The following YAML snippet shows the `RuntimeComponent` CR for the `coffeeshop-frontend` application. The snippet has the `.spec.affinity.podAffinity` field configured which informs the scheduler that all its replicas are to be co-located with pods that have the `app.kubernetes.io/instance: coffeeshop-backend` selector label. The CR also includes the `.spec.affinity.podAntiAffinity` label to ensure that each `coffeeshop-frontend` replica does not co-locate on a single node. In addition, the `spec.affinity.nodeAffinityLabels` parameter is specified to ensure that the application pods run on nodes with the `disktype: ssd` label.
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: coffeeshop-frontend
+spec:
+  applicationImage: 'k8s.gcr.io/pause:2.0'
+  replicas: 2
+  affinity:
+    nodeAffinityLabels:
+      disktype: ssd
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                  - coffeeshop-frontend
+          topologyKey: kubernetes.io/hostname
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                  - coffeeshop-backend
+          topologyKey: kubernetes.io/hostname
+----
+
+To verify which nodes the pods are scheduled on, run the following command:
+
+[source]
+----
+oc get pods -o wide
+----
+
+And the output would look like the following:
+
+[source]
+----
+NAME                                   READY   STATUS    RESTARTS   AGE     IP              NODE
+coffeeshop-backend-f57557d99-5lm24     1/1     Running   0          6m8s    10.254.20.173   worker0.shames.os.fyre.ibm.com
+coffeeshop-backend-f57557d99-fv62n     1/1     Running   0          6m8s    10.254.5.39     worker1.shames.os.fyre.ibm.com
+coffeeshop-frontend-789c585488-5k7sh   1/1     Running   0          5m52s   10.254.5.38     worker1.shames.os.fyre.ibm.com
+coffeeshop-frontend-789c585488-9m529   1/1     Running   0          5m52s   10.254.20.172   worker0.shames.os.fyre.ibm.com
+----
+
+The output shows that no more than one pod per application is running on a single node. Also, the pods for the two applications are co-located on the same node.
+
+This scenario illustrates how to use the link:++https://github.com/application-stacks/runtime-component-operator/blob/master/doc/user-guide.adoc#affinity++[Affinity] feature in the Runtime Component Operator to assign pods to certain nodes within a cluster.
