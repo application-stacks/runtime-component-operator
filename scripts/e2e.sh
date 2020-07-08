@@ -12,7 +12,7 @@ login_cluster(){
     # Start a cluster and login
     oc login ${CLUSTER_URL} --token=${CLUSTER_TOKEN}
     # Set variables for rest of script to use
-    readonly DEFAULT_REGISTRY=$(oc get route docker-registry -o jsonpath="{ .spec.host }" -n default)
+    readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
     readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/openshift/runtime-operator:${TRAVIS_BUILD_NUMBER}
 }
 
@@ -23,8 +23,10 @@ cleanup() {
 }
 
 main() {
+    parse_args "$@"
     echo "****** Logging into remote cluster..."
     login_cluster
+    exit 1
     echo "****** Logging into private registry..."
     echo $(oc sa get-token travis-tests -n default) | docker login -u unused --password-stdin $DEFAULT_REGISTRY
 
@@ -44,7 +46,7 @@ main() {
     fi
 
     echo "****** Starting e2e tests..."
-    CLUSTER_ENV="ocp" operator-sdk test local github.com/application-stacks/runtime-component-operator/test/e2e --debug --verbose  --go-test-flags "-timeout 35m" --image $(oc registry info)/openshift/runtime-operator:$TRAVIS_BUILD_NUMBER
+    CLUSTER_ENV="minikube" operator-sdk test local github.com/application-stacks/runtime-component-operator/test/e2e --debug --verbose  --go-test-flags "-timeout 35m" --image $(oc registry info)/openshift/runtime-operator:$TRAVIS_BUILD_NUMBER
     result=$?
     echo "****** Cleaning up tests..."
     cleanup
@@ -52,4 +54,34 @@ main() {
     return $result
 }
 
-main
+parse_args() {
+    while [ $# -gt 0 ]; do
+    case "$1" in
+    --cluster-url)
+      shift
+      readonly CLUSTER_URL="${1}"
+      ;;
+    --cluster-token)
+      shift
+      readonly CLUSTER_TOKEN="${1}"
+      ;;
+    --registry-name)
+      shift
+      readonly REGISTRY_NAME="${1}"
+      ;;
+    --registry-namespace)
+      shift
+      readonly REGISTRY_NAMESPACE="${1}"
+      ;;
+    *)
+      echo "Error: Invalid argument - $1"
+      echo "$usage"
+      exit 1
+      ;;
+    esac
+    shift
+  done
+}
+
+
+main "$@"
