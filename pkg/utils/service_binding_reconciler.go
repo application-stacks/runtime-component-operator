@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/application-stacks/runtime-component-operator/pkg/common"
@@ -269,6 +270,9 @@ func (r *ReconcilerBase) ReconcileConsumes(ba common.BaseComponent) (reconcile.R
 
 // ReconcileBindings goes through the reconcile logic for service binding
 func (r *ReconcilerBase) ReconcileBindings(ba common.BaseComponent) (reconcile.Result, error) {
+	if res, err := r.reconcileExpose(ba); isRequeue(res, err) {
+		return res, err
+	}
 	if ba.GetBindings() != nil && ba.GetBindings().GetEmbedded() != nil {
 		if res, err := r.reconcileEmbedded(ba); isRequeue(res, err) {
 			return res, err
@@ -282,6 +286,120 @@ func (r *ReconcilerBase) ReconcileBindings(ba common.BaseComponent) (reconcile.R
 		return res, err
 	}
 	return r.done(ba)
+}
+
+func (r *ReconcilerBase) reconcileExpose(ba common.BaseComponent) (reconcile.Result, error) {
+	mObj := ba.(metav1.Object)
+	bindingSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      getExposeBindingSecretName(ba),
+			Namespace: mObj.GetNamespace(),
+		},
+	}
+	falze := false
+	if ba.GetBindings() != nil && ba.GetBindings().GetExpose() != nil && ba.GetBindings().GetExpose().GetAutoDetect() == &falze {
+		// Update status and remove binding
+		if err := r.updateBindingStatus("", ba); err != nil {
+			return r.requeueError(ba, err)
+		}
+		if err := r.DeleteResource(bindingSecret); client.IgnoreNotFound(err) != nil {
+			return r.requeueError(ba, err)
+		}
+		return r.done(ba)
+	}
+
+	err := r.CreateOrUpdate(bindingSecret, mObj, func() error {
+		customSecret := &corev1.Secret{}
+		// Check if custom values are provided in a secret, and apply the custom values
+		if err := r.getCustomValuesToExpose(customSecret, ba); err != nil {
+			return err
+		}
+
+		bindingSecret.Data = customSecret.Data
+
+		// Apply default values to the secret (if needed)
+		r.applyDefaultValuesToExpose(bindingSecret, ba)
+		return nil
+	})
+	if err != nil {
+		return r.requeueError(ba, err)
+	}
+
+	// Update binding status
+	if err := r.updateBindingStatus(bindingSecret.Name, ba); err != nil {
+		return r.requeueError(ba, err)
+	}
+	return r.done(ba)
+}
+
+func (r *ReconcilerBase) getCustomValuesToExpose(secret *corev1.Secret, ba common.BaseComponent) error {
+	mObj := ba.(metav1.Object)
+	key := types.NamespacedName{Name: getOverrideExposeBindingSecretName(ba), Namespace: mObj.GetNamespace()}
+	err := r.GetClient().Get(context.TODO(), key, secret)
+	if client.IgnoreNotFound(err) != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *corev1.Secret, ba common.BaseComponent) {
+	mObj := ba.(metav1.Object)
+	secret.Labels = ba.GetLabels()
+	secret.Annotations = MergeMaps(secret.Annotations, ba.GetAnnotations())
+
+	secretData := secret.Data
+	if secretData == nil {
+		secretData = map[string][]byte{}
+	}
+	var host, protocol, basePath, port []byte
+	var found bool
+	if host, found = secretData["host"]; !found {
+		host = []byte(fmt.Sprintf("%s.%s.svc.cluster.local", mObj.GetName(), mObj.GetNamespace()))
+		secretData["host"] = host
+	}
+	if protocol, found = secretData["protocol"]; !found {
+		protocol = []byte("http")
+		secretData["protocol"] = protocol
+	}
+	if basePath, found = secretData["basePath"]; !found {
+		basePath = []byte("/")
+		secretData["basePath"] = basePath
+	}
+	if port, found = secretData["port"]; !found {
+		if ba.GetCreateKnativeService() == nil || *(ba.GetCreateKnativeService()) == false {
+			port = []byte(strconv.Itoa(int(ba.GetService().GetPort())))
+		}
+		secretData["port"] = port
+	}
+	if _, found = secretData["uri"]; !found {
+		uri := []byte(fmt.Sprintf("%s://%s", protocol, host))
+		portStr := string(port)
+		if portStr != "" {
+			uri = []byte(fmt.Sprintf("%s:%s", uri, portStr))
+		}
+		basePathStr := string(basePath)
+		if basePathStr != "" {
+			basePathStr = strings.TrimPrefix(basePathStr, "/")
+			uri = []byte(fmt.Sprintf("%s/%s", uri, basePathStr))
+		}
+		secretData["uri"] = uri
+	}
+
+	secret.Data = secretData
+}
+
+func (r *ReconcilerBase) updateBindingStatus(bindingSecretName string, ba common.BaseComponent) error {
+	var bindingStatus *corev1.LocalObjectReference
+	if bindingSecretName != "" {
+		bindingStatus = &corev1.LocalObjectReference{Name: bindingSecretName}
+	}
+	if bindingStatus != ba.GetStatus().GetBinding() {
+		ba.GetStatus().SetBinding(bindingStatus)
+		if err := r.UpdateStatus(ba.(runtime.Object)); err != nil {
+			return errors.Wrapf(err, "unable to update status with service binding information")
+		}
+	}
+	return nil
 }
 
 func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (retRes reconcile.Result, retErr error) {
@@ -329,7 +447,7 @@ func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (retRes rec
 
 	retRes, retErr = r.done(ba)
 	defer func() {
-		if res, err := r.updateBindingStatus(resolvedBindings, ba); isRequeue(res, err) {
+		if res, err := r.updateResolvedBindingStatus(resolvedBindings, ba); isRequeue(res, err) {
 			retRes, retErr = res, err
 		}
 	}()
@@ -481,14 +599,14 @@ func (r *ReconcilerBase) reconcileEmbedded(ba common.BaseComponent) (retRes reco
 
 	retRes, retErr = r.done(ba)
 	defer func() {
-		if res, err := r.updateBindingStatus(resolvedBindings, ba); isRequeue(res, err) {
+		if res, err := r.updateResolvedBindingStatus(resolvedBindings, ba); isRequeue(res, err) {
 			retRes, retErr = res, err
 		}
 	}()
 	return
 }
 
-func (r *ReconcilerBase) updateBindingStatus(bindings []string, ba common.BaseComponent) (reconcile.Result, error) {
+func (r *ReconcilerBase) updateResolvedBindingStatus(bindings []string, ba common.BaseComponent) (reconcile.Result, error) {
 	if !equals(bindings, ba.GetStatus().GetResolvedBindings()) {
 		sort.Strings(bindings)
 		ba.GetStatus().SetResolvedBindings(bindings)
@@ -593,4 +711,12 @@ func (r *ReconcilerBase) updateEmbeddedObject(object map[string]interface{}, emb
 
 func getDefaultServiceBindingName(ba common.BaseComponent) string {
 	return (ba.(metav1.Object)).GetName() + "-binding"
+}
+
+func getOverrideExposeBindingSecretName(ba common.BaseComponent) string {
+	return (ba.(metav1.Object)).GetName() + "-expose-binding-override"
+}
+
+func getExposeBindingSecretName(ba common.BaseComponent) string {
+	return (ba.(metav1.Object)).GetName() + "-expose-binding"
 }
