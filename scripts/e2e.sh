@@ -10,7 +10,7 @@ login_cluster(){
     sudo mv oc kubectl /usr/local/bin/
     cd ..
     # Start a cluster and login
-    oc login ${CLUSTER_URL} --token=${CLUSTER_TOKEN}
+    oc login ${OC_URL} --token=${OC_TOKEN}
     # Set variables for rest of script to use
     readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
     readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/openshift/runtime-operator:${TRAVIS_BUILD_NUMBER}
@@ -59,11 +59,11 @@ parse_args() {
     case "$1" in
     --cluster-url)
       shift
-      readonly CLUSTER_URL="${1}"
+      readonly OC_URL="${1}"
       ;;
     --cluster-token)
       shift
-      readonly CLUSTER_TOKEN="${1}"
+      readonly OC_TOKEN="${1}"
       ;;
     --registry-name)
       shift
