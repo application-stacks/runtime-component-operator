@@ -24,7 +24,6 @@ const (
 	indexFieldImageStreamName     = "spec.applicationImage"
 	indexFieldBindingsResourceRef = "spec.bindings.resourceRef"
 	bindingSecretSuffix           = "-binding"
-	exposeOverrideSecretSuffix    = "-expose-binding-override"
 )
 
 // EnqueueRequestsForCustomIndexField enqueues reconcile Requests Runtime Components if the app is relying on
@@ -129,7 +128,7 @@ func (b *BindingSecretMatcher) Match(secret metav1.Object) ([]appstacksv1beta1.R
 	apps = append(apps, appList.Items...)
 
 	// Check if this secret has a suffix that we care about aka meaning it is a secret in which an application is relying on
-	for _, suffix := range []string{bindingSecretSuffix, exposeOverrideSecretSuffix} {
+	for _, suffix := range []string{bindingSecretSuffix, appstacksutils.ExposeBindingOverrideSecretSuffix} {
 		if strings.HasSuffix(secret.GetName(), suffix) {
 			appName := strings.TrimSuffix(secret.GetName(), suffix)
 			app := &appstacksv1beta1.RuntimeComponent{}

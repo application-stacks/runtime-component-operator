@@ -28,10 +28,12 @@ import (
 
 // String constants
 const (
-	APIVersion = "apiVersion"
-	Kind       = "kind"
-	Metadata   = "metadata"
-	Spec       = "spec"
+	APIVersion                 = "apiVersion"
+	Kind                       = "kind"
+	Metadata                   = "metadata"
+	Spec                       = "spec"
+	ExposeBindingOverrideSecretSuffix = "-expose-binding-override"
+	ExposeBindingSecretSuffix         = "-expose-binding"
 )
 
 // SyncSecretAcrossNamespace syncs up the secret data across a namespace
@@ -714,9 +716,9 @@ func getDefaultServiceBindingName(ba common.BaseComponent) string {
 }
 
 func getOverrideExposeBindingSecretName(ba common.BaseComponent) string {
-	return (ba.(metav1.Object)).GetName() + "-expose-binding-override"
+	return (ba.(metav1.Object)).GetName() + ExposeBindingOverrideSecretSuffix
 }
 
 func getExposeBindingSecretName(ba common.BaseComponent) string {
-	return (ba.(metav1.Object)).GetName() + "-expose-binding"
+	return (ba.(metav1.Object)).GetName() + ExposeBindingSecretSuffix
 }

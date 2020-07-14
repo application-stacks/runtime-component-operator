@@ -675,7 +675,7 @@ func (r *RuntimeComponentBindings) GetExpose() common.BaseComponentExpose {
 	return r.Expose
 }
 
-// GetAutoDetect ...
+// GetAutoDetect returns whether the application should be exposable as a service
 func (e *RuntimeComponentBindingExpose) GetAutoDetect() *bool {
 	return e.AutoDetect
 }
