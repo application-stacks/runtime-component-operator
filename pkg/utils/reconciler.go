@@ -314,7 +314,7 @@ func (r *ReconcilerBase) ReconcileCertificate(ba common.BaseComponent) (reconcil
 				if crt.Spec.RenewBefore == nil {
 					crt.Spec.RenewBefore = &metav1.Duration{Duration: time.Hour * 24 * 31}
 				}
-				crt.Spec.CommonName = obj.GetName() + "." + obj.GetNamespace() + "." + "svc"
+				crt.Spec.CommonName = obj.GetName() + "." + "svc"
 				if crt.Spec.SecretName == "" {
 					crt.Spec.SecretName = obj.GetName() + "-svc-tls"
 				}
