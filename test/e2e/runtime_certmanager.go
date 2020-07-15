@@ -340,6 +340,8 @@ func deployAndWaitForCertificate(msg string, t *testing.T, f *framework.Framewor
 		return err
 	}
 
+	time.Sleep(time.Minute * 3)
+
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, ns, n, 1, retryInterval, timeout)
 	if err != nil {
 		return err
