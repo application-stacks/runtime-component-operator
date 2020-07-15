@@ -181,9 +181,12 @@ func runtimeCustomIssuerTest(t *testing.T, f *framework.Framework, ctx *framewor
 	runtime := util.MakeBasicRuntimeComponent(t, f, name, namespace, 1)
 	terminationPolicy := routev1.TLSTerminationReencrypt
 	expose := true
-	var durationTime time.Duration = 10 * time.Minute
+	var durationTime time.Duration = 70 * time.Minute
 	duration := metav1.Duration{
 		Duration: durationTime,
+	}
+	renewBefore := metav1.Duration{
+		Duration: 50 * time.Minute,
 	}
 	runtime.Spec.Expose = &expose
 	runtime.Spec.Route = &appstacksv1beta1.RuntimeComponentRoute{
@@ -191,6 +194,7 @@ func runtimeCustomIssuerTest(t *testing.T, f *framework.Framework, ctx *framewor
 		Termination: &terminationPolicy,
 		Certificate: &appstacksv1beta1.Certificate{
 			Duration:     &duration,
+			RenewBefore: &renewBefore,
 			Organization: []string{"My Company"},
 			IssuerRef: cmmeta.ObjectReference{
 				Name: "custom-issuer",
