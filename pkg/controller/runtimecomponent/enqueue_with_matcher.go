@@ -30,7 +30,12 @@ const (
 // the modified resource
 type EnqueueRequestsForCustomIndexField struct {
 	handler.Funcs
-	Matcher  CustomMatcher
+	Matcher CustomMatcher
+}
+
+// Create implements EventHandler
+func (e *EnqueueRequestsForCustomIndexField) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
+	e.handle(evt.Meta, evt.Object, q)
 }
 
 // Update implements EventHandler
@@ -122,15 +127,17 @@ func (b *BindingSecretMatcher) Match(secret metav1.Object) ([]appstacksv1beta1.R
 	}
 	apps = append(apps, appList.Items...)
 
-	if strings.HasSuffix(secret.GetName(), bindingSecretSuffix) {
-		appName := strings.TrimSuffix(secret.GetName(), bindingSecretSuffix)
-		// If we are able to find an app with the secret name, add the app. This is to cover the autoDetect scenario
-		app := &appstacksv1beta1.RuntimeComponent{}
-		err = b.klient.Get(context.Background(), types.NamespacedName{Name: appName, Namespace: secret.GetNamespace()}, app)
-		if err == nil {
-			apps = append(apps, *app)
-		} else if !kerrors.IsNotFound(err) {
-			return nil, err
+	// Check if this secret has a suffix that we care about aka meaning it is a secret in which an application is relying on
+	for _, suffix := range []string{bindingSecretSuffix, appstacksutils.ExposeBindingOverrideSecretSuffix} {
+		if strings.HasSuffix(secret.GetName(), suffix) {
+			appName := strings.TrimSuffix(secret.GetName(), suffix)
+			app := &appstacksv1beta1.RuntimeComponent{}
+			err = b.klient.Get(context.Background(), types.NamespacedName{Name: appName, Namespace: secret.GetNamespace()}, app)
+			if err == nil {
+				apps = append(apps, *app)
+			} else if !kerrors.IsNotFound(err) {
+				return nil, err
+			}
 		}
 	}
 

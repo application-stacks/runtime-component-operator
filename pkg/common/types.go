@@ -45,6 +45,8 @@ type BaseComponentStatus interface {
 	SetResolvedBindings([]string)
 	GetImageReference() string
 	SetImageReference(string)
+	GetBinding() *corev1.LocalObjectReference
+	SetBinding(*corev1.LocalObjectReference)
 }
 
 // ConsumedServices stores status of the service binding dependencies
@@ -131,6 +133,12 @@ type BaseComponentBindings interface {
 	GetAutoDetect() *bool
 	GetResourceRef() string
 	GetEmbedded() *runtime.RawExtension
+	GetExpose() BaseComponentExpose
+}
+
+// BaseComponentExpose represents authentication info when binding services
+type BaseComponentExpose interface {
+	GetEnabled() *bool
 }
 
 // ServiceBindingCategory ...

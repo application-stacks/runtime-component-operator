@@ -161,9 +161,15 @@ type ServiceBindingAuth struct {
 
 // RuntimeComponentBindings represents service binding related parameters
 type RuntimeComponentBindings struct {
-	AutoDetect  *bool                 `json:"autoDetect,omitempty"`
-	ResourceRef string                `json:"resourceRef,omitempty"`
-	Embedded    *runtime.RawExtension `json:"embedded,omitempty"`
+	AutoDetect  *bool                          `json:"autoDetect,omitempty"`
+	ResourceRef string                         `json:"resourceRef,omitempty"`
+	Embedded    *runtime.RawExtension          `json:"embedded,omitempty"`
+	Expose      *RuntimeComponentBindingExpose `json:"expose,omitempty"`
+}
+
+// RuntimeComponentBindingExpose encapsulates information exposed by the application
+type RuntimeComponentBindingExpose struct {
+	Enabled *bool `json:"enabled,omitempty"`
 }
 
 // RuntimeComponentStatus defines the observed state of RuntimeComponent
@@ -173,8 +179,9 @@ type RuntimeComponentStatus struct {
 	Conditions       []StatusCondition       `json:"conditions,omitempty"`
 	ConsumedServices common.ConsumedServices `json:"consumedServices,omitempty"`
 	// +listType=set
-	ResolvedBindings []string `json:"resolvedBindings,omitempty"`
-	ImageReference   string   `json:"imageReference,omitempty"`
+	ResolvedBindings []string                     `json:"resolvedBindings,omitempty"`
+	ImageReference   string                       `json:"imageReference,omitempty"`
+	Binding          *corev1.LocalObjectReference `json:"binding,omitempty"`
 }
 
 // StatusCondition ...
@@ -383,7 +390,7 @@ func (cr *RuntimeComponent) GetRoute() common.BaseComponentRoute {
 	return cr.Spec.Route
 }
 
-// GetBindings returns route configuration for RuntimeComponent
+// GetBindings returns binding configuration for RuntimeComponent
 func (cr *RuntimeComponent) GetBindings() common.BaseComponentBindings {
 	if cr.Spec.Bindings == nil {
 		return nil
@@ -430,6 +437,16 @@ func (s *RuntimeComponentStatus) GetImageReference() string {
 // SetImageReference sets Docker image reference on the status portion of the CR
 func (s *RuntimeComponentStatus) SetImageReference(imageReference string) {
 	s.ImageReference = imageReference
+}
+
+// GetBinding returns BindingStatus representing binding status
+func (s *RuntimeComponentStatus) GetBinding() *corev1.LocalObjectReference {
+	return s.Binding
+}
+
+// SetBinding sets BindingStatus representing binding status
+func (s *RuntimeComponentStatus) SetBinding(r *corev1.LocalObjectReference) {
+	s.Binding = r
 }
 
 // GetMinReplicas returns minimum replicas
@@ -648,6 +665,19 @@ func (r *RuntimeComponentBindings) GetResourceRef() string {
 // GetEmbedded returns the embedded underlying Service Binding resource
 func (r *RuntimeComponentBindings) GetEmbedded() *runtime.RawExtension {
 	return r.Embedded
+}
+
+// GetExpose returns the map used making this application a bindable service
+func (r *RuntimeComponentBindings) GetExpose() common.BaseComponentExpose {
+	if r.Expose == nil {
+		return nil
+	}
+	return r.Expose
+}
+
+// GetEnabled returns whether the application should be exposable as a service
+func (e *RuntimeComponentBindingExpose) GetEnabled() *bool {
+	return e.Enabled
 }
 
 // GetNodeAffinity returns node affinity
