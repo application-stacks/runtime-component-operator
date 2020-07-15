@@ -18,12 +18,12 @@ type Test struct {
 }
 
 var basicTests []Test = []Test{
-	// {"RuntimePullPolicyTest", RuntimePullPolicyTest},
-	// {"RuntimeBasicTest", RuntimeBasicTest},
-	// {"RuntimeProbeTest", RuntimeProbeTest},
-	// {"RuntimeAutoScalingTest", RuntimeAutoScalingTest},
-	// {"RuntimeBasicStorageTest", RuntimeBasicStorageTest},
-	// {"RuntimePersistenceTest", RuntimePersistenceTest},
+	{"RuntimePullPolicyTest", RuntimePullPolicyTest},
+	{"RuntimeBasicTest", RuntimeBasicTest},
+	{"RuntimeProbeTest", RuntimeProbeTest},
+	{"RuntimeAutoScalingTest", RuntimeAutoScalingTest},
+	{"RuntimeBasicStorageTest", RuntimeBasicStorageTest},
+	{"RuntimePersistenceTest", RuntimePersistenceTest},
 }
 
 var advancedTests []Test = []Test{
@@ -31,7 +31,7 @@ var advancedTests []Test = []Test{
 	{"RuntimeCertManagerTest", RuntimeCertManagerTest},
 	// {"RuntimeKnativeTest", RuntimeKnativeTest},
 	// {"RuntimeServiceMonitorTest", RuntimeServiceMonitorTest},
-	// {"RuntimeKappNavTest", RuntimeKappNavTest},
+	{"RuntimeKappNavTest", RuntimeKappNavTest},
 }
 
 var ocpTests []Test = []Test{
