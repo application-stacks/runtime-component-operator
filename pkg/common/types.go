@@ -138,7 +138,7 @@ type BaseComponentBindings interface {
 
 // BaseComponentExpose represents authentication info when binding services
 type BaseComponentExpose interface {
-	GetAutoDetect() *bool
+	GetEnabled() *bool
 }
 
 // ServiceBindingCategory ...

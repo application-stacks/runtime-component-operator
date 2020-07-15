@@ -169,7 +169,7 @@ type RuntimeComponentBindings struct {
 
 // RuntimeComponentBindingExpose encapsulates information exposed by the application
 type RuntimeComponentBindingExpose struct {
-	AutoDetect *bool `json:"autoDetect,omitempty"`
+	Enabled *bool `json:"enabled,omitempty"`
 }
 
 // RuntimeComponentStatus defines the observed state of RuntimeComponent
@@ -675,9 +675,9 @@ func (r *RuntimeComponentBindings) GetExpose() common.BaseComponentExpose {
 	return r.Expose
 }
 
-// GetAutoDetect returns whether the application should be exposable as a service
-func (e *RuntimeComponentBindingExpose) GetAutoDetect() *bool {
-	return e.AutoDetect
+// GetEnabled returns whether the application should be exposable as a service
+func (e *RuntimeComponentBindingExpose) GetEnabled() *bool {
+	return e.Enabled
 }
 
 // GetNodeAffinity returns node affinity

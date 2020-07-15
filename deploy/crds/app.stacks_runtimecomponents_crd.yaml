@@ -680,7 +680,7 @@ spec:
                   description: RuntimeComponentBindingExpose encapsulates information
                     exposed by the application
                   properties:
-                    autoDetect:
+                    enabled:
                       type: boolean
                   type: object
                 resourceRef:

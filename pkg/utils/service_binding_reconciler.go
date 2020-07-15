@@ -28,10 +28,10 @@ import (
 
 // String constants
 const (
-	APIVersion                 = "apiVersion"
-	Kind                       = "kind"
-	Metadata                   = "metadata"
-	Spec                       = "spec"
+	APIVersion                        = "apiVersion"
+	Kind                              = "kind"
+	Metadata                          = "metadata"
+	Spec                              = "spec"
 	ExposeBindingOverrideSecretSuffix = "-expose-binding-override"
 	ExposeBindingSecretSuffix         = "-expose-binding"
 )
@@ -298,37 +298,34 @@ func (r *ReconcilerBase) reconcileExpose(ba common.BaseComponent) (reconcile.Res
 			Namespace: mObj.GetNamespace(),
 		},
 	}
-	falze := false
-	if ba.GetBindings() != nil && ba.GetBindings().GetExpose() != nil && ba.GetBindings().GetExpose().GetAutoDetect() == &falze {
-		// Update status and remove binding
-		if err := r.updateBindingStatus("", ba); err != nil {
+
+	if ba.GetBindings() != nil && ba.GetBindings().GetExpose() != nil &&
+		ba.GetBindings().GetExpose().GetEnabled() != nil && *ba.GetBindings().GetExpose().GetEnabled() {
+		err := r.CreateOrUpdate(bindingSecret, mObj, func() error {
+			customSecret := &corev1.Secret{}
+			// Check if custom values are provided in a secret, and apply the custom values
+			if err := r.getCustomValuesToExpose(customSecret, ba); err != nil {
+				return err
+			}
+			// Use content of the 'override' secret as the base secret content
+			bindingSecret.Data = customSecret.Data
+			// Apply default values to the override secret if certain values are not set
+			r.applyDefaultValuesToExpose(bindingSecret, ba)
+			return nil
+		})
+		if err != nil {
 			return r.requeueError(ba, err)
 		}
-		if err := r.DeleteResource(bindingSecret); client.IgnoreNotFound(err) != nil {
-			return r.requeueError(ba, err)
-		}
+
+		// Update binding status
+		r.updateBindingStatus(bindingSecret.Name, ba)
 		return r.done(ba)
 	}
 
-	err := r.CreateOrUpdate(bindingSecret, mObj, func() error {
-		customSecret := &corev1.Secret{}
-		// Check if custom values are provided in a secret, and apply the custom values
-		if err := r.getCustomValuesToExpose(customSecret, ba); err != nil {
-			return err
-		}
-
-		bindingSecret.Data = customSecret.Data
-
-		// Apply default values to the secret (if needed)
-		r.applyDefaultValuesToExpose(bindingSecret, ba)
-		return nil
-	})
-	if err != nil {
-		return r.requeueError(ba, err)
-	}
-
-	// Update binding status
-	if err := r.updateBindingStatus(bindingSecret.Name, ba); err != nil {
+	// Update status
+	r.updateBindingStatus("", ba)
+	// Remove binding secret
+	if err := r.DeleteResource(bindingSecret); client.IgnoreNotFound(err) != nil {
 		return r.requeueError(ba, err)
 	}
 	return r.done(ba)
@@ -390,18 +387,12 @@ func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *corev1.Secret, ba co
 	secret.Data = secretData
 }
 
-func (r *ReconcilerBase) updateBindingStatus(bindingSecretName string, ba common.BaseComponent) error {
+func (r *ReconcilerBase) updateBindingStatus(bindingSecretName string, ba common.BaseComponent) {
 	var bindingStatus *corev1.LocalObjectReference
 	if bindingSecretName != "" {
 		bindingStatus = &corev1.LocalObjectReference{Name: bindingSecretName}
 	}
-	if bindingStatus != ba.GetStatus().GetBinding() {
-		ba.GetStatus().SetBinding(bindingStatus)
-		if err := r.UpdateStatus(ba.(runtime.Object)); err != nil {
-			return errors.Wrapf(err, "unable to update status with service binding information")
-		}
-	}
-	return nil
+	ba.GetStatus().SetBinding(bindingStatus)
 }
 
 func (r *ReconcilerBase) reconcileExternals(ba common.BaseComponent) (retRes reconcile.Result, retErr error) {
