@@ -10,6 +10,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.7.0]
+
+### Added
+
+- Added support to use application as a backing service ([#148](https://github.com/application-stacks/runtime-component-operator/pull/148))
+- Added examples for specifying affinity ([#133](https://github.com/application-stacks/runtime-component-operator/pull/133))
+
 ## [0.6.0]
 
 ### Added
@@ -63,7 +70,8 @@ All notable changes to this project will be documented in this file.
 The initial release of the Runtime Component Operator 🎉
 
 
-[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.7.0
 [0.6.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.6.0
 [0.5.1]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.5.1
 [0.5.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.5.0
