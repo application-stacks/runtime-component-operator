@@ -90,7 +90,7 @@ func RuntimeCertManagerTest(t *testing.T) {
 
 // Simple scenario test.
 func runtimePodCertTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
-	const name = "example-runtime-pod-cert"
+	const name = "r-pod-cert"
 
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
@@ -108,7 +108,7 @@ func runtimePodCertTest(t *testing.T, f *framework.Framework, ctx *framework.Tes
 
 // Test behaviour when specifying runtime.Spec.Route and then set it to nil.
 func runtimeRouteCertTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
-	const name = "example-runtime-route-cert"
+	const name = "r-route-cert"
 
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
@@ -162,7 +162,7 @@ func runtimeRouteCertTest(t *testing.T, f *framework.Framework, ctx *framework.T
 // Test the scenario where we create our custom issuer and use it as our certificate issuer.
 func runtimeCustomIssuerTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
 	// standard initialization
-	const name = "example-custom-issuer-cert"
+	const name = "r-custom-cert"
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		return fmt.Errorf("could not get namespace %v", err)
@@ -212,7 +212,7 @@ func runtimeCustomIssuerTest(t *testing.T, f *framework.Framework, ctx *framewor
 
 // Test using an existing certificate for TLS connection.
 func runtimeExistingCertTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
-	const name = "example-existing-cert"
+	const name = "r-existing-cert"
 	secretRefName := "myapp-rt-tls"
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
@@ -271,7 +271,7 @@ func runtimeExistingCertTest(t *testing.T, f *framework.Framework, ctx *framewor
 
 // Test using the OpenShift CA by adding annotations to the rutnime.
 func runtimeOpenShiftCATest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
-	const name = "example-oc-cert"
+	const name = "r-oc-cert"
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		return fmt.Errorf("could not get namespace %v", err)
