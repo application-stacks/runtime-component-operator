@@ -37,7 +37,7 @@ func RuntimeKnativeTest(t *testing.T) {
 	f := framework.Global
 
 	// catch cases where running tests locally with a cluster that does not have knative
-	if !isKnativeInstalled(t, f) {
+	if !util.isKnativeInstalled(t, f) {
 		t.Log("Knative is not installed on this cluster, skipping RuntimeKnativeTest...")
 		return
 	}
