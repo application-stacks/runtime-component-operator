@@ -67,6 +67,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `bindings.embedded` | A YAML object that represents a `ServiceBindingRequest` custom resource.
 | `bindings.autoDetect` | A boolean to toggle whether the operator should automatically detect and use a `ServiceBindingRequest` resource with `<CR_NAME>-binding` naming format. The default value for this parameter is `true`.
 | `bindings.resourceRef` | The name of a `ServiceBindingRequest` custom resource created manually in the same namespace as the application.
+| `bindings.expose.enabled` | A boolean to toggle whether the operator should expose the application as a bindable service. The default value for this parameter is `false`.
 | `service.port` | The port exposed by the container.
 | `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`.
 | `service.portName` | The name for the port exposed by the container.
@@ -476,6 +477,17 @@ Users can turn off the auto-detection mechanism by setting the `bindings.autoDet
 ----
 
 _This feature is only available if you have Service Binding Operator installed on your cluster._
+
+==== Exposing `RuntimeComponent` applications as Provisioned Services
+
+A `RuntimeComponent` application can be configured to behave as a link:++https://github.com/k8s-service-bindings/spec#provisioned-service++[Provisioned Service] defined by the link:++https://github.com/k8s-service-bindings/spec++[Service Binding Specification].
+
+According to the specification, a Provisioned Service resource must define a `.status.binding.name` which is a `LocalObjectReference`-able to a Secret.
+To expose your application as a Provisioned Service, set the `.spec.bindings.expose.enabled` parameter to a value of `true`. The Runtime Component Operator creates a *binding secret* named `<CR_NAME>-expose-binding` and adds the following entries to the secret: `host`, `port`, `protocol`, `basePath` and `uri`.
+
+To override the default values for the entries in the binding secret or to add new entries to the secret, create an *override secret* named `<CR_NAME>-expose-binding-override` and add any entries to the secret. The operator reads the content of the override secret and overrides the default values in the binding secret.
+
+Once a `RuntimeComponent` application is exposed as a Provisioned Service, a `ServiceBindingRequest` can refer to the application as a backing service.
 
 ==== Binding to `RuntimeComponent` applications
 
