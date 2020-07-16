@@ -45,7 +45,7 @@ main() {
     fi
 
     echo "****** Starting e2e tests..."
-    CLUSTER_ENV="test" operator-sdk test local github.com/application-stacks/runtime-component-operator/test/e2e --debug --verbose  --go-test-flags "-timeout 35m" --image $(oc registry info)/openshift/runtime-operator:$TRAVIS_BUILD_NUMBER
+    CLUSTER_ENV="ocp" operator-sdk test local github.com/application-stacks/runtime-component-operator/test/e2e --debug --verbose  --go-test-flags "-timeout 35m" --image $(oc registry info)/openshift/runtime-operator:$TRAVIS_BUILD_NUMBER
     result=$?
     echo "****** Cleaning up tests..."
     cleanup
