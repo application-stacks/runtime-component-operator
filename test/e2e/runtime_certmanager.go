@@ -75,17 +75,17 @@ func RuntimeCertManagerTest(t *testing.T) {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	if err = runtimeCustomIssuerTest(t, f, ctx); err != nil {
-		util.FailureCleanup(t, f, namespace, err)
-	}
+	// if err = runtimeCustomIssuerTest(t, f, ctx); err != nil {
+	// 	util.FailureCleanup(t, f, namespace, err)
+	// }
 
-	if err = runtimeExistingCertTest(t, f, ctx); err != nil {
-		util.FailureCleanup(t, f, namespace, err)
-	}
+	// if err = runtimeExistingCertTest(t, f, ctx); err != nil {
+	// 	util.FailureCleanup(t, f, namespace, err)
+	// }
 
-	if err = runtimeOpenShiftCATest(t, f, ctx); err != nil {
-		util.FailureCleanup(t, f, namespace, err)
-	}
+	// if err = runtimeOpenShiftCATest(t, f, ctx); err != nil {
+	// 	util.FailureCleanup(t, f, namespace, err)
+	// }
 }
 
 // Simple scenario test.
