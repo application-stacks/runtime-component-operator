@@ -75,17 +75,17 @@ func RuntimeCertManagerTest(t *testing.T) {
 		util.FailureCleanup(t, f, namespace, err)
 	}
 
-	// if err = runtimeCustomIssuerTest(t, f, ctx); err != nil {
-	// 	util.FailureCleanup(t, f, namespace, err)
-	// }
+	if err = runtimeCustomIssuerTest(t, f, ctx); err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
 
-	// if err = runtimeExistingCertTest(t, f, ctx); err != nil {
-	// 	util.FailureCleanup(t, f, namespace, err)
-	// }
+	if err = runtimeExistingCertTest(t, f, ctx); err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
 
-	// if err = runtimeOpenShiftCATest(t, f, ctx); err != nil {
-	// 	util.FailureCleanup(t, f, namespace, err)
-	// }
+	if err = runtimeOpenShiftCATest(t, f, ctx); err != nil {
+		util.FailureCleanup(t, f, namespace, err)
+	}
 }
 
 // Simple scenario test.
@@ -339,8 +339,6 @@ func deployAndWaitForCertificate(msg string, t *testing.T, f *framework.Framewor
 	if err != nil {
 		return err
 	}
-
-	time.Sleep(time.Minute * 3)
 
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, ns, n, 1, retryInterval, timeout)
 	if err != nil {
