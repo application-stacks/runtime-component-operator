@@ -29,7 +29,7 @@ var basicTests []Test = []Test{
 var advancedTests []Test = []Test{
 	// {"RuntimeServiceBindingTest", RuntimeServiceBindingTest},
 	{"RuntimeCertManagerTest", RuntimeCertManagerTest},
-	// {"RuntimeKnativeTest", RuntimeKnativeTest},
+	{"RuntimeKnativeTest", RuntimeKnativeTest},
 	// {"RuntimeServiceMonitorTest", RuntimeServiceMonitorTest},
 	{"RuntimeKappNavTest", RuntimeKappNavTest},
 }
