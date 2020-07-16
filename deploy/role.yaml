@@ -3,11 +3,6 @@ kind: Role
 metadata:
   creationTimestamp: null
   name: runtime-component-operator
-  labels:
-    "app.kubernetes.io/instance": runtime-component-operator
-    "app.kubernetes.io/managed-by": runtime-component-operator
-    "app.kubernetes.io/part-of": runtime-component-operator
-    "app.kubernetes.io/name": runtime-component-operatr
 rules:
 - apiGroups:
   - ""
