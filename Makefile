@@ -42,6 +42,9 @@ test-e2e: setup ## Run end-to-end tests
 test-minikube: setup setup-minikube
 	CLUSTER_ENV="minikube" operator-sdk test local github.com/application-stacks/runtime-component-operator/test/e2e --verbose --debug --up-local --namespace default
 
+scorecard: setup setup-minikube
+	operator-sdk scorecard
+
 test-e2e-locally: setup
 	kubectl apply -f scripts/servicemonitor.crd.yaml
 	CLUSTER_ENV="local" operator-sdk test local github.com/application-stacks/runtime-component-operator/test/e2e --verbose --debug --up-local --namespace default

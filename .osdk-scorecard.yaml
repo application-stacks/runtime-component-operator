@@ -1,0 +1,13 @@
+scorecard:
+  # Setting a global scorecard option
+  output: json
+  plugins:
+    # `basic` tests configured to test 2 CRs
+    - basic:
+        cr-manifest:
+          - "deploy/crds/app.stacks_runtimecomponents_cr.yaml"
+    # `olm` tests configured to test 2 CRs
+    - olm:
+        cr-manifest:
+          - "deploy/crds/app.stacks_runtimecomponents_cr.yaml"
+        csv-path: "deploy/olm-catalog/runtime-component-operator-certified/runtime-component-operator.v0.6.1.clusterserviceversion.yaml"

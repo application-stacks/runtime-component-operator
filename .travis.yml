@@ -30,6 +30,8 @@ jobs:
     - name: E2E testing on OCP 3.11
       script: make test-e2e
       if: fork = false
+    - name: Run operator-sdk scorecard
+      script: make scorecard
     ## if master branch build and push images on all three archs
     - name: Build image on amd64
       stage: build
