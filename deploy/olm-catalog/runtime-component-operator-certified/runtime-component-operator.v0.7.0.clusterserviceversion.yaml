@@ -76,6 +76,11 @@ spec:
         path: service.type
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: the name for the port used for kubernetes service
+        displayName: Service Port Name
+        path: service.portName
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: horizontal pod autoscaling
         displayName: Autoscaling
         path: autoscaling
@@ -87,11 +92,6 @@ spec:
         path: conditions
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes.conditions
-      - description: service to expose the runtime application
-        displayName: Service
-        path: service
-        x-descriptors:
-        - urn:alm:descriptor:io.kubernetes:Service
       - description: The name of the secret object that stores the service binding information
         displayName: Service Binding Secret
         path: binding.name
