@@ -11,4 +11,4 @@ scorecard:
     - olm:
         cr-manifest:
           - "deploy/crds/app.stacks_runtimecomponents_cr.yaml"
-        csv-path: "deploy/olm-catalog/runtime-component-operator-certified/runtime-component-operator.v0.6.1.clusterserviceversion.yaml"
+        csv-path: "deploy/olm-catalog/runtime-component-operator-certified/runtime-component-operator.v0.7.0.clusterserviceversion.yaml"

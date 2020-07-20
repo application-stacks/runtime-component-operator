@@ -36,6 +36,11 @@ spec:
         path: applicationImage
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: the name of the application this resource is a part of.
+        displayName: Application Name
+        path: applicationName
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: version of the application
         displayName: Application Version
         path: version
@@ -82,6 +87,11 @@ spec:
         path: conditions
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes.conditions
+      - description: service to expose the runtime application
+        displayName: Service
+        path: service
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Service
       - description: The name of the secret object that stores the service binding information
         displayName: Service Binding Secret
         path: binding.name
