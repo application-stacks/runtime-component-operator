@@ -81,6 +81,11 @@ spec:
         path: service.portName
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: the name for the port used for kubernetes service
+        displayName: Service Ports
+        path: service.ports
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:array
       - description: horizontal pod autoscaling
         displayName: Autoscaling
         path: autoscaling
