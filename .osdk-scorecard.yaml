@@ -1,6 +1,7 @@
 scorecard:
   # Setting a global scorecard option
   output: json
+  bundle: deploy/olm-catalog/runtime-component-operator-certified
   plugins:
     # `basic` tests configured to test 2 CRs
     - basic:
