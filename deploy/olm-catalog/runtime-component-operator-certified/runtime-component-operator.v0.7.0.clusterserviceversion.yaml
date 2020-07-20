@@ -81,11 +81,11 @@ spec:
         path: service.portName
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: the name for the port used for kubernetes service
-        displayName: Service Ports
-        path: service.ports
+      - description: the spec used for kubernetes service
+        displayName: Service
+        path: service
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:array
+        - urn:alm:descriptor:io.kubernetes.service
       - description: horizontal pod autoscaling
         displayName: Autoscaling
         path: autoscaling
@@ -103,6 +103,11 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes:Secret
         - binding:env:object:secret
+      - description: The application image reference
+        displayName: Service Binding Image Reference
+        path: imageReference
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       version: v1beta1
   description: 'This advanced Operator is capable of deploying any runtime component image with 
     consistent, production-grade QoS. It enables enterprise architects to govern the way their 
