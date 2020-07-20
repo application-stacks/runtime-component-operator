@@ -6,7 +6,7 @@ metadata:
     capabilities: Auto Pilot
     categories: Application Runtime
     certified: 'true'
-    containerImage: registry.connect.redhat.com/ibm/runtime-component-operator@sha256:REPLACE_WITH_ACTUAL_VALUE
+    containerImage: registry.connect.redhat.com/ibm/runtime-component-operator@sha256:1bf98ba1e20475f591e1edbb8bbf70c86c0fe0e124a84968c339eb873e639596
     createdAt: 2020-07-16 09:00:00
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     repository: https://github.com/application-stacks/runtime-component-operator
@@ -326,7 +326,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: runtime-component-operator
-                image: registry.connect.redhat.com/ibm/runtime-component-operator@sha256:REPLACE_WITH_ACTUAL_VALUE
+                image: registry.connect.redhat.com/ibm/runtime-component-operator@sha256:1bf98ba1e20475f591e1edbb8bbf70c86c0fe0e124a84968c339eb873e639596
                 imagePullPolicy: Always
                 name: runtime-component-operator
                 resources: {}
