@@ -36,8 +36,11 @@ build: ## Compile the operator
 unit-test: ## Run unit tests
 	go test -v -mod=vendor -tags=unit github.com/application-stacks/runtime-component-operator/pkg/...
 
-test-e2e: setup ## Run end-to-end tests
-	./scripts/e2e.sh
+test-e2e: setup
+	./scripts/e2e.sh --cluster-url ${CLUSTER_43_URL} --cluster-token ${CLUSTER_43_TOKEN} --registry-name image-registry --registry-namespace openshift-image-registry
+
+test-e2e-legacy: setup ## Run end-to-end tests
+	./scripts/e2e.sh --cluster-url ${CLUSTER_311_URL} --cluster-token ${CLUSTER_311_TOKEN} --registry-name docker-registry --registry-namespace default
 
 test-minikube: setup setup-minikube
 	CLUSTER_ENV="minikube" operator-sdk test local github.com/application-stacks/runtime-component-operator/test/e2e --verbose --debug --up-local --namespace default

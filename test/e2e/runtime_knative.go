@@ -11,9 +11,9 @@ import (
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	e2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 
-	appsv1 "k8s.io/api/apps/v1"
+	// appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	// apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -37,7 +37,7 @@ func RuntimeKnativeTest(t *testing.T) {
 	f := framework.Global
 
 	// catch cases where running tests locally with a cluster that does not have knative
-	if !isKnativeInstalled(t, f) {
+	if util.IsKnativeInstalled(t, f) != nil {
 		t.Log("Knative is not installed on this cluster, skipping RuntimeKnativeTest...")
 		return
 	}
@@ -111,15 +111,6 @@ func testKnIsTrueAndTurnOff(t *testing.T, f *framework.Framework, ctx *framework
 	err = util.WaitForKnativeDeployment(t, f, namespace, applicationName, retryInterval, timeout)
 	if err != nil {
 		util.FailureCleanup(t, f, namespace, err)
-	}
-
-	// if deployment not cleared, test fails.
-	dep := &appsv1.Deployment{}
-	err = f.Client.Get(goctx.TODO(), target, dep)
-	if err != nil {
-		if !apierrors.IsNotFound(err) {
-			util.FailureCleanup(t, f, namespace, err)
-		}
 	}
 
 	// turn the runtime component off / set CreateKnativeService to false.

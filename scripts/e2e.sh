@@ -10,9 +10,9 @@ login_cluster(){
     sudo mv oc kubectl /usr/local/bin/
     cd ..
     # Start a cluster and login
-    oc login ${CLUSTER_URL} --token=${CLUSTER_TOKEN}
+    oc login ${OC_URL} --token=${OC_TOKEN}
     # Set variables for rest of script to use
-    readonly DEFAULT_REGISTRY=$(oc get route docker-registry -o jsonpath="{ .spec.host }" -n default)
+    readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
     readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/openshift/runtime-operator:${TRAVIS_BUILD_NUMBER}
 }
 
@@ -23,6 +23,7 @@ cleanup() {
 }
 
 main() {
+    parse_args "$@"
     echo "****** Logging into remote cluster..."
     login_cluster
     echo "****** Logging into private registry..."
@@ -52,4 +53,34 @@ main() {
     return $result
 }
 
-main
+parse_args() {
+    while [ $# -gt 0 ]; do
+    case "$1" in
+    --cluster-url)
+      shift
+      readonly OC_URL="${1}"
+      ;;
+    --cluster-token)
+      shift
+      readonly OC_TOKEN="${1}"
+      ;;
+    --registry-name)
+      shift
+      readonly REGISTRY_NAME="${1}"
+      ;;
+    --registry-namespace)
+      shift
+      readonly REGISTRY_NAMESPACE="${1}"
+      ;;
+    *)
+      echo "Error: Invalid argument - $1"
+      echo "$usage"
+      exit 1
+      ;;
+    esac
+    shift
+  done
+}
+
+
+main "$@"
