@@ -132,9 +132,25 @@ spec:
       containers:
         - name: runtime-component-operator
           image: applicationstacks/operator:0.6.0
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
           command:
           - runtime-component-operator
           imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+                - ls
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "128Mi"
           env:
             - name: WATCH_NAMESPACE
               value: RUNTIME_COMPONENT_WATCH_NAMESPACE
