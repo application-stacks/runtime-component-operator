@@ -10,7 +10,6 @@ import (
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
-	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -23,6 +22,7 @@ import (
 	"k8s.io/client-go/rest"
 	coretesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
+	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
@@ -36,9 +36,9 @@ var (
 )
 
 const (
-	tlsCrt = "faketlscrt"
-	tlsKey = "faketlskey"
-	caCrt = "fakecacrt"
+	tlsCrt    = "faketlscrt"
+	tlsKey    = "faketlskey"
+	caCrt     = "fakecacrt"
 	destCACrt = "fakedestcacrt"
 )
 
@@ -49,8 +49,9 @@ func TestGetDiscoveryClient(t *testing.T) {
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
 	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
+	rcl := fakeclient.NewFakeClient(objs...)
 
-	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
+	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
 	newDC, err := r.GetDiscoveryClient()
 
@@ -67,8 +68,9 @@ func TestCreateOrUpdate(t *testing.T) {
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
 	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
+	rcl := fakeclient.NewFakeClient(objs...)
 
-	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
+	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
 	err := r.CreateOrUpdate(serviceAccount, runtimecomponent, func() error {
 		CustomizeServiceAccount(serviceAccount, runtimecomponent)
@@ -86,7 +88,8 @@ func TestDeleteResources(t *testing.T) {
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
 	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
-	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
+	rcl := fakeclient.NewFakeClient(objs...)
+	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
 	r.SetDiscoveryClient(createFakeDiscoveryClient())
 	nsn := types.NamespacedName{Name: "app", Namespace: "runtimecomponent"}
@@ -137,8 +140,9 @@ func TestGetOpConfigMap(t *testing.T) {
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
 	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
+	rcl := fakeclient.NewFakeClient(objs...)
 
-	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
+	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
 	if err := r.GetClient().Create(context.TODO(), configMap); err != nil {
 		t.Fatalf("Create configMap: (%v)", err)
@@ -161,8 +165,9 @@ func TestManageError(t *testing.T) {
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
 	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
+	rcl := fakeclient.NewFakeClient(objs...)
 
-	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
+	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
 	rec, err := r.ManageError(err, common.StatusConditionTypeReconciled, runtimecomponent)
 
@@ -180,7 +185,8 @@ func TestManageSuccess(t *testing.T) {
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
 	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
-	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
+	rcl := fakeclient.NewFakeClient(objs...)
+	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
 	r.ManageSuccess(common.StatusConditionTypeReconciled, runtimecomponent)
 
@@ -197,8 +203,9 @@ func TestIsGroupVersionSupported(t *testing.T) {
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
 	s.AddKnownTypes(appstacksv1beta1.SchemeGroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
+	rcl := fakeclient.NewFakeClient(objs...)
 
-	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
+	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 	fakeDiscoveryClient := &fakediscovery.FakeDiscovery{
 		Fake: &coretesting.Fake{Resources: []*metav1.APIResourceList{
 			{
@@ -233,7 +240,7 @@ func testGetSvcTLSValues(t *testing.T) {
 	runtimecomponent.Spec.Expose = &expose
 	runtimecomponent.Spec.Service = &appstacksv1beta1.RuntimeComponentService{
 		Certificate: &appstacksv1beta1.Certificate{},
-		Port: 3000,
+		Port:        3000,
 	}
 
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
@@ -241,13 +248,14 @@ func testGetSvcTLSValues(t *testing.T) {
 
 	// Deploy the expected secret
 	cl := fakeclient.NewFakeClient(objs...)
+	rcl := fakeclient.NewFakeClient(objs...)
 	secret := makeCertSecret("my-app-svc-tls", namespace)
 	if err := cl.Create(context.TODO(), secret); err != nil {
 		t.Fatal(err)
 	}
 
 	// Use the reconciler to retrieve the secret
-	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
+	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 	key, cert, ca, destCa, err := r.GetRouteTLSValues(runtimecomponent)
 	if err != nil {
 		t.Fatal(err)
@@ -271,8 +279,8 @@ func testGetRouteTLSValues(t *testing.T) {
 	secretRefName := "my-app-route-tls"
 	runtimecomponent.Spec.Expose = &expose
 	runtimecomponent.Spec.Route = &appstacksv1beta1.RuntimeComponentRoute{
-		Host:        "myapp.mycompany.com",
-		Termination: &terminationPolicy,
+		Host:                 "myapp.mycompany.com",
+		Termination:          &terminationPolicy,
 		CertificateSecretRef: &secretRefName,
 	}
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
@@ -280,14 +288,15 @@ func testGetRouteTLSValues(t *testing.T) {
 
 	// Create a fake client and a reconciler
 	cl := fakeclient.NewFakeClient(objs...)
-	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
-	
+	rcl := fakeclient.NewFakeClient(objs...)
+	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
+
 	// Make and deploy the secret for later retrieval
 	secret := makeCertSecret(secretRefName, namespace)
 	if err := cl.Create(context.TODO(), secret); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	// Use the reconciler to retrieve the secret
 	key, cert, ca, destCa, err := r.GetRouteTLSValues(runtimecomponent)
 	if err != nil {
@@ -320,12 +329,12 @@ func TestGetSelectorLabelsFromApplications(t *testing.T) {
 	s.AddKnownTypes(applicationsv1beta1.SchemeGroupVersion, &applicationsv1beta1.ApplicationList{})
 
 	// Configure the application
-	labelMap := map[string]string {
+	labelMap := map[string]string{
 		"test-key": "test-value",
 	}
 	application := &applicationsv1beta1.Application{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:      name,
 			Namespace: namespace,
 			Annotations: map[string]string{
 				"kappnav.component.namespaces": namespace,
@@ -340,14 +349,15 @@ func TestGetSelectorLabelsFromApplications(t *testing.T) {
 
 	// Create the fake client and the reconciler
 	cl := fakeclient.NewFakeClient()
-	r := NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
+	rcl := fakeclient.NewFakeClient()
+	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
 	// Deploy the application
 	err := cl.Create(context.TODO(), application)
 	if err != nil {
 		t.Fatal(err)
 	}
-	
+
 	// Get selector labels
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
 	returnedLabelMap, err := r.GetSelectorLabelsFromApplications(runtimecomponent)
@@ -381,17 +391,18 @@ func createFakeDiscoveryClient() discovery.DiscoveryInterface {
 
 	return fakeDiscoveryClient
 }
+
 // makeCertSecret returns a pointer to a simple Secret object with fake values inside.
 func makeCertSecret(n string, ns string) *corev1.Secret {
 	data := map[string][]byte{
-		"ca.crt": []byte(caCrt),
-		"tls.crt": []byte(tlsCrt),
-		"tls.key": []byte(tlsKey),
+		"ca.crt":     []byte(caCrt),
+		"tls.crt":    []byte(tlsCrt),
+		"tls.key":    []byte(tlsKey),
 		"destCA.crt": []byte(destCACrt),
 	}
 	secret := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: n,
+			Name:      n,
 			Namespace: ns,
 		},
 		Type: "kubernetes.io/tls",
