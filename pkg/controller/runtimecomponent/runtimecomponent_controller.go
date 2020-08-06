@@ -54,7 +54,9 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	reconciler := &ReconcileRuntimeComponent{ReconcilerBase: appstacksutils.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("runtime-component-operator"))}
+	reconciler := &ReconcileRuntimeComponent{
+		ReconcilerBase: appstacksutils.NewReconcilerBase(mgr.GetAPIReader(), mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("runtime-component-operator")),
+	}
 
 	watchNamespaces, err := appstacksutils.GetWatchNamespaces()
 	if err != nil {
@@ -415,15 +417,17 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 	if r.IsOpenShift() {
 		image, err := imageutil.ParseDockerImageReference(instance.Spec.ApplicationImage)
 		if err == nil {
-			imageStream := &imagev1.ImageStream{}
-			imageNamespace := image.Namespace
-			if imageNamespace == "" {
-				imageNamespace = instance.Namespace
+			isTag := &imagev1.ImageStreamTag{}
+			isTagName := imageutil.JoinImageStreamTag(image.Name, image.Tag)
+			isTagNamespace := image.Namespace
+			if isTagNamespace == "" {
+				isTagNamespace = instance.Namespace
 			}
-			err = r.GetClient().Get(context.Background(), types.NamespacedName{Name: image.Name, Namespace: imageNamespace}, imageStream)
+			key := types.NamespacedName{Name: isTagName, Namespace: isTagNamespace}
+			err = r.GetAPIReader().Get(context.Background(), key, isTag)
 			if err == nil {
-				image := imageutil.LatestTaggedImage(imageStream, image.Tag)
-				if image != nil {
+				image := isTag.Image
+				if image.DockerImageReference != "" {
 					instance.Status.ImageReference = image.DockerImageReference
 				}
 			} else if err != nil && !kerrors.IsNotFound(err) {

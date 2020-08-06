@@ -34,6 +34,7 @@ import (
 
 // ReconcilerBase base reconciler with some common behaviour
 type ReconcilerBase struct {
+	apiReader  client.Reader
 	client     client.Client
 	scheme     *runtime.Scheme
 	recorder   record.EventRecorder
@@ -43,8 +44,9 @@ type ReconcilerBase struct {
 }
 
 //NewReconcilerBase creates a new ReconcilerBase
-func NewReconcilerBase(client client.Client, scheme *runtime.Scheme, restConfig *rest.Config, recorder record.EventRecorder) ReconcilerBase {
+func NewReconcilerBase(apiReader client.Reader, client client.Client, scheme *runtime.Scheme, restConfig *rest.Config, recorder record.EventRecorder) ReconcilerBase {
 	return ReconcilerBase{
+		apiReader:  apiReader,
 		client:     client,
 		scheme:     scheme,
 		recorder:   recorder,
@@ -65,6 +67,18 @@ func (r *ReconcilerBase) SetController(c controller.Controller) {
 // GetClient returns client
 func (r *ReconcilerBase) GetClient() client.Client {
 	return r.client
+}
+
+// GetAPIReader returns a client.Reader. Use client.Reader only if a
+// particular resource does not implement the 'watch' verb such as
+// ImageStreamTag. This is because the operator-sdk Client
+// automatically performs a Watch on all the objects that are obtained
+// with Get, but some resources such as the ImageStreamTag kind does not
+// implement the Watch verb, which caused errors.
+// Here is an example of how the error would look like:
+//  `Failed to watch *v1.ImageStreamTag: the server does not allow this method on the requested resource (get imagestreamtags.image.openshift.io)`
+func (r *ReconcilerBase) GetAPIReader() client.Reader {
+	return r.apiReader
 }
 
 // GetRecorder returns the underlying recorder
