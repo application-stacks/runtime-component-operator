@@ -4,9 +4,8 @@ import (
 	"context"
 	"os"
 
-	utils "github.com/application-stacks/runtime-component-operator/pkg/utils"
-
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/pkg/apis/appstacks/v1beta1"
+	utils "github.com/application-stacks/runtime-component-operator/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -34,7 +33,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileRuntimeOperation{client: mgr.GetClient(), scheme: mgr.GetScheme(), recorder: mgr.GetEventRecorderFor("open-liberty-operator"), restConfig: mgr.GetConfig()}
+	return &ReconcileRuntimeOperation{client: mgr.GetClient(), scheme: mgr.GetScheme(), recorder: mgr.GetEventRecorderFor("runtime-component-operator"), restConfig: mgr.GetConfig()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -132,14 +131,14 @@ func (r *ReconcileRuntimeOperation) Reconcile(request reconcile.Request) (reconc
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Spec.PodName, Namespace: request.Namespace}, pod)
 	if err != nil || pod.Status.Phase != corev1.PodRunning {
 		//handle error
-		message := "Failed to find pod " + instance.Spec.PodName + " in namespace " + request.Namespace
+		message := "Failed to find pod '" + instance.Spec.PodName + "' in namespace '" + request.Namespace + "'"
 		log.Error(err, message)
 		r.recorder.Event(instance, "Warning", "ProcessingError", message)
 		c := appstacksv1beta1.OperationStatusCondition{
 			Type:    appstacksv1beta1.OperationStatusConditionTypeStarted,
 			Status:  corev1.ConditionFalse,
 			Reason:  "Error",
-			Message: "Failed to find a pod or pod is not in running state",
+			Message: "Failed to find pod '" + instance.Spec.PodName + "' or it's not in running state",
 		}
 		instance.Status.Conditions = appstacksv1beta1.SetOperationCondition(instance.Status.Conditions, c)
 		r.client.Status().Update(context.TODO(), instance)
@@ -162,7 +161,7 @@ func (r *ReconcileRuntimeOperation) Reconcile(request reconcile.Request) (reconc
 	_, err = utils.ExecuteCommandInContainer(r.restConfig, pod.Name, pod.Namespace, containerName, instance.Spec.Command)
 	if err != nil {
 		//handle error
-		log.Error(err, "Execute command cmd failed for RuntimeOperation runtimeop ", "cmd", instance.Spec.Command, "runtimeop", instance.Name)
+		log.Error(err, "Execute command failed", "RuntimeOperation name", instance.Name, "command", instance.Spec.Command)
 		r.recorder.Event(instance, "Warning", "ProcessingError", err.Error())
 		c = appstacksv1beta1.OperationStatusCondition{
 			Type:    appstacksv1beta1.OperationStatusConditionTypeCompleted,

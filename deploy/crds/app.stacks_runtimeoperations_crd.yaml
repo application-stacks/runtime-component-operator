@@ -69,11 +69,11 @@ spec:
                 type: string
               type: array
             containerName:
-              description: Name of the container. Defaults to "app"
+              description: Name of the container. Defaults to main container "app"
               type: string
             podName:
               description: Name of the Pod to perform runtime operation on. Pod must
-                be from the same namespace as RuntimeOperation
+                be from the same namespace as the RuntimeOperation instance
               type: string
           required:
           - command

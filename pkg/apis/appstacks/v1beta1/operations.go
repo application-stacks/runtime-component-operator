@@ -49,8 +49,6 @@ func (or *OperatedResource) SetOperatedResourceType(t string) {
 type OperationStatusConditionType string
 
 const (
-	// OperationStatusConditionTypeEnabled indicates whether operation is enabled
-	OperationStatusConditionTypeEnabled OperationStatusConditionType = "Enabled"
 	// OperationStatusConditionTypeStarted indicates whether operation has been started
 	OperationStatusConditionTypeStarted OperationStatusConditionType = "Started"
 	// OperationStatusConditionTypeCompleted indicates whether operation has been completed

@@ -1,0 +1,14 @@
+apiVersion: app.stacks/v1beta1
+kind: RuntimeOperation
+metadata:
+  name: example-runtime-operation
+spec:
+  # Specify name of the pod. Pod must be in the same namespace as this RuntimeOperation
+  podName: Specify_Pod_Name_Here
+  # Specify name of the container. Defaults to the main container `app`
+  containerName: app
+  # Command to execute. Not executed within a shell
+  command:
+    - /bin/sh
+    - '-c'
+    - echo "Hello" > /tmp/runtime-operation.log

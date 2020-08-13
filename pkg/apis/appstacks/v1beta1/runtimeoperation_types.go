@@ -9,10 +9,10 @@ import (
 // RuntimeOperationSpec defines the desired state of RuntimeOperation
 // +k8s:openapi-gen=true
 type RuntimeOperationSpec struct {
-	// Name of the Pod to perform runtime operation on. Pod must be from the same namespace as RuntimeOperation
+	// Name of the Pod to perform runtime operation on. Pod must be from the same namespace as the RuntimeOperation instance
 	PodName string `json:"podName"`
 
-	// Name of the container. Defaults to "app"
+	// Name of the container. Defaults to main container "app"
 	ContainerName string `json:"containerName,omitempty"`
 
 	// Command to execute. Not executed within a shell

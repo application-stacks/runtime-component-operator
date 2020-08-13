@@ -793,14 +793,14 @@ func schema_pkg_apis_appstacks_v1beta1_RuntimeOperationSpec(ref common.Reference
 				Properties: map[string]spec.Schema{
 					"podName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name of the Pod to perform runtime operation on. Pod must be from the same namespace as RuntimeOperation",
+							Description: "Name of the Pod to perform runtime operation on. Pod must be from the same namespace as the RuntimeOperation instance",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"containerName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name of the container. Defaults to \"app\"",
+							Description: "Name of the container. Defaults to main container \"app\"",
 							Type:        []string{"string"},
 							Format:      "",
 						},
