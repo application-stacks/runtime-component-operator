@@ -122,6 +122,9 @@ func (r *ReconcileRuntimeOperation) Reconcile(request reconcile.Request) (reconc
 	//do not reconcile if the RuntimeOperation already started
 	oc := appstacksv1beta1.GetOperationCondition(instance.Status.Conditions, appstacksv1beta1.OperationStatusConditionTypeStarted)
 	if oc != nil && oc.Status == corev1.ConditionTrue {
+		message := "RuntimeOperation '" + instance.Name + "' in namespace '" + request.Namespace + "' already started and it can not be modified. Create another RuntimeOperation instance to execute the command."
+		log.Info(message)
+		r.recorder.Event(instance, "Warning", "ProcessingError", message)
 		return reconcile.Result{}, err
 	}
 
