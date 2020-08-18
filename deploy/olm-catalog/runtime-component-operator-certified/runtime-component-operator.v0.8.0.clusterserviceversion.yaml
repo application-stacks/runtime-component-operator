@@ -47,10 +47,10 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:imagePullPolicy
       - description: if using a registry that requires authentication, the name of the secret containing credentials
-      displayName: Pull Secret
-    path: pullSecret
-    - urn:alm:descriptor:com.tectonic.ui:text
-    - description: number of pods to create
+        displayName: Pull Secret
+        path: pullSecret
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: number of pods to create
         displayName: Replicas
         path: replicas
         x-descriptors:
@@ -70,72 +70,72 @@ spec:
         path: service.port
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:service
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:service
       - description: the kubernetes service type
         displayName: Service Type
         path: service.type
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:service
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:service
       - description: the port that the operator assigns to containers inside pods
         displayName: Service TargetPort
         path: service.targetPort
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:service
-    - description: node proxies this port into your service
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:service
+      - description: node proxies this port into your service
         displayName: Service NodePort
         path: service.nodePort
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:service
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:service
       - description: name for the port exposed by the container
         displayName: Service Port Name
         path: service.portName
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:service
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:service
       - description: annotations to be added to the service
         displayName: Service Annotations
         path: service.annotations
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:service
-    - description: a name of a secret that already contains TLS key, certificate and CA to be mounted in the pod
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:service
+      - description: a name of a secret that already contains TLS key, certificate and CA to be mounted in the pod
         displayName: Service Certificate Secret Reference
         path: service.certificateSecretRef
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:service
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:service
       - description: horizontal pod autoscaling
         displayName: Target CPU Utilization Percent
         path: autoscaling.targetCPUUtilizationPercentage
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:autoscaling
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:autoscaling
       - description: lower limit for the number of pods that can be set
         displayName: Min Replicas
         path: autoscaling.minReplicas
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:autoscaling
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:autoscaling
       - description: upper limit for the number of pods that can be set
         displayName: Max Replicas
         path: autoscaling.maxReplicas
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:autoscaling
-    - description: service account name for container image
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:autoscaling
+      - description: service account name for container image
         displayName: Service Account Name
         path: serviceAccountName
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - description: automatically create a knative service
+      - description: automatically create a knative service
         displayName: Knative Service
         path: createKnativeService
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-    - description: application name
+      - description: application name
         displayName: Application Name
         path: applicationName
         x-descriptors:
@@ -145,85 +145,85 @@ spec:
         path: storage.size
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:storage
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:storage
       - description: directory inside the container where this persisted storage will be bound to
         displayName: Storage Mount Path
         path: storage.mountPath
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:storage
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:storage
       - description: represents a volumeClaimTemplate component of a StatefulSet
         displayName: Storage Volume Claim Template
         path: storage.volumeClaimTemplate
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes:PersistentVolumeClaim
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:storage
-    - description: labels to set on ServiceMonitor
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:storage
+      - description: labels to set on ServiceMonitor
         displayName: Monitoring Labels
         path: monitoring.labels
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:monitoring
-    - description: represents an array of Endpoint component from ServiceMonitor
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:monitoring
+      - description: represents an array of Endpoint component from ServiceMonitor
         displayName: Monitoring Endpoints
         path: monitoring.endpoints
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:endpointList
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:monitoring
-    - description: annotations to be added to the Route
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:monitoring
+      - description: annotations to be added to the Route
         displayName: Route Annotations
         path: route.annotations
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:route
-    - description: TLS termination policy. Can be one of edge, reencrypt and passthrough
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:route
+      - description: TLS termination policy. Can be one of edge, reencrypt and passthrough
         displayName: Route Termination
         path: route.termination
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:route
-    - description: HTTP traffic policy with TLS enabled. Can be one of Allow, Redirect and None
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:route
+      - description: HTTP traffic policy with TLS enabled. Can be one of Allow, Redirect and None
         displayName: Route Insecure Edge Termination Policy
         path: route.insecureEdgeTerminationPolicy
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:route
-    - description: a name of a secret that already contains TLS key, certificate and CA to be used in the route
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:route
+      - description: a name of a secret that already contains TLS key, certificate and CA to be used in the route
         displayName: Route Certificate Secret Reference
         path: route.certificateSecretRef
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:route
-    - description: hostname to be used for the Route
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:route
+      - description: hostname to be used for the Route
         displayName: Route Host
         path: route.host
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:route
-    - description: path to be used for the Route
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:route
+      - description: path to be used for the Route
         displayName: Route Path
         path: route.path
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:route
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:route
       - description: whether the operator should automatically detect a ServiceBindingRequest resource
         displayName: Bindings Autodetect
         path: bindings.autoDetect
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:bindings
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:bindings
       - description: the name of a ServiceBindingRequest custom resource
         displayName: Bindings Resource Ref
         path: bindings.resourceRef
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:bindings
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:bindings
       - description: whether the operator expose the application as a bindable service
         displayName: Bindings Expose Enabled
         path: bindings.expose.enabled
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-    - urn:alm:descriptor:com.tectonic.ui:fieldGroup:bindings
+        - urn:alm:descriptor:com.tectonic.ui:fieldGroup:bindings
       - description: represents a NodeAffinity
         displayName: Node Affinity
         path: affinity.nodeAffinity
