@@ -1034,6 +1034,44 @@ spec:
 
 See link:++https://github.com/application-stacks/runtime-component-operator/blob/master/examples/affinity/README.adocd++[Affinity Example] for more details
 
+=== Day-2 Operations
+
+You can easily perform day-2 operations on an instance of `RuntimeComponent` using the `RuntimeOperation` custom resource (CR), which allows you to specify the commands to execute on a container.
+
+The configurable parameters are:
+
+.Configurable Parameters
+|===
+| Parameter       | Description
+| `podName`       | The name of the Pod, which must be in the same namespace as the `RuntimeOperation` CR.
+| `containerName` | The name of the container within the Pod. Defaults to main container `app`.
+| `command`       | Command to execute. It's not executed within a shell.
+|===
+
+Example:
+
+[source,yaml]
+----
+apiVersion: app.stacks/v1beta1
+kind: RuntimeOperation
+metadata:
+  name: example-runtime-operation
+spec:
+  # Specify name of the pod. Pod must be in the same namespace as this RuntimeOperation
+  podName: Specify_Pod_Name_Here
+  # Specify name of the container. Defaults to the main container `app`
+  containerName: app
+  # Command to execute. Not executed within a shell
+  command:
+    - /bin/sh
+    - '-c'
+    - echo "Hello" > /tmp/runtime-operation.log
+----
+
+You can check the status of a runtime operation using the `status` field inside the CR YAML. You can also run the command `oc get runtimeop -o wide` to see the status of all operations in the current namespace.
+
+NOTE: The `RuntimeOperation` CR must be created in the same namespace as the `RuntimeComponent` to operate on. Once the `RuntimeOperation` has started, the CR can not be re-used for more operations. A new CR needs to be created for each day-2 operation. The operator can process only one `RuntimeOperation` at a given time. Long running commands can queue up the other runtime operations.
+
 === Troubleshooting
 
 See the link:++troubleshooting.adoc++[troubleshooting guide] for information on how to investigate and resolve deployment problems.
