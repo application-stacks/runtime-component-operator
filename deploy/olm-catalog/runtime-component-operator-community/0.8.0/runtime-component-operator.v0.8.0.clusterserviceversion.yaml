@@ -494,7 +494,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: runtime-component-operator
-                image: applicationstacks/operator:0.7.0
+                image: applicationstacks/operator:0.8.0
                 imagePullPolicy: Always
                 name: runtime-component-operator
                 resources: {}
@@ -536,5 +536,5 @@ spec:
   maturity: beta
   provider:
     name: Community
-  replaces: runtime-component-operator.v0.6.0
-  version: 0.7.0
+  replaces: runtime-component-operator.v0.7.0
+  version: 0.8.0
