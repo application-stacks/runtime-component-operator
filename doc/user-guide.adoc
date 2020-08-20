@@ -1036,9 +1036,7 @@ See link:++https://github.com/application-stacks/runtime-component-operator/blob
 
 === Day-2 Operations
 
-You can easily perform day-2 operations on an instance of `RuntimeComponent` using the `RuntimeOperation` custom resource (CR), which allows you to specify the commands to execute on a container.
-
-The configurable parameters are:
+You can easily perform day-2 operations using the `RuntimeOperation` custom resource (CR), which allows you to specify the commands to execute on a container within a Pod.
 
 .Configurable Parameters
 |===
@@ -1070,7 +1068,9 @@ spec:
 
 You can check the status of a runtime operation using the `status` field inside the CR YAML. You can also run the command `oc get runtimeop -o wide` to see the status of all operations in the current namespace.
 
-NOTE: The `RuntimeOperation` CR must be created in the same namespace as the `RuntimeComponent` to operate on. Once the `RuntimeOperation` has started, the CR can not be re-used for more operations. A new CR needs to be created for each day-2 operation. The operator can process only one `RuntimeOperation` at a given time. Long running commands can queue up the other runtime operations.
+The operator will retry to run the `RuntimeOperation` when it fails to start due to specified pod or container not being found or when the pod is not in running state. The retry interval will be doubled with each failed attempt. 
+
+NOTE: The `RuntimeOperation` CR must be created in the same namespace as the Pod to operate on. Once the `RuntimeOperation` has started, the CR can not be re-used for more operations. A new CR needs to be created for each day-2 operation. The operator can process only one `RuntimeOperation` at a given time. Long running commands can queue up the other runtime operations.
 
 === Troubleshooting
 
