@@ -11,7 +11,6 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"./pkg/apis/appstacks/v1beta1.OperatedResource":            schema_pkg_apis_appstacks_v1beta1_OperatedResource(ref),
 		"./pkg/apis/appstacks/v1beta1.OperationStatusCondition":    schema_pkg_apis_appstacks_v1beta1_OperationStatusCondition(ref),
 		"./pkg/apis/appstacks/v1beta1.RuntimeComponent":            schema_pkg_apis_appstacks_v1beta1_RuntimeComponent(ref),
 		"./pkg/apis/appstacks/v1beta1.RuntimeComponentAffinity":    schema_pkg_apis_appstacks_v1beta1_RuntimeComponentAffinity(ref),
@@ -26,31 +25,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"./pkg/apis/appstacks/v1beta1.ServiceBindingConsumes":      schema_pkg_apis_appstacks_v1beta1_ServiceBindingConsumes(ref),
 		"./pkg/apis/appstacks/v1beta1.ServiceBindingProvides":      schema_pkg_apis_appstacks_v1beta1_ServiceBindingProvides(ref),
 		"./pkg/apis/appstacks/v1beta1.StatusCondition":             schema_pkg_apis_appstacks_v1beta1_StatusCondition(ref),
-	}
-}
-
-func schema_pkg_apis_appstacks_v1beta1_OperatedResource(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OperatedResource ...",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"resourceType": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"resourceName": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
 	}
 }
 

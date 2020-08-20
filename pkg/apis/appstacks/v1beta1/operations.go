@@ -18,33 +18,6 @@ type OperationStatusCondition struct {
 	Type               OperationStatusConditionType `json:"type,omitempty"`
 }
 
-// OperatedResource ...
-// +k8s:openapi-gen=true
-type OperatedResource struct {
-	ResourceType string `json:"resourceType,omitempty"`
-	ResourceName string `json:"resourceName,omitempty"`
-}
-
-// GetOperatedResourceName get the last operated resource name
-func (or *OperatedResource) GetOperatedResourceName() string {
-	return or.ResourceName
-}
-
-// SetOperatedResourceName sets the last operated resource name
-func (or *OperatedResource) SetOperatedResourceName(n string) {
-	or.ResourceName = n
-}
-
-// GetOperatedResourceType get the last operated resource type
-func (or *OperatedResource) GetOperatedResourceType() string {
-	return or.ResourceType
-}
-
-// SetOperatedResourceType sets the last operated resource type
-func (or *OperatedResource) SetOperatedResourceType(t string) {
-	or.ResourceType = t
-}
-
 // OperationStatusConditionType ...
 type OperationStatusConditionType string
 
@@ -67,16 +40,16 @@ func GetOperationCondition(c []OperationStatusCondition, t OperationStatusCondit
 
 // SetOperationCondition set condition of specific type or appends if not present
 func SetOperationCondition(c []OperationStatusCondition, oc OperationStatusCondition) []OperationStatusCondition {
-	conditon := GetOperationCondition(c, oc.Type)
+	condition := GetOperationCondition(c, oc.Type)
 
-	if conditon != nil {
-		if conditon.Status != oc.Status {
-			conditon.LastTransitionTime = &metav1.Time{Time: time.Now()}
+	if condition != nil {
+		if condition.Status != oc.Status {
+			condition.LastTransitionTime = &metav1.Time{Time: time.Now()}
 		}
-		conditon.Status = oc.Status
-		conditon.LastUpdateTime = metav1.Time{Time: time.Now()}
-		conditon.Reason = oc.Reason
-		conditon.Message = oc.Message
+		condition.Status = oc.Status
+		condition.LastUpdateTime = metav1.Time{Time: time.Now()}
+		condition.Reason = oc.Reason
+		condition.Message = oc.Message
 		return c
 	}
 	oc.LastUpdateTime = metav1.Time{Time: time.Now()}
