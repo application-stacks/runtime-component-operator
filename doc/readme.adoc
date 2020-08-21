@@ -2,4 +2,4 @@
 
 * See the link:++user-guide.adoc++[user guide], for information on how to use the Runtime Component Operator.
 * See the link:++troubleshooting.adoc++[troubleshooting guide] for information on how to investigate and resolve deployment problems.
-* Additional point to test travis 1
+* Additional point to test travis 2
