@@ -425,12 +425,15 @@ func (r *ReconcileRuntimeComponent) Reconcile(request reconcile.Request) (reconc
 			}
 			key := types.NamespacedName{Name: isTagName, Namespace: isTagNamespace}
 			err = r.GetAPIReader().Get(context.Background(), key, isTag)
+			// Call ManageError only if the error type is not found or is not forbidden. Forbidden could happen
+			// when the operator tries to call GET for ImageStreamTags on a namespace that doesn't exists (e.g. 
+			// cannot get imagestreamtags.image.openshift.io in the namespace "navidsh": no RBAC policy matched)
 			if err == nil {
 				image := isTag.Image
 				if image.DockerImageReference != "" {
 					instance.Status.ImageReference = image.DockerImageReference
 				}
-			} else if err != nil && !kerrors.IsNotFound(err) {
+			} else if err != nil && !kerrors.IsNotFound(err) && !kerrors.IsForbidden(err) {
 				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 			}
 		}
