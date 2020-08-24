@@ -78,9 +78,10 @@ func TestRuntimeController(t *testing.T) {
 
 	// Create a fake client to mock API calls.
 	cl := fakeclient.NewFakeClient(objs...)
+	rcl := fakeclient.NewFakeClient(objs...)
 
 	// Create a ReconcileRuntimeComponent object
-	rb := appstacksutils.NewReconcilerBase(cl, s, &rest.Config{}, record.NewFakeRecorder(10))
+	rb := appstacksutils.NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 	r := &ReconcileRuntimeComponent{ReconcilerBase: rb}
 	r.SetDiscoveryClient(createFakeDiscoveryClient())
 
