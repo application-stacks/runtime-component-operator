@@ -1036,14 +1036,14 @@ See link:++https://github.com/application-stacks/runtime-component-operator/blob
 
 === Day-2 Operations
 
-You can easily perform day-2 operations using the `RuntimeOperation` custom resource (CR), which allows you to specify the commands to execute on a container within a Pod.
+You can easily perform day-2 operations using the `RuntimeOperation` custom resource (CR), which allows you to specify the commands to run on a container within a Pod.
 
 .Configurable Parameters
 |===
 | Parameter       | Description
 | `podName`       | The name of the Pod, which must be in the same namespace as the `RuntimeOperation` CR.
-| `containerName` | The name of the container within the Pod. Defaults to main container `app`.
-| `command`       | Command to execute. It's not executed within a shell.
+| `containerName` | The name of the container within the Pod. The default value is the name of the main container, which is `app`.
+| `command`       | Command to run. The command doesn't run in a shell.
 |===
 
 Example:
@@ -1055,22 +1055,22 @@ kind: RuntimeOperation
 metadata:
   name: example-runtime-operation
 spec:
-  # Specify name of the pod. Pod must be in the same namespace as this RuntimeOperation
+  # Specify the name of the pod. The pod must be in the same namespace as this RuntimeOperation CR.
   podName: Specify_Pod_Name_Here
-  # Specify name of the container. Defaults to the main container `app`
+  # Specify the name of the container. The default value is the name of the main container, which is `app`.
   containerName: app
-  # Command to execute. Not executed within a shell
+  # Run the following command. The command does not run in a shell.
   command:
     - /bin/sh
     - '-c'
     - echo "Hello" > /tmp/runtime-operation.log
 ----
 
-You can check the status of a runtime operation using the `status` field inside the CR YAML. You can also run the command `oc get runtimeop -o wide` to see the status of all operations in the current namespace.
+You can check the status of a runtime operation by using the `status` field inside the CR YAML file. You can also run the `oc get runtimeop -o wide` command to see the status of all operations in the current namespace.
 
 The operator will retry to run the `RuntimeOperation` when it fails to start due to specified pod or container not being found or when the pod is not in running state. The retry interval will be doubled with each failed attempt. 
 
-NOTE: The `RuntimeOperation` CR must be created in the same namespace as the Pod to operate on. Once the `RuntimeOperation` has started, the CR can not be re-used for more operations. A new CR needs to be created for each day-2 operation. The operator can process only one `RuntimeOperation` at a given time. Long running commands can queue up the other runtime operations.
+NOTE: The `RuntimeOperation` CR must be created in the same namespace as the Pod to operate on. After the `RuntimeOperation` CR starts, the CR cannot be reused for more operations. A new CR needs to be created for each day-2 operation. The operator can process only one `RuntimeOperation` instance at a time. Long running commands can cause other runtime operations to wait before they start.
 
 === Troubleshooting
 
