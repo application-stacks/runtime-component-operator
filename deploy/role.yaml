@@ -1,7 +1,6 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  creationTimestamp: null
   name: runtime-component-operator
 rules:
 - apiGroups:
@@ -15,6 +14,7 @@ rules:
   - configmaps
   - secrets
   - serviceaccounts
+  - pods/exec
   verbs:
   - '*'
 - apiGroups:

@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added support for Day-2 operations ([#157](https://github.com/application-stacks/runtime-component-operator/pull/157))
+
 ## [0.7.0]
 
 ### Added

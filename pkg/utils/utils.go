@@ -1,12 +1,17 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
 	"sort"
 	"strconv"
 	"strings"
 
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/remotecommand"
 
 	"github.com/application-stacks/runtime-component-operator/pkg/common"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -1058,4 +1063,46 @@ func CustomizeIngress(ing *networkingv1beta1.Ingress, ba common.BaseComponent) {
 	} else {
 		ing.Spec.TLS = nil
 	}
+}
+
+// ExecuteCommandInContainer Execute command inside a container in a pod through API
+func ExecuteCommandInContainer(config *rest.Config, podName, podNamespace, containerName string, command []string) (string, error) {
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		log.Error(err, "Failed to create Clientset")
+		return "", fmt.Errorf("Failed to create Clientset: %v", err.Error())
+	}
+
+	req := clientset.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Name(podName).
+		Namespace(podNamespace).
+		SubResource("exec")
+
+	req.VersionedParams(&corev1.PodExecOptions{
+		Command:   command,
+		Container: containerName,
+		Stdout:    true,
+		Stderr:    true,
+		TTY:       false,
+	}, scheme.ParameterCodec)
+
+	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+	if err != nil {
+		return "", fmt.Errorf("Encountered error while creating Executor: %v", err.Error())
+	}
+
+	var stdout, stderr bytes.Buffer
+	err = exec.Stream(remotecommand.StreamOptions{
+		Stdout: &stdout,
+		Stderr: &stderr,
+		Tty:    false,
+	})
+
+	if err != nil {
+		return stderr.String(), fmt.Errorf("Encountered error while running command: %v ; Stderr: %v ; Error: %v", command, stderr.String(), err.Error())
+	}
+
+	return stderr.String(), nil
 }
