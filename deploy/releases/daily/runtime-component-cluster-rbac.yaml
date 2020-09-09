@@ -2,7 +2,6 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: runtime-component-operator-RUNTIME_COMPONENT_OPERATOR_NAMESPACE
 rules:
 - apiGroups:
@@ -17,6 +16,7 @@ rules:
   - secrets
   - serviceaccounts
   - namespaces
+  - pods/exec
   verbs:
   - '*'
 - apiGroups:

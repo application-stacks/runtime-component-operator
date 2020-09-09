@@ -23,7 +23,7 @@ Appropriate cluster role and binding are required to watch another namespace, wa
 
 ---
 
-. Install `RuntimeComponent` Custom Resource Definition (CRD). This needs to be done only ONCE per cluster:
+. Install Custom Resource Definitions (CRDs) for `RuntimeComponent` and `RuntimeOperation` for day-2 operation. This needs to be done only ONCE per cluster:
 +
 [source,sh]
 ----
