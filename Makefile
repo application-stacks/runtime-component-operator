@@ -1,110 +1,123 @@
-OPERATOR_SDK_RELEASE_VERSION ?= v0.15.2
-OPERATOR_IMAGE ?= applicationstacks/operator
-OPERATOR_IMAGE_TAG ?= daily
-OPERATOR_MUST_GATHER_TAG ?= daily-must-gather
-
-WATCH_NAMESPACE ?= default
-OPERATOR_NAMESPACE ?= ${WATCH_NAMESPACE}
-
-GIT_COMMIT  ?= $(shell git rev-parse --short HEAD)
-
-# Get source files, ignore vendor directory
-SRC_FILES := $(shell find . -type f -name '*.go' -not -path "./vendor/*")
-
-.DEFAULT_GOAL := help
-
-.PHONY: help setup setup-cluster tidy build unit-test test-e2e generate build-image push-image gofmt golint clean install-crd install-rbac install-operator install-all uninstall-all
-
-help:
-	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-
-setup: ## Ensure Operator SDK is installed
-	./scripts/installers/install-operator-sdk.sh ${OPERATOR_SDK_RELEASE_VERSION}
-
-setup-manifest:
-	./scripts/installers/install-manifest-tool.sh
-
-setup-minikube:
-	./scripts/installers/install-minikube.sh
-
-tidy: ## Clean up Go modules by adding missing and removing unused modules
-	go mod tidy
-
-build: ## Compile the operator
-	go install ./cmd/manager
-
-unit-test: ## Run unit tests
-	go test -v -mod=vendor -tags=unit github.com/application-stacks/runtime-component-operator/pkg/...
-
-test-e2e: setup
-	./scripts/e2e.sh --cluster-url ${CLUSTER_43_URL} --cluster-token ${CLUSTER_43_TOKEN} --registry-name image-registry --registry-namespace openshift-image-registry
-
-test-minikube: setup setup-minikube
-	CLUSTER_ENV="minikube" operator-sdk test local github.com/application-stacks/runtime-component-operator/test/e2e --verbose --debug --up-local --namespace ${WATCH_NAMESPACE}
-
-test-e2e-locally: setup
-	kubectl apply -f scripts/servicemonitor.crd.yaml
-	CLUSTER_ENV="local" operator-sdk test local github.com/application-stacks/runtime-component-operator/test/e2e --verbose --debug --up-local --namespace ${WATCH_NAMESPACE}
-
-generate: setup ## Invoke `k8s` and `openapi` generators
-	operator-sdk generate k8s
-	operator-sdk generate openapi
-
-	# Remove `x-kubernetes-int-or-string: true` from CRD. Causing issues on clusters with older k8s: https://github.com/kubernetes/kubernetes/issues/83778 https://github.com/openshift/api/pull/505
-	sed -i '' '/x\-kubernetes\-int\-or\-string\: true/d' deploy/crds/app.stacks_runtimecomponents_crd.yaml
-	sed -i '' '/x\-kubernetes\-int\-or\-string\: true/d' deploy/crds/app.stacks_runtimeoperations_crd.yaml
-
-	kubectl annotate -f deploy/crds/app.stacks_runtimecomponents_crd.yaml --local=true app.stacks/day2operations='RuntimeOperation' --overwrite -o yaml | sed '/namespace: ""/d' | awk '/type: object/ {max=NR} {a[NR]=$$0} END{for (i=1;i<=NR;i++) {if (i!=max) print a[i]}}' > deploy/crds/app.stacks_runtimecomponents_crd.yaml.tmp
-	kubectl annotate -f deploy/crds/app.stacks_runtimeoperations_crd.yaml --local=true day2operation.app.stacks/targetKinds='Pod' --overwrite -o yaml | sed '/namespace: ""/d' | awk '/type: object/ {max=NR} {a[NR]=$$0} END{for (i=1;i<=NR;i++) {if (i!=max) print a[i]}}' > deploy/crds/app.stacks_runtimeoperations_crd.yaml.tmp
-	mv deploy/crds/app.stacks_runtimecomponents_crd.yaml.tmp deploy/crds/app.stacks_runtimecomponents_crd.yaml
-	mv deploy/crds/app.stacks_runtimeoperations_crd.yaml.tmp deploy/crds/app.stacks_runtimeoperations_crd.yaml
-
-build-image: setup ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}"
-	operator-sdk build ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}
-
-build-multiarch-image: setup ## Build and push operator image
-	./scripts/build-releases.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
-
-build-manifest: setup-manifest
-	./scripts/build-manifest.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
-
-build-must-gather: setup ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_MUST_GATHER_TAG}"
-	docker build ./must-gather -t ${OPERATOR_IMAGE}:${OPERATOR_MUST_GATHER_TAG} 
-
-push-must-gather: ## Push operator must gather image
-	docker push ${OPERATOR_IMAGE}:${OPERATOR_MUST_GATHER_TAG}
-
-gofmt: ## Format the Go code with `gofmt`
-	@gofmt -s -l -w $(SRC_FILES)
-
-golint: ## Run linter on operator code
-	for file in $(SRC_FILES); do \
-		golint $${file}; \
-		if [ -n "$$(golint $${file})" ]; then \
-			exit 1; \
-		fi; \
-	done
-
-clean: ## Clean binary artifacts
-	rm -rf build/_output
-
-install-crd: ## Installs operator CRD in the daily directory
-	kubectl apply -f deploy/releases/daily/runtime-component-crd.yaml
-
-install-rbac: ## Installs RBAC objects required for the operator to in a cluster-wide manner
-	sed -i.bak -e "s/RUNTIME_COMPONENT_OPERATOR_NAMESPACE/${OPERATOR_NAMESPACE}/" deploy/releases/daily/runtime-component-cluster-rbac.yaml
-	kubectl apply -f deploy/releases/daily/runtime-component-cluster-rbac.yaml
-
-install-operator: ## Installs operator in the ${OPERATOR_NAMESPACE} namespace and watches ${WATCH_NAMESPACE} namespace. ${WATCH_NAMESPACE} defaults to `default`. ${OPERATOR_NAMESPACE} defaults to ${WATCH_NAMESPACE}
-ifneq "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}" "applicationstacks/operator:daily"
-	sed -i.bak -e 's!image: applicationstacks/operator:daily!image: ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}!' deploy/releases/daily/runtime-component-operator.yaml
+# Current Operator version
+VERSION ?= 0.0.1
+# Default bundle image tag
+BUNDLE_IMG ?= controller-bundle:$(VERSION)
+# Options for 'bundle-build'
+ifneq ($(origin CHANNELS), undefined)
+BUNDLE_CHANNELS := --channels=$(CHANNELS)
 endif
-	sed -i.bak -e "s/RUNTIME_COMPONENT_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" deploy/releases/daily/runtime-component-operator.yaml
-	kubectl apply -n ${OPERATOR_NAMESPACE} -f deploy/releases/daily/runtime-component-operator.yaml
+ifneq ($(origin DEFAULT_CHANNEL), undefined)
+BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
+endif
+BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
-install-all: install-crd install-rbac install-operator
+# Image URL to use all building/pushing image targets
+IMG ?= controller:latest
+# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
+CRD_OPTIONS ?= "crd:trivialVersions=true"
 
-uninstall-all:
-	kubectl delete -n ${OPERATOR_NAMESPACE} -f deploy/releases/daily/runtime-component-operator.yaml
-	kubectl delete -f deploy/releases/daily/runtime-component-cluster-rbac.yaml
-	kubectl delete -f deploy/releases/daily/runtime-component-crd.yaml
+# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
+ifeq (,$(shell go env GOBIN))
+GOBIN=$(shell go env GOPATH)/bin
+else
+GOBIN=$(shell go env GOBIN)
+endif
+
+all: manager
+
+# Run tests
+ENVTEST_ASSETS_DIR = $(shell pwd)/testbin
+test: generate fmt vet manifests
+	mkdir -p $(ENVTEST_ASSETS_DIR)
+	test -f $(ENVTEST_ASSETS_DIR)/setup-envtest.sh || curl -sSLo $(ENVTEST_ASSETS_DIR)/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.6.3/hack/setup-envtest.sh
+	source $(ENVTEST_ASSETS_DIR)/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
+
+# Build manager binary
+manager: generate fmt vet
+	go build -o bin/manager main.go
+
+# Run against the configured Kubernetes cluster in ~/.kube/config
+run: generate fmt vet manifests
+	go run ./main.go
+
+# Install CRDs into a cluster
+install: manifests kustomize
+	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+
+# Uninstall CRDs from a cluster
+uninstall: manifests kustomize
+	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+
+# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+deploy: manifests kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default | kubectl apply -f -
+
+# Generate manifests e.g. CRD, RBAC etc.
+manifests: controller-gen
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+
+# Run go fmt against code
+fmt:
+	go fmt ./...
+
+# Run go vet against code
+vet:
+	go vet ./...
+
+# Generate code
+generate: controller-gen
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+
+# Build the docker image
+docker-build: test
+	docker build . -t ${IMG}
+
+# Push the docker image
+docker-push:
+	docker push ${IMG}
+
+# find or download controller-gen
+# download controller-gen if necessary
+controller-gen:
+ifeq (, $(shell which controller-gen))
+	@{ \
+	set -e ;\
+	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
+	cd $$CONTROLLER_GEN_TMP_DIR ;\
+	go mod init tmp ;\
+	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0 ;\
+	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
+	}
+CONTROLLER_GEN=$(GOBIN)/controller-gen
+else
+CONTROLLER_GEN=$(shell which controller-gen)
+endif
+
+kustomize:
+ifeq (, $(shell which kustomize))
+	@{ \
+	set -e ;\
+	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
+	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
+	go mod init tmp ;\
+	go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4 ;\
+	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
+	}
+KUSTOMIZE=$(GOBIN)/kustomize
+else
+KUSTOMIZE=$(shell which kustomize)
+endif
+
+# Generate bundle manifests and metadata, then validate generated files.
+.PHONY: bundle
+bundle: manifests
+	operator-sdk generate kustomize manifests -q
+	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
+	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	operator-sdk bundle validate ./bundle
+
+# Build the bundle image.
+.PHONY: bundle-build
+bundle-build:
+	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .

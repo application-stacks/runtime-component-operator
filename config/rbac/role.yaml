@@ -1,0 +1,108 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - app.k8s.io
+  resources:
+  - applications
+  verbs:
+  - '*'
+- apiGroups:
+  - app.stacks
+  resources:
+  - runtimecomponents
+  - runtimecomponents/status
+  verbs:
+  - '*'
+- apiGroups:
+  - app.stacks
+  resources:
+  - runtimeoperations
+  - runtimeoperations/status
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - statefulsets
+  verbs:
+  - '*'
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - servicebindingrequests
+  verbs:
+  - '*'
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - '*'
+- apiGroups:
+  - cert-manager.io
+  resources:
+  - certificates
+  verbs:
+  - '*'
+- apiGroups:
+  - certmanager.k8s.io
+  resources:
+  - certificates
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - secrets
+  - serviceaccounts
+  - services
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - pods/exec
+  verbs:
+  - '*'
+- apiGroups:
+  - image.openshift.io
+  resources:
+  - imagestream
+  - imagestreamtags
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - '*'
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - '*'
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  - routes/custom-host
+  verbs:
+  - '*'
+- apiGroups:
+  - serving.knative.dev
+  resources:
+  - services
+  verbs:
+  - '*'
