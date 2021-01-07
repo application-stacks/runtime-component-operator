@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"knative.dev/pkg/apis"
-	"knative.dev/pkg/apis/duck"
+	"knative.dev/pkg/apis/duck/ducktypes"
 )
 
 // +genduck
@@ -40,8 +40,6 @@ type Addressable struct {
 }
 
 var (
-	// Addressable is an Implementable "duck type".
-	_ duck.Implementable = (*Addressable)(nil)
 	// Addressable is a Convertible type.
 	_ apis.Convertible = (*Addressable)(nil)
 )
@@ -65,24 +63,24 @@ type AddressStatus struct {
 	Address *Addressable `json:"address,omitempty"`
 }
 
+// Verify AddressableType resources meet duck contracts.
 var (
-	// Verify AddressableType resources meet duck contracts.
-	_ duck.Populatable = (*AddressableType)(nil)
-	_ apis.Listable    = (*AddressableType)(nil)
+	_ apis.Listable         = (*AddressableType)(nil)
+	_ ducktypes.Populatable = (*AddressableType)(nil)
 )
 
 // GetFullType implements duck.Implementable
-func (*Addressable) GetFullType() duck.Populatable {
+func (*Addressable) GetFullType() ducktypes.Populatable {
 	return &AddressableType{}
 }
 
-// ConvertUp implements apis.Convertible
-func (a *Addressable) ConvertUp(ctx context.Context, to apis.Convertible) error {
+// ConvertTo implements apis.Convertible
+func (a *Addressable) ConvertTo(ctx context.Context, to apis.Convertible) error {
 	return fmt.Errorf("v1 is the highest known version, got: %T", to)
 }
 
-// ConvertDown implements apis.Convertible
-func (a *Addressable) ConvertDown(ctx context.Context, from apis.Convertible) error {
+// ConvertFrom implements apis.Convertible
+func (a *Addressable) ConvertFrom(ctx context.Context, from apis.Convertible) error {
 	return fmt.Errorf("v1 is the highest known version, got: %T", from)
 }
 

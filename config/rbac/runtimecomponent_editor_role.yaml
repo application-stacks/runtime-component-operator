@@ -1,0 +1,24 @@
+# permissions for end users to edit runtimecomponents.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: runtimecomponent-editor-role
+rules:
+- apiGroups:
+  - app.stacks
+  resources:
+  - runtimecomponents
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - app.stacks
+  resources:
+  - runtimecomponents/status
+  verbs:
+  - get

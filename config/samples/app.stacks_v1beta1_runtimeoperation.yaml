@@ -1,0 +1,7 @@
+apiVersion: app.stacks/v1beta1
+kind: RuntimeOperation
+metadata:
+  name: runtimeoperation-sample
+spec:
+  # Add fields here
+  foo: bar
