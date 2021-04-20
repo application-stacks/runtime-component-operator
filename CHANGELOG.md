@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Updated Image Stream lookup logic to query for Image Stream Tags ([#156](https://github.com/application-stacks/runtime-component-operator/pull/156))
+
 ### Added
 
 - Added support for Day-2 operations ([#157](https://github.com/application-stacks/runtime-component-operator/pull/157))
