@@ -48,7 +48,7 @@ replace (
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.0.0-20191016112829-06bb3c9d77c9
 )
 
-//To resolve license issue with bou.ke/monkey - https://github.com/operator-framework/operator-registry/issues/190
+//To resolve license issue - https://github.com/operator-framework/operator-registry/issues/190
 replace (
 	github.com/otiai10/copy => github.com/otiai10/copy v1.0.2
 	github.com/otiai10/mint => github.com/otiai10/mint v1.3.0
