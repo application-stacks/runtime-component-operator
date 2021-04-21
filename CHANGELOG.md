@@ -8,7 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.7.1]
+
+### Fixed
+
+- Updated Image Stream lookup logic to query for Image Stream Tags ([#156](https://github.com/application-stacks/runtime-component-operator/pull/156))
 
 ### Added
 
@@ -74,7 +78,8 @@ All notable changes to this project will be documented in this file.
 The initial release of the Runtime Component Operator 🎉
 
 
-[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.7.1
 [0.7.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.7.0
 [0.6.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.6.0
 [0.5.1]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.5.1
