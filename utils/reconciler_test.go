@@ -22,9 +22,11 @@ import (
 	coretesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
 	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
-	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
+	applicationsv1beta1 "sigs.k8s.io/application/api/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var (
@@ -43,7 +45,8 @@ const (
 )
 
 func TestGetDiscoveryClient(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
@@ -61,7 +64,8 @@ func TestGetDiscoveryClient(t *testing.T) {
 }
 
 func TestCreateOrUpdate(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 	serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
 
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
@@ -82,7 +86,8 @@ func TestCreateOrUpdate(t *testing.T) {
 }
 
 func TestDeleteResources(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
@@ -96,7 +101,7 @@ func TestDeleteResources(t *testing.T) {
 
 	sa := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
 	ss := &appsv1.StatefulSet{ObjectMeta: defaultMeta}
-	roList := []runtime.Object{sa, ss}
+	roList := []client.Object{sa, ss}
 
 	if err := r.GetClient().Create(context.TODO(), sa); err != nil {
 		t.Fatalf("Create ServiceAccount: (%v)", err)
@@ -127,7 +132,8 @@ func TestDeleteResources(t *testing.T) {
 }
 
 func TestGetOpConfigMap(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 
 	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
@@ -158,7 +164,8 @@ func TestGetOpConfigMap(t *testing.T) {
 }
 
 func TestManageError(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 	err := fmt.Errorf("test-error")
 
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
@@ -179,7 +186,8 @@ func TestManageError(t *testing.T) {
 }
 
 func TestManageSuccess(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
@@ -197,7 +205,8 @@ func TestManageSuccess(t *testing.T) {
 }
 
 func TestIsGroupVersionSupported(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
@@ -314,19 +323,21 @@ func testGetRouteTLSValues(t *testing.T) {
 }
 
 func TestGetRouteTLSValues(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 	// Test two scenarios: retrieving secret from service and retrieving secret from route
 	testGetSvcTLSValues(t)
 	testGetRouteTLSValues(t)
 }
 
 func TestGetSelectorLabelsFromApplications(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 
 	// Setup scheme
 	s := scheme.Scheme
-	s.AddKnownTypes(applicationsv1beta1.SchemeGroupVersion, &applicationsv1beta1.Application{})
-	s.AddKnownTypes(applicationsv1beta1.SchemeGroupVersion, &applicationsv1beta1.ApplicationList{})
+	s.AddKnownTypes(applicationsv1beta1.SchemeBuilder.GroupVersion, &applicationsv1beta1.Application{})
+	s.AddKnownTypes(applicationsv1beta1.SchemeBuilder.GroupVersion, &applicationsv1beta1.ApplicationList{})
 
 	// Configure the application
 	labelMap := map[string]string{

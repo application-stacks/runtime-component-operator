@@ -35,22 +35,22 @@ type EnqueueRequestsForCustomIndexField struct {
 
 // Create implements EventHandler
 func (e *EnqueueRequestsForCustomIndexField) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
-	e.handle(evt.Meta, evt.Object, q)
+	e.handle(evt.Object, evt.Object, q)
 }
 
 // Update implements EventHandler
 func (e *EnqueueRequestsForCustomIndexField) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
-	e.handle(evt.MetaNew, evt.ObjectNew, q)
+	e.handle(evt.ObjectNew, evt.ObjectNew, q)
 }
 
 // Delete implements EventHandler
 func (e *EnqueueRequestsForCustomIndexField) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
-	e.handle(evt.Meta, evt.Object, q)
+	e.handle(evt.Object, evt.Object, q)
 }
 
 // Generic implements EventHandler
 func (e *EnqueueRequestsForCustomIndexField) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
-	e.handle(evt.Meta, evt.Object, q)
+	e.handle(evt.Object, evt.Object, q)
 }
 
 // handle common implementation to enqueue reconcile Requests for applications

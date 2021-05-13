@@ -23,13 +23,13 @@ import (
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
-	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
+	applicationsv1beta1 "sigs.k8s.io/application/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 // ReconcilerBase base reconciler with some common behaviour
@@ -105,24 +105,19 @@ func (r *ReconcilerBase) SetDiscoveryClient(discovery discovery.DiscoveryInterfa
 var log = logf.Log.WithName("utils")
 
 // CreateOrUpdate ...
-func (r *ReconcilerBase) CreateOrUpdate(obj metav1.Object, owner metav1.Object, reconcile func() error) error {
+func (r *ReconcilerBase) CreateOrUpdate(obj client.Object, owner metav1.Object, reconcile func() error) error {
 
 	if owner != nil {
 		controllerutil.SetControllerReference(owner, obj, r.scheme)
 	}
-	runtimeObj, ok := obj.(runtime.Object)
-	if !ok {
-		err := fmt.Errorf("%T is not a runtime.Object", obj)
-		log.Error(err, "Failed to convert into runtime.Object")
-		return err
-	}
-	result, err := controllerutil.CreateOrUpdate(context.TODO(), r.GetClient(), runtimeObj, reconcile)
+
+	result, err := controllerutil.CreateOrUpdate(context.TODO(), r.GetClient(), obj, reconcile)
 	if err != nil {
 		return err
 	}
 
 	var gvk schema.GroupVersionKind
-	gvk, err = apiutil.GVKForObject(runtimeObj, r.scheme)
+	gvk, err = apiutil.GVKForObject(obj, r.scheme)
 	if err == nil {
 		log.Info("Reconciled", "Kind", gvk.Kind, "Namespace", obj.GetNamespace(), "Name", obj.GetName(), "Status", result)
 	}
@@ -131,7 +126,7 @@ func (r *ReconcilerBase) CreateOrUpdate(obj metav1.Object, owner metav1.Object, 
 }
 
 // DeleteResource deletes kubernetes resource
-func (r *ReconcilerBase) DeleteResource(obj runtime.Object) error {
+func (r *ReconcilerBase) DeleteResource(obj client.Object) error {
 	err := r.client.Delete(context.TODO(), obj)
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
@@ -157,7 +152,7 @@ func (r *ReconcilerBase) DeleteResource(obj runtime.Object) error {
 }
 
 // DeleteResources ...
-func (r *ReconcilerBase) DeleteResources(resources []runtime.Object) error {
+func (r *ReconcilerBase) DeleteResources(resources []client.Object) error {
 	for i := range resources {
 		err := r.DeleteResource(resources[i])
 		if err != nil {
@@ -180,11 +175,10 @@ func (r *ReconcilerBase) GetOpConfigMap(name string, ns string) (*corev1.ConfigM
 // ManageError ...
 func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
 	s := ba.GetStatus()
-	rObj := ba.(runtime.Object)
-	mObj := ba.(metav1.Object)
-	logger := log.WithValues("ba.Namespace", mObj.GetNamespace(), "ba.Name", mObj.GetName())
+	obj := ba.(client.Object)
+	logger := log.WithValues("ba.Namespace", obj.GetNamespace(), "ba.Name", obj.GetName())
 	logger.Error(issue, "ManageError", "Condition", conditionType, "ba", ba)
-	r.GetRecorder().Event(rObj, "Warning", "ProcessingError", issue.Error())
+	r.GetRecorder().Event(obj, "Warning", "ProcessingError", issue.Error())
 
 	oldCondition := s.GetCondition(conditionType)
 	if oldCondition == nil {
@@ -211,7 +205,7 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 
 	s.SetCondition(newCondition)
 
-	err := r.UpdateStatus(rObj)
+	err := r.UpdateStatus(obj)
 	if err != nil {
 
 		if apierrors.IsConflict(issue) {
@@ -267,7 +261,7 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 	statusCondition.SetType(conditionType)
 
 	s.SetCondition(statusCondition)
-	err := r.UpdateStatus(ba.(runtime.Object))
+	err := r.UpdateStatus(ba.(client.Object))
 	if err != nil {
 		log.Error(err, "Unable to update status")
 		return reconcile.Result{
@@ -305,7 +299,7 @@ func (r *ReconcilerBase) IsGroupVersionSupported(groupVersion string, kind strin
 }
 
 // UpdateStatus updates the fields corresponding to the status subresource for the object
-func (r *ReconcilerBase) UpdateStatus(obj runtime.Object) error {
+func (r *ReconcilerBase) UpdateStatus(obj client.Object) error {
 	return r.GetClient().Status().Update(context.Background(), obj)
 }
 
@@ -355,8 +349,8 @@ func (r *ReconcilerBase) ReconcileCertificate(ba common.BaseComponent) (reconcil
 				c.SetReason("CertificateNotReady")
 				c.SetMessage("Waiting for service certificate to be generated")
 				ba.GetStatus().SetCondition(c)
-				rtObj := ba.(runtime.Object)
-				r.UpdateStatus(rtObj)
+				obj := ba.(client.Object)
+				r.UpdateStatus(obj)
 				return reconcile.Result{}, errors.New("Certificate not ready")
 			}
 
@@ -415,8 +409,8 @@ func (r *ReconcilerBase) ReconcileCertificate(ba common.BaseComponent) (reconcil
 				c.SetReason("CertificateNotReady")
 				c.SetMessage("Waiting for route certificate to be generated")
 				ba.GetStatus().SetCondition(c)
-				rtObj := ba.(runtime.Object)
-				r.UpdateStatus(rtObj)
+				obj := ba.(client.Object)
+				r.UpdateStatus(obj)
 				return reconcile.Result{}, errors.New("Certificate not ready")
 			}
 		} else {
@@ -442,7 +436,7 @@ func (r *ReconcilerBase) IsOpenShift() bool {
 
 // IsApplicationSupported checks if Application
 func (r *ReconcilerBase) IsApplicationSupported() bool {
-	isApplicationSupported, err := r.IsGroupVersionSupported(applicationsv1beta1.SchemeGroupVersion.String(), "Application")
+	isApplicationSupported, err := r.IsGroupVersionSupported(applicationsv1beta1.SchemeBuilder.GroupVersion.Identifier(), "Application")
 	if err != nil {
 		return false
 	}

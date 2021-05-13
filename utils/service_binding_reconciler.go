@@ -180,22 +180,21 @@ func (r *ReconcilerBase) ReconcileProvides(ba common.BaseComponent) (_ reconcile
 
 // ReconcileConsumes ...
 func (r *ReconcilerBase) ReconcileConsumes(ba common.BaseComponent) (reconcile.Result, error) {
-	rObj := ba.(runtime.Object)
-	mObj := ba.(metav1.Object)
+	obj := ba.(client.Object)
 	for _, con := range ba.GetService().GetConsumes() {
 		if con.GetCategory() == common.ServiceBindingCategoryOpenAPI {
 			conNamespace := con.GetNamespace()
 			if conNamespace == "" {
-				conNamespace = mObj.GetNamespace()
+				conNamespace = obj.GetNamespace()
 			}
 			secretName := BuildServiceBindingSecretName(con.GetName(), conNamespace)
 			existingSecret := &corev1.Secret{}
 			err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: conNamespace}, existingSecret)
 			if err != nil {
 				if kerrors.IsNotFound(err) {
-					delErr := r.DeleteResource(&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secretName, Namespace: mObj.GetNamespace()}})
+					delErr := r.DeleteResource(&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secretName, Namespace: obj.GetNamespace()}})
 					if delErr != nil && !kerrors.IsNotFound(delErr) {
-						delErr = errors.Wrapf(delErr, "unable to delete orphaned secret %q from namespace %q", secretName, mObj.GetNamespace())
+						delErr = errors.Wrapf(delErr, "unable to delete orphaned secret %q from namespace %q", secretName, obj.GetNamespace())
 						err = errors.Wrapf(delErr, "unable to find service binding secret %q for service %q in namespace %q", secretName, con.GetName(), conNamespace)
 					} else {
 						err = errors.Wrapf(err, "unable to find service binding secret %q for service %q in namespace %q", secretName, con.GetName(), conNamespace)
@@ -208,24 +207,24 @@ func (r *ReconcilerBase) ReconcileConsumes(ba common.BaseComponent) (reconcile.R
 				existingSecret.Annotations = map[string]string{}
 			}
 			copiedToNamespacesKey := getCopiedToNamespacesAnnotationKey(ba)
-			existingSecret.Annotations[copiedToNamespacesKey] = AppendIfNotSubstring(mObj.GetNamespace(), existingSecret.Annotations[copiedToNamespacesKey])
+			existingSecret.Annotations[copiedToNamespacesKey] = AppendIfNotSubstring(obj.GetNamespace(), existingSecret.Annotations[copiedToNamespacesKey])
 			err = r.GetClient().Update(context.TODO(), existingSecret)
 			if err != nil {
 				r.requeueError(ba, errors.Wrapf(err, "failed to update service provider secret"))
 			}
 
 			copiedSecret := &corev1.Secret{}
-			err = r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: mObj.GetNamespace()}, copiedSecret)
+			err = r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: obj.GetNamespace()}, copiedSecret)
 			consumedByKey := getConsumedByAnnotationKey(ba)
 			if kerrors.IsNotFound(err) {
-				owner, _ := r.AsOwner(rObj, false)
+				owner, _ := r.AsOwner(obj, false)
 				copiedSecret = &corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:            secretName,
-						Namespace:       mObj.GetNamespace(),
+						Namespace:       obj.GetNamespace(),
 						Labels:          existingSecret.Labels,
 						OwnerReferences: []metav1.OwnerReference{owner},
-						Annotations:     map[string]string{consumedByKey: mObj.GetName()},
+						Annotations:     map[string]string{consumedByKey: obj.GetName()},
 					},
 					Data: existingSecret.Data,
 				}
@@ -235,12 +234,12 @@ func (r *ReconcilerBase) ReconcileConsumes(ba common.BaseComponent) (reconcile.R
 				if copiedSecret.Annotations == nil {
 					copiedSecret.Annotations = map[string]string{}
 				}
-				copiedSecret.Annotations[consumedByKey] = AppendIfNotSubstring(mObj.GetName(), copiedSecret.Annotations[consumedByKey])
+				copiedSecret.Annotations[consumedByKey] = AppendIfNotSubstring(obj.GetName(), copiedSecret.Annotations[consumedByKey])
 				copiedSecret.Data = existingSecret.Data
 				// Skip setting the owner on the copiedSecret if the consumer and provider are in the same namespace
 				// This is because we want the secret to be deleted if the provider is deleted
 				if conNamespace != copiedSecret.Namespace {
-					owner, _ := r.AsOwner(rObj, false)
+					owner, _ := r.AsOwner(obj, false)
 					EnsureOwnerRef(copiedSecret, owner)
 				}
 				if !reflect.DeepEqual(existingCopiedSecret, copiedSecret) {
@@ -260,7 +259,7 @@ func (r *ReconcilerBase) ReconcileConsumes(ba common.BaseComponent) (reconcile.R
 				consumedServices[common.ServiceBindingCategoryOpenAPI] =
 					append(consumedServices[common.ServiceBindingCategoryOpenAPI], secretName)
 				ba.GetStatus().SetConsumedServices(consumedServices)
-				err := r.UpdateStatus(rObj)
+				err := r.UpdateStatus(obj)
 				if err != nil {
 					return r.requeueError(ba, errors.Wrapf(err, "unable to update status with service binding secret information"))
 				}
@@ -603,7 +602,7 @@ func (r *ReconcilerBase) updateResolvedBindingStatus(bindings []string, ba commo
 	if !equals(bindings, ba.GetStatus().GetResolvedBindings()) {
 		sort.Strings(bindings)
 		ba.GetStatus().SetResolvedBindings(bindings)
-		if err := r.UpdateStatus(ba.(runtime.Object)); err != nil {
+		if err := r.UpdateStatus(ba.(client.Object)); err != nil {
 			return r.requeueError(ba, errors.Wrapf(err, "unable to update status with resolved service binding information"))
 		}
 	}

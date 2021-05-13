@@ -16,7 +16,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var (
@@ -74,7 +75,8 @@ type Test struct {
 }
 
 func TestCustomizeRoute(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service}
 	route, runtime := &routev1.Route{}, createRuntimeComponent(name, namespace, spec)
 
@@ -93,7 +95,8 @@ func TestCustomizeRoute(t *testing.T) {
 }
 
 func TestCustomizeService(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 
 	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service}
 	svc, runtime := &corev1.Service{}, createRuntimeComponent(name, namespace, spec)
@@ -257,13 +260,15 @@ func partialTestCustomizePodAffinity(t *testing.T) {
 }
 
 func TestCustomizeAffinity(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 	partialTestCustomizeNodeAffinity(t)
 	partialTestCustomizePodAffinity(t)
 }
 
 func TestCustomizePodSpec(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 
 	spec := appstacksv1beta1.RuntimeComponentSpec{
 		ApplicationImage:    appImage,
@@ -330,7 +335,8 @@ func TestCustomizePodSpec(t *testing.T) {
 }
 
 func TestCustomizePersistence(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 
 	spec := appstacksv1beta1.RuntimeComponentSpec{Storage: &storage}
 	statefulSet, runtime := &appsv1.StatefulSet{}, createRuntimeComponent(name, namespace, spec)
@@ -362,7 +368,8 @@ func TestCustomizePersistence(t *testing.T) {
 }
 
 func TestCustomizeServiceAccount(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 
 	spec := appstacksv1beta1.RuntimeComponentSpec{PullSecret: &pullSecret}
 	sa, runtime := &corev1.ServiceAccount{}, createRuntimeComponent(name, namespace, spec)
@@ -382,7 +389,8 @@ func TestCustomizeServiceAccount(t *testing.T) {
 }
 
 func TestCustomizeKnativeService(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 
 	spec := appstacksv1beta1.RuntimeComponentSpec{
 		ApplicationImage: appImage,
@@ -443,7 +451,8 @@ func TestCustomizeKnativeService(t *testing.T) {
 }
 
 func TestCustomizeHPA(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 
 	spec := appstacksv1beta1.RuntimeComponentSpec{Autoscaling: autoscaling}
 	hpa, runtime := &autoscalingv1.HorizontalPodAutoscaler{}, createRuntimeComponent(name, namespace, spec)
@@ -469,7 +478,8 @@ func TestCustomizeHPA(t *testing.T) {
 
 func TestCustomizeServiceMonitor(t *testing.T) {
 
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service}
 
 	params := map[string][]string{
@@ -543,7 +553,8 @@ func TestCustomizeServiceMonitor(t *testing.T) {
 }
 
 func TestGetCondition(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 	status := &appstacksv1beta1.RuntimeComponentStatus{
 		Conditions: []appstacksv1beta1.StatusCondition{
 			{
@@ -559,7 +570,8 @@ func TestGetCondition(t *testing.T) {
 }
 
 func TestSetCondition(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 	status := &appstacksv1beta1.RuntimeComponentStatus{
 		Conditions: []appstacksv1beta1.StatusCondition{
 			{Type: appstacksv1beta1.StatusConditionTypeReconciled},
@@ -576,7 +588,8 @@ func TestSetCondition(t *testing.T) {
 
 func TestGetWatchNamespaces(t *testing.T) {
 	// Set the logger to development mode for verbose logs
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 
 	os.Setenv("WATCH_NAMESPACE", "")
 	namespaces, err := GetWatchNamespaces()
@@ -612,7 +625,8 @@ func TestGetWatchNamespaces(t *testing.T) {
 }
 
 func TestUpdateAppDefinition(t *testing.T) {
-	logf.SetLogger(logf.ZapLogger(true))
+	logger := zap.New()
+	logf.SetLogger(logger)
 
 	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service, Version: "v1alpha"}
 	app := createRuntimeComponent(name, namespace, spec)

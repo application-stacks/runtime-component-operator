@@ -52,10 +52,10 @@ import (
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
-	applicationsv1beta1 "sigs.k8s.io/application/pkg/apis/app/v1beta1"
+	applicationsv1beta1 "sigs.k8s.io/application/api/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // RuntimeComponentReconciler reconciles a RuntimeComponent object
@@ -79,7 +79,7 @@ type RuntimeComponentReconciler struct {
 // +kubebuilder:rbac:groups=app.k8s.io,resources=applications,verbs=*
 // +kubebuilder:rbac:groups=apps.openshift.io,resources=servicebindingrequests,verbs=*
 
-func (r *RuntimeComponentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 
 	reqLogger := r.Log.WithValues("Request.Namespace", req.Namespace, "Request.Name", req.Name)
 	reqLogger.Info("Reconciling RuntimeComponent")
@@ -154,7 +154,7 @@ func (r *RuntimeComponentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 		}
 		instance.Labels = appstacksutils.MergeMaps(existingAppLabels, instance.Labels)
 	} else {
-		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", applicationsv1beta1.SchemeGroupVersion.String()))
+		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", applicationsv1beta1.SchemeBuilder.GroupVersion.String()))
 	}
 
 	if r.IsOpenShift() {
@@ -269,7 +269,7 @@ func (r *RuntimeComponentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 
 	if instance.Spec.CreateKnativeService != nil && *instance.Spec.CreateKnativeService {
 		// Clean up non-Knative resources
-		resources := []runtime.Object{
+		resources := []client.Object{
 			&corev1.Service{ObjectMeta: defaultMeta},
 			&corev1.Service{ObjectMeta: metav1.ObjectMeta{Name: instance.Name + "-headless", Namespace: instance.Namespace}},
 			&appsv1.Deployment{ObjectMeta: defaultMeta},
@@ -512,7 +512,7 @@ func (r *RuntimeComponentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 // SetupWithManager initializes reconciler
 func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
-	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta1.RuntimeComponent{}, indexFieldImageStreamName, func(obj runtime.Object) []string {
+	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta1.RuntimeComponent{}, indexFieldImageStreamName, func(obj client.Object) []string {
 		instance := obj.(*appstacksv1beta1.RuntimeComponent)
 		image, err := imageutil.ParseDockerImageReference(instance.Spec.ApplicationImage)
 		if err == nil {
@@ -525,7 +525,7 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		}
 		return nil
 	})
-	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta1.RuntimeComponent{}, indexFieldBindingsResourceRef, func(obj runtime.Object) []string {
+	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta1.RuntimeComponent{}, indexFieldBindingsResourceRef, func(obj client.Object) []string {
 		instance := obj.(*appstacksv1beta1.RuntimeComponent)
 
 		if instance.Spec.Bindings != nil && instance.Spec.Bindings.ResourceRef != "" {
@@ -549,28 +549,28 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	pred := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			// Ignore updates to CR status in which case metadata.Generation does not change
-			return e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration() && (isClusterWide || watchNamespacesMap[e.MetaOld.GetNamespace()])
+			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration() && (isClusterWide || watchNamespacesMap[e.ObjectNew.GetNamespace()])
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
-			return isClusterWide || watchNamespacesMap[e.Meta.GetNamespace()]
+			return isClusterWide || watchNamespacesMap[e.Object.GetNamespace()]
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
-			return isClusterWide || watchNamespacesMap[e.Meta.GetNamespace()]
+			return isClusterWide || watchNamespacesMap[e.Object.GetNamespace()]
 		},
 		GenericFunc: func(e event.GenericEvent) bool {
-			return isClusterWide || watchNamespacesMap[e.Meta.GetNamespace()]
+			return isClusterWide || watchNamespacesMap[e.Object.GetNamespace()]
 		},
 	}
 
 	predSubResource := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			return (isClusterWide || watchNamespacesMap[e.MetaOld.GetNamespace()])
+			return (isClusterWide || watchNamespacesMap[e.ObjectOld.GetNamespace()])
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
 			return false
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
-			return isClusterWide || watchNamespacesMap[e.Meta.GetNamespace()]
+			return isClusterWide || watchNamespacesMap[e.Object.GetNamespace()]
 		},
 		GenericFunc: func(e event.GenericEvent) bool {
 			return false
@@ -580,13 +580,13 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	predSubResWithGenCheck := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			// Ignore updates to CR status in which case metadata.Generation does not change
-			return (isClusterWide || watchNamespacesMap[e.MetaOld.GetNamespace()]) && e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration()
+			return (isClusterWide || watchNamespacesMap[e.ObjectOld.GetNamespace()]) && e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
 			return false
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
-			return isClusterWide || watchNamespacesMap[e.Meta.GetNamespace()]
+			return isClusterWide || watchNamespacesMap[e.Object.GetNamespace()]
 		},
 		GenericFunc: func(e event.GenericEvent) bool {
 			return false

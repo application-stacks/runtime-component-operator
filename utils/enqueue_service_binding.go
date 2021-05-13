@@ -26,17 +26,17 @@ type EnqueueRequestsForServiceBinding struct {
 
 // Update implements EventHandler
 func (e *EnqueueRequestsForServiceBinding) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
-	e.handle(evt.MetaNew, q)
+	e.handle(evt.ObjectNew, q)
 }
 
 // Delete implements EventHandler
 func (e *EnqueueRequestsForServiceBinding) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
-	e.handle(evt.Meta, q)
+	e.handle(evt.Object, q)
 }
 
 // Generic implements EventHandler
 func (e *EnqueueRequestsForServiceBinding) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
-	e.handle(evt.Meta, q)
+	e.handle(evt.Object, q)
 }
 
 // handle common implementation to enqueue reconcile Requests for applications affected by the secrets that

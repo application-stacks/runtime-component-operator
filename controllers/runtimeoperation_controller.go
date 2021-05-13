@@ -52,7 +52,7 @@ type RuntimeOperationReconciler struct {
 // +kubebuilder:rbac:groups=app.stacks,resources=runtimeoperations;runtimeoperations/status,verbs=*
 // +kubebuilder:rbac:groups=core,resources=pods/exec,verbs=*
 
-func (r *RuntimeOperationReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *RuntimeOperationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	reqLogger := r.Log.WithValues("Request.Namespace", req.Namespace, "Request.Name", req.Name)
 	reqLogger.Info("Reconciling RuntimeOperation")
 
@@ -173,16 +173,16 @@ func (r *RuntimeOperationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	pred := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			// Ignore updates to CR status in which case metadata.Generation does not change
-			return e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration() && (isClusterWide || watchNamespacesMap[e.MetaOld.GetNamespace()])
+			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration() && (isClusterWide || watchNamespacesMap[e.ObjectOld.GetNamespace()])
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
-			return isClusterWide || watchNamespacesMap[e.Meta.GetNamespace()]
+			return isClusterWide || watchNamespacesMap[e.Object.GetNamespace()]
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
-			return isClusterWide || watchNamespacesMap[e.Meta.GetNamespace()]
+			return isClusterWide || watchNamespacesMap[e.Object.GetNamespace()]
 		},
 		GenericFunc: func(e event.GenericEvent) bool {
-			return isClusterWide || watchNamespacesMap[e.Meta.GetNamespace()]
+			return isClusterWide || watchNamespacesMap[e.Object.GetNamespace()]
 		},
 	}
 
