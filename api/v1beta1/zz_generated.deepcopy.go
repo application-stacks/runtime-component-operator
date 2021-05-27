@@ -513,11 +513,6 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		*out = new(RuntimeComponentMonitoring)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.CreateAppDefinition != nil {
-		in, out := &in.CreateAppDefinition, &out.CreateAppDefinition
-		*out = new(bool)
-		**out = **in
-	}
 	if in.InitContainers != nil {
 		in, out := &in.InitContainers, &out.InitContainers
 		*out = make([]corev1.Container, len(*in))

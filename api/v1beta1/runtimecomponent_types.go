@@ -58,7 +58,6 @@ type RuntimeComponentSpec struct {
 	Storage              *RuntimeComponentStorage    `json:"storage,omitempty"`
 	CreateKnativeService *bool                       `json:"createKnativeService,omitempty"`
 	Monitoring           *RuntimeComponentMonitoring `json:"monitoring,omitempty"`
-	CreateAppDefinition  *bool                       `json:"createAppDefinition,omitempty"`
 	ApplicationName      string                      `json:"applicationName,omitempty"`
 	// +listType=map
 	// +listMapKey=name
@@ -340,11 +339,6 @@ func (cr *RuntimeComponent) GetService() common.BaseComponentService {
 // GetVersion returns application version
 func (cr *RuntimeComponent) GetVersion() string {
 	return cr.Spec.Version
-}
-
-// GetCreateAppDefinition returns a toggle for integration with kAppNav
-func (cr *RuntimeComponent) GetCreateAppDefinition() *bool {
-	return cr.Spec.CreateAppDefinition
 }
 
 // GetApplicationName returns Application name to be used for integration with kAppNav

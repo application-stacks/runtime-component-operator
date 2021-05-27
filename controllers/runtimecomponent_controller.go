@@ -54,7 +54,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
-	applicationsv1beta1 "sigs.k8s.io/application/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -144,17 +143,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		reqLogger.Error(err, "Error validating RuntimeComponent")
 		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		return reconcile.Result{}, nil
-	}
-
-	if r.IsApplicationSupported() {
-		// Get labels from Application CRs selector and merge with instance labels
-		existingAppLabels, err := r.GetSelectorLabelsFromApplications(instance)
-		if err != nil {
-			r.ManageError(errors.Wrapf(err, "unable to get %q Application CR selector's labels ", instance.Spec.ApplicationName), common.StatusConditionTypeReconciled, instance)
-		}
-		instance.Labels = appstacksutils.MergeMaps(existingAppLabels, instance.Labels)
-	} else {
-		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", applicationsv1beta1.SchemeBuilder.GroupVersion.String()))
 	}
 
 	if r.IsOpenShift() {

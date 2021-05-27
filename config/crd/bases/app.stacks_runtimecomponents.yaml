@@ -676,8 +676,6 @@ spec:
                   resourceRef:
                     type: string
                 type: object
-              createAppDefinition:
-                type: boolean
               createKnativeService:
                 type: boolean
               env:

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"strings"
 	"time"
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/api/v1beta1"
@@ -15,7 +14,6 @@ import (
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -23,7 +21,6 @@ import (
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
-	applicationsv1beta1 "sigs.k8s.io/application/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -434,15 +431,6 @@ func (r *ReconcilerBase) IsOpenShift() bool {
 	return isOpenShift
 }
 
-// IsApplicationSupported checks if Application
-func (r *ReconcilerBase) IsApplicationSupported() bool {
-	isApplicationSupported, err := r.IsGroupVersionSupported(applicationsv1beta1.SchemeBuilder.GroupVersion.Identifier(), "Application")
-	if err != nil {
-		return false
-	}
-	return isApplicationSupported
-}
-
 // GetRouteTLSValues returns certificate an key values to be used in the route
 func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string, cert string, ca string, destCa string, err error) {
 	key, cert, ca, destCa = "", "", "", ""
@@ -498,42 +486,4 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string,
 		}
 	}
 	return key, cert, ca, destCa, nil
-}
-
-// GetSelectorLabelsFromApplications finds application CRs with the specified name in the BaseComponent's namespace and returns labels in `selector.matchLabels`.
-// If it fails to find in the current namespace, it looks up in the whole cluster and aggregates all labels in `selector.matchLabels`.
-func (r *ReconcilerBase) GetSelectorLabelsFromApplications(ba common.BaseComponent) (map[string]string, error) {
-	mObj := ba.(metav1.Object)
-	allSelectorLabels := map[string]string{}
-	app := &applicationsv1beta1.Application{}
-	key := types.NamespacedName{Name: ba.GetApplicationName(), Namespace: mObj.GetNamespace()}
-	var err error
-	if err = r.GetClient().Get(context.Background(), key, app); err == nil {
-		if app.Spec.Selector != nil {
-			for name, value := range app.Spec.Selector.MatchLabels {
-				allSelectorLabels[name] = value
-			}
-		}
-	} else if err != nil && kerrors.IsNotFound(err) {
-		apps := &applicationsv1beta1.ApplicationList{}
-		if err = r.GetClient().List(context.Background(), apps, client.InNamespace("")); err == nil {
-			for _, app := range apps.Items {
-				if app.Name == ba.GetApplicationName() && app.Annotations != nil {
-					namespaces := strings.Split(app.Annotations["kappnav.component.namespaces"], ",")
-					for i := range namespaces {
-						namespaces[i] = strings.TrimSpace(namespaces[i])
-					}
-					if ContainsString(namespaces, mObj.GetNamespace()) && app.Spec.Selector != nil {
-						for name, value := range app.Spec.Selector.MatchLabels {
-							allSelectorLabels[name] = value
-						}
-					}
-				}
-			}
-		}
-	}
-	if err != nil && !kerrors.IsNotFound(err) {
-		return nil, err
-	}
-	return allSelectorLabels, nil
 }
