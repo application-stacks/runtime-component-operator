@@ -1,3 +1,4 @@
+OPERATOR_SDK_RELEASE_VERSION ?= v1.6.4
 # Current Operator version
 VERSION ?= 0.0.1
 # Default bundle image tag
@@ -121,3 +122,13 @@ bundle: manifests
 .PHONY: bundle-build
 bundle-build:
 	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+
+
+setup: ## Ensure Operator SDK is installed
+	./scripts/installers/install-operator-sdk.sh ${OPERATOR_SDK_RELEASE_VERSION}
+
+unit-test: ## Run unit tests
+	go test -v -mod=vendor -tags=unit github.com/application-stacks/runtime-component-operator/...
+
+build-image: ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}"
+	docker build ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}

@@ -179,7 +179,6 @@ type BaseComponent interface {
 	GetStorage() BaseComponentStorage
 	GetService() BaseComponentService
 	GetVersion() string
-	GetCreateAppDefinition() *bool
 	GetApplicationName() string
 	GetMonitoring() BaseComponentMonitoring
 	GetLabels() map[string]string

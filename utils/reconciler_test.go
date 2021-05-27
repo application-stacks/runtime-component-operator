@@ -22,7 +22,6 @@ import (
 	coretesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
 	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
-	applicationsv1beta1 "sigs.k8s.io/application/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -328,59 +327,6 @@ func TestGetRouteTLSValues(t *testing.T) {
 	// Test two scenarios: retrieving secret from service and retrieving secret from route
 	testGetSvcTLSValues(t)
 	testGetRouteTLSValues(t)
-}
-
-func TestGetSelectorLabelsFromApplications(t *testing.T) {
-	logger := zap.New()
-	logf.SetLogger(logger)
-
-	// Setup scheme
-	s := scheme.Scheme
-	s.AddKnownTypes(applicationsv1beta1.SchemeBuilder.GroupVersion, &applicationsv1beta1.Application{})
-	s.AddKnownTypes(applicationsv1beta1.SchemeBuilder.GroupVersion, &applicationsv1beta1.ApplicationList{})
-
-	// Configure the application
-	labelMap := map[string]string{
-		"test-key": "test-value",
-	}
-	application := &applicationsv1beta1.Application{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			Annotations: map[string]string{
-				"kappnav.component.namespaces": namespace,
-			},
-		},
-		Spec: applicationsv1beta1.ApplicationSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labelMap,
-			},
-		},
-	}
-
-	// Create the fake client and the reconciler
-	cl := fakeclient.NewFakeClient()
-	rcl := fakeclient.NewFakeClient()
-	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
-
-	// Deploy the application
-	err := cl.Create(context.TODO(), application)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Get selector labels
-	runtimecomponent := createRuntimeComponent(name, namespace, spec)
-	returnedLabelMap, err := r.GetSelectorLabelsFromApplications(runtimecomponent)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Verify the result
-	testMS := []Test{
-		{"SelectorLabels", labelMap, returnedLabelMap},
-	}
-	verifyTests(testMS, t)
 }
 
 func createFakeDiscoveryClient() discovery.DiscoveryInterface {

@@ -624,57 +624,6 @@ func TestGetWatchNamespaces(t *testing.T) {
 	verifyTests(configMapConstTests, t)
 }
 
-func TestUpdateAppDefinition(t *testing.T) {
-	logger := zap.New()
-	logf.SetLogger(logger)
-
-	spec := appstacksv1beta1.RuntimeComponentSpec{Service: service, Version: "v1alpha"}
-	app := createRuntimeComponent(name, namespace, spec)
-
-	// Toggle app definition off [disabled]
-	enabled := false
-	app.Spec.CreateAppDefinition = &enabled
-	labels, annotations := createAppDefinitionTags(app)
-	UpdateAppDefinition(labels, annotations, app)
-
-	appDefinitionTests := []Test{
-		{"Label unset", 0, len(labels)},
-		{"Annotation unset", 0, len(annotations)},
-	}
-
-	verifyTests(appDefinitionTests, t)
-
-	// Toggle back on [active]
-	enabled = true
-	completeLabels, completeAnnotations := createAppDefinitionTags(app)
-	UpdateAppDefinition(labels, annotations, app)
-
-	appDefinitionTests = []Test{
-		{"Label set", labels["kappnav.app.auto-create"], completeLabels["kappnav.app.auto-create"]},
-		{"Annotation name set", annotations["kappnav.app.auto-create.name"], completeAnnotations["kappnav.app.auto-create.name"]},
-		{"Annotation kinds set", annotations["kappnav.app.auto-create.kinds"], completeAnnotations["kappnav.app.auto-create.kinds"]},
-		{"Annotation label set", annotations["kappnav.app.auto-create.label"], completeAnnotations["kappnav.app.auto-create.label"]},
-		{"Annotation labels-values", annotations["kappnav.app.auto-create.labels-values"], completeAnnotations["kappnav.app.auto-create.labels-values"]},
-		{"Annotation version set", annotations["kappnav.app.auto-create.version"], completeAnnotations["kappnav.app.auto-create.version"]},
-	}
-	verifyTests(appDefinitionTests, t)
-
-	// Verify labels are still set when CreateApp is undefined [default]
-	app.Spec.CreateAppDefinition = nil
-	UpdateAppDefinition(labels, annotations, app)
-
-	appDefinitionTests = []Test{
-		{"Label set", labels["kappnav.app.auto-create"], completeLabels["kappnav.app.auto-create"]},
-		{"Annotation name set", annotations["kappnav.app.auto-create.name"], completeAnnotations["kappnav.app.auto-create.name"]},
-		{"Annotation kinds set", annotations["kappnav.app.auto-create.kinds"], completeAnnotations["kappnav.app.auto-create.kinds"]},
-		{"Annotation label set", annotations["kappnav.app.auto-create.label"], completeAnnotations["kappnav.app.auto-create.label"]},
-		{"Annotation labels-values", annotations["kappnav.app.auto-create.labels-values"], completeAnnotations["kappnav.app.auto-create.labels-values"]},
-		{"Annotation version set", annotations["kappnav.app.auto-create.version"], completeAnnotations["kappnav.app.auto-create.version"]},
-	}
-	verifyTests(appDefinitionTests, t)
-
-}
-
 // Helper Functions
 // Unconditionally set the proper tags for an enabled runtime omponent
 func createAppDefinitionTags(app *appstacksv1beta1.RuntimeComponent) (map[string]string, map[string]string) {

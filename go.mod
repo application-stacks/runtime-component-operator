@@ -8,16 +8,13 @@ require (
 	github.com/go-logr/logr v0.3.0
 	github.com/google/go-containerregistry v0.1.4 // indirect
 	github.com/jetstack/cert-manager v1.0.3
-	github.com/onsi/ginkgo v1.14.1
-	github.com/onsi/gomega v1.10.2
-	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
+	github.com/openshift/api v0.0.0-20201019163320-c6a5ec25f267
 	github.com/openshift/library-go v0.0.0-20201026125231-a28d3d1bad23
 	github.com/pkg/errors v0.9.1
 	k8s.io/api v0.19.2
 	k8s.io/apimachinery v0.19.2
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	knative.dev/serving v0.18.1
-	sigs.k8s.io/application v0.8.3
 	sigs.k8s.io/controller-runtime v0.7.2
 )
 

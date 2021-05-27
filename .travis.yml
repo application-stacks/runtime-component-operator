@@ -1,11 +1,9 @@
 dist: xenial
 language: go
 go:
-  - 1.13.x
+  - 1.15.x
 
 go_import_path: github.com/application-stacks/runtime-component-operator
-env:
-  - GO111MODULE=on
 
 services:
   - docker

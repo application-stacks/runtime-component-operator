@@ -47,7 +47,6 @@ func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseComponent) {
 		}
 	}
 
-	UpdateAppDefinition(deploy.Labels, deploy.Annotations, ba)
 }
 
 // CustomizeStatefulSet ...
@@ -65,31 +64,6 @@ func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseCompone
 			MatchLabels: map[string]string{
 				"app.kubernetes.io/instance": obj.GetName(),
 			},
-		}
-	}
-
-	UpdateAppDefinition(statefulSet.Labels, statefulSet.Annotations, ba)
-}
-
-// UpdateAppDefinition adds or removes kAppNav auto-create related annotations/labels
-func UpdateAppDefinition(labels map[string]string, annotations map[string]string, ba common.BaseComponent) {
-	if ba.GetCreateAppDefinition() != nil && !*ba.GetCreateAppDefinition() {
-		delete(labels, "kappnav.app.auto-create")
-		delete(annotations, "kappnav.app.auto-create.name")
-		delete(annotations, "kappnav.app.auto-create.kinds")
-		delete(annotations, "kappnav.app.auto-create.label")
-		delete(annotations, "kappnav.app.auto-create.labels-values")
-		delete(annotations, "kappnav.app.auto-create.version")
-	} else {
-		labels["kappnav.app.auto-create"] = "true"
-		annotations["kappnav.app.auto-create.name"] = ba.GetApplicationName()
-		annotations["kappnav.app.auto-create.kinds"] = "Deployment, StatefulSet, Service, Route, Ingress, ConfigMap"
-		annotations["kappnav.app.auto-create.label"] = "app.kubernetes.io/part-of"
-		annotations["kappnav.app.auto-create.labels-values"] = ba.GetApplicationName()
-		if ba.GetVersion() == "" {
-			delete(annotations, "kappnav.app.auto-create.version")
-		} else {
-			annotations["kappnav.app.auto-create.version"] = ba.GetVersion()
 		}
 	}
 }

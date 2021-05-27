@@ -71,29 +71,10 @@ main() {
 build_release() {
   local release="$1"
   local full_image="${IMAGE}:${release}-${arch}"
+  echo "*** Building ${full_image} for ${arch}"
+  docker build -t "${full_image}"
+  return $?
 
-  if [[ ! "${arch}" = "s390x" ]]; then
-    echo "*** Building ${full_image} for ${arch}"
-    operator-sdk build "${full_image}"
-    return $?
-  else
-    ## build manually on zLinux as operator-sdk doesn't support
-    ## NOTE values below must be changed to build other operators
-    echo "*** Building binary of operator project"
-    go build -o "$(pwd)/build/_output/bin/runtime-component-operator" \
-      -gcflags all=-trimpath=$(pwd)/.. \
-      -asmflags all=-trimpath=$(pwd)/..\
-      -mod=vendor "github.com/application-stacks/runtime-component-operator/cmd/manager"
-
-    if [[ $? -ne 0 ]]; then
-      echo "Failed to build binary for zLinux, exiting"
-      return 1
-    fi
-
-    echo "*** Building image: ${full_image} for ${arch}"
-    docker build -f build/Dockerfile -t "${full_image}" .
-    return $?
-  fi
 }
 
 push_release() {
