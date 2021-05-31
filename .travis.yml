@@ -11,9 +11,9 @@ services:
 stages:
   - name: test
   - name: build
-    if: branch = master AND fork = false AND type != pull_request
+#    if: branch = master AND fork = false AND type != pull_request
   - name: build manifest
-    if: branch = master AND fork = false AND type != pull_request
+#   if: branch = master AND fork = false AND type != pull_request
 
 jobs:
   include:
@@ -21,13 +21,15 @@ jobs:
       stage: test
       script: make unit-test
     - name: Verify operator image build
-      script: make build-image
-      if: branch != master OR fork = true OR type = pull_request
-    - name: E2E testing on Minikube
-      script: make test-minikube
-    - name: E2E testing on OCP 4.3
-      script: make test-e2e
-      if: fork = false
+      script: 
+        - make docker-login
+        - make build-image
+#      if: branch != master OR fork = true OR type = pull_request
+#    - name: E2E testing on Minikube
+#      script: make test-minikube
+#    - name: E2E testing on OCP 4.3
+#      script: make test-e2e
+#      if: fork = false
     ## if master branch build and push images on all three archs
     - name: Build image on amd64
       stage: build
@@ -35,19 +37,19 @@ jobs:
       arch: amd64
       script:
         - make build-multiarch-image
-        - make build-manifest
+        #- make build-manifest
     - name: Build image on ppc64le
       os: linux
       arch: ppc64le
       script:
         - make build-multiarch-image
-        - make build-manifest
+        #- make build-manifest
     - name: Build image on s390x
       os: linux
       arch: s390x
       script:
         - make build-multiarch-image
-        - make build-manifest
+        #- make build-manifest
     ## in case there were concurrency issues with building manifest lists
     ## in previous steps, create FAT manifests one last time
     - name: Verify manifest lists

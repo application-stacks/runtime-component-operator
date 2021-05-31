@@ -137,3 +137,15 @@ unit-test: ## Run unit tests
 
 build-image: ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}"
 	docker build -t ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG} .
+
+build-multiarch-image: ## Build and push operator image
+	./scripts/build-releases.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
+
+docker-login:
+	docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" 
+	
+build-manifest: setup-manifest
+	./scripts/build-manifest.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
+
+setup-manifest:
+	./scripts/installers/install-manifest-tool.sh

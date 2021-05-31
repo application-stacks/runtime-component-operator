@@ -49,8 +49,11 @@ main() {
   build_release "daily"
   echo "****** Pushing release: daily"
   push_release "daily"
+}
 
-  ## loop through tagged releases and build
+
+build_previous_releases() {
+ ## loop through tagged releases and build
   local tags=$(git tag -l)
   while read -r tag; do
     if [[ -z "${tag}" ]]; then
@@ -64,7 +67,7 @@ main() {
     echo "****** Building release: ${dockerTag}"
     build_release "${dockerTag}"
     echo "****** Pushing release: ${dockerTag}"
-    push_release "${dockerTag}"
+    #push_release "${dockerTag}"
   done <<< "${tags}"
 }
 
@@ -72,7 +75,7 @@ build_release() {
   local release="$1"
   local full_image="${IMAGE}:${release}-${arch}"
   echo "*** Building ${full_image} for ${arch}"
-  docker build -t "${full_image}"
+  docker build -t "${full_image}" .
   return $?
 
 }
