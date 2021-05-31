@@ -1,6 +1,11 @@
 OPERATOR_SDK_RELEASE_VERSION ?= v1.6.4
+
 # Current Operator version
-VERSION ?= 0.0.1
+VERSION ?= 0.7.1
+
+OPERATOR_IMAGE ?= applicationstacks/operator
+OPERATOR_IMAGE_TAG ?= daily
+
 # Default bundle image tag
 BUNDLE_IMG ?= controller-bundle:$(VERSION)
 # Options for 'bundle-build'
@@ -131,4 +136,4 @@ unit-test: ## Run unit tests
 	go test -v -mod=vendor -tags=unit github.com/application-stacks/runtime-component-operator/...
 
 build-image: ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}"
-	docker build ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}
+	docker build -t ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG} .
