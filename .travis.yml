@@ -11,9 +11,9 @@ services:
 stages:
   - name: test
   - name: build
-#    if: branch = master AND fork = false AND type != pull_request
+    if: branch = master AND fork = false AND type != pull_request
   - name: build manifest
-#   if: branch = master AND fork = false AND type != pull_request
+    if: branch = master AND fork = false AND type != pull_request
 
 jobs:
   include:
@@ -37,19 +37,19 @@ jobs:
       arch: amd64
       script:
         - make build-multiarch-image
-        #- make build-manifest
+        - make build-manifest
     - name: Build image on ppc64le
       os: linux
       arch: ppc64le
       script:
         - make build-multiarch-image
-        #- make build-manifest
+        - make build-manifest
     - name: Build image on s390x
       os: linux
       arch: s390x
       script:
         - make build-multiarch-image
-        #- make build-manifest
+        - make build-manifest
     ## in case there were concurrency issues with building manifest lists
     ## in previous steps, create FAT manifests one last time
     - name: Verify manifest lists
