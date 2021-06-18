@@ -29,10 +29,19 @@ spec:
         - --enable-leader-election
         image: controller:latest
         name: manager
+        env:
+          - name: OPERATOR_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: WATCH_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.annotations['olm.targetNamespaces']
         resources:
           limits:
-            cpu: 100m
-            memory: 30Mi
+            cpu: 200m
+            memory: 256Mi
           requests:
             cpu: 100m
             memory: 20Mi
