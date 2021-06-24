@@ -64,15 +64,16 @@ type RuntimeComponentReconciler struct {
 	watchNamespaces []string
 }
 
-// +kubebuilder:rbac:groups=app.stacks,resources=runtimecomponents;runtimecomponents/status,verbs=*
+// +kubebuilder:rbac:groups=app.stacks,resources=runtimecomponents;runtimecomponents/status;runtimecomponents/finalizers,verbs=*
 // +kubebuilder:rbac:groups=apps,resources=deployments;statefulsets,verbs=*
+// +kubebuilder:rbac:groups=apps,resources=deployments/finalizers;statefulsets,verbs=update
 // +kubebuilder:rbac:groups=core,resources=services;secrets;serviceaccounts;configmaps,verbs=*
 // +kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=*
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=*
 // +kubebuilder:rbac:groups=route.openshift.io,resources=routes;routes/custom-host,verbs=*
 // +kubebuilder:rbac:groups=cert-manager.io,resources=certificates,verbs=*
 // +kubebuilder:rbac:groups=certmanager.k8s.io,resources=certificates,verbs=*
-// +kubebuilder:rbac:groups=image.openshift.io,resources=imagestream;imagestreamtags,verbs=get;list;watch
+// +kubebuilder:rbac:groups=image.openshift.io,resources=imagestreams;imagestreamtags,verbs=get;list;watch
 // +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=*
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=*
 // +kubebuilder:rbac:groups=app.k8s.io,resources=applications,verbs=*

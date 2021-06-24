@@ -4,4 +4,7 @@ metadata:
   name: runtimeoperation-sample
 spec:
   # Add fields here
-  foo: bar
+  podName: app-74b69786dd-xhnlw
+  containerName: app
+  command:
+    - ./script.sh

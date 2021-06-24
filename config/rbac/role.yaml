@@ -16,12 +16,14 @@ rules:
   - app.stacks
   resources:
   - runtimecomponents
+  - runtimecomponents/finalizers
   - runtimecomponents/status
   verbs:
   - '*'
 - apiGroups:
   - app.stacks
   resources:
+  - runtimecomponents/finalizers
   - runtimeoperations
   - runtimeoperations/status
   verbs:
@@ -33,6 +35,13 @@ rules:
   - statefulsets
   verbs:
   - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments/finalizers
+  - statefulsets
+  verbs:
+  - update
 - apiGroups:
   - apps.openshift.io
   resources:
@@ -75,7 +84,7 @@ rules:
 - apiGroups:
   - image.openshift.io
   resources:
-  - imagestream
+  - imagestreams
   - imagestreamtags
   verbs:
   - get

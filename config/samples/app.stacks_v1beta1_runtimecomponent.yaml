@@ -4,4 +4,4 @@ metadata:
   name: runtimecomponent-sample
 spec:
   # Add fields here
-  foo: bar
+  applicationImage: registry.connect.redhat.com/ibm/open-liberty-samples:springPetClinic
