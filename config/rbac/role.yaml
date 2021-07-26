@@ -23,8 +23,8 @@ rules:
 - apiGroups:
   - app.stacks
   resources:
-  - runtimecomponents/finalizers
   - runtimeoperations
+  - runtimeoperations/finalizers
   - runtimeoperations/status
   verbs:
   - '*'
