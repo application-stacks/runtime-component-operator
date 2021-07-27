@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 )
 
 // CustomizeDeployment ...
@@ -578,7 +578,7 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent)
 }
 
 // CustomizeKnativeService ...
-func CustomizeKnativeService(ksvc *servingv1alpha1.Service, ba common.BaseComponent) {
+func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	ksvc.Labels = ba.GetLabels()
 	ksvc.Annotations = MergeMaps(ksvc.Annotations, ba.GetAnnotations())
@@ -591,9 +591,6 @@ func CustomizeKnativeService(ksvc *servingv1alpha1.Service, ba common.BaseCompon
 		ksvc.Labels["serving.knative.dev/visibility"] = "cluster-local"
 	}
 
-	if ksvc.Spec.Template == nil {
-		ksvc.Spec.Template = &servingv1alpha1.RevisionTemplateSpec{}
-	}
 	if len(ksvc.Spec.Template.Spec.Containers) == 0 {
 		ksvc.Spec.Template.Spec.Containers = append(ksvc.Spec.Template.Spec.Containers, corev1.Container{})
 	}
@@ -971,7 +968,7 @@ func GetAppContainer(containerList []corev1.Container) *corev1.Container {
 }
 
 // CustomizeIngress customizes ingress resource
-func CustomizeIngress(ing *networkingv1beta1.Ingress, ba common.BaseComponent) {
+func CustomizeIngress(ing *networkingv1.Ingress, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	ing.Labels = ba.GetLabels()
 	servicePort := strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
@@ -998,17 +995,21 @@ func CustomizeIngress(ing *networkingv1beta1.Ingress, ba common.BaseComponent) {
 		l.Info("No Ingress hostname is provided. Ingress might not function correctly without hostname. It is recommended to set Ingress host or to provide default value through operator's config map.")
 	}
 
-	ing.Spec.Rules = []networkingv1beta1.IngressRule{
+	ing.Spec.Rules = []networkingv1.IngressRule{
 		{
 			Host: host,
-			IngressRuleValue: networkingv1beta1.IngressRuleValue{
-				HTTP: &networkingv1beta1.HTTPIngressRuleValue{
-					Paths: []networkingv1beta1.HTTPIngressPath{
+			IngressRuleValue: networkingv1.IngressRuleValue{
+				HTTP: &networkingv1.HTTPIngressRuleValue{
+					Paths: []networkingv1.HTTPIngressPath{
 						{
 							Path: path,
-							Backend: networkingv1beta1.IngressBackend{
-								ServiceName: obj.GetName(),
-								ServicePort: intstr.IntOrString{Type: intstr.String, StrVal: servicePort},
+							Backend: networkingv1.IngressBackend{
+								Service: &networkingv1.IngressServiceBackend{
+									Name: obj.GetName(),
+									Port: networkingv1.ServiceBackendPort{
+										Name: servicePort,
+									},
+								},
 							},
 						},
 					},
@@ -1028,7 +1029,7 @@ func CustomizeIngress(ing *networkingv1beta1.Ingress, ba common.BaseComponent) {
 		tlsSecretName = *rt.GetCertificateSecretRef()
 	}
 	if tlsSecretName != "" && host != "" {
-		ing.Spec.TLS = []networkingv1beta1.IngressTLS{
+		ing.Spec.TLS = []networkingv1.IngressTLS{
 			{
 				Hosts:      []string{host},
 				SecretName: tlsSecretName,

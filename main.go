@@ -34,7 +34,7 @@ import (
 	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -56,7 +56,7 @@ func init() {
 
 	utilruntime.Must(imagev1.AddToScheme(scheme))
 
-	utilruntime.Must(servingv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(servingv1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 

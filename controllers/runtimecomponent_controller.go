@@ -49,11 +49,11 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
-	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -249,11 +249,11 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	isKnativeSupported, err := r.IsGroupVersionSupported(servingv1alpha1.SchemeGroupVersion.String(), "Service")
+	isKnativeSupported, err := r.IsGroupVersionSupported(servingv1.SchemeGroupVersion.String(), "Service")
 	if err != nil {
 		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	} else if !isKnativeSupported {
-		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", servingv1alpha1.SchemeGroupVersion.String()))
+		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", servingv1.SchemeGroupVersion.String()))
 	}
 
 	if instance.Spec.CreateKnativeService != nil && *instance.Spec.CreateKnativeService {
@@ -271,8 +271,8 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		}
 
-		if ok, _ := r.IsGroupVersionSupported(networkingv1beta1.SchemeGroupVersion.String(), "Ingress"); ok {
-			r.DeleteResource(&networkingv1beta1.Ingress{ObjectMeta: defaultMeta})
+		if ok, _ := r.IsGroupVersionSupported(networkingv1.SchemeGroupVersion.String(), "Ingress"); ok {
+			r.DeleteResource(&networkingv1.Ingress{ObjectMeta: defaultMeta})
 		}
 
 		if r.IsOpenShift() {
@@ -285,7 +285,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 
 		if isKnativeSupported {
-			ksvc := &servingv1alpha1.Service{ObjectMeta: defaultMeta}
+			ksvc := &servingv1.Service{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(ksvc, instance, func() error {
 				appstacksutils.CustomizeKnativeService(ksvc, instance)
 				appstacksutils.CustomizeServiceBinding(resolvedBindingSecret, &ksvc.Spec.Template.Spec.PodSpec, instance)
@@ -302,7 +302,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	if isKnativeSupported {
-		ksvc := &servingv1alpha1.Service{ObjectMeta: defaultMeta}
+		ksvc := &servingv1.Service{ObjectMeta: defaultMeta}
 		err = r.DeleteResource(ksvc)
 		if err != nil {
 			reqLogger.Error(err, "Failed to delete Knative Service")
@@ -443,12 +443,12 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	} else {
 
-		if ok, err := r.IsGroupVersionSupported(networkingv1beta1.SchemeGroupVersion.String(), "Ingress"); err != nil {
-			reqLogger.Error(err, fmt.Sprintf("Failed to check if %s is supported", networkingv1beta1.SchemeGroupVersion.String()))
+		if ok, err := r.IsGroupVersionSupported(networkingv1.SchemeGroupVersion.String(), "Ingress"); err != nil {
+			reqLogger.Error(err, fmt.Sprintf("Failed to check if %s is supported", networkingv1.SchemeGroupVersion.String()))
 			r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		} else if ok {
 			if instance.Spec.Expose != nil && *instance.Spec.Expose {
-				ing := &networkingv1beta1.Ingress{ObjectMeta: defaultMeta}
+				ing := &networkingv1.Ingress{ObjectMeta: defaultMeta}
 				err = r.CreateOrUpdate(ing, instance, func() error {
 					appstacksutils.CustomizeIngress(ing, instance)
 					return nil
@@ -458,7 +458,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 					return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 				}
 			} else {
-				ing := &networkingv1beta1.Ingress{ObjectMeta: defaultMeta}
+				ing := &networkingv1.Ingress{ObjectMeta: defaultMeta}
 				err = r.DeleteResource(ing)
 				if err != nil {
 					reqLogger.Error(err, "Failed to delete Ingress")
@@ -604,13 +604,13 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if ok {
 		b = b.Owns(&routev1.Route{}, builder.WithPredicates(predSubResource))
 	}
-	ok, _ = r.IsGroupVersionSupported(networkingv1beta1.SchemeGroupVersion.String(), "Ingress")
+	ok, _ = r.IsGroupVersionSupported(networkingv1.SchemeGroupVersion.String(), "Ingress")
 	if ok {
-		b = b.Owns(&networkingv1beta1.Ingress{}, builder.WithPredicates(predSubResource))
+		b = b.Owns(&networkingv1.Ingress{}, builder.WithPredicates(predSubResource))
 	}
-	ok, _ = r.IsGroupVersionSupported(servingv1alpha1.SchemeGroupVersion.String(), "Service")
+	ok, _ = r.IsGroupVersionSupported(servingv1.SchemeGroupVersion.String(), "Service")
 	if ok {
-		b = b.Owns(&servingv1alpha1.Service{}, builder.WithPredicates(predSubResource))
+		b = b.Owns(&servingv1.Service{}, builder.WithPredicates(predSubResource))
 	}
 	ok, _ = r.IsGroupVersionSupported(certmngrv1alpha2.SchemeGroupVersion.String(), "Certificate")
 	if ok {

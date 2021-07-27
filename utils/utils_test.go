@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
@@ -402,7 +402,7 @@ func TestCustomizeKnativeService(t *testing.T) {
 		EnvFrom:          envFrom,
 		Volumes:          []corev1.Volume{volume},
 	}
-	ksvc, runtime := &servingv1alpha1.Service{}, createRuntimeComponent(name, namespace, spec)
+	ksvc, runtime := &servingv1.Service{}, createRuntimeComponent(name, namespace, spec)
 
 	CustomizeKnativeService(ksvc, runtime)
 	ksvcNumPorts := len(ksvc.Spec.Template.Spec.Containers[0].Ports)
