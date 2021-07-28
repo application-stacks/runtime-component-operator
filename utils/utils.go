@@ -160,7 +160,7 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 		svc.Spec.Ports[0].NodePort = *ba.GetService().GetNodePort()
 	}
 
-	if *ba.GetService().GetType() == corev1.ServiceTypeClusterIP {
+	if *ba.GetService().GetType() == corev1.ServiceTypeClusterIP || strings.HasSuffix(svc.Name, "-headless") == true {
 		svc.Spec.Ports[0].NodePort = 0
 	}
 
