@@ -1,11 +1,9 @@
 dist: xenial
 language: go
 go:
-  - 1.13.x
+  - 1.16.x
 
 go_import_path: github.com/application-stacks/runtime-component-operator
-env:
-  - GO111MODULE=on
 
 services:
   - docker
@@ -23,13 +21,15 @@ jobs:
       stage: test
       script: make unit-test
     - name: Verify operator image build
-      script: make build-image
-      if: branch != master OR fork = true OR type = pull_request
-    - name: E2E testing on Minikube
-      script: make test-minikube
-    - name: E2E testing on OCP 4.3
-      script: make test-e2e
-      if: fork = false
+      script: 
+        - make docker-login
+        - make build-image
+#      if: branch != master OR fork = true OR type = pull_request
+#    - name: E2E testing on Minikube
+#      script: make test-minikube
+#    - name: E2E testing on OCP 4.3
+#      script: make test-e2e
+#      if: fork = false
     ## if master branch build and push images on all three archs
     - name: Build image on amd64
       stage: build

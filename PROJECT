@@ -1,0 +1,13 @@
+layout: go.kubebuilder.io/v3
+projectName: runtime-component
+repo: github.com/application-stacks/runtime-component-operator
+resources:
+- group: app.stacks
+  kind: RuntimeComponent
+  version: v1beta1
+- group: app.stacks
+  kind: RuntimeOperation
+  version: v1beta1
+version: "3"
+plugins:
+  go.sdk.operatorframework.io/v2-alpha: {}

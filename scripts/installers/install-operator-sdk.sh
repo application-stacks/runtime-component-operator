@@ -15,7 +15,7 @@ main() {
     exit 0
   fi
 
-  DEFAULT_RELEASE_VERSION=v0.15.2
+  DEFAULT_RELEASE_VERSION=v1.6.4
   RELEASE_VERSION=${1:-$DEFAULT_RELEASE_VERSION}
 
   if [[ "$(uname)" = "Darwin" ]]; then
