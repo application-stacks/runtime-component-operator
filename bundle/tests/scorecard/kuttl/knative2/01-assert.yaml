@@ -1,0 +1,9 @@
+# There shouldn't be a deployment if there is a knative service
+# This should only be created when the knative service is removed
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: knative2-rc
+status:
+  readyReplicas: 1
+

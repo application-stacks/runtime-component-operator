@@ -1,0 +1,12 @@
+# Check that when the createKnativeService field exists but
+# is set to false, no knative service is created
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: knative1-rc
+spec:
+  # Add fields here
+  applicationImage: navidsh/demo-day
+  replicas: 1
+  createKnativeService: false
+

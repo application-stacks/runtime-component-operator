@@ -1,0 +1,12 @@
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: service-monitor-rc
+spec:
+  # Add fields here
+  applicationImage: 'navidsh/demo-day'
+  service:
+    type: "ClusterIP"
+    port: 3000
+  replicas: 1
+
