@@ -1,0 +1,5 @@
+apiVersion: kudo.dev/v1beta1
+kind: TestSuite
+parallel: 1
+timeout: 120
+startControlPlane: false

@@ -1,0 +1,12 @@
+# Check that the knative service is removed when the appropriate
+# field is updated to false
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: example-runtime-component
+spec:
+  # Add fields here
+  applicationImage: navidsh/demo-day
+  replicas: 1
+  createKnativeService: false
+

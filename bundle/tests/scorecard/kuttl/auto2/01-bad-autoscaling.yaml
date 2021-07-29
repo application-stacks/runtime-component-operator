@@ -1,0 +1,14 @@
+# Not all required fields are set, so autoscaling
+# should not be enabled
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: scale2-runtime-component
+spec:
+  resourceConstraints:
+    requests:
+      cpu: "0.2"
+  autoscaling:
+    minReplicas: 5
+    targetCPUUtilizationPercentage: 50
+
