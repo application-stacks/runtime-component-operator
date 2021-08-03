@@ -135,6 +135,9 @@ setup: ## Ensure Operator SDK is installed
 unit-test: ## Run unit tests
 	go test -v -mod=vendor -tags=unit github.com/application-stacks/runtime-component-operator/...
 
+test-e2e: setup
+	./scripts/e2e.sh --cluster-url ${CLUSTER_URL} --cluster-token ${CLUSTER_TOKEN} --registry-name image-registry --registry-namespace openshift-image-registry
+
 build-image: ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}"
 	docker build -t ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG} .
 

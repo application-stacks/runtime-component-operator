@@ -21,9 +21,10 @@ jobs:
       stage: test
       script: make unit-test
     - name: Verify operator image build
-      script: 
-        - make docker-login
-        - make build-image
+      script: make test-e2e
+
+#        - make docker-login
+#        - make build-image
 #      if: branch != master OR fork = true OR type = pull_request
 #    - name: E2E testing on Minikube
 #      script: make test-minikube
