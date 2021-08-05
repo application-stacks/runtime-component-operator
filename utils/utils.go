@@ -381,6 +381,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	}
 	appContainer.ReadinessProbe = ba.GetReadinessProbe()
 	appContainer.LivenessProbe = ba.GetLivenessProbe()
+	appContainer.StartupProbe = ba.GetStartupProbe()
 
 	if ba.GetPullPolicy() != nil {
 		appContainer.ImagePullPolicy = *ba.GetPullPolicy()
@@ -616,6 +617,7 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	//ksvc.Spec.Template.Spec.Containers[0].Resources = *cr.Spec.ResourceConstraints
 	ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe = ba.GetReadinessProbe()
 	ksvc.Spec.Template.Spec.Containers[0].LivenessProbe = ba.GetLivenessProbe()
+	ksvc.Spec.Template.Spec.Containers[0].StartupProbe = ba.GetStartupProbe()
 	ksvc.Spec.Template.Spec.Containers[0].ImagePullPolicy = *ba.GetPullPolicy()
 	ksvc.Spec.Template.Spec.Containers[0].Env = ba.GetEnv()
 	ksvc.Spec.Template.Spec.Containers[0].EnvFrom = ba.GetEnvFrom()
@@ -645,6 +647,15 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 		}
 		if ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.TCPSocket != nil {
 			ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.TCPSocket.Port = intstr.IntOrString{}
+		}
+	}
+
+	if ksvc.Spec.Template.Spec.Containers[0].StartupProbe != nil {
+		if ksvc.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet != nil {
+			ksvc.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet.Port = intstr.IntOrString{}
+		}
+		if ksvc.Spec.Template.Spec.Containers[0].StartupProbe.TCPSocket != nil {
+			ksvc.Spec.Template.Spec.Containers[0].StartupProbe.TCPSocket.Port = intstr.IntOrString{}
 		}
 	}
 }

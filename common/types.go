@@ -167,6 +167,7 @@ type BaseComponent interface {
 	GetReplicas() *int32
 	GetLivenessProbe() *corev1.Probe
 	GetReadinessProbe() *corev1.Probe
+	GetStartupProbe() *corev1.Probe
 	GetVolumes() []corev1.Volume
 	GetVolumeMounts() []corev1.VolumeMount
 	GetResourceConstraints() *corev1.ResourceRequirements

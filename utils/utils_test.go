@@ -60,6 +60,12 @@ var (
 			TCPSocket: &corev1.TCPSocketAction{},
 		},
 	}
+	startupProbe = &corev1.Probe{
+		Handler: corev1.Handler{
+			HTTPGet:   &corev1.HTTPGetAction{},
+			TCPSocket: &corev1.TCPSocketAction{},
+		},
+	}
 	volume      = corev1.Volume{Name: "runtime-volume"}
 	volumeMount = corev1.VolumeMount{Name: volumeCT.Name, MountPath: storage.MountPath}
 	resLimits   = map[corev1.ResourceName]resource.Quantity{
@@ -276,6 +282,7 @@ func TestCustomizePodSpec(t *testing.T) {
 		ResourceConstraints: resourceContraints,
 		ReadinessProbe:      readinessProbe,
 		LivenessProbe:       livenessProbe,
+		StartupProbe:        startupProbe,
 		VolumeMounts:        []corev1.VolumeMount{volumeMount},
 		PullPolicy:          &pullPolicy,
 		Env:                 env,
@@ -299,6 +306,7 @@ func TestCustomizePodSpec(t *testing.T) {
 		ResourceConstraints: resourceContraints,
 		ReadinessProbe:      readinessProbe,
 		LivenessProbe:       livenessProbe,
+		StartupProbe:        startupProbe,
 		VolumeMounts:        []corev1.VolumeMount{volumeMount},
 		PullPolicy:          &pullPolicy,
 		Env:                 env,
@@ -397,6 +405,7 @@ func TestCustomizeKnativeService(t *testing.T) {
 		Service:          service,
 		LivenessProbe:    livenessProbe,
 		ReadinessProbe:   readinessProbe,
+		StartupProbe:     startupProbe,
 		PullPolicy:       &pullPolicy,
 		Env:              env,
 		EnvFrom:          envFrom,
@@ -412,6 +421,8 @@ func TestCustomizeKnativeService(t *testing.T) {
 	ksvcLPTCP := ksvc.Spec.Template.Spec.Containers[0].LivenessProbe.TCPSocket.Port
 	ksvcRPPort := ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Port
 	ksvcRPTCP := ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.TCPSocket.Port
+	ksvcSPPort := ksvc.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet.Port
+	ksvcSPTCP := ksvc.Spec.Template.Spec.Containers[0].StartupProbe.TCPSocket.Port
 	ksvcLabelNoExpose := ksvc.Labels["serving.knative.dev/visibility"]
 
 	spec = appstacksv1beta1.RuntimeComponentSpec{
@@ -424,6 +435,7 @@ func TestCustomizeKnativeService(t *testing.T) {
 		ServiceAccountName: &serviceAccountName,
 		LivenessProbe:      livenessProbe,
 		ReadinessProbe:     readinessProbe,
+		StartupProbe:       startupProbe,
 		Expose:             &expose,
 	}
 	runtime = createRuntimeComponent(name, namespace, spec)
@@ -443,6 +455,8 @@ func TestCustomizeKnativeService(t *testing.T) {
 		{"liveness probe TCP socket port", intstr.IntOrString{}, ksvcLPTCP},
 		{"Readiness probe port", intstr.IntOrString{}, ksvcRPPort},
 		{"Readiness probe TCP socket port", intstr.IntOrString{}, ksvcRPTCP},
+		{"Startup probe port", intstr.IntOrString{}, ksvcSPPort},
+		{"Startup probe TCP socket port", intstr.IntOrString{}, ksvcSPTCP},
 		{"expose not set", "cluster-local", ksvcLabelNoExpose},
 		{"expose set to true", "", ksvcLabelTrueExpose},
 		{"expose set to false", "cluster-local", ksvcLabelFalseExpose},
