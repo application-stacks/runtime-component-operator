@@ -11,9 +11,7 @@ login_cluster(){
     oc login ${OC_URL} --token=${OC_TOKEN}
     # Set variables for rest of script to use
     readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
-    readonly OPERATOR_IMAGE_TAG=${TRAVIS_BUILD_NUMBER}
-    readonly OPERATOR_IMAGE=${DEFAULT_REGISTRY}/openshift/runtime-operator:
-##    readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/openshift/runtime-operator:${TRAVIS_BUILD_NUMBER}
+    readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/openshift/runtime-operator:${TRAVIS_BUILD_NUMBER}
 }
 
 ## cleanup : Delete generated resources that are not bound to a test namespace.
@@ -35,20 +33,34 @@ main() {
     fi
 
     echo "****** Building image"
-    make build-image
+    docker build -t "${BUILD_IMAGE}" .
     echo "****** Pushing image into registry..."
-##    docker push "${BUILD_IMAGE}"
+    docker push "${BUILD_IMAGE}"
 
     if [[ $? -ne 0 ]]; then
         echo "Failed to push ref: ${BUILD_IMAGE} to docker registry, exiting..."
         exit 1
     fi
-
+    echo "****** Install CRD"
+    make install
+    if [[ $? -ne 0 ]]; then
+        echo "Failed to install the Custome Resource Definitions exiting..."
+        exit 1
+    fi
+    echo "****** Install RCO"
+## TDO Need to modify to deploy the operator into a known unique namespace for the tests to be run against
+    make deploy
+    if [[ $? -ne 0 ]]; then
+        echo "Failed to install the Runtime Component Operator exiting..."
+        exit 1
+    fi
     echo "****** Starting e2e tests..."
+## TDO Need to set the namespace variable to match that of the operator is intalled into
+    operator-sdk scorecard ./bundle  --selector=suite=kuttlsuite --namespace=${OPERATOR_NAMESPACE} --service-account=${SERVICE_ACCOUNT} -w 600s --verbose
 ##    CLUSTER_ENV="ocp" operator-sdk test local github.com/application-stacks/runtime-component-operator/test/e2e --debug --verbose  --go-test-flags "-timeout 35m" --image $(oc registry info)/openshift/runtime-operator:$TRAVIS_BUILD_NUMBER
 ##    result=$?
     echo "****** Cleaning up tests..."
-##    cleanup
+    cleanup
 
     return $result
 }
