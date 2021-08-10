@@ -243,12 +243,12 @@ func TestIsGroupVersionSupported(t *testing.T) {
 // testGetSvcTLSValues test part of the function GetRouteTLSValues in reconciler.go.
 func testGetSvcTLSValues(t *testing.T) {
 	// Configure the runtime component
+
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
 	expose := true
 	runtimecomponent.Spec.Expose = &expose
 	runtimecomponent.Spec.Service = &appstacksv1beta1.RuntimeComponentService{
-		Certificate: &appstacksv1beta1.Certificate{},
-		Port:        3000,
+		Port: 3000,
 	}
 
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
@@ -258,6 +258,7 @@ func testGetSvcTLSValues(t *testing.T) {
 	cl := fakeclient.NewFakeClient(objs...)
 	rcl := fakeclient.NewFakeClient(objs...)
 	secret := makeCertSecret("my-app-svc-tls", namespace)
+	runtimecomponent.Spec.Service.CertificateSecretRef = &secret.Name
 	if err := cl.Create(context.TODO(), secret); err != nil {
 		t.Fatal(err)
 	}

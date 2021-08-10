@@ -222,7 +222,7 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.annotations['olm.targetNamespaces']
-                image: arturdzm/rco:operator
+                image: applicationstacks/operator:daily
                 name: manager
                 resources:
                   limits:

@@ -7,7 +7,6 @@ require (
 	github.com/coreos/prometheus-operator v0.41.1
 	github.com/go-logr/logr v0.3.0
 	github.com/google/go-containerregistry v0.1.4 // indirect
-	github.com/jetstack/cert-manager v1.0.3
 	github.com/openshift/api v0.0.0-20201019163320-c6a5ec25f267
 	github.com/openshift/library-go v0.0.0-20201026125231-a28d3d1bad23
 	github.com/pkg/errors v0.9.1

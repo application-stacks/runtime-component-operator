@@ -2,7 +2,6 @@ package common
 
 import (
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -85,7 +84,6 @@ type BaseComponentService interface {
 	GetAnnotations() map[string]string
 	GetProvides() ServiceBindingProvides
 	GetConsumes() []ServiceBindingConsumes
-	GetCertificate() Certificate
 	GetCertificateSecretRef() *string
 }
 
@@ -97,7 +95,6 @@ type BaseComponentMonitoring interface {
 
 // BaseComponentRoute represents route configuration
 type BaseComponentRoute interface {
-	GetCertificate() Certificate
 	GetTermination() *routev1.TLSTerminationType
 	GetInsecureEdgeTerminationPolicy() *routev1.InsecureEdgeTerminationPolicyType
 	GetAnnotations() map[string]string
@@ -190,9 +187,4 @@ type BaseComponent interface {
 	GetRoute() BaseComponentRoute
 	GetBindings() BaseComponentBindings
 	GetAffinity() BaseComponentAffinity
-}
-
-// Certificate returns cert-manager CertificateSpec
-type Certificate interface {
-	GetSpec() certmngrv1alpha2.CertificateSpec
 }

@@ -42,7 +42,6 @@ import (
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/api/v1beta1"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/openshift/library-go/pkg/image/imageutil"
@@ -211,10 +210,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	result, err = r.ReconcileConsumes(instance)
 	if err != nil || result != (reconcile.Result{}) {
 		return result, err
-	}
-	result, err = r.ReconcileCertificate(instance)
-	if err != nil || result != (reconcile.Result{}) {
-		return result, nil
 	}
 
 	if r.IsServiceBindingSupported() {
@@ -611,10 +606,6 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	ok, _ = r.IsGroupVersionSupported(servingv1.SchemeGroupVersion.String(), "Service")
 	if ok {
 		b = b.Owns(&servingv1.Service{}, builder.WithPredicates(predSubResource))
-	}
-	ok, _ = r.IsGroupVersionSupported(certmngrv1alpha2.SchemeGroupVersion.String(), "Certificate")
-	if ok {
-		b = b.Owns(&certmngrv1alpha2.Certificate{}, builder.WithPredicates(predSubResource))
 	}
 	ok, _ = r.IsGroupVersionSupported(prometheusv1.SchemeGroupVersion.String(), "ServiceMonitor")
 	if ok {

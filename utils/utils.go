@@ -393,11 +393,8 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	appContainer.VolumeMounts = ba.GetVolumeMounts()
 	pts.Spec.Volumes = ba.GetVolumes()
 
-	if ba.GetService().GetCertificate() != nil || ba.GetService().GetCertificateSecretRef() != nil {
+	if ba.GetService().GetCertificateSecretRef() != nil {
 		secretName := obj.GetName() + "-svc-tls"
-		if ba.GetService().GetCertificate() != nil && ba.GetService().GetCertificate().GetSpec().SecretName != "" {
-			secretName = ba.GetService().GetCertificate().GetSpec().SecretName
-		}
 		if ba.GetService().GetCertificateSecretRef() != nil {
 			secretName = *ba.GetService().GetCertificateSecretRef()
 		}
@@ -1019,12 +1016,6 @@ func CustomizeIngress(ing *networkingv1.Ingress, ba common.BaseComponent) {
 	}
 
 	tlsSecretName := ""
-	if rt != nil && rt.GetCertificate() != nil {
-		tlsSecretName = obj.GetName() + "-route-tls"
-		if rt.GetCertificate().GetSpec().SecretName != "" {
-			tlsSecretName = obj.GetName() + rt.GetCertificate().GetSpec().SecretName
-		}
-	}
 	if rt != nil && rt.GetCertificateSecretRef() != nil && *rt.GetCertificateSecretRef() != "" {
 		tlsSecretName = *rt.GetCertificateSecretRef()
 	}

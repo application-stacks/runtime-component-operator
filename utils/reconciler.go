@@ -8,10 +8,7 @@ import (
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/api/v1beta1"
 	"github.com/application-stacks/runtime-component-operator/common"
-	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
-	v1 "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -300,128 +297,6 @@ func (r *ReconcilerBase) UpdateStatus(obj client.Object) error {
 	return r.GetClient().Status().Update(context.Background(), obj)
 }
 
-// ReconcileCertificate used to manage cert-manager integration
-func (r *ReconcilerBase) ReconcileCertificate(ba common.BaseComponent) (reconcile.Result, error) {
-	owner := ba.(metav1.Object)
-	if ok, err := r.IsGroupVersionSupported(certmngrv1alpha2.SchemeGroupVersion.String(), "Certificate"); err != nil {
-		r.ManageError(err, common.StatusConditionTypeReconciled, ba)
-	} else if ok {
-		if ba.GetService() != nil && ba.GetService().GetCertificate() != nil {
-			crt := &certmngrv1alpha2.Certificate{ObjectMeta: metav1.ObjectMeta{Name: owner.GetName() + "-svc-crt", Namespace: owner.GetNamespace()}}
-			err = r.CreateOrUpdate(crt, owner, func() error {
-				obj := ba.(metav1.Object)
-				crt.Labels = ba.GetLabels()
-				crt.Annotations = MergeMaps(crt.Annotations, ba.GetAnnotations())
-				crt.Spec = ba.GetService().GetCertificate().GetSpec()
-				if crt.Spec.Duration == nil {
-					crt.Spec.Duration = &metav1.Duration{Duration: time.Hour * 24 * 365}
-				}
-				if crt.Spec.RenewBefore == nil {
-					crt.Spec.RenewBefore = &metav1.Duration{Duration: time.Hour * 24 * 31}
-				}
-				crt.Spec.CommonName = obj.GetName() + "." + obj.GetNamespace() + "." + "svc"
-				if crt.Spec.SecretName == "" {
-					crt.Spec.SecretName = obj.GetName() + "-svc-tls"
-				}
-				if len(crt.Spec.DNSNames) == 0 {
-					crt.Spec.DNSNames = append(crt.Spec.DNSNames, crt.Spec.CommonName)
-				}
-				return nil
-			})
-			if err != nil {
-				return r.ManageError(err, common.StatusConditionTypeReconciled, ba)
-			}
-			crtReady := false
-			for i := range crt.Status.Conditions {
-				if crt.Status.Conditions[i].Type == certmngrv1alpha2.CertificateConditionReady {
-					if crt.Status.Conditions[i].Status == v1.ConditionTrue {
-						crtReady = true
-					}
-				}
-			}
-			if !crtReady {
-				c := ba.GetStatus().NewCondition()
-				c.SetType(common.StatusConditionTypeReconciled)
-				c.SetStatus(corev1.ConditionFalse)
-				c.SetReason("CertificateNotReady")
-				c.SetMessage("Waiting for service certificate to be generated")
-				ba.GetStatus().SetCondition(c)
-				obj := ba.(client.Object)
-				r.UpdateStatus(obj)
-				return reconcile.Result{}, errors.New("Certificate not ready")
-			}
-
-		} else {
-			crt := &certmngrv1alpha2.Certificate{ObjectMeta: metav1.ObjectMeta{Name: owner.GetName() + "-svc-crt", Namespace: owner.GetNamespace()}}
-			err = r.DeleteResource(crt)
-			if err != nil {
-				return r.ManageError(err, common.StatusConditionTypeReconciled, ba)
-			}
-		}
-
-		if ba.GetExpose() != nil && *ba.GetExpose() && ba.GetRoute() != nil && ba.GetRoute().GetCertificate() != nil {
-			crt := &certmngrv1alpha2.Certificate{ObjectMeta: metav1.ObjectMeta{Name: owner.GetName() + "-route-crt", Namespace: owner.GetNamespace()}}
-			err = r.CreateOrUpdate(crt, owner, func() error {
-				obj := ba.(metav1.Object)
-				crt.Labels = ba.GetLabels()
-				crt.Annotations = MergeMaps(crt.Annotations, ba.GetAnnotations())
-				crt.Spec = ba.GetRoute().GetCertificate().GetSpec()
-				if crt.Spec.Duration == nil {
-					crt.Spec.Duration = &metav1.Duration{Duration: time.Hour * 24 * 365}
-				}
-				if crt.Spec.RenewBefore == nil {
-					crt.Spec.RenewBefore = &metav1.Duration{Duration: time.Hour * 24 * 31}
-				}
-				if crt.Spec.SecretName == "" {
-					crt.Spec.SecretName = obj.GetName() + "-route-tls"
-				}
-				// use routes host if no DNS information provided on certificate
-				if crt.Spec.CommonName == "" {
-					crt.Spec.CommonName = ba.GetRoute().GetHost()
-					if crt.Spec.CommonName == "" && common.Config[common.OpConfigDefaultHostname] != "" {
-						crt.Spec.CommonName = obj.GetName() + "-" + obj.GetNamespace() + "." + common.Config[common.OpConfigDefaultHostname]
-					}
-				}
-				if len(crt.Spec.DNSNames) == 0 {
-					crt.Spec.DNSNames = append(crt.Spec.DNSNames, crt.Spec.CommonName)
-				}
-				return nil
-			})
-			if err != nil {
-				return r.ManageError(err, common.StatusConditionTypeReconciled, ba)
-			}
-			crtReady := false
-			for i := range crt.Status.Conditions {
-				if crt.Status.Conditions[i].Type == certmngrv1alpha2.CertificateConditionReady {
-					if crt.Status.Conditions[i].Status == v1.ConditionTrue {
-						crtReady = true
-					}
-				}
-			}
-			if !crtReady {
-				log.Info("Status", "Conditions", crt.Status.Conditions)
-				c := ba.GetStatus().NewCondition()
-				c.SetType(common.StatusConditionTypeReconciled)
-				c.SetStatus(corev1.ConditionFalse)
-				c.SetReason("CertificateNotReady")
-				c.SetMessage("Waiting for route certificate to be generated")
-				ba.GetStatus().SetCondition(c)
-				obj := ba.(client.Object)
-				r.UpdateStatus(obj)
-				return reconcile.Result{}, errors.New("Certificate not ready")
-			}
-		} else {
-			crt := &certmngrv1alpha2.Certificate{ObjectMeta: metav1.ObjectMeta{Name: owner.GetName() + "-route-crt", Namespace: owner.GetNamespace()}}
-			err = r.DeleteResource(crt)
-			if err != nil {
-				return r.ManageError(err, common.StatusConditionTypeReconciled, ba)
-			}
-		}
-
-	}
-	return reconcile.Result{}, nil
-}
-
 // IsOpenShift returns true if the operator is running on an OpenShift platform
 func (r *ReconcilerBase) IsOpenShift() bool {
 	isOpenShift, err := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route")
@@ -435,12 +310,9 @@ func (r *ReconcilerBase) IsOpenShift() bool {
 func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string, cert string, ca string, destCa string, err error) {
 	key, cert, ca, destCa = "", "", "", ""
 	mObj := ba.(metav1.Object)
-	if ba.GetService() != nil && (ba.GetService().GetCertificate() != nil || ba.GetService().GetCertificateSecretRef() != nil) {
+	if ba.GetService() != nil && ba.GetService().GetCertificateSecretRef() != nil {
 		tlsSecret := &corev1.Secret{}
 		secretName := mObj.GetName() + "-svc-tls"
-		if ba.GetService().GetCertificate() != nil && ba.GetService().GetCertificate().GetSpec().SecretName != "" {
-			secretName = ba.GetService().GetCertificate().GetSpec().SecretName
-		}
 		if ba.GetService().GetCertificateSecretRef() != nil {
 			secretName = *ba.GetService().GetCertificateSecretRef()
 		}
@@ -454,12 +326,9 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string,
 			destCa = string(caCrt)
 		}
 	}
-	if ba.GetRoute() != nil && (ba.GetRoute().GetCertificate() != nil || ba.GetRoute().GetCertificateSecretRef() != nil) {
+	if ba.GetRoute() != nil && ba.GetRoute().GetCertificateSecretRef() != nil {
 		tlsSecret := &corev1.Secret{}
 		secretName := mObj.GetName() + "-route-tls"
-		if ba.GetRoute().GetCertificate() != nil && ba.GetRoute().GetCertificate().GetSpec().SecretName != "" {
-			secretName = ba.GetRoute().GetCertificate().GetSpec().SecretName
-		}
 		if ba.GetRoute().GetCertificateSecretRef() != nil {
 			secretName = *ba.GetRoute().GetCertificateSecretRef()
 		}

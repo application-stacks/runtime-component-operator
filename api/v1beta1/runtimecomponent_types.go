@@ -113,8 +113,7 @@ type RuntimeComponentService struct {
 	Consumes []ServiceBindingConsumes `json:"consumes,omitempty"`
 	Provides *ServiceBindingProvides  `json:"provides,omitempty"`
 	// +k8s:openapi-gen=true
-	Certificate          *Certificate `json:"certificate,omitempty"`
-	CertificateSecretRef *string      `json:"certificateSecretRef,omitempty"`
+	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
 }
 
 // ServiceBindingProvides represents information about
@@ -153,7 +152,6 @@ type RuntimeComponentRoute struct {
 	Annotations                   map[string]string                          `json:"annotations,omitempty"`
 	Termination                   *routev1.TLSTerminationType                `json:"termination,omitempty"`
 	InsecureEdgeTerminationPolicy *routev1.InsecureEdgeTerminationPolicyType `json:"insecureEdgeTerminationPolicy,omitempty"`
-	Certificate                   *Certificate                               `json:"certificate,omitempty"`
 	CertificateSecretRef          *string                                    `json:"certificateSecretRef,omitempty"`
 	Host                          string                                     `json:"host,omitempty"`
 	Path                          string                                     `json:"path,omitempty"`
@@ -521,14 +519,6 @@ func (s *RuntimeComponentService) GetProvides() common.ServiceBindingProvides {
 	return s.Provides
 }
 
-// GetCertificate returns services certificate configuration
-func (s *RuntimeComponentService) GetCertificate() common.Certificate {
-	if s.Certificate == nil {
-		return nil
-	}
-	return s.Certificate
-}
-
 // GetCertificateSecretRef returns a secret reference with a certificate
 func (s *RuntimeComponentService) GetCertificateSecretRef() *string {
 	return s.CertificateSecretRef
@@ -609,14 +599,6 @@ func (m *RuntimeComponentMonitoring) GetEndpoints() []prometheusv1.Endpoint {
 // GetAnnotations returns route annotations
 func (r *RuntimeComponentRoute) GetAnnotations() map[string]string {
 	return r.Annotations
-}
-
-// GetCertificate returns certificate spec for route
-func (r *RuntimeComponentRoute) GetCertificate() common.Certificate {
-	if r.Certificate == nil {
-		return nil
-	}
-	return r.Certificate
 }
 
 // GetCertificateSecretRef returns a secret reference with a certificate
@@ -739,25 +721,6 @@ func (cr *RuntimeComponent) Initialize() {
 		cr.Spec.Service.Provides.Protocol = "http"
 	}
 
-	if cr.Spec.Service.Certificate != nil {
-		if cr.Spec.Service.Certificate.IssuerRef.Name == "" {
-			cr.Spec.Service.Certificate.IssuerRef.Name = common.Config[common.OpConfigPropDefaultIssuer]
-		}
-
-		if cr.Spec.Service.Certificate.IssuerRef.Kind == "" && common.Config[common.OpConfigPropUseClusterIssuer] != "false" {
-			cr.Spec.Service.Certificate.IssuerRef.Kind = "ClusterIssuer"
-		}
-	}
-
-	if cr.Spec.Route != nil && cr.Spec.Route.Certificate != nil {
-		if cr.Spec.Route.Certificate.IssuerRef.Name == "" {
-			cr.Spec.Route.Certificate.IssuerRef.Name = common.Config[common.OpConfigPropDefaultIssuer]
-		}
-
-		if cr.Spec.Route.Certificate.IssuerRef.Kind == "" && common.Config[common.OpConfigPropUseClusterIssuer] != "false" {
-			cr.Spec.Route.Certificate.IssuerRef.Kind = "ClusterIssuer"
-		}
-	}
 }
 
 // GetLabels returns set of labels to be added to all resources

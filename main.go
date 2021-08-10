@@ -31,7 +31,6 @@ import (
 	"github.com/application-stacks/runtime-component-operator/controllers"
 	"github.com/application-stacks/runtime-component-operator/utils"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	certmngrv1alpha2 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
@@ -51,8 +50,6 @@ func init() {
 	utilruntime.Must(routev1.AddToScheme(scheme))
 
 	utilruntime.Must(prometheusv1.AddToScheme(scheme))
-
-	utilruntime.Must(certmngrv1alpha2.AddToScheme(scheme))
 
 	utilruntime.Must(imagev1.AddToScheme(scheme))
 
