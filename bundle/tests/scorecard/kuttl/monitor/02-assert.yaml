@@ -35,12 +35,4 @@ spec:
         key: password
       username:
         key: username
----
-apiVersion: app.stacks/v1beta1
-kind: RuntimeComponent
-metadata:
-  name: service-monitor-rc
-spec:
-  monitoring:
-    endpoints:
-    - path: "/path"
+
