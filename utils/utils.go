@@ -462,19 +462,6 @@ func CustomizeServiceBinding(secret *corev1.Secret, podSpec *corev1.PodSpec, ba 
 	}
 }
 
-// CustomizeDeploymentStrategy ...
-func CustomizeDeploymentStrategy(ds *appsv1.DeploymentStrategy, ba common.BaseComponent) {
-	ds.RollingUpdate.MaxSurge = ba.GetDeploymentStrategy().RollingUpdate.MaxSurge
-	if ba.GetDeploymentStrategy().RollingUpdate.MaxSurge != nil {
-		ds.RollingUpdate.MaxSurge.Type = ba.GetDeploymentStrategy().RollingUpdate.MaxSurge.Type
-	}
-
-	ds.RollingUpdate.MaxUnavailable = ba.GetDeploymentStrategy().RollingUpdate.MaxUnavailable
-	if ba.GetDeploymentStrategy().RollingUpdate.MaxUnavailable != nil {
-		ds.RollingUpdate.MaxUnavailable.Type = ba.GetDeploymentStrategy().RollingUpdate.MaxUnavailable.Type
-	}
-}
-
 // CustomizeConsumedServices ...
 func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseComponent) {
 	if ba.GetStatus().GetConsumedServices() != nil {
