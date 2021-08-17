@@ -22,10 +22,21 @@ import (
 	"github.com/application-stacks/runtime-component-operator/common"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
+
+// RuntimeComponentDeployment settings
+type RuntimeComponentDeployment struct {
+	UpdateStrategy *appsv1.DeploymentStrategy `json:"updateStrategy,omitempty"`
+}
+
+// RuntimeComponentStatefulSet settings
+type RuntimeComponentStatefulSet struct {
+	UpdateStrategy *appsv1.StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
+}
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
@@ -53,6 +64,7 @@ type RuntimeComponentSpec struct {
 	// +listMapKey=name
 	Env                []corev1.EnvVar `json:"env,omitempty"`
 	ServiceAccountName *string         `json:"serviceAccountName,omitempty"`
+
 	// +listType=set
 	Architecture         []string                    `json:"architecture,omitempty"`
 	Storage              *RuntimeComponentStorage    `json:"storage,omitempty"`
@@ -68,6 +80,9 @@ type RuntimeComponentSpec struct {
 	Route             *RuntimeComponentRoute    `json:"route,omitempty"`
 	Bindings          *RuntimeComponentBindings `json:"bindings,omitempty"`
 	Affinity          *RuntimeComponentAffinity `json:"affinity,omitempty"`
+
+	Deployment  *RuntimeComponentDeployment  `json:"deployment,omitempty"`
+	StatefulSet *RuntimeComponentStatefulSet `json:"statefulSet,omitempty"`
 }
 
 // RuntimeComponentAffinity deployment affinity settings
@@ -394,6 +409,17 @@ func (cr *RuntimeComponent) GetAffinity() common.BaseComponentAffinity {
 		return nil
 	}
 	return cr.Spec.Affinity
+}
+
+// Edit: High level - update strategy
+// GetDeploymentStrategy returns deployment strategy struct
+func (cr *RuntimeComponent) GetDeploymentStrategy() *appsv1.DeploymentStrategy {
+	return cr.Spec.Deployment.UpdateStrategy
+}
+
+// GetStatefulSetUpdateStrategy returns statefulset strategy struct
+func (cr *RuntimeComponent) GetStatefulSetUpdateStrategy() *appsv1.StatefulSetUpdateStrategy {
+	return cr.Spec.StatefulSet.UpdateStrategy
 }
 
 // GetResolvedBindings returns a map of all the service names to be consumed by the application

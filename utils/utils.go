@@ -47,6 +47,10 @@ func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseComponent) {
 		}
 	}
 
+	if ba.GetDeploymentStrategy() != nil {
+		deploy.Spec.Strategy = *ba.GetDeploymentStrategy()
+	}
+
 }
 
 // CustomizeStatefulSet ...
@@ -65,6 +69,10 @@ func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseCompone
 				"app.kubernetes.io/instance": obj.GetName(),
 			},
 		}
+	}
+
+	if ba.GetStatefulSetUpdateStrategy() != nil {
+		statefulSet.Spec.UpdateStrategy = *ba.GetStatefulSetUpdateStrategy()
 	}
 }
 
@@ -451,6 +459,19 @@ func CustomizeServiceBinding(secret *corev1.Secret, podSpec *corev1.PodSpec, ba 
 			Name:  "RESOLVED_BINDING_SECRET_REV",
 			Value: secret.ResourceVersion}
 		appContainer.Env = append(appContainer.Env, secretRev)
+	}
+}
+
+// CustomizeDeploymentStrategy ...
+func CustomizeDeploymentStrategy(ds *appsv1.DeploymentStrategy, ba common.BaseComponent) {
+	ds.RollingUpdate.MaxSurge = ba.GetDeploymentStrategy().RollingUpdate.MaxSurge
+	if ba.GetDeploymentStrategy().RollingUpdate.MaxSurge != nil {
+		ds.RollingUpdate.MaxSurge.Type = ba.GetDeploymentStrategy().RollingUpdate.MaxSurge.Type
+	}
+
+	ds.RollingUpdate.MaxUnavailable = ba.GetDeploymentStrategy().RollingUpdate.MaxUnavailable
+	if ba.GetDeploymentStrategy().RollingUpdate.MaxUnavailable != nil {
+		ds.RollingUpdate.MaxUnavailable.Type = ba.GetDeploymentStrategy().RollingUpdate.MaxUnavailable.Type
 	}
 }
 

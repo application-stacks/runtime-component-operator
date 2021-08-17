@@ -3,6 +3,7 @@ package common
 import (
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -187,4 +188,6 @@ type BaseComponent interface {
 	GetRoute() BaseComponentRoute
 	GetBindings() BaseComponentBindings
 	GetAffinity() BaseComponentAffinity
+	GetDeploymentStrategy() *appsv1.DeploymentStrategy
+	GetStatefulSetUpdateStrategy() *appsv1.StatefulSetUpdateStrategy
 }
