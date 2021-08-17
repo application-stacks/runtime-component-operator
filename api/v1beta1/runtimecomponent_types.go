@@ -45,6 +45,7 @@ type RuntimeComponentSpec struct {
 	ResourceConstraints *corev1.ResourceRequirements `json:"resourceConstraints,omitempty"`
 	ReadinessProbe      *corev1.Probe                `json:"readinessProbe,omitempty"`
 	LivenessProbe       *corev1.Probe                `json:"livenessProbe,omitempty"`
+	StartupProbe        *corev1.Probe                `json:"startupProbe,omitempty"`
 	Service             *RuntimeComponentService     `json:"service,omitempty"`
 	Expose              *bool                        `json:"expose,omitempty"`
 	// +listType=atomic
@@ -268,6 +269,11 @@ func (cr *RuntimeComponent) GetLivenessProbe() *corev1.Probe {
 // GetReadinessProbe returns readiness probe
 func (cr *RuntimeComponent) GetReadinessProbe() *corev1.Probe {
 	return cr.Spec.ReadinessProbe
+}
+
+// GetStartupProbe returns startup probe
+func (cr *RuntimeComponent) GetStartupProbe() *corev1.Probe {
+	return cr.Spec.StartupProbe
 }
 
 // GetVolumes returns volumes slice
