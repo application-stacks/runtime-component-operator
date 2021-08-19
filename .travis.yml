@@ -54,7 +54,7 @@ jobs:
       os: linux
       arch: amd64
       script:
-        - make bundle bundle-build bundle-push
+        - make bundle-build bundle-push
     ## in case there were concurrency issues with building manifest lists
     ## in previous steps, create FAT manifests one last time
     - name: Verify manifest lists
