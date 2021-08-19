@@ -24,8 +24,8 @@ import (
 	"github.com/application-stacks/runtime-component-operator/common"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	"k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -81,17 +81,17 @@ func (in *RuntimeComponentAffinity) DeepCopyInto(out *RuntimeComponentAffinity) 
 	*out = *in
 	if in.NodeAffinity != nil {
 		in, out := &in.NodeAffinity, &out.NodeAffinity
-		*out = new(corev1.NodeAffinity)
+		*out = new(v1.NodeAffinity)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.PodAffinity != nil {
 		in, out := &in.PodAffinity, &out.PodAffinity
-		*out = new(corev1.PodAffinity)
+		*out = new(v1.PodAffinity)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.PodAntiAffinity != nil {
 		in, out := &in.PodAntiAffinity, &out.PodAntiAffinity
-		*out = new(corev1.PodAntiAffinity)
+		*out = new(v1.PodAntiAffinity)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Architecture != nil {
@@ -198,7 +198,7 @@ func (in *RuntimeComponentDeployment) DeepCopyInto(out *RuntimeComponentDeployme
 	*out = *in
 	if in.UpdateStrategy != nil {
 		in, out := &in.UpdateStrategy, &out.UpdateStrategy
-		*out = new(v1.DeploymentStrategy)
+		*out = new(appsv1.DeploymentStrategy)
 		(*in).DeepCopyInto(*out)
 	}
 }
@@ -316,7 +316,7 @@ func (in *RuntimeComponentService) DeepCopyInto(out *RuntimeComponentService) {
 	*out = *in
 	if in.Type != nil {
 		in, out := &in.Type, &out.Type
-		*out = new(corev1.ServiceType)
+		*out = new(v1.ServiceType)
 		**out = **in
 	}
 	if in.TargetPort != nil {
@@ -331,7 +331,7 @@ func (in *RuntimeComponentService) DeepCopyInto(out *RuntimeComponentService) {
 	}
 	if in.Ports != nil {
 		in, out := &in.Ports, &out.Ports
-		*out = make([]corev1.ServicePort, len(*in))
+		*out = make([]v1.ServicePort, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -385,7 +385,7 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 	}
 	if in.PullPolicy != nil {
 		in, out := &in.PullPolicy, &out.PullPolicy
-		*out = new(corev1.PullPolicy)
+		*out = new(v1.PullPolicy)
 		**out = **in
 	}
 	if in.PullSecret != nil {
@@ -395,31 +395,36 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 	}
 	if in.Volumes != nil {
 		in, out := &in.Volumes, &out.Volumes
-		*out = make([]corev1.Volume, len(*in))
+		*out = make([]v1.Volume, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.VolumeMounts != nil {
 		in, out := &in.VolumeMounts, &out.VolumeMounts
-		*out = make([]corev1.VolumeMount, len(*in))
+		*out = make([]v1.VolumeMount, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.ResourceConstraints != nil {
 		in, out := &in.ResourceConstraints, &out.ResourceConstraints
-		*out = new(corev1.ResourceRequirements)
+		*out = new(v1.ResourceRequirements)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.ReadinessProbe != nil {
 		in, out := &in.ReadinessProbe, &out.ReadinessProbe
-		*out = new(corev1.Probe)
+		*out = new(v1.Probe)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.LivenessProbe != nil {
 		in, out := &in.LivenessProbe, &out.LivenessProbe
-		*out = new(corev1.Probe)
+		*out = new(v1.Probe)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.StartupProbe != nil {
+		in, out := &in.StartupProbe, &out.StartupProbe
+		*out = new(v1.Probe)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Service != nil {
@@ -432,16 +437,26 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.Deployment != nil {
+		in, out := &in.Deployment, &out.Deployment
+		*out = new(RuntimeComponentDeployment)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.StatefulSet != nil {
+		in, out := &in.StatefulSet, &out.StatefulSet
+		*out = new(RuntimeComponentStatefulSet)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.EnvFrom != nil {
 		in, out := &in.EnvFrom, &out.EnvFrom
-		*out = make([]corev1.EnvFromSource, len(*in))
+		*out = make([]v1.EnvFromSource, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.Env != nil {
 		in, out := &in.Env, &out.Env
-		*out = make([]corev1.EnvVar, len(*in))
+		*out = make([]v1.EnvVar, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -473,14 +488,14 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 	}
 	if in.InitContainers != nil {
 		in, out := &in.InitContainers, &out.InitContainers
-		*out = make([]corev1.Container, len(*in))
+		*out = make([]v1.Container, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.SidecarContainers != nil {
 		in, out := &in.SidecarContainers, &out.SidecarContainers
-		*out = make([]corev1.Container, len(*in))
+		*out = make([]v1.Container, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -500,16 +515,6 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		*out = new(RuntimeComponentAffinity)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.Deployment != nil {
-		in, out := &in.Deployment, &out.Deployment
-		*out = new(RuntimeComponentDeployment)
-		(*in).DeepCopyInto(*out)
-	}
-	if in.StatefulSet != nil {
-		in, out := &in.StatefulSet, &out.StatefulSet
-		*out = new(RuntimeComponentStatefulSet)
-		(*in).DeepCopyInto(*out)
-	}
 }
 
 // DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new RuntimeComponentSpec.
@@ -527,7 +532,7 @@ func (in *RuntimeComponentStatefulSet) DeepCopyInto(out *RuntimeComponentStatefu
 	*out = *in
 	if in.UpdateStrategy != nil {
 		in, out := &in.UpdateStrategy, &out.UpdateStrategy
-		*out = new(v1.StatefulSetUpdateStrategy)
+		*out = new(appsv1.StatefulSetUpdateStrategy)
 		(*in).DeepCopyInto(*out)
 	}
 }
@@ -574,7 +579,7 @@ func (in *RuntimeComponentStatus) DeepCopyInto(out *RuntimeComponentStatus) {
 	}
 	if in.Binding != nil {
 		in, out := &in.Binding, &out.Binding
-		*out = new(corev1.LocalObjectReference)
+		*out = new(v1.LocalObjectReference)
 		**out = **in
 	}
 }
@@ -594,7 +599,7 @@ func (in *RuntimeComponentStorage) DeepCopyInto(out *RuntimeComponentStorage) {
 	*out = *in
 	if in.VolumeClaimTemplate != nil {
 		in, out := &in.VolumeClaimTemplate, &out.VolumeClaimTemplate
-		*out = new(corev1.PersistentVolumeClaim)
+		*out = new(v1.PersistentVolumeClaim)
 		(*in).DeepCopyInto(*out)
 	}
 }

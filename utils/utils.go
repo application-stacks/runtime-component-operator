@@ -47,8 +47,9 @@ func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseComponent) {
 		}
 	}
 
-	if ba.GetDeploymentStrategy() != nil {
-		deploy.Spec.Strategy = *ba.GetDeploymentStrategy()
+	dp := ba.GetDeployment()
+	if dp.GetDeploymentUpdateStrategy() != nil {
+		deploy.Spec.Strategy = *dp.GetDeploymentUpdateStrategy()
 	}
 
 }
@@ -71,8 +72,9 @@ func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseCompone
 		}
 	}
 
-	if ba.GetStatefulSetUpdateStrategy() != nil {
-		statefulSet.Spec.UpdateStrategy = *ba.GetStatefulSetUpdateStrategy()
+	ss := ba.GetStatefulSet()
+	if ss.GetStatefulSetUpdateStrategy() != nil {
+		statefulSet.Spec.UpdateStrategy = *ss.GetStatefulSetUpdateStrategy()
 	}
 }
 
@@ -389,6 +391,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	}
 	appContainer.ReadinessProbe = ba.GetReadinessProbe()
 	appContainer.LivenessProbe = ba.GetLivenessProbe()
+	appContainer.StartupProbe = ba.GetStartupProbe()
 
 	if ba.GetPullPolicy() != nil {
 		appContainer.ImagePullPolicy = *ba.GetPullPolicy()
@@ -621,6 +624,7 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	//ksvc.Spec.Template.Spec.Containers[0].Resources = *cr.Spec.ResourceConstraints
 	ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe = ba.GetReadinessProbe()
 	ksvc.Spec.Template.Spec.Containers[0].LivenessProbe = ba.GetLivenessProbe()
+	ksvc.Spec.Template.Spec.Containers[0].StartupProbe = ba.GetStartupProbe()
 	ksvc.Spec.Template.Spec.Containers[0].ImagePullPolicy = *ba.GetPullPolicy()
 	ksvc.Spec.Template.Spec.Containers[0].Env = ba.GetEnv()
 	ksvc.Spec.Template.Spec.Containers[0].EnvFrom = ba.GetEnvFrom()
@@ -650,6 +654,15 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 		}
 		if ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.TCPSocket != nil {
 			ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.TCPSocket.Port = intstr.IntOrString{}
+		}
+	}
+
+	if ksvc.Spec.Template.Spec.Containers[0].StartupProbe != nil {
+		if ksvc.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet != nil {
+			ksvc.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet.Port = intstr.IntOrString{}
+		}
+		if ksvc.Spec.Template.Spec.Containers[0].StartupProbe.TCPSocket != nil {
+			ksvc.Spec.Template.Spec.Containers[0].StartupProbe.TCPSocket.Port = intstr.IntOrString{}
 		}
 	}
 }

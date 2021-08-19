@@ -156,6 +156,16 @@ type BaseComponentAffinity interface {
 	GetNodeAffinityLabels() map[string]string
 }
 
+// BaseComponentDeployment describes deployment
+type BaseComponentDeployment interface {
+	GetDeploymentUpdateStrategy() *appsv1.DeploymentStrategy
+}
+
+// BaseComponentStatefulSet describes deployment
+type BaseComponentStatefulSet interface {
+	GetStatefulSetUpdateStrategy() *appsv1.StatefulSetUpdateStrategy
+}
+
 // BaseComponent represents basic kubernetes application
 type BaseComponent interface {
 	GetApplicationImage() string
@@ -165,6 +175,7 @@ type BaseComponent interface {
 	GetReplicas() *int32
 	GetLivenessProbe() *corev1.Probe
 	GetReadinessProbe() *corev1.Probe
+	GetStartupProbe() *corev1.Probe
 	GetVolumes() []corev1.Volume
 	GetVolumeMounts() []corev1.VolumeMount
 	GetResourceConstraints() *corev1.ResourceRequirements
@@ -176,6 +187,8 @@ type BaseComponent interface {
 	GetAutoscaling() BaseComponentAutoscaling
 	GetStorage() BaseComponentStorage
 	GetService() BaseComponentService
+	GetDeployment() BaseComponentDeployment
+	GetStatefulSet() BaseComponentStatefulSet
 	GetVersion() string
 	GetApplicationName() string
 	GetMonitoring() BaseComponentMonitoring
@@ -188,6 +201,4 @@ type BaseComponent interface {
 	GetRoute() BaseComponentRoute
 	GetBindings() BaseComponentBindings
 	GetAffinity() BaseComponentAffinity
-	GetDeploymentStrategy() *appsv1.DeploymentStrategy
-	GetStatefulSetUpdateStrategy() *appsv1.StatefulSetUpdateStrategy
 }

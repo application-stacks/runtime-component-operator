@@ -28,16 +28,6 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
-// RuntimeComponentDeployment settings
-type RuntimeComponentDeployment struct {
-	UpdateStrategy *appsv1.DeploymentStrategy `json:"updateStrategy,omitempty"`
-}
-
-// RuntimeComponentStatefulSet settings
-type RuntimeComponentStatefulSet struct {
-	UpdateStrategy *appsv1.StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
-}
-
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // RuntimeComponentSpec defines the desired state of RuntimeComponent
@@ -56,8 +46,13 @@ type RuntimeComponentSpec struct {
 	ResourceConstraints *corev1.ResourceRequirements `json:"resourceConstraints,omitempty"`
 	ReadinessProbe      *corev1.Probe                `json:"readinessProbe,omitempty"`
 	LivenessProbe       *corev1.Probe                `json:"livenessProbe,omitempty"`
+	StartupProbe        *corev1.Probe                `json:"startupProbe,omitempty"`
 	Service             *RuntimeComponentService     `json:"service,omitempty"`
 	Expose              *bool                        `json:"expose,omitempty"`
+
+	Deployment  *RuntimeComponentDeployment  `json:"deployment,omitempty"`
+	StatefulSet *RuntimeComponentStatefulSet `json:"statefulSet,omitempty"`
+
 	// +listType=atomic
 	EnvFrom []corev1.EnvFromSource `json:"envFrom,omitempty"`
 	// +listType=map
@@ -80,9 +75,6 @@ type RuntimeComponentSpec struct {
 	Route             *RuntimeComponentRoute    `json:"route,omitempty"`
 	Bindings          *RuntimeComponentBindings `json:"bindings,omitempty"`
 	Affinity          *RuntimeComponentAffinity `json:"affinity,omitempty"`
-
-	Deployment  *RuntimeComponentDeployment  `json:"deployment,omitempty"`
-	StatefulSet *RuntimeComponentStatefulSet `json:"statefulSet,omitempty"`
 }
 
 // RuntimeComponentAffinity deployment affinity settings
@@ -129,6 +121,16 @@ type RuntimeComponentService struct {
 	Provides *ServiceBindingProvides  `json:"provides,omitempty"`
 	// +k8s:openapi-gen=true
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
+}
+
+// RuntimeComponentDeployment settings
+type RuntimeComponentDeployment struct {
+	UpdateStrategy *appsv1.DeploymentStrategy `json:"updateStrategy,omitempty"`
+}
+
+// RuntimeComponentStatefulSet settings
+type RuntimeComponentStatefulSet struct {
+	UpdateStrategy *appsv1.StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
 }
 
 // ServiceBindingProvides represents information about
@@ -285,6 +287,11 @@ func (cr *RuntimeComponent) GetReadinessProbe() *corev1.Probe {
 	return cr.Spec.ReadinessProbe
 }
 
+// GetStartupProbe returns startup probe
+func (cr *RuntimeComponent) GetStartupProbe() *corev1.Probe {
+	return cr.Spec.StartupProbe
+}
+
 // GetVolumes returns volumes slice
 func (cr *RuntimeComponent) GetVolumes() []corev1.Volume {
 	return cr.Spec.Volumes
@@ -411,15 +418,30 @@ func (cr *RuntimeComponent) GetAffinity() common.BaseComponentAffinity {
 	return cr.Spec.Affinity
 }
 
-// Edit: High level - update strategy
-// GetDeploymentStrategy returns deployment strategy struct
-func (cr *RuntimeComponent) GetDeploymentStrategy() *appsv1.DeploymentStrategy {
-	return cr.Spec.Deployment.UpdateStrategy
+// GetDeployment returns deployment settings
+func (cr *RuntimeComponent) GetDeployment() common.BaseComponentDeployment {
+	if cr.Spec.Deployment == nil {
+		return nil
+	}
+	return cr.Spec.Deployment
 }
 
-// GetStatefulSetUpdateStrategy returns statefulset strategy struct
-func (cr *RuntimeComponent) GetStatefulSetUpdateStrategy() *appsv1.StatefulSetUpdateStrategy {
-	return cr.Spec.StatefulSet.UpdateStrategy
+// GetDeploymentStrategy returns deployment strategy struct
+func (cr *RuntimeComponentDeployment) GetDeploymentUpdateStrategy() *appsv1.DeploymentStrategy {
+	return cr.UpdateStrategy
+}
+
+// GetStatefulSet returns statefulSet settings
+func (cr *RuntimeComponent) GetStatefulSet() common.BaseComponentStatefulSet {
+	if cr.Spec.StatefulSet == nil {
+		return nil
+	}
+	return cr.Spec.StatefulSet
+}
+
+// GetStatefulSetUpdateStrategy returns statefulSet strategy struct
+func (cr *RuntimeComponentStatefulSet) GetStatefulSetUpdateStrategy() *appsv1.StatefulSetUpdateStrategy {
+	return cr.UpdateStrategy
 }
 
 // GetResolvedBindings returns a map of all the service names to be consumed by the application
