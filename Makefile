@@ -7,7 +7,7 @@ OPERATOR_IMAGE ?= applicationstacks/operator
 OPERATOR_IMAGE_TAG ?= daily
 
 # Default bundle image tag
-BUNDLE_IMG ?= controller-bundle:$(VERSION)
+BUNDLE_IMG ?= applicationstacks/operator-bundle:daily
 # Options for 'bundle-build'
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
@@ -128,6 +128,9 @@ bundle: manifests
 bundle-build:
 	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
 
+.PHONY: bundle-push
+bundle-push:
+	docker push $(BUNDLE_IMG)
 
 setup: ## Ensure Operator SDK is installed
 	./scripts/installers/install-operator-sdk.sh ${OPERATOR_SDK_RELEASE_VERSION}
@@ -149,3 +152,6 @@ build-manifest: setup-manifest
 
 setup-manifest:
 	./scripts/installers/install-manifest-tool.sh
+
+test-e2e: setup
+	./scripts/e2e.sh --cluster-url ${CLUSTER_URL} --cluster-token ${CLUSTER_TOKEN} --registry-name image-registry --registry-namespace openshift-image-registry

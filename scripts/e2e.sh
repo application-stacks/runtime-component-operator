@@ -33,7 +33,7 @@ main() {
     fi
 
     echo "****** Building image"
-    operator-sdk build "${BUILD_IMAGE}"
+    docker build -t "${BUILD_IMAGE}" .
     echo "****** Pushing image into registry..."
     docker push "${BUILD_IMAGE}"
 
@@ -41,10 +41,30 @@ main() {
         echo "Failed to push ref: ${BUILD_IMAGE} to docker registry, exiting..."
         exit 1
     fi
-
+    echo "****** Install CRD"
+    make install
+    if [[ $? -ne 0 ]]; then
+        echo "Failed to install the Custome Resource Definitions exiting..."
+        exit 1
+    fi
+    echo "****** Install RCO"
+## TDO Need to modify to deploy the operator into a known unique namespace for the tests to be run against
+    make deploy OPERATOR_NAMESPACE=${OPERATOR_NAMESPACE}
+    if [[ $? -ne 0 ]]; then
+        echo "Failed to install the Runtime Component Operator exiting..."
+        exit 1
+    fi
     echo "****** Starting e2e tests..."
-    CLUSTER_ENV="ocp" operator-sdk test local github.com/application-stacks/runtime-component-operator/test/e2e --debug --verbose  --go-test-flags "-timeout 35m" --image $(oc registry info)/openshift/runtime-operator:$TRAVIS_BUILD_NUMBER
-    result=$?
+## TDO Need to set the namespace variable to match that of the operator is intalled into
+    operator-sdk scorecard ./bundle  --selector=suite=kuttlsuite --namespace=${OPERATOR_NAMESPACE} --service-account=${SERVICE_ACCOUNT} -w 600s --verbose
+##    CLUSTER_ENV="ocp" operator-sdk test local github.com/application-stacks/runtime-component-operator/test/e2e --debug --verbose  --go-test-flags "-timeout 35m" --image $(oc registry info)/openshift/runtime-operator:$TRAVIS_BUILD_NUMBER
+##    result=$?
+
+    if [[ $? -ne 0 ]]; then
+        echo "Failed to push ref: ${BUILD_IMAGE} to docker registry, exiting..."
+        exit 1
+    fi
+
     echo "****** Cleaning up tests..."
     cleanup
 
