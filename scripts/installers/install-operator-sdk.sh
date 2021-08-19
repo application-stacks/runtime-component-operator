@@ -19,11 +19,13 @@ main() {
   RELEASE_VERSION=${1:-$DEFAULT_RELEASE_VERSION}
 
   if [[ "$(uname)" = "Darwin" ]]; then
-    binary_url="https://github.com/operator-framework/operator-sdk/releases/download/$RELEASE_VERSION/operator-sdk-$RELEASE_VERSION-x86_64-apple-darwin"
+    binary_url="https://github.com/operator-framework/operator-sdk/releases/download/$RELEASE_VERSION/operator-sdk_darwin_amd64"
   elif [[ "$(uname -p)" = "ppc64le" ]]; then
-    binary_url="https://github.com/operator-framework/operator-sdk/releases/download/$RELEASE_VERSION/operator-sdk-$RELEASE_VERSION-ppc64le-linux-gnu"
+    binary_url="https://github.com/operator-framework/operator-sdk/releases/download/$RELEASE_VERSION/operator-sdk_linux_ppc64le"
+  elif [[ "$(uname -p)" = "s390x" ]]; then
+    binary_url="https://github.com/operator-framework/operator-sdk/releases/download/$RELEASE_VERSION/operator-sdk_linux_s390x"
   else
-    binary_url="https://github.com/operator-framework/operator-sdk/releases/download/$RELEASE_VERSION/operator-sdk-$RELEASE_VERSION-x86_64-linux-gnu"
+    binary_url="https://github.com/operator-framework/operator-sdk/releases/download/$RELEASE_VERSION/operator-sdk_linux_amd64"
   fi
 
   echo "****** Installing operator-sdk version $RELEASE_VERSION on $(uname)"
