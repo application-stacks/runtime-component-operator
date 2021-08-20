@@ -48,7 +48,7 @@ func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseComponent) {
 	}
 
 	dp := ba.GetDeployment()
-	if dp.GetDeploymentUpdateStrategy() != nil {
+	if dp != nil && dp.GetDeploymentUpdateStrategy() != nil {
 		deploy.Spec.Strategy = *dp.GetDeploymentUpdateStrategy()
 	}
 
@@ -73,7 +73,7 @@ func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseCompone
 	}
 
 	ss := ba.GetStatefulSet()
-	if ss.GetStatefulSetUpdateStrategy() != nil {
+	if ss != nil && ss.GetStatefulSetUpdateStrategy() != nil {
 		statefulSet.Spec.UpdateStrategy = *ss.GetStatefulSetUpdateStrategy()
 	}
 }
