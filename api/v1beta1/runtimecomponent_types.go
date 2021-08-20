@@ -22,6 +22,7 @@ import (
 	"github.com/application-stacks/runtime-component-operator/common"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -48,12 +49,17 @@ type RuntimeComponentSpec struct {
 	StartupProbe        *corev1.Probe                `json:"startupProbe,omitempty"`
 	Service             *RuntimeComponentService     `json:"service,omitempty"`
 	Expose              *bool                        `json:"expose,omitempty"`
+
+	Deployment  *RuntimeComponentDeployment  `json:"deployment,omitempty"`
+	StatefulSet *RuntimeComponentStatefulSet `json:"statefulSet,omitempty"`
+
 	// +listType=atomic
 	EnvFrom []corev1.EnvFromSource `json:"envFrom,omitempty"`
 	// +listType=map
 	// +listMapKey=name
 	Env                []corev1.EnvVar `json:"env,omitempty"`
 	ServiceAccountName *string         `json:"serviceAccountName,omitempty"`
+
 	// +listType=set
 	Architecture         []string                    `json:"architecture,omitempty"`
 	Storage              *RuntimeComponentStorage    `json:"storage,omitempty"`
@@ -115,6 +121,16 @@ type RuntimeComponentService struct {
 	Provides *ServiceBindingProvides  `json:"provides,omitempty"`
 	// +k8s:openapi-gen=true
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
+}
+
+// RuntimeComponentDeployment settings
+type RuntimeComponentDeployment struct {
+	UpdateStrategy *appsv1.DeploymentStrategy `json:"updateStrategy,omitempty"`
+}
+
+// RuntimeComponentStatefulSet settings
+type RuntimeComponentStatefulSet struct {
+	UpdateStrategy *appsv1.StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
 }
 
 // ServiceBindingProvides represents information about
@@ -400,6 +416,32 @@ func (cr *RuntimeComponent) GetAffinity() common.BaseComponentAffinity {
 		return nil
 	}
 	return cr.Spec.Affinity
+}
+
+// GetDeployment returns deployment settings
+func (cr *RuntimeComponent) GetDeployment() common.BaseComponentDeployment {
+	if cr.Spec.Deployment == nil {
+		return nil
+	}
+	return cr.Spec.Deployment
+}
+
+// GetDeploymentStrategy returns deployment strategy struct
+func (cr *RuntimeComponentDeployment) GetDeploymentUpdateStrategy() *appsv1.DeploymentStrategy {
+	return cr.UpdateStrategy
+}
+
+// GetStatefulSet returns statefulSet settings
+func (cr *RuntimeComponent) GetStatefulSet() common.BaseComponentStatefulSet {
+	if cr.Spec.StatefulSet == nil {
+		return nil
+	}
+	return cr.Spec.StatefulSet
+}
+
+// GetStatefulSetUpdateStrategy returns statefulSet strategy struct
+func (cr *RuntimeComponentStatefulSet) GetStatefulSetUpdateStrategy() *appsv1.StatefulSetUpdateStrategy {
+	return cr.UpdateStrategy
 }
 
 // GetResolvedBindings returns a map of all the service names to be consumed by the application

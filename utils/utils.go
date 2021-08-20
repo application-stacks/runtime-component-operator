@@ -47,6 +47,11 @@ func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseComponent) {
 		}
 	}
 
+	dp := ba.GetDeployment()
+	if dp != nil && dp.GetDeploymentUpdateStrategy() != nil {
+		deploy.Spec.Strategy = *dp.GetDeploymentUpdateStrategy()
+	}
+
 }
 
 // CustomizeStatefulSet ...
@@ -65,6 +70,11 @@ func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseCompone
 				"app.kubernetes.io/instance": obj.GetName(),
 			},
 		}
+	}
+
+	ss := ba.GetStatefulSet()
+	if ss != nil && ss.GetStatefulSetUpdateStrategy() != nil {
+		statefulSet.Spec.UpdateStrategy = *ss.GetStatefulSetUpdateStrategy()
 	}
 }
 
