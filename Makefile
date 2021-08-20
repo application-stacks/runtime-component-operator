@@ -129,7 +129,7 @@ bundle-build:
 	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
 
 .PHONY: bundle-push
-bundle-push:
+bundle-push: docker-login
 	docker push ${BUNDLE_IMG}
 
 setup: ## Ensure Operator SDK is installed
