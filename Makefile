@@ -7,7 +7,7 @@ OPERATOR_IMAGE ?= applicationstacks/operator
 OPERATOR_IMAGE_TAG ?= daily
 
 # Default bundle image tag
-BUNDLE_IMG ?= applicationstacks/operator-bundle:daily
+BUNDLE_IMG ?= applicationstacks/operator:bundle-daily
 # Options for 'bundle-build'
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
