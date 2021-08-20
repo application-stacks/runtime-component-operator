@@ -1,0 +1,19 @@
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: persistent-rc
+spec:
+  applicationImage: navidsh/demo-day
+  replicas: 1
+  volumeMounts:
+    - name: pvc
+      mountPath: /data
+  storage:
+    volumeClaimTemplate:
+      metadata:
+        name: pvc
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 15Mi
