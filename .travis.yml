@@ -11,26 +11,13 @@ services:
   - docker
 
 stages:
-  - name: test
   - name: build
-    if: branch = master AND fork = false AND type != pull_request
+    if: fork = false
   - name: build manifest
-    if: branch = master AND fork = false AND type != pull_request
+    if: fork = false
 
 jobs:
   include:
-    - name: Unit testing
-      stage: test
-      script: make unit-test
-    - name: Verify operator image build
-      script: make build-image
-      if: branch != master OR fork = true OR type = pull_request
-    - name: E2E testing on Minikube
-      script: make test-minikube
-    - name: E2E testing on OCP 4.3
-      script: make test-e2e
-      if: fork = false
-    ## if master branch build and push images on all three archs
     - name: Build image on amd64
       stage: build
       os: linux
