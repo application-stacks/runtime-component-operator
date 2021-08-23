@@ -1759,25 +1759,6 @@ spec:
                     type: object
                   certificateSecretRef:
                     type: string
-                  consumes:
-                    items:
-                      description: ServiceBindingConsumes represents a service to be consumed
-                      properties:
-                        category:
-                          description: ServiceBindingCategory ...
-                          type: string
-                        mountPath:
-                          type: string
-                        name:
-                          type: string
-                        namespace:
-                          type: string
-                      required:
-                      - category
-                      - name
-                      type: object
-                    type: array
-                    x-kubernetes-list-type: atomic
                   nodePort:
                     format: int32
                     maximum: 65535
@@ -1822,53 +1803,6 @@ spec:
                       - port
                       type: object
                     type: array
-                  provides:
-                    description: ServiceBindingProvides represents information about
-                    properties:
-                      auth:
-                        description: ServiceBindingAuth allows a service to provide authentication information
-                        properties:
-                          password:
-                            description: The secret that contains the password for authenticating
-                            properties:
-                              key:
-                                description: The key of the secret to select from.  Must be a valid secret key.
-                                type: string
-                              name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
-                                type: string
-                              optional:
-                                description: Specify whether the Secret or its key must be defined
-                                type: boolean
-                            required:
-                            - key
-                            type: object
-                          username:
-                            description: The secret that contains the username for authenticating
-                            properties:
-                              key:
-                                description: The key of the secret to select from.  Must be a valid secret key.
-                                type: string
-                              name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
-                                type: string
-                              optional:
-                                description: Specify whether the Secret or its key must be defined
-                                type: boolean
-                            required:
-                            - key
-                            type: object
-                        type: object
-                      category:
-                        description: ServiceBindingCategory ...
-                        type: string
-                      context:
-                        type: string
-                      protocol:
-                        type: string
-                    required:
-                    - category
-                    type: object
                   targetPort:
                     format: int32
                     maximum: 65535

@@ -38,8 +38,6 @@ type BaseComponentStatus interface {
 	GetCondition(StatusConditionType) StatusCondition
 	SetCondition(StatusCondition)
 	NewCondition() StatusCondition
-	GetConsumedServices() ConsumedServices
-	SetConsumedServices(ConsumedServices)
 	GetResolvedBindings() []string
 	SetResolvedBindings([]string)
 	GetImageReference() string
@@ -82,8 +80,6 @@ type BaseComponentService interface {
 	GetNodePort() *int32
 	GetPorts() []corev1.ServicePort
 	GetAnnotations() map[string]string
-	GetProvides() ServiceBindingProvides
-	GetConsumes() []ServiceBindingConsumes
 	GetCertificateSecretRef() *string
 }
 
@@ -101,22 +97,6 @@ type BaseComponentRoute interface {
 	GetHost() string
 	GetPath() string
 	GetCertificateSecretRef() *string
-}
-
-// ServiceBindingProvides represents a service to be provided
-type ServiceBindingProvides interface {
-	GetCategory() ServiceBindingCategory
-	GetContext() string
-	GetProtocol() string
-	GetAuth() ServiceBindingAuth
-}
-
-// ServiceBindingConsumes represents a service to be consumed
-type ServiceBindingConsumes interface {
-	GetName() string
-	GetNamespace() string
-	GetCategory() ServiceBindingCategory
-	GetMountPath() string
 }
 
 // ServiceBindingAuth represents authentication info when binding services

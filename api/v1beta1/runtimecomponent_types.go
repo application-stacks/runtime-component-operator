@@ -110,27 +110,9 @@ type RuntimeComponentService struct {
 	Ports []corev1.ServicePort `json:"ports,omitempty"`
 
 	Annotations map[string]string `json:"annotations,omitempty"`
-	// +listType=atomic
-	Consumes []ServiceBindingConsumes `json:"consumes,omitempty"`
-	Provides *ServiceBindingProvides  `json:"provides,omitempty"`
+
 	// +k8s:openapi-gen=true
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
-}
-
-// ServiceBindingProvides represents information about
-type ServiceBindingProvides struct {
-	Category common.ServiceBindingCategory `json:"category"`
-	Context  string                        `json:"context,omitempty"`
-	Protocol string                        `json:"protocol,omitempty"`
-	Auth     *ServiceBindingAuth           `json:"auth,omitempty"`
-}
-
-// ServiceBindingConsumes represents a service to be consumed
-type ServiceBindingConsumes struct {
-	Name      string                        `json:"name"`
-	Namespace string                        `json:"namespace,omitempty"`
-	Category  common.ServiceBindingCategory `json:"category"`
-	MountPath string                        `json:"mountPath,omitempty"`
 }
 
 // RuntimeComponentStorage ...
@@ -158,14 +140,6 @@ type RuntimeComponentRoute struct {
 	Path                          string                                     `json:"path,omitempty"`
 }
 
-// ServiceBindingAuth allows a service to provide authentication information
-type ServiceBindingAuth struct {
-	// The secret that contains the username for authenticating
-	Username corev1.SecretKeySelector `json:"username,omitempty"`
-	// The secret that contains the password for authenticating
-	Password corev1.SecretKeySelector `json:"password,omitempty"`
-}
-
 // RuntimeComponentBindings represents service binding related parameters
 type RuntimeComponentBindings struct {
 	AutoDetect  *bool                          `json:"autoDetect,omitempty"`
@@ -182,8 +156,7 @@ type RuntimeComponentBindingExpose struct {
 // RuntimeComponentStatus defines the observed state of RuntimeComponent
 type RuntimeComponentStatus struct {
 	// +listType=atomic
-	Conditions       []StatusCondition       `json:"conditions,omitempty"`
-	ConsumedServices common.ConsumedServices `json:"consumedServices,omitempty"`
+	Conditions []StatusCondition `json:"conditions,omitempty"`
 	// +listType=set
 	ResolvedBindings []string                     `json:"resolvedBindings,omitempty"`
 	ImageReference   string                       `json:"imageReference,omitempty"`
@@ -412,19 +385,6 @@ func (s *RuntimeComponentStatus) SetResolvedBindings(rb []string) {
 	s.ResolvedBindings = rb
 }
 
-// GetConsumedServices returns a map of all the service names to be consumed by the application
-func (s *RuntimeComponentStatus) GetConsumedServices() common.ConsumedServices {
-	if s.ConsumedServices == nil {
-		return nil
-	}
-	return s.ConsumedServices
-}
-
-// SetConsumedServices sets ConsumedServices
-func (s *RuntimeComponentStatus) SetConsumedServices(c common.ConsumedServices) {
-	s.ConsumedServices = c
-}
-
 // GetImageReference returns Docker image reference to be deployed by the CR
 func (s *RuntimeComponentStatus) GetImageReference() string {
 	return s.ImageReference
@@ -517,79 +477,9 @@ func (s *RuntimeComponentService) GetPorts() []corev1.ServicePort {
 	return s.Ports
 }
 
-// GetProvides returns service provider configuration
-func (s *RuntimeComponentService) GetProvides() common.ServiceBindingProvides {
-	if s.Provides == nil {
-		return nil
-	}
-	return s.Provides
-}
-
 // GetCertificateSecretRef returns a secret reference with a certificate
 func (s *RuntimeComponentService) GetCertificateSecretRef() *string {
 	return s.CertificateSecretRef
-}
-
-// GetCategory returns category of a service provider configuration
-func (p *ServiceBindingProvides) GetCategory() common.ServiceBindingCategory {
-	return p.Category
-}
-
-// GetContext returns context of a service provider configuration
-func (p *ServiceBindingProvides) GetContext() string {
-	return p.Context
-}
-
-// GetAuth returns secret of a service provider configuration
-func (p *ServiceBindingProvides) GetAuth() common.ServiceBindingAuth {
-	if p.Auth == nil {
-		return nil
-	}
-	return p.Auth
-}
-
-// GetProtocol returns protocol of a service provider configuration
-func (p *ServiceBindingProvides) GetProtocol() string {
-	return p.Protocol
-}
-
-// GetConsumes returns a list of service consumers' configuration
-func (s *RuntimeComponentService) GetConsumes() []common.ServiceBindingConsumes {
-	consumes := make([]common.ServiceBindingConsumes, len(s.Consumes))
-	for i := range s.Consumes {
-		consumes[i] = &s.Consumes[i]
-	}
-	return consumes
-}
-
-// GetName returns service name of a service consumer configuration
-func (c *ServiceBindingConsumes) GetName() string {
-	return c.Name
-}
-
-// GetNamespace returns namespace of a service consumer configuration
-func (c *ServiceBindingConsumes) GetNamespace() string {
-	return c.Namespace
-}
-
-// GetCategory returns category of a service consumer configuration
-func (c *ServiceBindingConsumes) GetCategory() common.ServiceBindingCategory {
-	return common.ServiceBindingCategoryOpenAPI
-}
-
-// GetMountPath returns mount path of a service consumer configuration
-func (c *ServiceBindingConsumes) GetMountPath() string {
-	return c.MountPath
-}
-
-// GetUsername returns username of a service binding auth object
-func (a *ServiceBindingAuth) GetUsername() corev1.SecretKeySelector {
-	return a.Username
-}
-
-// GetPassword returns password of a service binding auth object
-func (a *ServiceBindingAuth) GetPassword() corev1.SecretKeySelector {
-	return a.Password
 }
 
 // GetLabels returns labels to be added on ServiceMonitor
@@ -723,10 +613,6 @@ func (cr *RuntimeComponent) Initialize() {
 		cr.Spec.Service.Port = 8080
 	}
 
-	if cr.Spec.Service.Provides != nil && cr.Spec.Service.Provides.Protocol == "" {
-		cr.Spec.Service.Provides.Protocol = "http"
-	}
-
 }
 
 // GetLabels returns set of labels to be added to all resources
@@ -747,10 +633,6 @@ func (cr *RuntimeComponent) GetLabels() map[string]string {
 		if key != "app.kubernetes.io/instance" {
 			labels[key] = value
 		}
-	}
-
-	if cr.Spec.Service != nil && cr.Spec.Service.Provides != nil {
-		labels["service.app.stacks/bindable"] = "true"
 	}
 
 	return labels
