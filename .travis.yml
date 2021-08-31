@@ -11,11 +11,8 @@ services:
   - docker
 
 stages:
-  - name: test
   - name: build
-    if: branch = master AND fork = false AND type != pull_request
   - name: build manifest
-    if: branch = master AND fork = false AND type != pull_request
 
 jobs:
   include:

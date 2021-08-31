@@ -44,11 +44,6 @@ main() {
   ## login to docker
   echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
-  ## build latest master branch
-  echo "****** Building release: daily"
-  build_release "daily"
-  echo "****** Pushing release: daily"
-  push_release "daily"
 
   ## loop through tagged releases and build
   local tags=$(git tag -l)
@@ -99,7 +94,7 @@ build_release() {
 push_release() {
   local release="$1"
 
-  if [[ "${TRAVIS}" = "true" && "${TRAVIS_PULL_REQUEST}" = "false" && "${TRAVIS_BRANCH}" = "master" ]]; then
+  if [[ "${TRAVIS}" = "true" && "${TRAVIS_PULL_REQUEST}" = "false" && "${TRAVIS_BRANCH}" = "0.7.1" ]]; then
     echo "****** Pushing image: ${IMAGE}:${release}-${arch}"
     docker push "${IMAGE}:${release}-${arch}"
   else
