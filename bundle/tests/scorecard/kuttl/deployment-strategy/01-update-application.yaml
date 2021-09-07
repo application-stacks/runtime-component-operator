@@ -1,0 +1,12 @@
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: deployment-strategy-rc
+spec:
+  # Add fields here
+  applicationImage: 'k8s.gcr.io/pause:3.1'
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:
+  - command: kubectl rollout status deployment/deployment-strategy-rc -n $WATCH_NAMESPACE
