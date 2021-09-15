@@ -13,4 +13,4 @@ apiVersion: v1
 kind: Pod
 spec:   
   containers:
-  - imagePullPolicy: "ifNotPresent"
+  - imagePullPolicy: "IfNotPresent"
