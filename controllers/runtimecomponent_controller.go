@@ -324,7 +324,10 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
-	if instance.Spec.Storage != nil {
+	if instance.Spec.StatefulSet != nil {
+		l := reqLogger.WithValues("instance.Spec.StatefulSet!!!!!", instance.Spec.StatefulSet)
+		l.Info("")
+
 		// Delete Deployment if exists
 		deploy := &appsv1.Deployment{ObjectMeta: defaultMeta}
 		err = r.DeleteResource(deploy)

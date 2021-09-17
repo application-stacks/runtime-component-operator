@@ -37,9 +37,10 @@ spec:
     type: ClusterIP
     port: 9080
   expose: true
-  storage:
-    size: 2Gi
-    mountPath: "/logs"
+  statefulSet:
+    storage:
+      size: 2Gi
+      mountPath: "/logs"
 ----
 
 == Configuration
@@ -108,9 +109,9 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `startupProbe` | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes++[Kubernetes startup probe] that controls when Kubernetes needs to startup the pod on its first initialization.
 | `volumes` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/storage/volumes++[pod volume].
 | `volumeMounts` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/storage/volumes/++[pod volumeMount].
-| `storage.size` | A convenient field to set the size of the persisted storage. Can be overridden by the `storage.volumeClaimTemplate` property.
-| `storage.mountPath` | The directory inside the container where this persisted storage will be bound to.
-| `storage.volumeClaimTemplate` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components++[volumeClaimTemplate] component of a `StatefulSet`.
+| `statefulSet.storage.size` | A convenient field to set the size of the persisted storage. Can be overridden by the `storage.volumeClaimTemplate` property.
+| `statefulSet.storage.mountPath` | The directory inside the container where this persisted storage will be bound to.
+| `statefulSet.storage.volumeClaimTemplate` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components++[volumeClaimTemplate] component of a `StatefulSet`.
 | `monitoring.labels` | Labels to set on link:++https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitor++[ServiceMonitor].
 | `monitoring.endpoints` | A YAML snippet representing an array of link:++https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#endpoint++[Endpoint] component from ServiceMonitor.
 | `route.annotations` | Annotations to be added to the Route.
@@ -361,7 +362,7 @@ Users also can provide mount points for their application. There are 2 ways to e
 
 With the `RuntimeComponent` CR definition below the operator will create `PersistentVolumeClaim` called `pvc` with the size of `1Gi` and `ReadWriteOnce` access mode.
 
-The operator will also create a volume mount for the `StatefulSet` mounting to `/data` folder. You can use `volumeMounts` field instead of `storage.mountPath` if you require to persist more then one folder.
+The operator will also create a volume mount for the `StatefulSet` mounting to `/data` folder. You can use `volumeMounts` field instead of `statefulSet.storage.mountPath` if you require to persist more then one folder.
 
 [source,yaml]
 ----
@@ -371,16 +372,17 @@ metadata:
   name: my-app
 spec:
   applicationImage: quay.io/my-repo/my-app:1.0
-  storage:
-    size: 1Gi
-    mountPath: "/data"
+  statefulSet:
+    storage:
+      size: 1Gi
+      mountPath: "/data"
 ----
 
 ==== Advanced storage
 
 Runtime Component Operator allows users to provide entire `volumeClaimTemplate` for full control over automatically created `PersistentVolumeClaim`.
 
-It is also possible to create multiple volume mount points for persistent volume using `volumeMounts` field as shown below. You can still use `storage.mountPath` if you require only a single mount point.
+It is also possible to create multiple volume mount points for persistent volume using `volumeMounts` field as shown below. You can still use `statefulSet.storage.mountPath` if you require only a single mount point.
 
 [source,yaml]
 ----
@@ -397,17 +399,18 @@ spec:
   - name: pvc
     mountPath: /data_2
     subPath: data_2
-  storage:
-    volumeClaimTemplate:
-      metadata:
-        name: pvc
-      spec:
-        accessModes:
-        - "ReadWriteMany"
-        storageClassName: 'glusterfs'
-        resources:
-          requests:
-            storage: 1Gi
+  statefulSet:
+    storage:
+      volumeClaimTemplate:
+        metadata:
+          name: pvc
+        spec:
+          accessModes:
+          - "ReadWriteMany"
+          storageClassName: 'glusterfs'
+          resources:
+            requests:
+              storage: 1Gi
 ----
 
 === Service binding

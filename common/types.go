@@ -164,6 +164,7 @@ type BaseComponentDeployment interface {
 // BaseComponentStatefulSet describes deployment
 type BaseComponentStatefulSet interface {
 	GetStatefulSetUpdateStrategy() *appsv1.StatefulSetUpdateStrategy
+	GetStorage() BaseComponentStorage
 }
 
 // BaseComponent represents basic kubernetes application
@@ -185,7 +186,6 @@ type BaseComponent interface {
 	GetCreateKnativeService() *bool
 	GetArchitecture() []string
 	GetAutoscaling() BaseComponentAutoscaling
-	GetStorage() BaseComponentStorage
 	GetService() BaseComponentService
 	GetDeployment() BaseComponentDeployment
 	GetStatefulSet() BaseComponentStatefulSet

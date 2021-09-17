@@ -471,11 +471,6 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.Storage != nil {
-		in, out := &in.Storage, &out.Storage
-		*out = new(RuntimeComponentStorage)
-		(*in).DeepCopyInto(*out)
-	}
 	if in.CreateKnativeService != nil {
 		in, out := &in.CreateKnativeService, &out.CreateKnativeService
 		*out = new(bool)
@@ -533,6 +528,11 @@ func (in *RuntimeComponentStatefulSet) DeepCopyInto(out *RuntimeComponentStatefu
 	if in.UpdateStrategy != nil {
 		in, out := &in.UpdateStrategy, &out.UpdateStrategy
 		*out = new(appsv1.StatefulSetUpdateStrategy)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Storage != nil {
+		in, out := &in.Storage, &out.Storage
+		*out = new(RuntimeComponentStorage)
 		(*in).DeepCopyInto(*out)
 	}
 }

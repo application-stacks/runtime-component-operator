@@ -8,7 +8,8 @@ spec:
   # Add fields here
   applicationImage: 'k8s.gcr.io/pause:2.0'
   replicas: 1
-  storage:
-    size: "10Mi"
-    mountPath: "/mnt/data"
+  statefulSet:
+    storage:
+      size: "10Mi"
+      mountPath: "/mnt/data"
 

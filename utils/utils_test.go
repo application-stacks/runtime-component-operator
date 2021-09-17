@@ -346,7 +346,8 @@ func TestCustomizePersistence(t *testing.T) {
 	logger := zap.New()
 	logf.SetLogger(logger)
 
-	spec := appstacksv1beta1.RuntimeComponentSpec{Storage: &storage}
+	runtimeStatefulSet := &appstacksv1beta1.RuntimeComponentStatefulSet{Storage: &storage}
+	spec := appstacksv1beta1.RuntimeComponentSpec{StatefulSet: runtimeStatefulSet}
 	statefulSet, runtime := &appsv1.StatefulSet{}, createRuntimeComponent(name, namespace, spec)
 	statefulSet.Spec.Template.Spec.Containers = []corev1.Container{{}}
 	statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{}
@@ -357,7 +358,8 @@ func TestCustomizePersistence(t *testing.T) {
 
 	//reset
 	storageNilVCT := appstacksv1beta1.RuntimeComponentStorage{Size: "10Mi", MountPath: "/mnt/data", VolumeClaimTemplate: nil}
-	spec = appstacksv1beta1.RuntimeComponentSpec{Storage: &storageNilVCT}
+	runtimeStatefulSet = &appstacksv1beta1.RuntimeComponentStatefulSet{Storage: &storageNilVCT}
+	spec = appstacksv1beta1.RuntimeComponentSpec{StatefulSet: runtimeStatefulSet}
 	statefulSet, runtime = &appsv1.StatefulSet{}, createRuntimeComponent(name, namespace, spec)
 
 	statefulSet.Spec.Template.Spec.Containers = []corev1.Container{{}}
@@ -473,7 +475,8 @@ func TestCustomizeHPA(t *testing.T) {
 	CustomizeHPA(hpa, runtime)
 	nilSTRKind := hpa.Spec.ScaleTargetRef.Kind
 
-	spec = appstacksv1beta1.RuntimeComponentSpec{Autoscaling: autoscaling, Storage: &storage}
+	runtimeStatefulSet := &appstacksv1beta1.RuntimeComponentStatefulSet{Storage: &storage}
+	spec = appstacksv1beta1.RuntimeComponentSpec{Autoscaling: autoscaling, StatefulSet: runtimeStatefulSet}
 	runtime = createRuntimeComponent(name, namespace, spec)
 	CustomizeHPA(hpa, runtime)
 	STRKind := hpa.Spec.ScaleTargetRef.Kind
