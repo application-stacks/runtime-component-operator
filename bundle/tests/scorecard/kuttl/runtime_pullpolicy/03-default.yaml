@@ -5,3 +5,4 @@ metadata:
 spec:
   applicationImage: navidsh/demo-day
   replicas: 1
+  pullPolicy: null
