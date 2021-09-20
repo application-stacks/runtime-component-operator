@@ -681,7 +681,7 @@ func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseComp
 	hpa.Spec.ScaleTargetRef.Name = obj.GetName()
 	hpa.Spec.ScaleTargetRef.APIVersion = "apps/v1"
 
-	if ba.GetStatefulSet() != nil && ba.GetStatefulSet().GetStorage() != nil {
+	if ba.GetStatefulSet() != nil {
 		hpa.Spec.ScaleTargetRef.Kind = "StatefulSet"
 	} else {
 		hpa.Spec.ScaleTargetRef.Kind = "Deployment"
@@ -695,7 +695,7 @@ func Validate(ba common.BaseComponent) (bool, error) {
 	if ss != nil && ss.GetStorage() != nil {
 		if ss.GetStorage().GetVolumeClaimTemplate() == nil {
 			if ss.GetStorage().GetSize() == "" {
-				return false, fmt.Errorf("validation failed: " + requiredFieldMessage("spec.storage.size"))
+				return false, fmt.Errorf("validation failed: " + requiredFieldMessage("spec.statefulSet.storage.size"))
 			}
 			if _, err := resource.ParseQuantity(ss.GetStorage().GetSize()); err != nil {
 				return false, fmt.Errorf("validation failed: cannot parse '%v': %v", ss.GetStorage().GetSize(), err)
