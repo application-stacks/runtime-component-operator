@@ -1,6 +1,6 @@
 apiVersion: kuttl.dev/v1beta1
 kind: TestAssert
-timeout: 90
+timeout: 60
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -9,8 +9,5 @@ metadata:
 spec:
   strategy:
     type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 2
 status:
   readyReplicas: 3

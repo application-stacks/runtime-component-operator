@@ -6,11 +6,11 @@ spec:
   # Add fields here
   applicationImage: k8s.gcr.io/pause:2.0
   replicas: 3
-  storage:
-    size: 100Mi
-    mountPath: /data
   statefulSet:
     updateStrategy:
       type: RollingUpdate
       rollingUpdate:
         partition: 2
+    storage:
+      size: 100Mi
+      mountPath: /data

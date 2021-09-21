@@ -1,0 +1,9 @@
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: deployment-strategy-rc
+spec:
+  # Add fields here
+  replicas: 3
+  deployment:
+    updateStrategy:
