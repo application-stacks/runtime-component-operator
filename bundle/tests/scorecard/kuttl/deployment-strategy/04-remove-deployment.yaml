@@ -1,9 +1,8 @@
 apiVersion: app.stacks/v1beta1
 kind: RuntimeComponent
 metadata:
-  name: probes-rc
+  name: deployment-strategy-rc
 spec:
   # Add fields here
-  livenessProbe: null
-  readinessProbe: null
-  startupProbe: null
+  replicas: 3
+  deployment:

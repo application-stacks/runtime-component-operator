@@ -7,4 +7,7 @@ spec:
     initialDelaySeconds: 6
   readinessProbe:
     initialDelaySeconds: 3
+  startupProbe:
+    failureThreshold: 20
+    periodSeconds: 10
 
