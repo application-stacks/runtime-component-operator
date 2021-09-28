@@ -50,8 +50,9 @@ func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseComponent) {
 	dp := ba.GetDeployment()
 	if dp != nil && dp.GetDeploymentUpdateStrategy() != nil {
 		deploy.Spec.Strategy = *dp.GetDeploymentUpdateStrategy()
+	} else {
+		deploy.Spec.Strategy = appsv1.DeploymentStrategy{Type: appsv1.RollingUpdateDeploymentStrategyType}
 	}
-
 }
 
 // CustomizeStatefulSet ...
@@ -73,8 +74,12 @@ func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseCompone
 	}
 
 	ss := ba.GetStatefulSet()
-	if ss != nil && ss.GetStatefulSetUpdateStrategy() != nil {
-		statefulSet.Spec.UpdateStrategy = *ss.GetStatefulSetUpdateStrategy()
+	if ss != nil {
+		if ss.GetStatefulSetUpdateStrategy() != nil {
+			statefulSet.Spec.UpdateStrategy = *ss.GetStatefulSetUpdateStrategy()
+		} else {
+			statefulSet.Spec.UpdateStrategy = appsv1.StatefulSetUpdateStrategy{Type: appsv1.RollingUpdateStatefulSetStrategyType}
+		}
 	}
 }
 
