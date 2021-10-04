@@ -77,7 +77,7 @@ type RuntimeComponentSpec struct {
 	Affinity          *RuntimeComponentAffinity `json:"affinity,omitempty"`
 }
 
-// RuntimeComponentAffinity deployment affinity settings
+// RuntimeComponentAffinity configures a Pod to run on particular Nodes
 type RuntimeComponentAffinity struct {
 	NodeAffinity    *corev1.NodeAffinity    `json:"nodeAffinity,omitempty"`
 	PodAffinity     *corev1.PodAffinity     `json:"podAffinity,omitempty"`
@@ -87,7 +87,7 @@ type RuntimeComponentAffinity struct {
 	NodeAffinityLabels map[string]string `json:"nodeAffinityLabels,omitempty"`
 }
 
-// RuntimeComponentAutoScaling ...
+// RuntimeComponentAutoScaling configures the desired resource consumption of pods
 type RuntimeComponentAutoScaling struct {
 	TargetCPUUtilizationPercentage *int32 `json:"targetCPUUtilizationPercentage,omitempty"`
 	MinReplicas                    *int32 `json:"minReplicas,omitempty"`
@@ -96,7 +96,7 @@ type RuntimeComponentAutoScaling struct {
 	MaxReplicas int32 `json:"maxReplicas,omitempty"`
 }
 
-// RuntimeComponentService ...
+// RuntimeComponentService configures parameters for the network service of pods
 type RuntimeComponentService struct {
 	Type *corev1.ServiceType `json:"type,omitempty"`
 
@@ -123,17 +123,17 @@ type RuntimeComponentService struct {
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
 }
 
-// RuntimeComponentDeployment settings
+// RuntimeComponentDeployment defines the desired state and cycle of applications
 type RuntimeComponentDeployment struct {
 	UpdateStrategy *appsv1.DeploymentStrategy `json:"updateStrategy,omitempty"`
 }
 
-// RuntimeComponentStatefulSet settings
+// RuntimeComponentStatefulSet defines the desired state and cycle of stateful applications
 type RuntimeComponentStatefulSet struct {
 	UpdateStrategy *appsv1.StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
 }
 
-// ServiceBindingProvides represents information about
+// ServiceBindingProvides configures the OpenAPI information to expose
 type ServiceBindingProvides struct {
 	Category common.ServiceBindingCategory `json:"category"`
 	Context  string                        `json:"context,omitempty"`
@@ -149,7 +149,7 @@ type ServiceBindingConsumes struct {
 	MountPath string                        `json:"mountPath,omitempty"`
 }
 
-// RuntimeComponentStorage ...
+// RuntimeComponentStorage defines settings of persisted storage for StatefulSets
 type RuntimeComponentStorage struct {
 	// +kubebuilder:validation:Pattern=^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
 	Size                string                        `json:"size,omitempty"`
@@ -157,13 +157,13 @@ type RuntimeComponentStorage struct {
 	VolumeClaimTemplate *corev1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }
 
-// RuntimeComponentMonitoring ...
+// RuntimeComponentMonitoring specifies parameters for Service Monitor
 type RuntimeComponentMonitoring struct {
 	Labels    map[string]string       `json:"labels,omitempty"`
 	Endpoints []prometheusv1.Endpoint `json:"endpoints,omitempty"`
 }
 
-// RuntimeComponentRoute ...
+// RuntimeComponentRoute configures the ingress resource
 // +k8s:openapi-gen=true
 type RuntimeComponentRoute struct {
 	Annotations                   map[string]string                          `json:"annotations,omitempty"`
