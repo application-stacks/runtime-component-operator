@@ -1,0 +1,8 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: runtime-component-operator-crb
+subjects:
+- kind: ServiceAccount
+  name: runtime-component-operator
+  namespace: test-project

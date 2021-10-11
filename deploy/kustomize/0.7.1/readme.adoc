@@ -1,0 +1,13 @@
+## Install to a single namespace
+Intall the RuntimeComponentOperator by running the command `kubectl apply -k base`
+This will install the runtime component operator to the namespace `default`, and the
+operator will watch for new RuntimeComponent instances only in the namespace default
+To delete the operator, `kubectl delete -k base`
+
+## Install to watch all namespaces
+Example overlay files are provided for an installation to watch all namespaces. This
+example overlay also changes the install namespace for the operator to `test-project`
+and adds the necessary ClusterRole and ClusterRoleBinding
+To install run `kubectl apply -k overlay/example`
+To delete run `kubectl delete -k overlay/example`
+
