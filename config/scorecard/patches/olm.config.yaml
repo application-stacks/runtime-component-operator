@@ -48,3 +48,10 @@
     labels:
       suite: olm
       test: olm-status-descriptors-test
+- op: add
+  path: /stages/0/tests/-
+  value:
+    image: quay.io/operator-framework/scorecard-test-kuttl:latest
+    labels:
+      suite: kuttlsuite
+      test: basic-test
