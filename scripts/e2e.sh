@@ -83,14 +83,13 @@ main() {
     docker build -t "${BUILD_IMAGE}" .
 
     echo "****** Building bundle..."
-    operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}"
+    IMG="${BUNDLE_IMAGE}" make bundle bundle-build
 
     echo "****** Pushing operator and operator bundle images into registry..."
     push_images
 
     echo "****** Starting e2e tests..."
-    readonly test_location="github.com/application-stacks/runtime-component-operator/test/e2e"
-    operator-sdk test local "${test_location}" --debug --verbose  --go-test-flags "-timeout 35m" --image "${BUILD_IMAGE}"
+    operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}"
 
     result=$?
     echo "****** Cleaning up test environment..."
