@@ -80,7 +80,7 @@ main() {
     echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
     echo "****** Building image"
-    docker build -t "${BUILD_IMAGE}"
+    docker build -t "${BUILD_IMAGE}" .
 
     echo "****** Building bundle..."
     operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}"
