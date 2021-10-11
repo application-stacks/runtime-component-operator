@@ -37,7 +37,7 @@ jobs:
       arch: amd64
       script:
         - make build-multiarch-image
-        - make test-e2e || travis_terminate 1
+        - make setup test-e2e || travis_terminate 1
         - make build-manifest
         - make push-multiarch-image
     - name: Build image on ppc64le
