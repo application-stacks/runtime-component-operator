@@ -18,21 +18,20 @@ setup_env() {
     readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
     readonly TEST_NAMESPACE="runtime-operator-test-${TRAVIS_BUILD_NUMBER}"
     readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/runtime-operator
+    readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle"
 
     echo "****** Creating test namespace: ${TEST_NAMESPACE}"
     oc new-project "${TEST_NAMESPACE}"
-
-
 }
 
-## cleanup : Delete generated resources that are not bound to a test TEST_NAMESPACE.
+## cleanup_env : Delete generated resources that are not bound to a test TEST_NAMESPACE.
 cleanup_env() {
   oc delete project "${TEST_NAMESPACE}"
   # Remove image related resources after the test has finished
   oc delete imagestream "runtime-operator:${TRAVIS_BUILD_NUMBER}" -n openshift
 }
 
-push_bundle_image() {
+push_images() {
     echo "****** Logging into private registry..."
     oc sa get-token "${SERVICE_ACCOUNT}" -n default | docker login -u unused --password-stdin "${DEFAULT_REGISTRY}" || {
         echo "Failed to log into docker registry as ${SERVICE_ACCOUNT}, exiting..."
@@ -44,6 +43,11 @@ push_bundle_image() {
 
     docker push "${BUILD_IMAGE}" || {
         echo "Failed to push ref: ${BUILD_IMAGE} to docker registry, exiting..."
+        exit 1
+    }
+
+    docker push "${BUNDLE_IMAGE}" || {
+        echo "Failed to push ref: ${BUNDLE_IMAGE} to docker registry, exiting..."
         exit 1
     }
 }
@@ -76,13 +80,13 @@ main() {
     echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
     echo "****** Building image"
-    operator-sdk build "${BUILD_IMAGE}"
-    echo "****** Pushing image into registry..."
-    push_bundle_image
+    docker build -t "${BUILD_IMAGE}"
 
     echo "****** Building bundle..."
-    readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle"
     operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}"
+
+    echo "****** Pushing operator and operator bundle images into registry..."
+    push_images
 
     echo "****** Starting e2e tests..."
     readonly test_location="github.com/application-stacks/runtime-component-operator/test/e2e"
