@@ -158,4 +158,6 @@ setup-manifest:
 	./scripts/installers/install-manifest-tool.sh
 
 test-e2e:
-	./scripts/e2e.sh
+	./scripts/e2e.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" \
+                     --cluster-url "${CLUSTER_URL}" --cluster-token "${CLUSTER_TOKEN}" \
+                     --registry-name default-route --registry-namespace openshift-image-registry
