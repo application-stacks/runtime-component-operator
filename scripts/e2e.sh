@@ -83,7 +83,7 @@ main() {
     docker build -t "${BUILD_IMAGE}" .
 
     echo "****** Building bundle..."
-    IMG="${BUNDLE_IMAGE}" make bundle bundle-build
+    IMG="${BUNDLE_IMAGE}" make kustomize bundle bundle-build
 
     echo "****** Pushing operator and operator bundle images into registry..."
     push_images
