@@ -3,7 +3,8 @@
 #########################################################################################
 #
 #
-#           Script to build and push the multi arch images for operator
+#           Script to build the multi arch images for operator
+#           To push the image to DockerHub, provide the `--push` flag.
 #           Note: Assumed to run under <operator root>/scripts
 #
 #
@@ -28,7 +29,7 @@ main() {
     exit 1
   fi
 
-  ## Define current arc variable
+  ## Define current arch variable
   case "$(uname -p)" in
   "ppc64le")
     readonly arch="ppc64le"
@@ -44,11 +45,14 @@ main() {
   ## login to docker
   echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
-  ## build latest master branch
-  echo "****** Building release: daily"
-  build_release "daily"
-  echo "****** Pushing release: daily"
-  push_release "daily"
+  ## build or push latest master branch
+  if [[ "${IS_PUSH}" != true ]]; then
+    echo "****** Building release: daily"
+    build_release "daily"
+  else
+    echo "****** Pushing release: daily"
+    push_release "daily"
+  fi
 }
 
 
@@ -105,6 +109,9 @@ parse_args() {
     --image)
       shift
       readonly IMAGE="${1}"
+      ;;
+    --push)
+      readonly IS_PUSH=true
       ;;
     *)
       echo "Error: Invalid argument - $1"

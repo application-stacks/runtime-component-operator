@@ -1,52 +1,68 @@
 #!/bin/bash
 
+readonly usage="Usage: e2e.sh --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace>"
 readonly SERVICE_ACCOUNT="travis-tests"
 
-# login_cluster : Download oc cli and use it to log into our persistent cluster
-login_cluster(){
+# setup_env: Download oc cli, log into our persistent cluster, and create a test project
+setup_env() {
+    echo "****** Installing OC CLI..."
     # Install kubectl and oc
     curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-4.3/openshift-client-linux.tar.gz | tar xvz
     sudo mv oc kubectl /usr/local/bin/
+
     # Start a cluster and login
-    oc login ${OC_URL} --token=${OC_TOKEN}
+    echo "****** Logging into remote cluster ..."
+    oc login "${OC_URL}" --token="${OC_TOKEN}"
+
     # Set variables for rest of script to use
     readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
-    readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/openshift/runtime-operator:${TRAVIS_BUILD_NUMBER}
+    readonly TEST_NAMESPACE="runtime-operator-test-${TRAVIS_BUILD_NUMBER}"
+    readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/runtime-operator
+
+    echo "****** Creating test namespace: ${TEST_NAMESPACE}"
+    oc new-project "${TEST_NAMESPACE}"
+
+    echo "****** Logging into private registry..."
+    oc sa get-token "${SERVICE_ACCOUNT}" -n default | docker login -u unused --password-stdin "${DEFAULT_REGISTRY}" || {
+      echo "Failed to log into docker registry as ${SERVICE_ACCOUNT}, exiting..."
+      exit 1
+    }
+
+    echo "****** Creating pull secret using Docker config..."
+    oc create secret generic regcred --from-file=.dockerconfigjson="${HOME}/.docker/config.json" --type=kubernetes.io/dockerconfigjson
 }
 
-## cleanup : Delete generated resources that are not bound to a test namespace.
-cleanup() {
-    # Remove image related resources after the test has finished
-    oc delete imagestream "runtime-operator:${TRAVIS_BUILD_NUMBER}" -n openshift
+## cleanup : Delete generated resources that are not bound to a test TEST_NAMESPACE.
+cleanup_env() {
+  oc delete project "${TEST_NAMESPACE}"
+  # Remove image related resources after the test has finished
+  oc delete imagestream "runtime-operator:${TRAVIS_BUILD_NUMBER}" -n openshift
 }
 
 main() {
     parse_args "$@"
-    echo "****** Logging into remote cluster..."
-    login_cluster
-    echo "****** Logging into private registry..."
-    echo $(oc sa get-token travis-tests -n default) | docker login -u unused --password-stdin $DEFAULT_REGISTRY
-
-    if [[ $? -ne 0 ]]; then
-        echo "Failed to log into docker registry as ${SERVICE_ACCOUNT}, exiting..."
-        exit 1
-    fi
+    echo "****** Setting up test environment..."
+    setup_env
 
     echo "****** Building image"
     operator-sdk build "${BUILD_IMAGE}"
     echo "****** Pushing image into registry..."
-    docker push "${BUILD_IMAGE}"
-
-    if [[ $? -ne 0 ]]; then
+    docker push "${BUILD_IMAGE}" || {
         echo "Failed to push ref: ${BUILD_IMAGE} to docker registry, exiting..."
         exit 1
-    fi
+    }
+
+    echo "****** Building bundle..."
+    readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle"
+    operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}"
 
     echo "****** Starting e2e tests..."
-    CLUSTER_ENV="ocp" operator-sdk test local github.com/application-stacks/runtime-component-operator/test/e2e --debug --verbose  --go-test-flags "-timeout 35m" --image $(oc registry info)/openshift/runtime-operator:$TRAVIS_BUILD_NUMBER
+    readonly test_location="github.com/application-stacks/runtime-component-operator/test/e2e"
+    operator-sdk test local "${test_location}" --debug --verbose  --go-test-flags "-timeout 35m" --image "${BUILD_IMAGE}"
+
     result=$?
-    echo "****** Cleaning up tests..."
-    cleanup
+    echo "****** Cleaning up test environment..."
+    cleanup_env
 
     return $result
 }

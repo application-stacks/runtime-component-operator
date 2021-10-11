@@ -141,8 +141,12 @@ unit-test: ## Run unit tests
 build-image: ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}"
 	docker build -t ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG} .
 
-build-multiarch-image: ## Build and push operator image
+build-multiarch-image: ## Build operator image
 	./scripts/build-releases.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
+
+push-multiarch-image: ## Push operator image
+	./scripts/build-releases.sh --push -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
+
 
 docker-login:
 	docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" 
@@ -152,3 +156,6 @@ build-manifest: setup-manifest
 
 setup-manifest:
 	./scripts/installers/install-manifest-tool.sh
+
+test-e2e:
+	./scripts/e2e.sh
