@@ -88,8 +88,11 @@ main() {
     echo "****** Pushing operator and operator bundle images into registry..."
     push_images
 
-    echo "****** Starting e2e tests..."
+    echo "Installing bundle..."
     operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}"
+
+    echo "****** Starting e2e tests..."
+    operator-sdk scorecard "${BUNDLE_IMAGE}" --selector=suite=kuttlesuite
 
     result=$?
     echo "****** Cleaning up test environment..."
