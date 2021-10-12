@@ -89,14 +89,20 @@ main() {
     push_images
 
     echo "Installing bundle..."
-    operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}"
+    operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}" || {
+        echo "****** Installing bundle failed..."
+        exit 1
+    }
 
-    echo "****** Starting e2e tests..."
-    operator-sdk scorecard "${BUNDLE_IMAGE}" --selector=suite=kuttlesuite
-
+    echo "****** Starting scorecard tests..."
+    operator-sdk scorecard --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --wait-time 30m ./bundle || {
+        echo "****** Scorecard tests failed..."
+        exit 1
+    }
     result=$?
+
     echo "****** Cleaning up test environment..."
-    #cleanup_env
+    cleanup_env
 
     return $result
 }
