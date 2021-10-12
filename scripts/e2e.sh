@@ -18,7 +18,7 @@ setup_env() {
     readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
     readonly TEST_NAMESPACE="runtime-operator-test-${TRAVIS_BUILD_NUMBER}"
     readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/runtime-operator
-    readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle"
+    readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle:latest"
 
     echo "****** Creating test namespace: ${TEST_NAMESPACE}"
     oc new-project "${TEST_NAMESPACE}"
@@ -40,9 +40,6 @@ push_images() {
 
     echo "****** Creating pull secret using Docker config..."
     oc create secret generic regcred --from-file=.dockerconfigjson="${HOME}/.docker/config.json" --type=kubernetes.io/dockerconfigjson
-
-    ls -al "${HOME}/.docker"
-    oc get all
 
     docker push "${BUILD_IMAGE}" || {
         echo "Failed to push ref: ${BUILD_IMAGE} to docker registry, exiting..."
