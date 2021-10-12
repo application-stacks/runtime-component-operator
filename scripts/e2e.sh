@@ -28,7 +28,7 @@ setup_env() {
 cleanup_env() {
   oc delete project "${TEST_NAMESPACE}"
   # Remove image related resources after the test has finished
-  oc delete imagestream "runtime-operator:${TRAVIS_BUILD_NUMBER}" -n openshift
+  # oc delete imagestream "runtime-operator:${TRAVIS_BUILD_NUMBER}" -n openshift
 }
 
 push_images() {
@@ -40,6 +40,9 @@ push_images() {
 
     echo "****** Creating pull secret using Docker config..."
     oc create secret generic regcred --from-file=.dockerconfigjson="${HOME}/.docker/config.json" --type=kubernetes.io/dockerconfigjson
+
+    ls -al "${HOME}/.docker"
+    oc get all
 
     docker push "${BUILD_IMAGE}" || {
         echo "Failed to push ref: ${BUILD_IMAGE} to docker registry, exiting..."
@@ -93,7 +96,7 @@ main() {
 
     result=$?
     echo "****** Cleaning up test environment..."
-    cleanup_env
+    #cleanup_env
 
     return $result
 }
@@ -134,6 +137,5 @@ parse_args() {
     shift
   done
 }
-
 
 main "$@"
