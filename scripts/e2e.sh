@@ -94,15 +94,18 @@ main() {
         exit 1
     }
 
+    ## XXX: Try waiting for bundle to deploy
+    sleep 300
+
     echo "****** Starting scorecard tests..."
-    operator-sdk scorecard --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --wait-time 30m ./bundle || {
+    operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --wait-time 30m ./bundle || {
         echo "****** Scorecard tests failed..."
         exit 1
     }
     result=$?
 
     echo "****** Cleaning up test environment..."
-    cleanup_env
+    #cleanup_env
 
     return $result
 }
