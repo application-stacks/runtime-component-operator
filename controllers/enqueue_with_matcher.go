@@ -2,12 +2,10 @@ package controllers
 
 import (
 	"context"
-	"strings"
 
 	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/api/v1beta1"
 	appstacksutils "github.com/application-stacks/runtime-component-operator/utils"
 	corev1 "k8s.io/api/core/v1"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -101,44 +99,6 @@ func (i *ImageStreamMatcher) Match(imageStreamTag metav1.Object) ([]appstacksv1b
 			return nil, err
 		}
 		apps = append(apps, appList.Items...)
-	}
-
-	return apps, nil
-}
-
-// BindingSecretMatcher implements CustomMatcher for Binding Secrets
-type BindingSecretMatcher struct {
-	klient client.Client
-}
-
-// Match returns all applications that "could" rely on the secret as a secret binding by finding apps that have
-// resourceRef matching the secret name OR app name matching the secret name
-func (b *BindingSecretMatcher) Match(secret metav1.Object) ([]appstacksv1beta1.RuntimeComponent, error) {
-	apps := []appstacksv1beta1.RuntimeComponent{}
-
-	// Adding apps which have this secret defined in the spec.bindings.resourceRef
-	appList := &appstacksv1beta1.RuntimeComponentList{}
-	err := b.klient.List(context.Background(),
-		appList,
-		client.InNamespace(secret.GetNamespace()),
-		client.MatchingFields{indexFieldBindingsResourceRef: secret.GetName()})
-	if err != nil {
-		return nil, err
-	}
-	apps = append(apps, appList.Items...)
-
-	// Check if this secret has a suffix that we care about aka meaning it is a secret in which an application is relying on
-	for _, suffix := range []string{bindingSecretSuffix, appstacksutils.ExposeBindingOverrideSecretSuffix} {
-		if strings.HasSuffix(secret.GetName(), suffix) {
-			appName := strings.TrimSuffix(secret.GetName(), suffix)
-			app := &appstacksv1beta1.RuntimeComponent{}
-			err = b.klient.Get(context.Background(), types.NamespacedName{Name: appName, Namespace: secret.GetNamespace()}, app)
-			if err == nil {
-				apps = append(apps, *app)
-			} else if !kerrors.IsNotFound(err) {
-				return nil, err
-			}
-		}
 	}
 
 	return apps, nil
