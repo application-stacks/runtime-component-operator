@@ -27,8 +27,6 @@ setup_env() {
 ## cleanup_env : Delete generated resources that are not bound to a test TEST_NAMESPACE.
 cleanup_env() {
   oc delete project "${TEST_NAMESPACE}"
-  # Remove image related resources after the test has finished
-  # oc delete imagestream "runtime-operator:${TRAVIS_BUILD_NUMBER}" -n openshift
 }
 
 push_images() {
@@ -88,14 +86,19 @@ main() {
     echo "****** Pushing operator and operator bundle images into registry..."
     push_images
 
-    echo "Installing bundle..."
+    echo "****** Installing bundle..."
     operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}" || {
         echo "****** Installing bundle failed..."
         exit 1
     }
 
-    ## XXX: Try waiting for bundle to deploy
-    sleep 300
+    # Wait for operator deployment to be ready
+    while [[ $(oc get deploy rco-controller-manager -o jsonpath='{ .status.readyReplicas }') -ne "1" ]]; do
+        echo "****** Waiting for rco-controller-manager to be ready..."
+        sleep 10
+    done
+
+    echo "****** rco-controller-manager deployment is ready..."
 
     echo "****** Starting scorecard tests..."
     operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --wait-time 30m ./bundle || {
