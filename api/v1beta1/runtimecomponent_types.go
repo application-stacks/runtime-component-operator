@@ -30,151 +30,245 @@ import (
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// RuntimeComponentSpec defines the desired state of RuntimeComponent
+// Defines the desired state of RuntimeComponent
 type RuntimeComponentSpec struct {
-	Version          string                       `json:"version,omitempty"`
-	ApplicationImage string                       `json:"applicationImage"`
-	Replicas         *int32                       `json:"replicas,omitempty"`
-	Autoscaling      *RuntimeComponentAutoScaling `json:"autoscaling,omitempty"`
-	PullPolicy       *corev1.PullPolicy           `json:"pullPolicy,omitempty"`
-	PullSecret       *string                      `json:"pullSecret,omitempty"`
+	Version          string `json:"version,omitempty"`
+	ApplicationImage string `json:"applicationImage"`
+	Replicas         *int32 `json:"replicas,omitempty"`
+
+	Autoscaling *RuntimeComponentAutoScaling `json:"autoscaling,omitempty"`
+
+	// Policy for pulling container images. Defaults to IfNotPresent. Parameters autoscaling.maxReplicas and resourceConstraints.requests.cpu must be specified.
+	PullPolicy *corev1.PullPolicy `json:"pullPolicy,omitempty"`
+
+	// Name of the Secret to use to pull images from the specified repository. It is not required if the cluster is configured with a global image pull secret.
+	PullSecret *string `json:"pullSecret,omitempty"`
+
+	// Represents a pod volume with data that is accessible to the containers.
 	// +listType=map
 	// +listMapKey=name
 	Volumes []corev1.Volume `json:"volumes,omitempty"`
+
+	// Represents where to mount the volumes into containers.
 	// +listType=atomic
-	VolumeMounts        []corev1.VolumeMount         `json:"volumeMounts,omitempty"`
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
+
+	// Limits the amount of required resources.
 	ResourceConstraints *corev1.ResourceRequirements `json:"resourceConstraints,omitempty"`
-	ReadinessProbe      *corev1.Probe                `json:"readinessProbe,omitempty"`
-	LivenessProbe       *corev1.Probe                `json:"livenessProbe,omitempty"`
-	StartupProbe        *corev1.Probe                `json:"startupProbe,omitempty"`
-	Service             *RuntimeComponentService     `json:"service,omitempty"`
-	Expose              *bool                        `json:"expose,omitempty"`
+
+	// Detects if the services are ready to serve.
+	ReadinessProbe *corev1.Probe `json:"readinessProbe,omitempty"`
+
+	// Detects if the services needs to be restarted.
+	LivenessProbe *corev1.Probe `json:"livenessProbe,omitempty"`
+
+	// Protects slow starting containers from livenessProbe.
+	StartupProbe *corev1.Probe `json:"startupProbe,omitempty"`
+
+	Service *RuntimeComponentService `json:"service,omitempty"`
+
+	// A boolean that toggles the external exposure of this deployment via a Route or a Knative Route resource.
+	Expose *bool `json:"expose,omitempty"`
 
 	Deployment  *RuntimeComponentDeployment  `json:"deployment,omitempty"`
 	StatefulSet *RuntimeComponentStatefulSet `json:"statefulSet,omitempty"`
 
+	// An array of references to ConfigMap or Secret resources containing environment variables.
 	// +listType=atomic
 	EnvFrom []corev1.EnvFromSource `json:"envFrom,omitempty"`
+
+	// An array of environment variables following the format of {name, value}, where value is a simple string.
 	// +listType=map
 	// +listMapKey=name
-	Env                []corev1.EnvVar `json:"env,omitempty"`
-	ServiceAccountName *string         `json:"serviceAccountName,omitempty"`
+	Env []corev1.EnvVar `json:"env,omitempty"`
 
+	// The name of the OpenShift service account to be used during deployment.
+	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
+
+	// An array of architectures to be considered for deployment. Their position in the array indicates preference.
 	// +listType=set
-	Architecture         []string                    `json:"architecture,omitempty"`
-	Storage              *RuntimeComponentStorage    `json:"storage,omitempty"`
-	CreateKnativeService *bool                       `json:"createKnativeService,omitempty"`
-	Monitoring           *RuntimeComponentMonitoring `json:"monitoring,omitempty"`
-	ApplicationName      string                      `json:"applicationName,omitempty"`
+	Architecture []string `json:"architecture,omitempty"`
+
+	Storage *RuntimeComponentStorage `json:"storage,omitempty"`
+
+	// A boolean to toggle the creation of Knative resources and usage of Knative serving.
+	CreateKnativeService *bool `json:"createKnativeService,omitempty"`
+
+	Monitoring *RuntimeComponentMonitoring `json:"monitoring,omitempty"`
+
+	// The name of the application this resource is part of. If not specified, it defaults to the name of the CR.
+	ApplicationName string `json:"applicationName,omitempty"`
+
+	// List of containers that run before other containers in a pod.
 	// +listType=map
 	// +listMapKey=name
 	InitContainers []corev1.Container `json:"initContainers,omitempty"`
+
+	// The list of sidecar containers. These are additional containers to be added to the pods.
 	// +listType=map
 	// +listMapKey=name
-	SidecarContainers []corev1.Container        `json:"sidecarContainers,omitempty"`
-	Route             *RuntimeComponentRoute    `json:"route,omitempty"`
-	Bindings          *RuntimeComponentBindings `json:"bindings,omitempty"`
-	Affinity          *RuntimeComponentAffinity `json:"affinity,omitempty"`
+	SidecarContainers []corev1.Container `json:"sidecarContainers,omitempty"`
+
+	Route    *RuntimeComponentRoute    `json:"route,omitempty"`
+	Bindings *RuntimeComponentBindings `json:"bindings,omitempty"`
+	Affinity *RuntimeComponentAffinity `json:"affinity,omitempty"`
 }
 
-// RuntimeComponentAffinity configures a Pod to run on particular Nodes
+// Configures a Pod to run on particular Nodes
 type RuntimeComponentAffinity struct {
-	NodeAffinity    *corev1.NodeAffinity    `json:"nodeAffinity,omitempty"`
-	PodAffinity     *corev1.PodAffinity     `json:"podAffinity,omitempty"`
+	// Controls which nodes the pod are scheduled to run on, based on labels on the node.
+	NodeAffinity *corev1.NodeAffinity `json:"nodeAffinity,omitempty"`
+
+	// Controls the nodes the pod are scheduled to run on, based on labels on the pods that are already running on the node.
+	PodAffinity *corev1.PodAffinity `json:"podAffinity,omitempty"`
+
+	// Enables the ability to prevent running a pod on the same node as another pod.
 	PodAntiAffinity *corev1.PodAntiAffinity `json:"podAntiAffinity,omitempty"`
+
+	// An array of architectures to be considered for deployment. Their position in the array indicates preference.
 	// +listType=set
-	Architecture       []string          `json:"architecture,omitempty"`
+	Architecture []string `json:"architecture,omitempty"`
+
+	// A YAML object that contains set of required labels and their values.
 	NodeAffinityLabels map[string]string `json:"nodeAffinityLabels,omitempty"`
 }
 
-// RuntimeComponentAutoScaling configures the desired resource consumption of pods
+// Configures the desired resource consumption of pods
 type RuntimeComponentAutoScaling struct {
+	// Target average CPU utilization (represented as a percentage of requested CPU) over all the pods.
 	TargetCPUUtilizationPercentage *int32 `json:"targetCPUUtilizationPercentage,omitempty"`
-	MinReplicas                    *int32 `json:"minReplicas,omitempty"`
 
+	// Lower limit for the number of pods that can be set by the autoscaler.
+	MinReplicas *int32 `json:"minReplicas,omitempty"`
+
+	// Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler.
 	// +kubebuilder:validation:Minimum=1
 	MaxReplicas int32 `json:"maxReplicas,omitempty"`
 }
 
-// RuntimeComponentService configures parameters for the network service of pods
+// Configures parameters for the network service of pods
 type RuntimeComponentService struct {
 	Type *corev1.ServiceType `json:"type,omitempty"`
 
+	// The port exposed by the container.
 	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:validation:Minimum=1
 	Port int32 `json:"port,omitempty"`
+
+	// The port that the operator assigns to containers inside pods. Defaults to the value of service.port.
 	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:validation:Minimum=1
 	TargetPort *int32 `json:"targetPort,omitempty"`
 
+	// Node proxies this port into your service.
 	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:validation:Minimum=0
 	NodePort *int32 `json:"nodePort,omitempty"`
 
+	// The name for the port exposed by the container.
 	PortName string `json:"portName,omitempty"`
 
+	// An array consisting of service ports.
 	Ports []corev1.ServicePort `json:"ports,omitempty"`
 
+	// Annotations to be added to the service.
 	Annotations map[string]string `json:"annotations,omitempty"`
+
 	// +listType=atomic
 	Consumes []ServiceBindingConsumes `json:"consumes,omitempty"`
 	Provides *ServiceBindingProvides  `json:"provides,omitempty"`
+
+	// 	A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.
 	// +k8s:openapi-gen=true
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
 }
 
-// RuntimeComponentDeployment defines the desired state and cycle of applications
+// Defines the desired state and cycle of applications
 type RuntimeComponentDeployment struct {
+	// Specifies the strategy to replace old deployment pods with new pods
 	UpdateStrategy *appsv1.DeploymentStrategy `json:"updateStrategy,omitempty"`
 }
 
-// RuntimeComponentStatefulSet defines the desired state and cycle of stateful applications
+// Defines the desired state and cycle of stateful applications
 type RuntimeComponentStatefulSet struct {
+	// Specifies the strategy to replace old statefulSet pods with new pods
 	UpdateStrategy *appsv1.StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
 }
 
-// ServiceBindingProvides configures the OpenAPI information to expose
+// Configures the OpenAPI information to expose
 type ServiceBindingProvides struct {
+	// Service binding type to be provided by this CR. At this time, the only allowed value is openapi.
 	Category common.ServiceBindingCategory `json:"category"`
-	Context  string                        `json:"context,omitempty"`
-	Protocol string                        `json:"protocol,omitempty"`
-	Auth     *ServiceBindingAuth           `json:"auth,omitempty"`
+
+	// Specifies context root of the service.
+	Context string `json:"context,omitempty"`
+
+	// Protocol of the provided service. Defauts to http.
+	Protocol string `json:"protocol,omitempty"`
+
+	Auth *ServiceBindingAuth `json:"auth,omitempty"`
 }
 
-// ServiceBindingConsumes represents a service to be consumed
+// Represents a service to be consumed
 type ServiceBindingConsumes struct {
-	Name      string                        `json:"name"`
-	Namespace string                        `json:"namespace,omitempty"`
-	Category  common.ServiceBindingCategory `json:"category"`
-	MountPath string                        `json:"mountPath,omitempty"`
+	// The name of the service to be consumed. If binding to a RuntimeComponent, then this would be the provider’s CR name.
+	Name string `json:"name"`
+
+	// The namespace of the service to be consumed. If binding to a RuntimeComponent, then this would be the provider’s CR namespace.
+	Namespace string `json:"namespace,omitempty"`
+
+	// The type of service binding to be consumed. At this time, the only allowed value is openapi.
+	Category common.ServiceBindingCategory `json:"category"`
+
+	// Optional field to specify which location in the pod, service binding secret should be mounted.
+	MountPath string `json:"mountPath,omitempty"`
 }
 
-// RuntimeComponentStorage defines settings of persisted storage for StatefulSets
+// Defines settings of persisted storage for StatefulSets
 type RuntimeComponentStorage struct {
+	// A convenient field to set the size of the persisted storage.
 	// +kubebuilder:validation:Pattern=^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
-	Size                string                        `json:"size,omitempty"`
-	MountPath           string                        `json:"mountPath,omitempty"`
+	Size string `json:"size,omitempty"`
+
+	// The directory inside the container where this persisted storage will be bound to.
+	MountPath string `json:"mountPath,omitempty"`
+
+	// A YAML object that represents a volumeClaimTemplate component of a StatefulSet.
 	VolumeClaimTemplate *corev1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }
 
-// RuntimeComponentMonitoring specifies parameters for Service Monitor
+// Specifies parameters for Service Monitor
 type RuntimeComponentMonitoring struct {
-	Labels    map[string]string       `json:"labels,omitempty"`
+	// Labels to set on ServiceMonitor.
+	Labels map[string]string `json:"labels,omitempty"`
+
+	// A YAML snippet representing an array of Endpoint component from ServiceMonitor.
 	Endpoints []prometheusv1.Endpoint `json:"endpoints,omitempty"`
 }
 
-// RuntimeComponentRoute configures the ingress resource
+// Configures the ingress resource
 // +k8s:openapi-gen=true
 type RuntimeComponentRoute struct {
-	Annotations                   map[string]string                          `json:"annotations,omitempty"`
-	Termination                   *routev1.TLSTerminationType                `json:"termination,omitempty"`
+	// Annotations to be added to the Route.
+	Annotations map[string]string `json:"annotations,omitempty"`
+
+	// TLS termination policy. Can be one of edge, reencrypt and passthrough.
+	Termination *routev1.TLSTerminationType `json:"termination,omitempty"`
+
+	// HTTP traffic policy with TLS enabled. Can be one of Allow, Redirect and None.
 	InsecureEdgeTerminationPolicy *routev1.InsecureEdgeTerminationPolicyType `json:"insecureEdgeTerminationPolicy,omitempty"`
-	CertificateSecretRef          *string                                    `json:"certificateSecretRef,omitempty"`
-	Host                          string                                     `json:"host,omitempty"`
-	Path                          string                                     `json:"path,omitempty"`
+
+	// A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
+	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
+
+	// Hostname to be used for the Route.
+	Host string `json:"host,omitempty"`
+
+	// Path to be used for Route.
+	Path string `json:"path,omitempty"`
 }
 
-// ServiceBindingAuth allows a service to provide authentication information
+// Allows a service to provide authentication information
 type ServiceBindingAuth struct {
 	// The secret that contains the username for authenticating
 	Username corev1.SecretKeySelector `json:"username,omitempty"`
@@ -182,20 +276,27 @@ type ServiceBindingAuth struct {
 	Password corev1.SecretKeySelector `json:"password,omitempty"`
 }
 
-// RuntimeComponentBindings represents service binding related parameters
+// Represents service binding related parameters
 type RuntimeComponentBindings struct {
-	AutoDetect  *bool                          `json:"autoDetect,omitempty"`
-	ResourceRef string                         `json:"resourceRef,omitempty"`
-	Embedded    *runtime.RawExtension          `json:"embedded,omitempty"`
-	Expose      *RuntimeComponentBindingExpose `json:"expose,omitempty"`
+	// A boolean to toggle whether the operator should automatically detect and use a ServiceBindingRequest resource with <CR_NAME>-binding naming format.
+	AutoDetect *bool `json:"autoDetect,omitempty"`
+
+	// The name of a ServiceBindingRequest custom resource created manually in the same namespace as the application.
+	ResourceRef string `json:"resourceRef,omitempty"`
+
+	// A YAML object that represents a ServiceBindingRequest custom resource.
+	Embedded *runtime.RawExtension `json:"embedded,omitempty"`
+
+	Expose *RuntimeComponentBindingExpose `json:"expose,omitempty"`
 }
 
-// RuntimeComponentBindingExpose encapsulates information exposed by the application
+// Encapsulates information exposed by the application
 type RuntimeComponentBindingExpose struct {
+	// A boolean to toggle whether the operator expose the application as a bindable service. The default value for this parameter is false.
 	Enabled *bool `json:"enabled,omitempty"`
 }
 
-// RuntimeComponentStatus defines the observed state of RuntimeComponent
+// Defines the observed state of RuntimeComponent
 type RuntimeComponentStatus struct {
 	// +listType=atomic
 	Conditions       []StatusCondition       `json:"conditions,omitempty"`
@@ -206,7 +307,7 @@ type RuntimeComponentStatus struct {
 	Binding          *corev1.LocalObjectReference `json:"binding,omitempty"`
 }
 
-// StatusCondition defines possible status conditions
+// Defines possible status conditions
 type StatusCondition struct {
 	LastTransitionTime *metav1.Time           `json:"lastTransitionTime,omitempty"`
 	LastUpdateTime     metav1.Time            `json:"lastUpdateTime,omitempty"`
@@ -216,7 +317,7 @@ type StatusCondition struct {
 	Type               StatusConditionType    `json:"type,omitempty"`
 }
 
-// StatusConditionType ...
+// Defines the type of status condition
 type StatusConditionType string
 
 const (
@@ -230,7 +331,7 @@ const (
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// RuntimeComponent is the Schema for the runtimecomponents API
+// The Schema for the runtimecomponents API
 type RuntimeComponent struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -241,7 +342,7 @@ type RuntimeComponent struct {
 
 // +kubebuilder:object:root=true
 
-// RuntimeComponentList contains a list of RuntimeComponent
+// Contains a list of RuntimeComponent
 type RuntimeComponentList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
