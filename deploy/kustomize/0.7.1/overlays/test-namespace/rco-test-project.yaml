@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: runtime-component-operator
+spec:
+  template:
+    spec:
+      containers:
+        - name: runtime-component-operator
+          env:
+            - name: WATCH_NAMESPACE
+              value: test-project
