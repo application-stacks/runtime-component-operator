@@ -111,7 +111,7 @@ main() {
     result=$?
 
     echo "****** Cleaning up test environment..."
-    #cleanup_env
+    cleanup_env
 
     return $result
 }
