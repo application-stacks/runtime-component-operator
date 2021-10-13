@@ -22,6 +22,9 @@ setup_env() {
 
     echo "****** Creating test namespace: ${TEST_NAMESPACE}"
     oc new-project "${TEST_NAMESPACE}"
+
+    ## Create service account for Kuttl tests
+    oc apply -f config/rbac/kuttl-rbac.yaml
 }
 
 ## cleanup_env : Delete generated resources that are not bound to a test TEST_NAMESPACE.
@@ -101,7 +104,7 @@ main() {
     echo "****** rco-controller-manager deployment is ready..."
 
     echo "****** Starting scorecard tests..."
-    operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --wait-time 30m ./bundle || {
+    operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --service-account scorecard-kuttl --wait-time 30m ./bundle || {
         echo "****** Scorecard tests failed..."
         exit 1
     }
