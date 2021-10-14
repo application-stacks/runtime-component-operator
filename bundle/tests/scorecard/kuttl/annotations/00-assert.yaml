@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rc-deployment-annotations
+  annotations:
+    bar2: foo2
+    foo1: bar1  
+spec:
+  template:
+    metadata:
+      annotations:
+        bar2: foo2
+        foo1: bar1
+status:
+  readyReplicas: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rc-deployment-annotations
+  annotations:
+    foo1: bar1
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    bar2: foo2
+    foo1: bar1
