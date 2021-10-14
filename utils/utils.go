@@ -525,53 +525,54 @@ func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseComponent)
 
 // CustomizePersistence ...
 func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseComponent) {
-	obj := ba.(metav1.Object)
-	if len(statefulSet.Spec.VolumeClaimTemplates) == 0 {
-		var pvc *corev1.PersistentVolumeClaim
-		if ba.GetStorage().GetVolumeClaimTemplate() != nil {
-			pvc = ba.GetStorage().GetVolumeClaimTemplate()
-		} else {
-			pvc = &corev1.PersistentVolumeClaim{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "pvc",
-					Namespace: obj.GetNamespace(),
-					Labels:    ba.GetLabels(),
-				},
-				Spec: corev1.PersistentVolumeClaimSpec{
-					Resources: corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							corev1.ResourceStorage: resource.MustParse(ba.GetStorage().GetSize()),
+	obj, ss := ba.(metav1.Object), ba.GetStatefulSet()
+	if ss.GetStorage() != nil {
+		if len(statefulSet.Spec.VolumeClaimTemplates) == 0 {
+			var pvc *corev1.PersistentVolumeClaim
+			if ss.GetStorage().GetVolumeClaimTemplate() != nil {
+				pvc = ss.GetStorage().GetVolumeClaimTemplate()
+			} else {
+				pvc = &corev1.PersistentVolumeClaim{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "pvc",
+						Namespace: obj.GetNamespace(),
+						Labels:    ba.GetLabels(),
+					},
+					Spec: corev1.PersistentVolumeClaimSpec{
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceStorage: resource.MustParse(ss.GetStorage().GetSize()),
+							},
+						},
+						AccessModes: []corev1.PersistentVolumeAccessMode{
+							corev1.ReadWriteOnce,
 						},
 					},
-					AccessModes: []corev1.PersistentVolumeAccessMode{
-						corev1.ReadWriteOnce,
-					},
-				},
+				}
+				pvc.Annotations = MergeMaps(pvc.Annotations, ba.GetAnnotations())
 			}
-			pvc.Annotations = MergeMaps(pvc.Annotations, ba.GetAnnotations())
-		}
-		statefulSet.Spec.VolumeClaimTemplates = append(statefulSet.Spec.VolumeClaimTemplates, *pvc)
-	}
-
-	appContainer := GetAppContainer(statefulSet.Spec.Template.Spec.Containers)
-
-	if ba.GetStorage().GetMountPath() != "" {
-		found := false
-		for _, v := range appContainer.VolumeMounts {
-			if v.Name == statefulSet.Spec.VolumeClaimTemplates[0].Name {
-				found = true
-			}
+			statefulSet.Spec.VolumeClaimTemplates = append(statefulSet.Spec.VolumeClaimTemplates, *pvc)
 		}
 
-		if !found {
-			vm := corev1.VolumeMount{
-				Name:      statefulSet.Spec.VolumeClaimTemplates[0].Name,
-				MountPath: ba.GetStorage().GetMountPath(),
+		appContainer := GetAppContainer(statefulSet.Spec.Template.Spec.Containers)
+
+		if ss.GetStorage().GetMountPath() != "" {
+			found := false
+			for _, v := range appContainer.VolumeMounts {
+				if v.Name == statefulSet.Spec.VolumeClaimTemplates[0].Name {
+					found = true
+				}
 			}
-			appContainer.VolumeMounts = append(appContainer.VolumeMounts, vm)
+
+			if !found {
+				vm := corev1.VolumeMount{
+					Name:      statefulSet.Spec.VolumeClaimTemplates[0].Name,
+					MountPath: ss.GetStorage().GetMountPath(),
+				}
+				appContainer.VolumeMounts = append(appContainer.VolumeMounts, vm)
+			}
 		}
 	}
-
 }
 
 // CustomizeServiceAccount ...
@@ -685,7 +686,7 @@ func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseComp
 	hpa.Spec.ScaleTargetRef.Name = obj.GetName()
 	hpa.Spec.ScaleTargetRef.APIVersion = "apps/v1"
 
-	if ba.GetStorage() != nil {
+	if ba.GetStatefulSet() != nil {
 		hpa.Spec.ScaleTargetRef.Kind = "StatefulSet"
 	} else {
 		hpa.Spec.ScaleTargetRef.Kind = "Deployment"
@@ -695,13 +696,14 @@ func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseComp
 // Validate if the BaseComponent is valid
 func Validate(ba common.BaseComponent) (bool, error) {
 	// Storage validation
-	if ba.GetStorage() != nil {
-		if ba.GetStorage().GetVolumeClaimTemplate() == nil {
-			if ba.GetStorage().GetSize() == "" {
-				return false, fmt.Errorf("validation failed: " + requiredFieldMessage("spec.storage.size"))
+	ss := ba.GetStatefulSet()
+	if ss != nil && ss.GetStorage() != nil {
+		if ss.GetStorage().GetVolumeClaimTemplate() == nil {
+			if ss.GetStorage().GetSize() == "" {
+				return false, fmt.Errorf("validation failed: " + requiredFieldMessage("spec.statefulSet.storage.size"))
 			}
-			if _, err := resource.ParseQuantity(ba.GetStorage().GetSize()); err != nil {
-				return false, fmt.Errorf("validation failed: cannot parse '%v': %v", ba.GetStorage().GetSize(), err)
+			if _, err := resource.ParseQuantity(ss.GetStorage().GetSize()); err != nil {
+				return false, fmt.Errorf("validation failed: cannot parse '%v': %v", ss.GetStorage().GetSize(), err)
 			}
 		}
 	}

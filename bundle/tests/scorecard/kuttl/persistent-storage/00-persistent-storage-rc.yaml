@@ -8,12 +8,13 @@ spec:
   volumeMounts:
     - name: pvc
       mountPath: /data
-  storage:
-    volumeClaimTemplate:
-      metadata:
-        name: pvc
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        resources:
-          requests:
-            storage: 15Mi
+  statefulSet:
+    storage:
+      volumeClaimTemplate:
+        metadata:
+          name: pvc
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 15Mi

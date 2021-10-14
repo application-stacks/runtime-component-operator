@@ -62,7 +62,6 @@ type RuntimeComponentSpec struct {
 
 	// +listType=set
 	Architecture         []string                    `json:"architecture,omitempty"`
-	Storage              *RuntimeComponentStorage    `json:"storage,omitempty"`
 	CreateKnativeService *bool                       `json:"createKnativeService,omitempty"`
 	Monitoring           *RuntimeComponentMonitoring `json:"monitoring,omitempty"`
 	ApplicationName      string                      `json:"applicationName,omitempty"`
@@ -131,6 +130,7 @@ type RuntimeComponentDeployment struct {
 // RuntimeComponentStatefulSet settings
 type RuntimeComponentStatefulSet struct {
 	UpdateStrategy *appsv1.StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
+	Storage        *RuntimeComponentStorage          `json:"storage,omitempty"`
 }
 
 // ServiceBindingProvides represents information about
@@ -341,11 +341,11 @@ func (cr *RuntimeComponent) GetAutoscaling() common.BaseComponentAutoscaling {
 }
 
 // GetStorage returns storage settings
-func (cr *RuntimeComponent) GetStorage() common.BaseComponentStorage {
-	if cr.Spec.Storage == nil {
+func (ss *RuntimeComponentStatefulSet) GetStorage() common.BaseComponentStorage {
+	if ss.Storage == nil {
 		return nil
 	}
-	return cr.Spec.Storage
+	return ss.Storage
 }
 
 // GetService returns service settings
