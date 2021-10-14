@@ -324,6 +324,60 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
+	if ok, err := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route"); err != nil {
+		reqLogger.Error(err, fmt.Sprintf("Failed to check if %s is supported", routev1.SchemeGroupVersion.String()))
+		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+	} else if ok {
+		if instance.Spec.Expose != nil && *instance.Spec.Expose {
+			route := &routev1.Route{ObjectMeta: defaultMeta}
+			err = r.CreateOrUpdate(route, instance, func() error {
+				key, cert, caCert, destCACert, err := r.GetRouteTLSValues(ba)
+				if err != nil {
+					return err
+				}
+				appstacksutils.CustomizeRoute(route, ba, key, cert, caCert, destCACert)
+
+				return nil
+			})
+			if err != nil {
+				reqLogger.Error(err, "Failed to reconcile Route")
+				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+			}
+		} else {
+			route := &routev1.Route{ObjectMeta: defaultMeta}
+			err = r.DeleteResource(route)
+			if err != nil {
+				reqLogger.Error(err, "Failed to delete Route")
+				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+			}
+		}
+	} else {
+
+		if ok, err := r.IsGroupVersionSupported(networkingv1.SchemeGroupVersion.String(), "Ingress"); err != nil {
+			reqLogger.Error(err, fmt.Sprintf("Failed to check if %s is supported", networkingv1.SchemeGroupVersion.String()))
+			r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+		} else if ok {
+			if instance.Spec.Expose != nil && *instance.Spec.Expose {
+				ing := &networkingv1.Ingress{ObjectMeta: defaultMeta}
+				err = r.CreateOrUpdate(ing, instance, func() error {
+					appstacksutils.CustomizeIngress(ing, instance)
+					return nil
+				})
+				if err != nil {
+					reqLogger.Error(err, "Failed to reconcile Ingress")
+					return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+				}
+			} else {
+				ing := &networkingv1.Ingress{ObjectMeta: defaultMeta}
+				err = r.DeleteResource(ing)
+				if err != nil {
+					reqLogger.Error(err, "Failed to delete Ingress")
+					return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+				}
+			}
+		}
+	}
+
 	if instance.Spec.Storage != nil {
 		// Delete Deployment if exists
 		deploy := &appsv1.Deployment{ObjectMeta: defaultMeta}
@@ -406,60 +460,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		if err != nil {
 			reqLogger.Error(err, "Failed to delete HorizontalPodAutoscaler")
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-		}
-	}
-
-	if ok, err := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route"); err != nil {
-		reqLogger.Error(err, fmt.Sprintf("Failed to check if %s is supported", routev1.SchemeGroupVersion.String()))
-		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-	} else if ok {
-		if instance.Spec.Expose != nil && *instance.Spec.Expose {
-			route := &routev1.Route{ObjectMeta: defaultMeta}
-			err = r.CreateOrUpdate(route, instance, func() error {
-				key, cert, caCert, destCACert, err := r.GetRouteTLSValues(ba)
-				if err != nil {
-					return err
-				}
-				appstacksutils.CustomizeRoute(route, ba, key, cert, caCert, destCACert)
-
-				return nil
-			})
-			if err != nil {
-				reqLogger.Error(err, "Failed to reconcile Route")
-				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-			}
-		} else {
-			route := &routev1.Route{ObjectMeta: defaultMeta}
-			err = r.DeleteResource(route)
-			if err != nil {
-				reqLogger.Error(err, "Failed to delete Route")
-				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-			}
-		}
-	} else {
-
-		if ok, err := r.IsGroupVersionSupported(networkingv1.SchemeGroupVersion.String(), "Ingress"); err != nil {
-			reqLogger.Error(err, fmt.Sprintf("Failed to check if %s is supported", networkingv1.SchemeGroupVersion.String()))
-			r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-		} else if ok {
-			if instance.Spec.Expose != nil && *instance.Spec.Expose {
-				ing := &networkingv1.Ingress{ObjectMeta: defaultMeta}
-				err = r.CreateOrUpdate(ing, instance, func() error {
-					appstacksutils.CustomizeIngress(ing, instance)
-					return nil
-				})
-				if err != nil {
-					reqLogger.Error(err, "Failed to reconcile Ingress")
-					return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-				}
-			} else {
-				ing := &networkingv1.Ingress{ObjectMeta: defaultMeta}
-				err = r.DeleteResource(ing)
-				if err != nil {
-					reqLogger.Error(err, "Failed to delete Ingress")
-					return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-				}
-			}
 		}
 	}
 
