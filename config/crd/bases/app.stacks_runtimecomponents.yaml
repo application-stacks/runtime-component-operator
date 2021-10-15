@@ -681,6 +681,12 @@ spec:
               deployment:
                 description: RuntimeComponentDeployment settings
                 properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: Annotations to be added only to the Deployment and
+                      resources owned by the Deployment
+                    type: object
                   updateStrategy:
                     description: DeploymentStrategy describes how to replace existing
                       pods with new ones.
@@ -3968,6 +3974,12 @@ spec:
               statefulSet:
                 description: RuntimeComponentStatefulSet settings
                 properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: Annotations to be added only to the StatefulSet and
+                      resources owned by the StatefulSet
+                    type: object
                   storage:
                     description: RuntimeComponentStorage ...
                     properties:

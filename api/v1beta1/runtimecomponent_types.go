@@ -125,12 +125,16 @@ type RuntimeComponentService struct {
 // RuntimeComponentDeployment settings
 type RuntimeComponentDeployment struct {
 	UpdateStrategy *appsv1.DeploymentStrategy `json:"updateStrategy,omitempty"`
+	// Annotations to be added only to the Deployment and resources owned by the Deployment
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // RuntimeComponentStatefulSet settings
 type RuntimeComponentStatefulSet struct {
 	UpdateStrategy *appsv1.StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
 	Storage        *RuntimeComponentStorage          `json:"storage,omitempty"`
+	// Annotations to be added only to the StatefulSet and resources owned by the StatefulSet
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // ServiceBindingProvides represents information about
@@ -431,6 +435,11 @@ func (cr *RuntimeComponentDeployment) GetDeploymentUpdateStrategy() *appsv1.Depl
 	return cr.UpdateStrategy
 }
 
+// GetAnnotations returns annotations to be added only to the Deployment and its child resources
+func (rcd *RuntimeComponentDeployment) GetAnnotations() map[string]string {
+	return rcd.Annotations
+}
+
 // GetStatefulSet returns statefulSet settings
 func (cr *RuntimeComponent) GetStatefulSet() common.BaseComponentStatefulSet {
 	if cr.Spec.StatefulSet == nil {
@@ -442,6 +451,11 @@ func (cr *RuntimeComponent) GetStatefulSet() common.BaseComponentStatefulSet {
 // GetStatefulSetUpdateStrategy returns statefulSet strategy struct
 func (cr *RuntimeComponentStatefulSet) GetStatefulSetUpdateStrategy() *appsv1.StatefulSetUpdateStrategy {
 	return cr.UpdateStrategy
+}
+
+// GetAnnotations returns annotations to be added only to the StatefulSet and its child resources
+func (rcss *RuntimeComponentStatefulSet) GetAnnotations() map[string]string {
+	return rcss.Annotations
 }
 
 // GetResolvedBindings returns a map of all the service names to be consumed by the application

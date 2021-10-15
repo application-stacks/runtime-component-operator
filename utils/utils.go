@@ -53,6 +53,10 @@ func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseComponent) {
 	} else {
 		deploy.Spec.Strategy = appsv1.DeploymentStrategy{Type: appsv1.RollingUpdateDeploymentStrategyType}
 	}
+	if dp != nil && dp.GetAnnotations() != nil {
+		deploy.Annotations = MergeMaps(deploy.Annotations, dp.GetAnnotations())
+	}
+
 }
 
 // CustomizeStatefulSet ...
@@ -80,6 +84,9 @@ func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseCompone
 		} else {
 			statefulSet.Spec.UpdateStrategy = appsv1.StatefulSetUpdateStrategy{Type: appsv1.RollingUpdateStatefulSetStrategyType}
 		}
+	}
+	if ss != nil && ss.GetAnnotations() != nil {
+		statefulSet.Annotations = MergeMaps(statefulSet.Annotations, ss.GetAnnotations())
 	}
 }
 
@@ -366,6 +373,21 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	pts.Labels = ba.GetLabels()
 	pts.Annotations = MergeMaps(pts.Annotations, ba.GetAnnotations())
+
+	// If they exist, add annotations from the StatefulSet or Deployment to the pods
+	// Both structs can exist, but if StatefulSet =! nil, then that is 'active' and the
+	// deployment should be ignored
+	dp := ba.GetDeployment()
+	rcss := ba.GetStatefulSet()
+	if rcss != nil {
+		if rcss.GetAnnotations() != nil {
+			pts.Annotations = MergeMaps(pts.Annotations, rcss.GetAnnotations())
+		}
+	} else {
+		if dp != nil && dp.GetAnnotations() != nil {
+			pts.Annotations = MergeMaps(pts.Annotations, dp.GetAnnotations())
+		}
+	}
 
 	var appContainer corev1.Container
 	if len(pts.Spec.Containers) == 0 {

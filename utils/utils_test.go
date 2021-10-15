@@ -43,6 +43,10 @@ var (
 	serviceAccountName = "service-account"
 	serviceType        = corev1.ServiceTypeClusterIP
 	service            = &appstacksv1beta1.RuntimeComponentService{Type: &serviceType, Port: 8443}
+	deploymentAnnos    = map[string]string{"depAnno": "depAnno"}
+	deployment         = &appstacksv1beta1.RuntimeComponentDeployment{Annotations: deploymentAnnos}
+	ssAnnos            = map[string]string{"setAnno": "setAnno"}
+	statefulSet        = &appstacksv1beta1.RuntimeComponentStatefulSet{Annotations: ssAnnos}
 	volumeCT           = &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{Name: "pvc", Namespace: namespace},
 		TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"}}
@@ -270,6 +274,72 @@ func TestCustomizeAffinity(t *testing.T) {
 	logf.SetLogger(logger)
 	partialTestCustomizeNodeAffinity(t)
 	partialTestCustomizePodAffinity(t)
+}
+
+func TestCustomizePodSpecAnnotations(t *testing.T) {
+	logger := zap.New()
+	logf.SetLogger(logger)
+
+	spec := appstacksv1beta1.RuntimeComponentSpec{
+		ApplicationImage:    appImage,
+		Service:             service,
+		ResourceConstraints: resourceContraints,
+		ReadinessProbe:      readinessProbe,
+		LivenessProbe:       livenessProbe,
+		StartupProbe:        startupProbe,
+		VolumeMounts:        []corev1.VolumeMount{volumeMount},
+		PullPolicy:          &pullPolicy,
+		Env:                 env,
+		EnvFrom:             envFrom,
+		Volumes:             []corev1.Volume{volume},
+	}
+
+	// No dep or set, annotation should be empty
+	pts1, runtime1 := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts1, runtime1)
+	annolen1 := len(pts1.Annotations)
+	testAnnotations1 := []Test{
+		{"Shouldn't be any annotations", 0, annolen1},
+	}
+	verifyTests(testAnnotations1, t)
+
+	// dep but not set, annotation should be dep annotations
+	spec.Deployment = deployment
+	pts2, runtime2 := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts2, runtime2)
+	annolen2 := len(pts2.Annotations)
+	anno2 := pts2.Annotations["depAnno"]
+	testAnnotations2 := []Test{
+		{"Wrong annotations", "depAnno", anno2},
+		{"Wrong number of annotations", 1, annolen2},
+	}
+	verifyTests(testAnnotations2, t)
+
+	// set but not dep, annotation should be set annotations
+	spec.Deployment = nil
+	spec.StatefulSet = statefulSet
+	pts3, runtime3 := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts3, runtime3)
+	annolen3 := len(pts3.Annotations)
+	anno3 := pts3.Annotations["setAnno"]
+	testAnnotations3 := []Test{
+		{"Wrong annotations", "setAnno", anno3},
+		{"Wrong number of annotations", 1, annolen3},
+	}
+	verifyTests(testAnnotations3, t)
+
+	// dep and set, annotation should be set annotations
+	spec.Deployment = deployment
+	pts4, runtime4 := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts4, runtime4)
+	annolen4 := len(pts4.Annotations)
+	anno4 := pts4.Annotations["setAnno"]
+	testAnnotations4 := []Test{
+		{"Wrong annotations", "setAnno", anno4},
+		{"Wrong number of annotations", 1, annolen4},
+	}
+	verifyTests(testAnnotations4, t)
+
 }
 
 func TestCustomizePodSpec(t *testing.T) {

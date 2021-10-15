@@ -159,12 +159,14 @@ type BaseComponentAffinity interface {
 // BaseComponentDeployment describes deployment
 type BaseComponentDeployment interface {
 	GetDeploymentUpdateStrategy() *appsv1.DeploymentStrategy
+	GetAnnotations() map[string]string
 }
 
 // BaseComponentStatefulSet describes deployment
 type BaseComponentStatefulSet interface {
 	GetStatefulSetUpdateStrategy() *appsv1.StatefulSetUpdateStrategy
 	GetStorage() BaseComponentStorage
+	GetAnnotations() map[string]string
 }
 
 // BaseComponent represents basic kubernetes application
