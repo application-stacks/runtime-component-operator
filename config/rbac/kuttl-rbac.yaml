@@ -25,6 +25,7 @@ rules:
   resources:
   - namespaces
   - pods
+  - services
   verbs:
   - get
   - list
