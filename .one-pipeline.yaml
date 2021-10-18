@@ -4,24 +4,21 @@ setup:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     #!/usr/bin/env bash
+    echo "setup"
 
-    GH_TOKEN=$(cat "$WORKSPACE/git-token")
-    OWNER=$(jq -r '.services[] | select(.toolchain_binding.name=="app-repo") | .parameters.owner_id' /toolchain/toolchain.json)
-    REPO=$(jq -r '.services[] | select(.toolchain_binding.name=="app-repo") | .parameters.repo_name' /toolchain/toolchain.json)
-    REPO=${REPO%.git}
-    curl -u ":$GH_TOKEN" https://github.ibm.com/api/v3/repos/$OWNER/$REPO/branches/master/protection -XPUT -d '{"required_pull_request_reviews":{"dismiss_stale_reviews":true},"required_status_checks":{"strict":true,"contexts":["tekton/code-branch-protection","tekton/code-unit-tests","tekton/code-cis-check","tekton/code-vulnerability-scan","tekton/code-detect-secrets"]},"enforce_admins":null,"restrictions":null}'
+    #GH_TOKEN=$(cat "$WORKSPACE/git-token")
+    #OWNER=$(jq -r '.services[] | select(.toolchain_binding.name=="app-repo") | .parameters.owner_id' /toolchain/toolchain.json)
+    #REPO=$(jq -r '.services[] | select(.toolchain_binding.name=="app-repo") | .parameters.repo_name' /toolchain/toolchain.json)
+    #REPO=${REPO%.git}
+    #curl -u ":$GH_TOKEN" https://github.ibm.com/api/v3/repos/$OWNER/$REPO/branches/master/protection -XPUT -d '{"required_pull_request_reviews":{"dismiss_stale_reviews":true},"required_status_checks":{"strict":true,"contexts":["tekton/code-branch-protection","tekton/code-unit-tests","tekton/code-cis-check","tekton/code-vulnerability-scan","tekton/code-detect-secrets"]},"enforce_admins":null,"restrictions":null}'
 
-    npm ci
 
 test:
   abort_on_failure: false
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     #!/usr/bin/env bash
-
-    cd ../"$(load_repo app-repo path)"
-    npm ci
-    npm test
+    echo "test"
 
 containerize:
   dind: true
@@ -34,9 +31,7 @@ containerize:
       env
       set -x
     fi
-
-    source scripts/build_setup.sh
-    source scripts/build.sh
+    echo "containerize"
 
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
@@ -48,51 +43,44 @@ deploy:
       env
       set -x
     fi
-
-    source scripts/deploy_setup.sh
-    source scripts/deploy.sh
+    echo "deploy"
 
 dynamic-scan: 
   abort_on_failure: false
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     #!/usr/bin/env bash
-
-    export APP_URL=$(cat ../app-url)
+    echo "dynamic-scan"
+    #export APP_URL=$(cat ../app-url)
     # feature preivew this until evidence locker v2 usage is full feature ready 
     # can be triggered, and owasp will run for preview purposes 
-    source scripts/zap/trigger_api_scan.sh
+    #source scripts/zap/trigger_api_scan.sh
 
 acceptance-test:
   abort_on_failure: false
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     #!/usr/bin/env bash
-
-    source /root/.nvm/nvm.sh
-    npm ci
-    export APP_URL=$(cat ../app-url)
-    npm run acceptance-test
+    echo "acceptance-test"
 
 release:
   abort_on_failure: false
   image: wcp-compliance-automation-team-docker-local.artifactory.swg-devops.com/ibm-compliance-automation:1.9.1@sha256:3f3e344a1efb160d83c48cf2ee878a39cbad058c8640c423472e0546316232fd
   script: |
     #!/usr/bin/env bash
+    echo "release" 
 
-    source scripts/release.sh
-
-owasp-zap-api:
-  dind: true
-  abort_on_failure: false
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
-  script: |
+    #owasp-zap-api:
+    #  dind: true
+    #  abort_on_failure: false
+    #  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
+    #  script: |
     #!/usr/bin/env bash
-    if [[ "$PIPELINE_DEBUG" == 1 ]]; then
-      trap env EXIT
-      env
-      set -x
-    fi
+    #    if [[ "$PIPELINE_DEBUG" == 1 ]]; then
+    #      trap env EXIT
+    #      env
+    #      set -x
+    #    fi
     
-    source scripts/zap/setup_api_scan.sh
-    source scripts/zap/run_api_scan.sh
+    #    source scripts/zap/setup_api_scan.sh
+    #    source scripts/zap/run_api_scan.sh
