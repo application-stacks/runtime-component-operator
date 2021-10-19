@@ -18,6 +18,8 @@ test:
     apt-get update
     apt-get -y install build-essential 
     make unit-test
+    export DOCKER_USERNAME=$(get_env docker-username)
+    export DOCKER_PASSWORD=$(get_env docker-password)
     make docker-login
     make build-image
 
