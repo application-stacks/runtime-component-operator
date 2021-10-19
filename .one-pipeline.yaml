@@ -7,6 +7,7 @@ setup:
     echo "setup"
   
 test:
+  dind: true
   abort_on_failure: true
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
@@ -17,9 +18,10 @@ test:
     export PATH=$PATH:/usr/local/go/bin
     apt-get update
     apt-get -y install build-essential 
-    make unit-test
+    # Run unit tests
     export DOCKER_USERNAME=$(get_env docker-username)
     export DOCKER_PASSWORD=$(get_env docker-password)
+    make unit-test
     make docker-login
     make build-image
 
