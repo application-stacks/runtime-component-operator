@@ -16,7 +16,7 @@ spec:
     singular: runtimecomponent
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - name: v1beta2
     schema:
       openAPIV3Schema:
         description: RuntimeComponent is the Schema for the runtimecomponents API.

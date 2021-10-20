@@ -40,7 +40,7 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/api/v1beta1"
+	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -119,7 +119,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	// Fetch the RuntimeComponent instance
-	instance := &appstacksv1beta1.RuntimeComponent{}
+	instance := &appstacksv1beta2.RuntimeComponent{}
 	var ba common.BaseComponent
 	ba = instance
 	err = r.GetClient().Get(context.TODO(), req.NamespacedName, instance)
@@ -496,8 +496,8 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 // SetupWithManager initializes reconciler
 func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
-	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta1.RuntimeComponent{}, indexFieldImageStreamName, func(obj client.Object) []string {
-		instance := obj.(*appstacksv1beta1.RuntimeComponent)
+	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta2.RuntimeComponent{}, indexFieldImageStreamName, func(obj client.Object) []string {
+		instance := obj.(*appstacksv1beta2.RuntimeComponent)
 		image, err := imageutil.ParseDockerImageReference(instance.Spec.ApplicationImage)
 		if err == nil {
 			imageNamespace := image.Namespace
@@ -509,8 +509,8 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		}
 		return nil
 	})
-	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta1.RuntimeComponent{}, indexFieldBindingsResourceRef, func(obj client.Object) []string {
-		instance := obj.(*appstacksv1beta1.RuntimeComponent)
+	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta2.RuntimeComponent{}, indexFieldBindingsResourceRef, func(obj client.Object) []string {
+		instance := obj.(*appstacksv1beta2.RuntimeComponent)
 
 		if instance.Spec.Bindings != nil && instance.Spec.Bindings.ResourceRef != "" {
 			return []string{instance.Spec.Bindings.ResourceRef}
@@ -578,7 +578,7 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	var b *builder.Builder
-	b = ctrl.NewControllerManagedBy(mgr).For(&appstacksv1beta1.RuntimeComponent{}, builder.WithPredicates(pred)).
+	b = ctrl.NewControllerManagedBy(mgr).For(&appstacksv1beta2.RuntimeComponent{}, builder.WithPredicates(pred)).
 		Owns(&corev1.Service{}, builder.WithPredicates(predSubResource)).
 		Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource)).
 		Owns(&appsv1.Deployment{}, builder.WithPredicates(predSubResWithGenCheck)).

@@ -7,5 +7,5 @@ delete:
 # Delete all image streams in the test namespace
 - apiVersion: image.openshift.io/v1
   kind: ImageStream
-- apiVersion: app.stacks/v1beta1
+- apiVersion: app.stacks/v1beta2
   kind: RuntimeComponent

@@ -1,6 +1,6 @@
 # With some storage configured, the operator
 # should create a stateful set
-apiVersion: app.stacks/v1beta1
+apiVersion: app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: storage-rc

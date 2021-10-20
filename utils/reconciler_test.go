@@ -8,7 +8,7 @@ import (
 
 	"github.com/application-stacks/runtime-component-operator/common"
 
-	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/api/v1beta1"
+	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -33,7 +33,7 @@ var (
 		Name:      "app",
 		Namespace: "runtimecomponent",
 	}
-	spec = appstacksv1beta1.RuntimeComponentSpec{}
+	spec = appstacksv1beta2.RuntimeComponentSpec{}
 )
 
 const (
@@ -49,7 +49,7 @@ func TestGetDiscoveryClient(t *testing.T) {
 
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
-	s.AddKnownTypes(appstacksv1beta1.GroupVersion, runtimecomponent)
+	s.AddKnownTypes(appstacksv1beta2.GroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
 	rcl := fakeclient.NewFakeClient(objs...)
 
@@ -69,7 +69,7 @@ func TestCreateOrUpdate(t *testing.T) {
 
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
-	s.AddKnownTypes(appstacksv1beta1.GroupVersion, runtimecomponent)
+	s.AddKnownTypes(appstacksv1beta2.GroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
 	rcl := fakeclient.NewFakeClient(objs...)
 
@@ -90,7 +90,7 @@ func TestDeleteResources(t *testing.T) {
 
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
-	s.AddKnownTypes(appstacksv1beta1.GroupVersion, runtimecomponent)
+	s.AddKnownTypes(appstacksv1beta2.GroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
 	rcl := fakeclient.NewFakeClient(objs...)
 	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
@@ -143,7 +143,7 @@ func TestGetOpConfigMap(t *testing.T) {
 
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
-	s.AddKnownTypes(appstacksv1beta1.GroupVersion, runtimecomponent)
+	s.AddKnownTypes(appstacksv1beta2.GroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
 	rcl := fakeclient.NewFakeClient(objs...)
 
@@ -169,7 +169,7 @@ func TestManageError(t *testing.T) {
 
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
-	s.AddKnownTypes(appstacksv1beta1.GroupVersion, runtimecomponent)
+	s.AddKnownTypes(appstacksv1beta2.GroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
 	rcl := fakeclient.NewFakeClient(objs...)
 
@@ -190,7 +190,7 @@ func TestManageSuccess(t *testing.T) {
 
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
-	s.AddKnownTypes(appstacksv1beta1.GroupVersion, runtimecomponent)
+	s.AddKnownTypes(appstacksv1beta2.GroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
 	rcl := fakeclient.NewFakeClient(objs...)
 	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
@@ -209,7 +209,7 @@ func TestIsGroupVersionSupported(t *testing.T) {
 
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
-	s.AddKnownTypes(appstacksv1beta1.GroupVersion, runtimecomponent)
+	s.AddKnownTypes(appstacksv1beta2.GroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
 	rcl := fakeclient.NewFakeClient(objs...)
 
@@ -247,12 +247,12 @@ func testGetSvcTLSValues(t *testing.T) {
 	runtimecomponent := createRuntimeComponent(name, namespace, spec)
 	expose := true
 	runtimecomponent.Spec.Expose = &expose
-	runtimecomponent.Spec.Service = &appstacksv1beta1.RuntimeComponentService{
+	runtimecomponent.Spec.Service = &appstacksv1beta2.RuntimeComponentService{
 		Port: 3000,
 	}
 
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
-	s.AddKnownTypes(appstacksv1beta1.GroupVersion, runtimecomponent)
+	s.AddKnownTypes(appstacksv1beta2.GroupVersion, runtimecomponent)
 
 	// Deploy the expected secret
 	cl := fakeclient.NewFakeClient(objs...)
@@ -287,13 +287,13 @@ func testGetRouteTLSValues(t *testing.T) {
 	terminationPolicy := routev1.TLSTerminationReencrypt
 	secretRefName := "my-app-route-tls"
 	runtimecomponent.Spec.Expose = &expose
-	runtimecomponent.Spec.Route = &appstacksv1beta1.RuntimeComponentRoute{
+	runtimecomponent.Spec.Route = &appstacksv1beta2.RuntimeComponentRoute{
 		Host:                 "myapp.mycompany.com",
 		Termination:          &terminationPolicy,
 		CertificateSecretRef: &secretRefName,
 	}
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
-	s.AddKnownTypes(appstacksv1beta1.GroupVersion, runtimecomponent)
+	s.AddKnownTypes(appstacksv1beta2.GroupVersion, runtimecomponent)
 
 	// Create a fake client and a reconciler
 	cl := fakeclient.NewFakeClient(objs...)

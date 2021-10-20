@@ -1,4 +1,4 @@
-apiVersion: app.stacks/v1beta1
+apiVersion: app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: probes-rc

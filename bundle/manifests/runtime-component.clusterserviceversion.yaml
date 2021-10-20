@@ -5,7 +5,7 @@ metadata:
     alm-examples: |-
       [
         {
-          "apiVersion": "app.stacks/v1beta1",
+          "apiVersion": "app.stacks/v1beta2",
           "kind": "RuntimeComponent",
           "metadata": {
             "name": "runtimecomponent-sample"
@@ -15,7 +15,7 @@ metadata:
           }
         },
         {
-          "apiVersion": "app.stacks/v1beta1",
+          "apiVersion": "app.stacks/v1beta2",
           "kind": "RuntimeOperation",
           "metadata": {
             "name": "runtimeoperation-sample"
@@ -302,7 +302,7 @@ spec:
         path: conditions
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes.conditions
-      version: v1beta1
+      version: v1beta2
     - description: RuntimeOperation is the Schema for the runtimeoperations API.
       displayName: Runtime Operation
       kind: RuntimeOperation
@@ -322,7 +322,7 @@ spec:
         path: podName
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      version: v1beta1
+      version: v1beta2
   description: |
     This advanced Operator is capable of deploying any runtime component image with consistent, production-grade QoS. It enables enterprise architects to govern the way their applications get deployed & managed in the cluster, while dramatically reducing the learning curve for developers to deploy into Kubernetes - allowing them to focus on writing the code!
     Here are some key features:
