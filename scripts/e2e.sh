@@ -2,12 +2,13 @@
 
 readonly usage="Usage: e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace>"
 readonly SERVICE_ACCOUNT="travis-tests"
+readonly OC_CLIENT_VERSION="4.6.0"
 
 # setup_env: Download oc cli, log into our persistent cluster, and create a test project
 setup_env() {
     echo "****** Installing OC CLI..."
     # Install kubectl and oc
-    curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-4.3/openshift-client-linux.tar.gz | tar xvz
+    curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OC_CLIENT_VERSION}/openshift-client-linux.tar.gz | tar xvz
     sudo mv oc kubectl /usr/local/bin/
 
     # Start a cluster and login
