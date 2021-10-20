@@ -42,7 +42,7 @@ containerize:
     export PATH=$PATH:/usr/local/go/bin
     apt-get update
     apt-get -y install build-essential 
-    # Run unit tests
+    # Build images
     export DOCKER_USERNAME=$(get_env docker-username)
     export DOCKER_PASSWORD=$(get_env docker-password)    
     make build-multiarch-image
