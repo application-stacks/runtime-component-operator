@@ -36,6 +36,15 @@ containerize:
       env
       set -x
     fi
+    # Download and configure golang
+    wget --header "Accept: application/octet-stream"  "https://golang.org/dl/go1.16.linux-amd64.tar.gz" 
+    rm -rf /usr/local/go && tar -C /usr/local -xf go1.16.linux-amd64.tar.gz
+    export PATH=$PATH:/usr/local/go/bin
+    apt-get update
+    apt-get -y install build-essential 
+    # Run unit tests
+    export DOCKER_USERNAME=$(get_env docker-username)
+    export DOCKER_PASSWORD=$(get_env docker-password)    
     make build-multiarch-image
     make bundle-build
 
