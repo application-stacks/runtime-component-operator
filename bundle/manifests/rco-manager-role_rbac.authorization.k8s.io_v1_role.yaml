@@ -1,11 +1,8 @@
-
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   creationTimestamp: null
-  name: manager-role
-  namespace: runtime-component-operator
+  name: rco-manager-role
 rules:
 - apiGroups:
   - app.k8s.io

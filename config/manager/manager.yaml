@@ -29,6 +29,7 @@ spec:
         - --enable-leader-election
         image: controller:latest
         name: manager
+        imagePullPolicy: Always
         env:
           - name: OPERATOR_NAMESPACE
             valueFrom:
@@ -46,3 +47,4 @@ spec:
             cpu: 100m
             memory: 20Mi
       terminationGracePeriodSeconds: 10
+      serviceAccountName: sa

@@ -63,20 +63,20 @@ type RuntimeComponentReconciler struct {
 	watchNamespaces []string
 }
 
-// +kubebuilder:rbac:groups=app.stacks,resources=runtimecomponents;runtimecomponents/status;runtimecomponents/finalizers,verbs=*
-// +kubebuilder:rbac:groups=apps,resources=deployments;statefulsets,verbs=*
-// +kubebuilder:rbac:groups=apps,resources=deployments/finalizers;statefulsets,verbs=update
-// +kubebuilder:rbac:groups=core,resources=services;secrets;serviceaccounts;configmaps,verbs=*
-// +kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=*
-// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=*
-// +kubebuilder:rbac:groups=route.openshift.io,resources=routes;routes/custom-host,verbs=*
-// +kubebuilder:rbac:groups=cert-manager.io,resources=certificates,verbs=*
-// +kubebuilder:rbac:groups=certmanager.k8s.io,resources=certificates,verbs=*
-// +kubebuilder:rbac:groups=image.openshift.io,resources=imagestreams;imagestreamtags,verbs=get;list;watch
-// +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=*
-// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=*
-// +kubebuilder:rbac:groups=app.k8s.io,resources=applications,verbs=*
-// +kubebuilder:rbac:groups=apps.openshift.io,resources=servicebindingrequests,verbs=*
+// +kubebuilder:rbac:groups=app.stacks,resources=runtimecomponents;runtimecomponents/status;runtimecomponents/finalizers,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=apps,resources=deployments;statefulsets,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=apps,resources=deployments/finalizers;statefulsets,verbs=update,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=core,resources=services;secrets;serviceaccounts;configmaps,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=route.openshift.io,resources=routes;routes/custom-host,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=cert-manager.io,resources=certificates,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=certmanager.k8s.io,resources=certificates,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=image.openshift.io,resources=imagestreams;imagestreamtags,verbs=get;list;watch,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=app.k8s.io,resources=applications,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=apps.openshift.io,resources=servicebindingrequests,verbs=*,namespace=runtime-component-operator
 
 func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 
@@ -583,17 +583,7 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource)).
 		Owns(&appsv1.Deployment{}, builder.WithPredicates(predSubResWithGenCheck)).
 		Owns(&appsv1.StatefulSet{}, builder.WithPredicates(predSubResWithGenCheck)).
-		Owns(&autoscalingv1.HorizontalPodAutoscaler{}, builder.WithPredicates(predSubResource)).
-		Watches(&source.Kind{Type: &corev1.Secret{}}, &EnqueueRequestsForCustomIndexField{
-			Matcher: &BindingSecretMatcher{
-				klient: mgr.GetClient(),
-			},
-		}).
-		Watches(&source.Kind{Type: &corev1.Secret{}}, &utils.EnqueueRequestsForServiceBinding{
-			Client:          mgr.GetClient(),
-			GroupName:       "app.stacks",
-			WatchNamespaces: watchNamespaces,
-		})
+		Owns(&autoscalingv1.HorizontalPodAutoscaler{}, builder.WithPredicates(predSubResource))
 
 	ok, _ := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route")
 	if ok {
