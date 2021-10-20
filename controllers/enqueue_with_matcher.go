@@ -19,9 +19,11 @@ import (
 var _ handler.EventHandler = &EnqueueRequestsForCustomIndexField{}
 
 const (
-	indexFieldImageStreamName     = "spec.applicationImage"
-	indexFieldBindingsResourceRef = "spec.bindings.resourceRef"
-	bindingSecretSuffix           = "-binding"
+	indexFieldImageStreamName               = "spec.applicationImage"
+	indexFieldBindingsResourceRef           = "spec.bindings.resourceRef"
+	indexFieldCertificateSecretRefName      = "spec.service.certificateSecretRef"
+	indexFieldRouteCertificateSecretRefName = "spec.route.certificateSecretRef"
+	bindingSecretSuffix                     = "-binding"
 )
 
 // EnqueueRequestsForCustomIndexField enqueues reconcile Requests Runtime Components if the app is relying on
@@ -74,6 +76,12 @@ type ImageStreamMatcher struct {
 	WatchNamespaces []string
 }
 
+// SecretMatcher implements CustomMatcher for Secrets
+type SecretMatcher struct {
+	Klient          client.Client
+	WatchNamespaces []string
+}
+
 // Match returns all applications using the input ImageStreamTag
 func (i *ImageStreamMatcher) Match(imageStreamTag metav1.Object) ([]appstacksv1beta1.RuntimeComponent, error) {
 	apps := []appstacksv1beta1.RuntimeComponent{}
@@ -101,5 +109,43 @@ func (i *ImageStreamMatcher) Match(imageStreamTag metav1.Object) ([]appstacksv1b
 		apps = append(apps, appList.Items...)
 	}
 
+	return apps, nil
+}
+
+func (s *SecretMatcher) Match(secret metav1.Object) ([]appstacksv1beta1.RuntimeComponent, error) {
+	apps := []appstacksv1beta1.RuntimeComponent{}
+	var namespaces []string
+	if appstacksutils.IsClusterWide(s.WatchNamespaces) {
+		nsList := &corev1.NamespaceList{}
+		if err := s.Klient.List(context.Background(), nsList, client.InNamespace("")); err != nil {
+			return nil, err
+		}
+		for _, ns := range nsList.Items {
+			namespaces = append(namespaces, ns.Name)
+		}
+	} else {
+		namespaces = s.WatchNamespaces
+	}
+	for _, ns := range namespaces {
+		appList := &appstacksv1beta1.RuntimeComponentList{}
+		err := s.Klient.List(context.Background(),
+			appList,
+			client.InNamespace(ns),
+			client.MatchingFields{indexFieldCertificateSecretRefName: secret.GetName()})
+		if err != nil {
+			return nil, err
+		}
+		apps = append(apps, appList.Items...)
+
+		appList = &appstacksv1beta1.RuntimeComponentList{}
+		err = s.Klient.List(context.Background(),
+			appList,
+			client.InNamespace(ns),
+			client.MatchingFields{indexFieldRouteCertificateSecretRefName: secret.GetName()})
+		if err != nil {
+			return nil, err
+		}
+		apps = append(apps, appList.Items...)
+	}
 	return apps, nil
 }

@@ -585,6 +585,13 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.StatefulSet{}, builder.WithPredicates(predSubResWithGenCheck)).
 		Owns(&autoscalingv1.HorizontalPodAutoscaler{}, builder.WithPredicates(predSubResource))
 
+	b = b.Watches(&source.Kind{Type: &corev1.Secret{}}, &EnqueueRequestsForCustomIndexField{
+		Matcher: &SecretMatcher{
+			Klient:          mgr.GetClient(),
+			WatchNamespaces: watchNamespaces,
+		},
+	})
+
 	ok, _ := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route")
 	if ok {
 		b = b.Owns(&routev1.Route{}, builder.WithPredicates(predSubResource))
