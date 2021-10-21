@@ -17,7 +17,7 @@ spec:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: RuntimeComponent is the Schema for the runtimecomponents API
+        description: RuntimeComponent is the Schema for the runtimecomponents API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -28,18 +28,19 @@ spec:
           metadata:
             type: object
           spec:
-            description: RuntimeComponentSpec defines the desired state of RuntimeComponent
+            description: Defines the desired state of RuntimeComponent.
             properties:
               affinity:
-                description: RuntimeComponentAffinity deployment affinity settings
+                description: Configures a Pod to run on particular Nodes.
                 properties:
                   architecture:
+                    description: An array of architectures to be considered for deployment. Their position in the array indicates preference.
                     items:
                       type: string
                     type: array
                     x-kubernetes-list-type: set
                   nodeAffinity:
-                    description: Node affinity is a group of node affinity scheduling rules.
+                    description: Controls which nodes the pod are scheduled to run on, based on labels on the node.
                     properties:
                       preferredDuringSchedulingIgnoredDuringExecution:
                         description: The scheduler will prefer to schedule pods to nodes that satisfy the affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding "weight" to the sum if the node matches the corresponding matchExpressions; the node(s) with the highest sum are the most preferred.
@@ -160,9 +161,10 @@ spec:
                   nodeAffinityLabels:
                     additionalProperties:
                       type: string
+                    description: A YAML object that contains set of required labels and their values.
                     type: object
                   podAffinity:
-                    description: Pod affinity is a group of inter pod affinity scheduling rules.
+                    description: Controls the nodes the pod are scheduled to run on, based on labels on the pods that are already running on the node.
                     properties:
                       preferredDuringSchedulingIgnoredDuringExecution:
                         description: The scheduler will prefer to schedule pods to nodes that satisfy the affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding "weight" to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.
@@ -271,7 +273,7 @@ spec:
                         type: array
                     type: object
                   podAntiAffinity:
-                    description: Pod anti affinity is a group of inter pod anti affinity scheduling rules.
+                    description: Enables the ability to prevent running a pod on the same node as another pod.
                     properties:
                       preferredDuringSchedulingIgnoredDuringExecution:
                         description: The scheduler will prefer to schedule pods to nodes that satisfy the anti-affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling anti-affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding "weight" to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.
@@ -381,51 +383,67 @@ spec:
                     type: object
                 type: object
               applicationImage:
+                description: Application image to be installed.
                 type: string
               applicationName:
+                description: The name of the application this resource is part of. If not specified, it defaults to the name of the CR.
                 type: string
               architecture:
+                description: An array of architectures to be considered for deployment. Their position in the array indicates preference.
                 items:
                   type: string
                 type: array
                 x-kubernetes-list-type: set
               autoscaling:
-                description: RuntimeComponentAutoScaling ...
+                description: Configures the desired resource consumption of pods.
                 properties:
                   maxReplicas:
+                    description: Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler.
                     format: int32
                     minimum: 1
                     type: integer
                   minReplicas:
+                    description: Lower limit for the number of pods that can be set by the autoscaler.
                     format: int32
                     type: integer
                   targetCPUUtilizationPercentage:
+                    description: Target average CPU utilization (represented as a percentage of requested CPU) over all the pods.
                     format: int32
                     type: integer
                 type: object
               bindings:
-                description: RuntimeComponentBindings represents service binding related parameters
+                description: Represents service binding related parameters.
                 properties:
                   autoDetect:
+                    description: A boolean to toggle whether the operator should automatically detect and use a ServiceBindingRequest resource with <CR_NAME>-binding naming format.
                     type: boolean
                   embedded:
+                    description: A YAML object that represents a ServiceBindingRequest custom resource.
                     type: object
                   expose:
-                    description: RuntimeComponentBindingExpose encapsulates information exposed by the application
+                    description: A boolean to toggle whether the operator expose the application as a bindable service.
                     properties:
                       enabled:
+                        description: A boolean to toggle whether the operator expose the application as a bindable service. The default value for this parameter is false.
                         type: boolean
                     type: object
                   resourceRef:
+                    description: The name of a ServiceBindingRequest custom resource created manually in the same namespace as the application.
                     type: string
                 type: object
               createKnativeService:
+                description: A boolean to toggle the creation of Knative resources and usage of Knative serving.
                 type: boolean
               deployment:
-                description: RuntimeComponentDeployment settings
+                description: Defines the desired state and cycle of applications.
                 properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: Annotations to be added only to the Deployment and resources owned by the Deployment.
+                    type: object
                   updateStrategy:
-                    description: DeploymentStrategy describes how to replace existing pods with new ones.
+                    description: Specifies the strategy to replace old deployment pods with new pods.
                     properties:
                       rollingUpdate:
                         description: 'Rolling update config params. Present only if DeploymentStrategyType = RollingUpdate. --- TODO: Update this to follow our convention for oneOf, whatever we decide it to be.'
@@ -449,6 +467,7 @@ spec:
                     type: object
                 type: object
               env:
+                description: An array of environment variables following the format of {name, value}, where value is a simple string.
                 items:
                   description: EnvVar represents an environment variable present in a Container.
                   properties:
@@ -531,6 +550,7 @@ spec:
                 - name
                 x-kubernetes-list-type: map
               envFrom:
+                description: An array of references to ConfigMap or Secret resources containing environment variables.
                 items:
                   description: EnvFromSource represents the source of a set of ConfigMaps
                   properties:
@@ -561,8 +581,10 @@ spec:
                 type: array
                 x-kubernetes-list-type: atomic
               expose:
+                description: A boolean that toggles the external exposure of this deployment via a Route or a Knative Route resource.
                 type: boolean
               initContainers:
+                description: List of containers that run before other containers in a pod.
                 items:
                   description: A single application container that you want to run within a pod.
                   properties:
@@ -1291,7 +1313,7 @@ spec:
                 - name
                 x-kubernetes-list-type: map
               livenessProbe:
-                description: Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
+                description: Detects if the services needs to be restarted.
                 properties:
                   exec:
                     description: One and only one of the following should be specified. Exec specifies the action to take.
@@ -1376,9 +1398,10 @@ spec:
                     type: integer
                 type: object
               monitoring:
-                description: RuntimeComponentMonitoring ...
+                description: Specifies parameters for Service Monitor.
                 properties:
                   endpoints:
+                    description: A YAML snippet representing an array of Endpoint component from ServiceMonitor.
                     items:
                       description: Endpoint defines a scrapeable endpoint serving Prometheus metrics.
                       properties:
@@ -1640,15 +1663,17 @@ spec:
                   labels:
                     additionalProperties:
                       type: string
+                    description: Labels to set on ServiceMonitor.
                     type: object
                 type: object
               pullPolicy:
-                description: PullPolicy describes a policy for if/when to pull a container image
+                description: Policy for pulling container images. Defaults to IfNotPresent. Parameters autoscaling.maxReplicas and resourceConstraints.requests.cpu must be specified.
                 type: string
               pullSecret:
+                description: Name of the Secret to use to pull images from the specified repository. It is not required if the cluster is configured with a global image pull secret.
                 type: string
               readinessProbe:
-                description: Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
+                description: Detects if the services are ready to serve.
                 properties:
                   exec:
                     description: One and only one of the following should be specified. Exec specifies the action to take.
@@ -1733,10 +1758,11 @@ spec:
                     type: integer
                 type: object
               replicas:
+                description: Number of pods to create.
                 format: int32
                 type: integer
               resourceConstraints:
-                description: ResourceRequirements describes the compute resource requirements.
+                description: Limits the amount of required resources.
                 properties:
                   limits:
                     additionalProperties:
@@ -1758,46 +1784,55 @@ spec:
                     type: object
                 type: object
               route:
-                description: RuntimeComponentRoute ...
+                description: Configures the ingress resource.
                 properties:
                   annotations:
                     additionalProperties:
                       type: string
+                    description: Annotations to be added to the Route.
                     type: object
                   certificateSecretRef:
+                    description: A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
                     type: string
                   host:
+                    description: Hostname to be used for the Route.
                     type: string
                   insecureEdgeTerminationPolicy:
-                    description: InsecureEdgeTerminationPolicyType dictates the behavior of insecure connections to an edge-terminated route.
+                    description: HTTP traffic policy with TLS enabled. Can be one of Allow, Redirect and None.
                     type: string
                   path:
+                    description: Path to be used for Route.
                     type: string
                   termination:
-                    description: 'TLSTerminationType dictates where the secure communication will stop TODO: Reconsider this type in v2'
+                    description: TLS termination policy. Can be one of edge, reencrypt and passthrough.
                     type: string
                 type: object
               service:
-                description: RuntimeComponentService ...
+                description: Configures parameters for the network service of pods.
                 properties:
                   annotations:
                     additionalProperties:
                       type: string
+                    description: Annotations to be added to the service.
                     type: object
                   certificateSecretRef:
+                    description: "\tA name of a secret that already contains TLS key, certificate and CA to be mounted in the pod."
                     type: string
                   consumes:
                     items:
-                      description: ServiceBindingConsumes represents a service to be consumed
+                      description: Represents a service to be consumed.
                       properties:
                         category:
-                          description: ServiceBindingCategory ...
+                          description: The type of service binding to be consumed. At this time, the only allowed value is openapi.
                           type: string
                         mountPath:
+                          description: Optional field to specify which location in the pod, service binding secret should be mounted.
                           type: string
                         name:
+                          description: The name of the service to be consumed. If binding to a RuntimeComponent, then this would be the provider’s CR name.
                           type: string
                         namespace:
+                          description: The namespace of the service to be consumed. If binding to a RuntimeComponent, then this would be the provider’s CR namespace.
                           type: string
                       required:
                       - category
@@ -1806,18 +1841,22 @@ spec:
                     type: array
                     x-kubernetes-list-type: atomic
                   nodePort:
+                    description: Node proxies this port into your service.
                     format: int32
                     maximum: 65535
                     minimum: 0
                     type: integer
                   port:
+                    description: The port exposed by the container.
                     format: int32
                     maximum: 65535
                     minimum: 1
                     type: integer
                   portName:
+                    description: The name for the port exposed by the container.
                     type: string
                   ports:
+                    description: An array consisting of service ports.
                     items:
                       description: ServicePort contains information on service's port.
                       properties:
@@ -1850,13 +1889,13 @@ spec:
                       type: object
                     type: array
                   provides:
-                    description: ServiceBindingProvides represents information about
+                    description: Configures the OpenAPI information to expose.
                     properties:
                       auth:
-                        description: ServiceBindingAuth allows a service to provide authentication information
+                        description: Allows a service to provide authentication information.
                         properties:
                           password:
-                            description: The secret that contains the password for authenticating
+                            description: The secret that contains the password for authenticating.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must be a valid secret key.
@@ -1871,7 +1910,7 @@ spec:
                             - key
                             type: object
                           username:
-                            description: The secret that contains the username for authenticating
+                            description: The secret that contains the username for authenticating.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must be a valid secret key.
@@ -1887,16 +1926,19 @@ spec:
                             type: object
                         type: object
                       category:
-                        description: ServiceBindingCategory ...
+                        description: Service binding type to be provided by this CR. At this time, the only allowed value is openapi.
                         type: string
                       context:
+                        description: Specifies context root of the service.
                         type: string
                       protocol:
+                        description: Protocol of the provided service. Defauts to http.
                         type: string
                     required:
                     - category
                     type: object
                   targetPort:
+                    description: The port that the operator assigns to containers inside pods. Defaults to the value of service.port.
                     format: int32
                     maximum: 65535
                     minimum: 1
@@ -1906,8 +1948,10 @@ spec:
                     type: string
                 type: object
               serviceAccountName:
+                description: The name of the OpenShift service account to be used during deployment.
                 type: string
               sidecarContainers:
+                description: The list of sidecar containers. These are additional containers to be added to the pods.
                 items:
                   description: A single application container that you want to run within a pod.
                   properties:
@@ -2636,7 +2680,7 @@ spec:
                 - name
                 x-kubernetes-list-type: map
               startupProbe:
-                description: Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
+                description: Protects slow starting containers from livenessProbe.
                 properties:
                   exec:
                     description: One and only one of the following should be specified. Exec specifies the action to take.
@@ -2721,18 +2765,25 @@ spec:
                     type: integer
                 type: object
               statefulSet:
-                description: RuntimeComponentStatefulSet settings
+                description: Defines the desired state and cycle of stateful applications.
                 properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: Annotations to be added only to the StatefulSet and resources owned by the StatefulSet.
+                    type: object
                   storage:
-                    description: RuntimeComponentStorage ...
+                    description: Defines settings of persisted storage for StatefulSets.
                     properties:
                       mountPath:
+                        description: The directory inside the container where this persisted storage will be bound to.
                         type: string
                       size:
+                        description: A convenient field to set the size of the persisted storage.
                         pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
                         type: string
                       volumeClaimTemplate:
-                        description: PersistentVolumeClaim is a user's request for and claim to a persistent volume
+                        description: A YAML object that represents a volumeClaimTemplate component of a StatefulSet.
                         properties:
                           apiVersion:
                             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -2899,7 +2950,7 @@ spec:
                         type: object
                     type: object
                   updateStrategy:
-                    description: StatefulSetUpdateStrategy indicates the strategy that the StatefulSet controller will use to perform updates. It includes any additional parameters necessary to perform the update for the indicated strategy.
+                    description: Specifies the strategy to replace old statefulSet pods with new pods.
                     properties:
                       rollingUpdate:
                         description: RollingUpdate is used to communicate parameters when Type is RollingUpdateStatefulSetStrategyType.
@@ -2917,6 +2968,7 @@ spec:
               version:
                 type: string
               volumeMounts:
+                description: Represents where to mount the volumes into containers.
                 items:
                   description: VolumeMount describes a mounting of a Volume within a container.
                   properties:
@@ -2945,6 +2997,7 @@ spec:
                 type: array
                 x-kubernetes-list-type: atomic
               volumes:
+                description: Represents a pod volume with data that is accessible to the containers.
                 items:
                   description: Volume represents a named volume in a pod that may be accessed by any container in the pod.
                   properties:
@@ -3872,7 +3925,7 @@ spec:
             - applicationImage
             type: object
           status:
-            description: RuntimeComponentStatus defines the observed state of RuntimeComponent
+            description: Defines the observed state of RuntimeComponent.
             properties:
               binding:
                 description: LocalObjectReference contains enough information to let you locate the referenced object inside the same namespace.
@@ -3883,7 +3936,7 @@ spec:
                 type: object
               conditions:
                 items:
-                  description: StatusCondition defines possible status conditions
+                  description: Defines possible status conditions.
                   properties:
                     lastTransitionTime:
                       format: date-time
@@ -3898,7 +3951,7 @@ spec:
                     status:
                       type: string
                     type:
-                      description: StatusConditionType ...
+                      description: Defines the type of status condition.
                       type: string
                   type: object
                 type: array

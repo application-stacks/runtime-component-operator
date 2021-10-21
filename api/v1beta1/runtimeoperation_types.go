@@ -23,19 +23,21 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// RuntimeOperationSpec defines the desired state of RuntimeOperation
+// Defines the desired state of RuntimeOperation
 type RuntimeOperationSpec struct {
-	// Name of the Pod to perform runtime operation on. Pod must be from the same namespace as the RuntimeOperation instance
+	// Name of the Pod to perform runtime operation on. Pod must be from the same namespace as the RuntimeOperation instance.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Pod Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	PodName string `json:"podName"`
 
-	// Name of the container. Defaults to main container "app"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Container Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	ContainerName string `json:"containerName,omitempty"`
 
-	// Command to execute. Not executed within a shell
+	// Command to execute. Not executed within a shell.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Command",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Command []string `json:"command"`
 }
 
-// RuntimeOperationStatus defines the observed state of RuntimeOperation
+// Defines the observed state of RuntimeOperation.
 type RuntimeOperationStatus struct {
 	// +listType=atomic
 	Conditions []OperationStatusCondition `json:"conditions,omitempty"`
@@ -44,7 +46,7 @@ type RuntimeOperationStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// RuntimeOperation is the Schema for the runtimeoperations API
+// RuntimeOperation is the Schema for the runtimeoperations API.
 type RuntimeOperation struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -55,7 +57,7 @@ type RuntimeOperation struct {
 
 // +kubebuilder:object:root=true
 
-// RuntimeOperationList contains a list of RuntimeOperation
+// RuntimeOperationList contains a list of RuntimeOperation.
 type RuntimeOperationList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

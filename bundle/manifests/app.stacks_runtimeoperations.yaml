@@ -17,7 +17,7 @@ spec:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: RuntimeOperation is the Schema for the runtimeoperations API
+        description: RuntimeOperation is the Schema for the runtimeoperations API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -28,25 +28,24 @@ spec:
           metadata:
             type: object
           spec:
-            description: RuntimeOperationSpec defines the desired state of RuntimeOperation
+            description: Defines the desired state of RuntimeOperation
             properties:
               command:
-                description: Command to execute. Not executed within a shell
+                description: Command to execute. Not executed within a shell.
                 items:
                   type: string
                 type: array
               containerName:
-                description: Name of the container. Defaults to main container "app"
                 type: string
               podName:
-                description: Name of the Pod to perform runtime operation on. Pod must be from the same namespace as the RuntimeOperation instance
+                description: Name of the Pod to perform runtime operation on. Pod must be from the same namespace as the RuntimeOperation instance.
                 type: string
             required:
             - command
             - podName
             type: object
           status:
-            description: RuntimeOperationStatus defines the observed state of RuntimeOperation
+            description: Defines the observed state of RuntimeOperation.
             properties:
               conditions:
                 items:
