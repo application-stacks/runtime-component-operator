@@ -49,7 +49,7 @@ containerize:
     make bundle-build
     echo $(get_env ibmcloud-api-key) | docker login stg.icr.io -u "iamapikey" --password-stdin
     declare -a tags=("daily-amd64" "bundle-daily")
-    for i in "${arr[@]}"
+    for i in "${tags[@]}"
     do
        IMAGE=stg.icr.io/cp/wshe/operator:$i
        docker tag applicationstacks/operator:$i $IMAGE
