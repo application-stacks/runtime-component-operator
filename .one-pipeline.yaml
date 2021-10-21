@@ -47,7 +47,19 @@ containerize:
     export DOCKER_PASSWORD=$(get_env docker-password)    
     make build-multiarch-image
     make bundle-build
+    echo $(get_env ibmcloud-api-key) | docker login stg.icr.io -u "iamapikey" --password-stdin
+    declare -a tags=("daily-amd64" "bundle-daily")
+    for i in "${arr[@]}"
+    do
+       IMAGE=stg.icr.io/cp/wshe/operator:$i
+       docker tag applicationstacks/operator:$i $IMAGE
+       docker push $IMAGE  
+       docker pull "$IMAGE" > /dev/null
+       DIGEST="$(docker image inspect --format '{{index .RepoDigests 0}}' "$IMAGE" | cut -d@ -f2)"
+       save_artifact $i type=image name="$IMAGE" "digest=$DIGEST"    
+    done
 
+ 
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
