@@ -23,10 +23,17 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - create
+- apiGroups:
+  - ""
+  resources:
   - namespaces
   - pods
   - services
-  - secrets
   verbs:
   - get
   - list
