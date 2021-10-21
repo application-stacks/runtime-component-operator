@@ -298,6 +298,7 @@ spec:
   description: |
     This advanced Operator is capable of deploying any runtime component image with consistent, production-grade QoS. It enables enterprise architects to govern the way their applications get deployed & managed in the cluster, while dramatically reducing the learning curve for developers to deploy into Kubernetes - allowing them to focus on writing the code!
     Here are some key features:
+
     #### Application Lifecyle
     You can deploy your runtime component container by either pointing to a container image, or an OpenShift ImageStream. When using an ImageStream the Operator will watch for any updates and will re-deploy the modified image.
 
@@ -305,7 +306,7 @@ spec:
     This Operator is capable of using a custom ServiceAccount from the caller, allowing it to follow RBAC restrictions. By default it creates a ServiceAccount if one is not specified, which can also be bound with specific roles.
 
     #### Environment Configuration
-    You can configured a variety of artifacts with your deployment, such as: labels, annotations, and environment variables from a ConfigMap, a Secret or a value.
+    You can configure a variety of artifacts with your deployment, such as: labels, annotations, and environment variables from a ConfigMap, a Secret or a value.
 
     #### Routing
     Expose your application to external users via a single toggle to create a Route on OpenShift or an Ingress on other Kubernetes environments. Advanced configuration, such as TLS settings, are also easily enabled.  Expiring Route certificates are re-issued.
@@ -320,9 +321,11 @@ spec:
 
     #### Service Binding
     Easily bind to available services in your cluster.  Your runtime components can expose and consume other services by simply specifying the target endpoinds: we take care of the heavy lifting such as creating k8s Secrets, injecting them into your container and watching for any changes in configuration!  This way your applications can dynamically reconnect to its required services without any intervention or interruption.
+
     #### Exposing metrics to Prometheus
     The Runtime Component Operator exposes the runtime container's metrics via the [Prometheus Operator](https://operatorhub.io/operator/prometheus).
     Users can pick between a basic mode, where they simply specify the label that Prometheus is watching to scrape the metrics from the container, or they can specify the full `ServiceMonitor` spec embedded into the RuntimeComponent's `spec.monitoring` key controlling things like the poll internal and security credentials.
+
     #### Easily mount logs and transaction directories
     If you need to mount the logs and transaction data from your runtime component to an external volume such as NFS (or any storage supported in your cluster), simply add the following (customizing the folder location and size) to your RuntimeComponent CR:
     ``` storage: size: 2Gi mountPath: "/logs" ```
