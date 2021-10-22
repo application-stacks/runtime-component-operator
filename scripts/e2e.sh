@@ -19,7 +19,7 @@ setup_env() {
     readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
     readonly TEST_NAMESPACE="runtime-operator-test-${TRAVIS_BUILD_NUMBER}"
     readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/runtime-operator:${TRAVIS_BUILD_NUMBER}
-    readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle:latest"
+    readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle:${TRAVIS_BUILD_NUMBER}"
 
     echo "****** Creating test namespace: ${TEST_NAMESPACE}"
     oc new-project "${TEST_NAMESPACE}"
@@ -84,7 +84,7 @@ main() {
     echo "****** Building image ${BUILD_IMAGE}"
     docker build -t "${BUILD_IMAGE}" .
 
-    echo "****** Building bundle..."
+    echo "****** Building bundle ${BUNDLE_IMAGE} ..."
     IMG="${BUILD_IMAGE}" BUNDLE_IMG="${BUNDLE_IMAGE}" make kustomize bundle bundle-build
 
     echo "****** Pushing operator and operator bundle images into registry..."
