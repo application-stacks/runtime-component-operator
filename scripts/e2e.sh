@@ -18,7 +18,7 @@ setup_env() {
     # Set variables for rest of script to use
     readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
     readonly TEST_NAMESPACE="runtime-operator-test-${TRAVIS_BUILD_NUMBER}"
-    readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/runtime-operator
+    readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/runtime-operator:${TRAVIS_BUILD_NUMBER}
     readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle:latest"
 
     echo "****** Creating test namespace: ${TEST_NAMESPACE}"
@@ -81,7 +81,7 @@ main() {
     ## login to docker to avoid rate limiting during build
     echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
-    echo "****** Building image"
+    echo "****** Building image ${BUILD_IMAGE}"
     docker build -t "${BUILD_IMAGE}" .
 
     echo "****** Building bundle..."
