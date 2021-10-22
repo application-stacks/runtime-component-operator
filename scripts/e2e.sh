@@ -104,6 +104,10 @@ main() {
 
     echo "****** rco-controller-manager deployment is ready..."
 
+    echo "PPP getting pods PPP"
+    oc get pods -o yaml
+    echo "PPP got pods PPP"
+
     echo "****** Starting scorecard tests..."
     operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --service-account scorecard-kuttl --wait-time 30m ./bundle || {
         echo "****** Scorecard tests failed..."
