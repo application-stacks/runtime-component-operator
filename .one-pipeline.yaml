@@ -45,28 +45,33 @@ containerize:
     # Build images
     export DOCKER_USERNAME=$(get_env docker-username)
     export DOCKER_PASSWORD=$(get_env docker-password)    
+    # Build amd64 image
     make build-multiarch-image
-    #make bundle-build
-    #echo $(get_env ibmcloud-api-key) | docker login stg.icr.io -u "iamapikey" --password-stdin
-    echo $(get_env ibmcloud-api-key) | docker login us.icr.io -u "iamapikey" --password-stdin
-    declare -a tags=("daily-amd64" "bundle-daily") 
+    echo $(get_env ibmcloud-api-key) | docker login us.icr.io -u "$(get_env ibmcloud-api-user)" --password-stdin
+    IMAGE=us.icr.io/runtimecomponentoperator/operator:daily-amd64
+    docker tag applicationstacks/operator:daily-amd64 $IMAGE
+    docker push $IMAGE
+    # Build ppc64le and s390x images
+    ./scripts/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -u "$(get_env ibmcloud-api-user)" -a $(get_env ibmcloud-api-key) -b $(get_env branch) -l
+    # Build bundle image
+    make bundle-build
+    IMAGE=us.icr.io/runtimecomponentoperator/operator:bundle-daily
+    docker tag applicationstacks/operator:bundle-daily $IMAGE
+    docker push $IMAGE
+    # Save artifacts
+    declare -a tags=("daily-amd64" "daily-ppc64le" "daily-s390x" "bundle-daily") 
     for i in "${tags[@]}"
     do
       IMAGE=us.icr.io/runtimecomponentoperator/operator:$i
-      docker tag applicationstacks/operator:$i $IMAGE
-      docker push $IMAGE  
       docker pull "$IMAGE" > /dev/null
       DIGEST="$(docker image inspect --format '{{index .RepoDigests 0}}' "$IMAGE" | cut -d@ -f2)"
       save_artifact $i type=image name="$IMAGE" "digest=$DIGEST"    
     done
-    #TAG=daily-amd64
-    #IMAGE=stg.icr.io/cp/wshe/operator:$TAG
-    #docker tag applicationstacks/operator:$TAG $IMAGE
-    #docker push $IMAGE  
-    #   docker pull "$IMAGE" > /dev/null
-    #   DIGEST="$(docker image inspect --format '{{index .RepoDigests 0}}' "$IMAGE" | cut -d@ -f2)"
-    #   save_artifact $i type=image name="$IMAGE" "digest=$DIGEST"    
-    #done
+    # Build manifest
+    OPERATOR_IMAGE=us.icr.io/runtimecomponentoperator/operator
+    make setup-manifest
+    echo $(get_env ibmcloud-api-key) | docker login us.icr.io -u "$(get_env ibmcloud-api-user)" --password-stdin
+    ./scripts/build-manifest.sh -u "$(get_env ibmcloud-api-user)" -p $(get_env ibmcloud-api-key) --image "$OPERATOR_IMAGE"    
 
  
 deploy:
