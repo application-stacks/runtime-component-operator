@@ -46,18 +46,27 @@ containerize:
     export DOCKER_USERNAME=$(get_env docker-username)
     export DOCKER_PASSWORD=$(get_env docker-password)    
     make build-multiarch-image
-    make bundle-build
-    echo $(get_env ibmcloud-api-key) | docker login stg.icr.io -u "iamapikey" --password-stdin
-    declare -a tags=("daily-amd64" "bundle-daily")
+    #make bundle-build
+    #echo $(get_env ibmcloud-api-key) | docker login stg.icr.io -u "iamapikey" --password-stdin
+    echo $(get_env ibmcloud-api-key) | docker login us.icr.io -u "iamapikey" --password-stdin
+    declare -a tags=("daily-amd64" "bundle-daily") 
     for i in "${tags[@]}"
     do
-       IMAGE=stg.icr.io/cp/wshe/operator:$i
-       docker tag applicationstacks/operator:$i $IMAGE
-       docker push $IMAGE  
-       docker pull "$IMAGE" > /dev/null
-       DIGEST="$(docker image inspect --format '{{index .RepoDigests 0}}' "$IMAGE" | cut -d@ -f2)"
-       save_artifact $i type=image name="$IMAGE" "digest=$DIGEST"    
+      IMAGE=us.icr.io/runtimecomponentoperator/operator:$i
+      docker tag applicationstacks/operator:$i $IMAGE
+      docker push $IMAGE  
+      docker pull "$IMAGE" > /dev/null
+      DIGEST="$(docker image inspect --format '{{index .RepoDigests 0}}' "$IMAGE" | cut -d@ -f2)"
+      save_artifact $i type=image name="$IMAGE" "digest=$DIGEST"    
     done
+    #TAG=daily-amd64
+    #IMAGE=stg.icr.io/cp/wshe/operator:$TAG
+    #docker tag applicationstacks/operator:$TAG $IMAGE
+    #docker push $IMAGE  
+    #   docker pull "$IMAGE" > /dev/null
+    #   DIGEST="$(docker image inspect --format '{{index .RepoDigests 0}}' "$IMAGE" | cut -d@ -f2)"
+    #   save_artifact $i type=image name="$IMAGE" "digest=$DIGEST"    
+    #done
 
  
 deploy:
