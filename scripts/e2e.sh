@@ -22,7 +22,7 @@ setup_env() {
     readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle:latest"
 
     echo "****** Creating test namespace: ${TEST_NAMESPACE}"
-    oc new-project "${TEST_NAMESPACE}"
+    oc new-project "${TEST_NAMESPACE}" || oc project "${TEST_NAMESPACE}"
 
     ## Create service account for Kuttl tests
     oc apply -f config/rbac/kuttl-rbac.yaml
