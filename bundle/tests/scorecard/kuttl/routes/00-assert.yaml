@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: route
+status:
+  readyReplicas: 1
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: route
+spec:
+  host: myapp.mycompany.com
