@@ -1,0 +1,8 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+delete:
+  - apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      name: route
+
