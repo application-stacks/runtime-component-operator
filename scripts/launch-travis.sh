@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 TRAVIS_TOKEN=
 LAUNCH_TRAVIS=
 MONITOR_TRAVIS=yes
@@ -113,9 +115,6 @@ function launch_travis() {
                             \"arch\": \"ppc64le\",
                             \"script\": [
                                 \"make build-multiarch-image\",
-                                \"echo $APIKEY | docker login us.icr.io -u $USER --password-stdin\",
-                                \"docker tag  applicationstacks/operator:daily-ppc64le us.icr.io/runtimecomponentoperator/operator:daily-ppc64le\",
-                                \"docker push us.icr.io/runtimecomponentoperator/operator:daily-ppc64le\"
                             ]
                         },
                         {
@@ -124,9 +123,6 @@ function launch_travis() {
                             \"arch\": \"s390x\",
                             \"script\": [
                                 \"make build-multiarch-image\",
-                                \"echo $APIKEY | docker login us.icr.io -u $USER --password-stdin\",
-                                \"docker tag  applicationstacks/operator:daily-s390x us.icr.io/runtimecomponentoperator/operator:daily-s390x\",
-                                \"docker push us.icr.io/runtimecomponentoperator/operator:daily-s390x\"                                
                             ]
                         }
                     ]
@@ -146,7 +142,7 @@ function launch_travis() {
         -H "Travis-API-Version: 3" \
         -H "Authorization: token ${TRAVIS_TOKEN}" \
         -d "$body" \
-        "https://travis-ci.com/api/repo/${GH_REPO}/requests" > travis-request.json
+        "https://api.travis-ci.com/repo/${GH_REPO}/requests" > travis-request.json
 
     fi
 
@@ -170,7 +166,7 @@ function launch_travis() {
             -H "Accept: application/json" \
             -H "Travis-API-Version: 3" \
             -H "Authorization: token ${TRAVIS_TOKEN}" \
-            "https://travis-ci.com/api/repo/${GH_REPO}/request/${REQUEST_NUMBER}" > travis-status-1.json
+            "https://api.travis-ci.com/repo/${GH_REPO}/request/${REQUEST_NUMBER}" > travis-status-1.json
 
         REQUEST_STATUS=$(jq -r '.builds[].state' travis-status-1.json)
         echo "Travis request ${REQUEST_NUMBER} status: '${REQUEST_STATUS}' ..."
