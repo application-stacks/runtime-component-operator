@@ -70,7 +70,6 @@ containerize:
     # Build manifest
     OPERATOR_IMAGE=us.icr.io/runtimecomponentoperator/operator
     make setup-manifest
-    echo $(get_env ibmcloud-api-key) | docker login us.icr.io -u "$(get_env ibmcloud-api-user)" --password-stdin
     ./scripts/build-manifest.sh -u "$(get_env ibmcloud-api-user)" -p $(get_env ibmcloud-api-key) --image "$OPERATOR_IMAGE"    
 
  
@@ -105,8 +104,8 @@ acceptance-test:
     echo "acceptance-test"
     export DOCKER_USERNAME=$(get_env docker-username)
     export DOCKER_PASSWORD=$(get_env docker-password)  
-    export CLUSTER_URL=$(get_env cluster-url)
-    export CLUSTER_TOKEN=$(get_env cluster-token)    
+    export CLUSTER_URL=$(get_env test-cluster-url)
+    export CLUSTER_TOKEN=$(get_env test-cluster-token)    
     make setup
     make test-e2e
 
