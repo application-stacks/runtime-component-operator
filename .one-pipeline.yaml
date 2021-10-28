@@ -42,6 +42,17 @@ containerize:
     export PATH=$PATH:/usr/local/go/bin
     apt-get update
     apt-get -y install build-essential 
+    # Download and install skopeo
+    if ! command -v skopeo &> /dev/null; then  
+      if [ ! -f "/apt/sources.list.d/devel:kubic:libcontainers:stable.list" ]; then
+        sudo sh -c "echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_18.04/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list"      
+        wget --no-check-certificate -nv https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_18.04/Release.key -O- | sudo apt-key add -
+        sudo apt-get update -qq
+      fi
+      sudo apt-get -y install skopeo
+    else
+      skopeo --version
+    fi  
     # Build images
     export DOCKER_USERNAME=$(get_env docker-username)
     export DOCKER_PASSWORD=$(get_env docker-password)    
@@ -63,15 +74,17 @@ containerize:
     for i in "${tags[@]}"
     do
       IMAGE=us.icr.io/runtimecomponentoperator/operator:$i
-      docker pull "$IMAGE" > /dev/null
-      DIGEST="$(docker image inspect --format '{{index .RepoDigests 0}}' "$IMAGE" | cut -d@ -f2)"
+      DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
       save_artifact $i type=image name="$IMAGE" "digest=$DIGEST"    
     done
     # Build manifest
-    OPERATOR_IMAGE=us.icr.io/runtimecomponentoperator/operator
+    OPERATOR_IMAGE=us.icr.io/runtimecomponentoperator/operator:daily
     make setup-manifest
-    ./scripts/build-manifest.sh -u "$(get_env ibmcloud-api-user)" -p $(get_env ibmcloud-api-key) --image "$OPERATOR_IMAGE"    
-
+    manifest-tool push from-args \
+      --platforms "linux/amd64,linux/s390x,linux/ppc64le" \
+      --template "$OPERATOR_IMAGE-ARCH" \
+      --target "$OPERATOR_IMAGE" \
+      || echo "*** WARN: Target archs not available"
  
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
