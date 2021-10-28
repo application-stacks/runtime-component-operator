@@ -21,8 +21,6 @@ function print_usage() {
     echo ""
     echo "Options:"
     echo "   -t, --token      string  Travis API token"
-    echo "   -a, --apikey     string  Staging registry apikey"
-    echo "   -u, --user       string  Staging registry api user"
     echo "   -b, --branch     string  Github Repository branch"
     echo "   -l, --launch             Launch Travis job"
     echo "   -m, --monitor            Monitor Travis job"
@@ -50,14 +48,6 @@ function parse_arguments() {
             shift
             BRANCH=$1
             ;;    
-        -a | --apikey)
-            shift
-            APIKEY=$1
-            ;;
-        -u | --user)
-            shift
-            USER=$1
-            ;;        
         -l | --launch)
             LAUNCH_TRAVIS=yes
             ;;

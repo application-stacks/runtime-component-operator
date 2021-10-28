@@ -52,7 +52,7 @@ containerize:
     docker tag applicationstacks/operator:daily-amd64 $IMAGE
     docker push $IMAGE
     # Build ppc64le and s390x images
-    ./scripts/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -u "$(get_env ibmcloud-api-user)" -a $(get_env ibmcloud-api-key) -b $(get_env branch) -l
+    #./scripts/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
     # Build bundle image
     make bundle-build
     IMAGE=us.icr.io/runtimecomponentoperator/operator:bundle-daily
@@ -103,6 +103,21 @@ acceptance-test:
   script: |
     #!/usr/bin/env bash
     echo "acceptance-test"
+    export DOCKER_USERNAME=$(get_env docker-username)
+    export DOCKER_PASSWORD=$(get_env docker-password)  
+    export CLUSTER_URL=$(get_env cluster-url)
+    export CLUSTER_TOKEN=$(get_env cluster-token)    
+    make setup
+    make test-e2e
+
+scan-artifact:
+  abort_on_failure: false
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.6@sha256:7f588468622a981f89cf5e1212aaf75fface9da6169b5345ca52ab63d8215907
+  script: |
+    #!/usr/bin/env bash
+    . /opt/one-pipeline/internal/container-registry/va_scan    
+    #./scripts/twistlock-scan.sh    
+
 
 release:
   abort_on_failure: false
@@ -111,17 +126,17 @@ release:
     #!/usr/bin/env bash
     echo "release" 
 
-    #owasp-zap-api:
-    #  dind: true
-    #  abort_on_failure: false
-    #  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
-    #  script: |
-    #!/usr/bin/env bash
-    #    if [[ "$PIPELINE_DEBUG" == 1 ]]; then
-    #      trap env EXIT
-    #      env
-    #      set -x
-    #    fi
+#owasp-zap-api:
+#  dind: true
+#  abort_on_failure: false
+#  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
+#  script: |
+#    !/usr/bin/env bash
+#    if [[ "$PIPELINE_DEBUG" == 1 ]]; then
+#      trap env EXIT
+#      env
+#      set -x
+#    fi
     
-    #    source scripts/zap/setup_api_scan.sh
-    #    source scripts/zap/run_api_scan.sh
+#    source scripts/zap/setup_api_scan.sh
+#    source scripts/zap/run_api_scan.sh
