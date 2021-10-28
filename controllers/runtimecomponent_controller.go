@@ -62,7 +62,7 @@ type RuntimeComponentReconciler struct {
 	watchNamespaces []string
 }
 
-// +kubebuilder:rbac:groups=app.stacks,resources=runtimecomponents;runtimecomponents/status;runtimecomponents/finalizers,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=rc.app.stacks,resources=runtimecomponents;runtimecomponents/status;runtimecomponents/finalizers,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=apps,resources=deployments;statefulsets,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=apps,resources=deployments/finalizers;statefulsets,verbs=update,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=core,resources=services;secrets;serviceaccounts;configmaps,verbs=*,namespace=runtime-component-operator

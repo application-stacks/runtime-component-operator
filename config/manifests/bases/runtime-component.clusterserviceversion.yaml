@@ -2,7 +2,7 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
   annotations:
-    alm-examples: '[{"apiVersion":"app.stacks/v1beta2","kind":"RuntimeComponent","metadata":{"name":"example-runtime-component"},"spec":{"applicationImage":"registry.connect.redhat.com/ibm/open-liberty-samples:springPetClinic"}}]'
+    alm-examples: '[{"apiVersion":"rc.app.stacks/v1beta2","kind":"RuntimeComponent","metadata":{"name":"example-runtime-component"},"spec":{"applicationImage":"registry.connect.redhat.com/ibm/open-liberty-samples:springPetClinic"}}]'
     capabilities: Auto Pilot
     categories: Application Runtime
     description: Deploys any runtime component with dynamic and auto-tuning configuration
@@ -17,7 +17,7 @@ spec:
     - description: RuntimeComponent is the Schema for the runtimecomponents API.
       displayName: Runtime Component
       kind: RuntimeComponent
-      name: runtimecomponents.app.stacks
+      name: runtimecomponents.rc.app.stacks
       specDescriptors:
       - description: The name of the application this resource is part of. If not specified, it defaults to the name of the CR.
         displayName: Appliation Name
@@ -278,7 +278,7 @@ spec:
     - description: RuntimeOperation is the Schema for the runtimeoperations API.
       displayName: Runtime Operation
       kind: RuntimeOperation
-      name: runtimeoperations.app.stacks
+      name: runtimeoperations.rc.app.stacks
       specDescriptors:
       - description: Command to execute. Not executed within a shell.
         displayName: Command
@@ -298,7 +298,7 @@ spec:
     - description: RuntimeComponent is the Schema for the runtimecomponents API.
       displayName: Runtime Component
       kind: RuntimeComponent
-      name: runtimecomponents.app.stacks
+      name: runtimecomponents.rc.app.stacks
       specDescriptors:
       - description: The name of the application this resource is part of. If not specified, it defaults to the name of the CR.
         displayName: Appliation Name
@@ -559,7 +559,7 @@ spec:
     - description: RuntimeOperation is the Schema for the runtimeoperations API.
       displayName: Runtime Operation
       kind: RuntimeOperation
-      name: runtimeoperations.app.stacks
+      name: runtimeoperations.rc.app.stacks
       specDescriptors:
       - description: Command to execute. Not executed within a shell.
         displayName: Command

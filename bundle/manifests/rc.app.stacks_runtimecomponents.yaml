@@ -4,9 +4,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.0
   creationTimestamp: null
-  name: runtimecomponents.app.stacks
+  name: runtimecomponents.rc.app.stacks
 spec:
-  group: app.stacks
+  group: rc.app.stacks
   names:
     kind: RuntimeComponent
     listKind: RuntimeComponentList

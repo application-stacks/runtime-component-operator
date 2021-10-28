@@ -5,7 +5,7 @@ metadata:
     alm-examples: |-
       [
         {
-          "apiVersion": "app.stacks/v1beta2",
+          "apiVersion": "rc.app.stacks/v1beta2",
           "kind": "RuntimeComponent",
           "metadata": {
             "name": "runtimecomponent-sample"
@@ -15,7 +15,7 @@ metadata:
           }
         },
         {
-          "apiVersion": "app.stacks/v1beta2",
+          "apiVersion": "rc.app.stacks/v1beta2",
           "kind": "RuntimeOperation",
           "metadata": {
             "name": "runtimeoperation-sample"
@@ -45,7 +45,7 @@ spec:
     - description: RuntimeComponent is the Schema for the runtimecomponents API.
       displayName: Runtime Component
       kind: RuntimeComponent
-      name: runtimecomponents.app.stacks
+      name: runtimecomponents.rc.app.stacks
       specDescriptors:
       - description: The name of the application this resource is part of. If not specified, it defaults to the name of the CR.
         displayName: Appliation Name
@@ -306,7 +306,7 @@ spec:
     - description: RuntimeOperation is the Schema for the runtimeoperations API.
       displayName: Runtime Operation
       kind: RuntimeOperation
-      name: runtimeoperations.app.stacks
+      name: runtimeoperations.rc.app.stacks
       specDescriptors:
       - description: Command to execute. Not executed within a shell.
         displayName: Command
@@ -484,22 +484,6 @@ spec:
           - patch
           - delete
         - apiGroups:
-          - app.stacks
-          resources:
-          - runtimecomponents
-          - runtimecomponents/finalizers
-          - runtimecomponents/status
-          verbs:
-          - '*'
-        - apiGroups:
-          - app.stacks
-          resources:
-          - runtimeoperations
-          - runtimeoperations/finalizers
-          - runtimeoperations/status
-          verbs:
-          - '*'
-        - apiGroups:
           - apps
           resources:
           - deployments
@@ -559,6 +543,22 @@ spec:
           - networking.k8s.io
           resources:
           - ingresses
+          verbs:
+          - '*'
+        - apiGroups:
+          - rc.app.stacks
+          resources:
+          - runtimecomponents
+          - runtimecomponents/finalizers
+          - runtimecomponents/status
+          verbs:
+          - '*'
+        - apiGroups:
+          - rc.app.stacks
+          resources:
+          - runtimeoperations
+          - runtimeoperations/finalizers
+          - runtimeoperations/status
           verbs:
           - '*'
         - apiGroups:

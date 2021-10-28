@@ -82,7 +82,7 @@ rules:
   verbs:
   - get
 - apiGroups:
-  - app.stacks
+  - rc.app.stacks
   resources:
   - runtimecomponents
   verbs:

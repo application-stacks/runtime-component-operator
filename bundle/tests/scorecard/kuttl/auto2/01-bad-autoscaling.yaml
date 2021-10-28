@@ -1,6 +1,6 @@
 # Not all required fields are set, so autoscaling
 # should not be enabled
-apiVersion: app.stacks/v1beta2
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: scale2-runtime-component

@@ -2,10 +2,10 @@ layout: go.kubebuilder.io/v3
 projectName: runtime-component
 repo: github.com/application-stacks/runtime-component-operator
 resources:
-- group: app.stacks
+- group: rc.app.stacks
   kind: RuntimeComponent
   version: v1beta2
-- group: app.stacks
+- group: rc.app.stacks
   kind: RuntimeOperation
   version: v1beta2
 version: "3"

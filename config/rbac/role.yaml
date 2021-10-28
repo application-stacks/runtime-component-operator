@@ -8,22 +8,6 @@ metadata:
   namespace: runtime-component-operator
 rules:
 - apiGroups:
-  - app.stacks
-  resources:
-  - runtimecomponents
-  - runtimecomponents/finalizers
-  - runtimecomponents/status
-  verbs:
-  - '*'
-- apiGroups:
-  - app.stacks
-  resources:
-  - runtimeoperations
-  - runtimeoperations/finalizers
-  - runtimeoperations/status
-  verbs:
-  - '*'
-- apiGroups:
   - apps
   resources:
   - deployments
@@ -83,6 +67,22 @@ rules:
   - networking.k8s.io
   resources:
   - ingresses
+  verbs:
+  - '*'
+- apiGroups:
+  - rc.app.stacks
+  resources:
+  - runtimecomponents
+  - runtimecomponents/finalizers
+  - runtimecomponents/status
+  verbs:
+  - '*'
+- apiGroups:
+  - rc.app.stacks
+  resources:
+  - runtimeoperations
+  - runtimeoperations/finalizers
+  - runtimeoperations/status
   verbs:
   - '*'
 - apiGroups:

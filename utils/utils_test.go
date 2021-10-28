@@ -601,8 +601,8 @@ func TestCustomizeServiceMonitor(t *testing.T) {
 	CustomizeServiceMonitor(sm, runtime)
 
 	labelMatches := map[string]string{
-		"monitor.app.stacks/enabled": "true",
-		"app.kubernetes.io/instance": name,
+		"monitor.rc.app.stacks/enabled": "true",
+		"app.kubernetes.io/instance":    name,
 	}
 
 	allSMLabels := runtime.GetLabels()

@@ -5,7 +5,7 @@ metadata:
   name: runtimecomponent-viewer-role
 rules:
 - apiGroups:
-  - app.stacks
+  - rc.app.stacks
   resources:
   - runtimecomponents
   verbs:
@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - app.stacks
+  - rc.app.stacks
   resources:
   - runtimecomponents/status
   verbs:

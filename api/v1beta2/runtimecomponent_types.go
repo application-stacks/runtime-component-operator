@@ -577,7 +577,7 @@ func (cr *RuntimeComponent) GetSidecarContainers() []corev1.Container {
 
 // GetGroupName returns group name to be used in labels and annotation
 func (cr *RuntimeComponent) GetGroupName() string {
-	return "app.stacks"
+	return "rc.app.stacks"
 }
 
 // GetRoute returns route configuration for RuntimeComponent
@@ -988,7 +988,7 @@ func (cr *RuntimeComponent) GetLabels() map[string]string {
 	}
 
 	if cr.Spec.Service != nil && cr.Spec.Service.Provides != nil {
-		labels["service.app.stacks/bindable"] = "true"
+		labels["service.rc.app.stacks/bindable"] = "true"
 	}
 
 	return labels

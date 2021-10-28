@@ -49,7 +49,7 @@ type RuntimeOperationReconciler struct {
 	RestConfig *rest.Config
 }
 
-// +kubebuilder:rbac:groups=app.stacks,resources=runtimeoperations;runtimeoperations/status;runtimeoperations/finalizers,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=rc.app.stacks,resources=runtimeoperations;runtimeoperations/status;runtimeoperations/finalizers,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=core,resources=pods/exec,verbs=*,namespace=runtime-component-operator
 
