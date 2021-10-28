@@ -376,21 +376,6 @@ spec:
     mediatype: image/png
   install:
     spec:
-      clusterPermissions:
-      - rules:
-        - apiGroups:
-          - authentication.k8s.io
-          resources:
-          - tokenreviews
-          verbs:
-          - create
-        - apiGroups:
-          - authorization.k8s.io
-          resources:
-          - subjectaccessreviews
-          verbs:
-          - create
-        serviceAccountName: rco-controller-manager
       deployments:
       - name: rco-controller-manager
         spec:
@@ -406,18 +391,6 @@ spec:
             spec:
               containers:
               - args:
-                - --secure-listen-address=0.0.0.0:8443
-                - --upstream=http://127.0.0.1:8080/
-                - --logtostderr=true
-                - --v=10
-                image: gcr.io/kubebuilder/kube-rbac-proxy:v0.5.0
-                name: kube-rbac-proxy
-                ports:
-                - containerPort: 8443
-                  name: https
-                resources: {}
-              - args:
-                - --metrics-addr=127.0.0.1:8080
                 - --enable-leader-election
                 command:
                 - /manager
