@@ -34,7 +34,6 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 
-	"github.com/application-stacks/runtime-component-operator/utils"
 	appstacksutils "github.com/application-stacks/runtime-component-operator/utils"
 	"github.com/go-logr/logr"
 
@@ -70,20 +69,16 @@ type RuntimeComponentReconciler struct {
 // +kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=route.openshift.io,resources=routes;routes/custom-host,verbs=*,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=cert-manager.io,resources=certificates,verbs=*,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=certmanager.k8s.io,resources=certificates,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=image.openshift.io,resources=imagestreams;imagestreamtags,verbs=get;list;watch,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=*,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=app.k8s.io,resources=applications,verbs=*,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=apps.openshift.io,resources=servicebindingrequests,verbs=*,namespace=runtime-component-operator
 
 func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 
 	reqLogger := r.Log.WithValues("Request.Namespace", req.Namespace, "Request.Name", req.Name)
 	reqLogger.Info("Reconciling RuntimeComponent")
 
-	ns, err := utils.GetOperatorNamespace()
+	ns, err := appstacksutils.GetOperatorNamespace()
 	// When running the operator locally, `ns` will be empty string
 	if ns == "" {
 		// Since this method can be called directly from unit test, populate `watchNamespaces`.

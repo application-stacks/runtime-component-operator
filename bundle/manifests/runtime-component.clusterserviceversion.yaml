@@ -376,6 +376,21 @@ spec:
     mediatype: image/png
   install:
     spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - authentication.k8s.io
+          resources:
+          - tokenreviews
+          verbs:
+          - create
+        - apiGroups:
+          - authorization.k8s.io
+          resources:
+          - subjectaccessreviews
+          verbs:
+          - create
+        serviceAccountName: rco-controller-manager
       deployments:
       - name: rco-controller-manager
         spec:
@@ -425,7 +440,7 @@ spec:
                   requests:
                     cpu: 100m
                     memory: 20Mi
-              serviceAccountName: rco-sa
+              serviceAccountName: rco-controller-manager
               terminationGracePeriodSeconds: 10
       permissions:
       - rules:
@@ -469,12 +484,6 @@ spec:
           - patch
           - delete
         - apiGroups:
-          - app.k8s.io
-          resources:
-          - applications
-          verbs:
-          - '*'
-        - apiGroups:
           - app.stacks
           resources:
           - runtimecomponents
@@ -505,27 +514,9 @@ spec:
           verbs:
           - update
         - apiGroups:
-          - apps.openshift.io
-          resources:
-          - servicebindingrequests
-          verbs:
-          - '*'
-        - apiGroups:
           - autoscaling
           resources:
           - horizontalpodautoscalers
-          verbs:
-          - '*'
-        - apiGroups:
-          - cert-manager.io
-          resources:
-          - certificates
-          verbs:
-          - '*'
-        - apiGroups:
-          - certmanager.k8s.io
-          resources:
-          - certificates
           verbs:
           - '*'
         - apiGroups:
@@ -583,7 +574,7 @@ spec:
           - services
           verbs:
           - '*'
-        serviceAccountName: rco-sa
+        serviceAccountName: rco-controller-manager
     strategy: deployment
   installModes:
   - supported: true
