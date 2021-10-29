@@ -146,16 +146,16 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		instance.Annotations = appstacksutils.MergeMaps(instance.Annotations, appstacksutils.GetOpenShiftAnnotations(instance))
 	}
 
-	currentGen := instance.Generation
 	err = r.GetClient().Update(context.TODO(), instance)
 	if err != nil {
 		reqLogger.Error(err, "Error updating RuntimeComponent")
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
-	if currentGen == 1 {
-		return reconcile.Result{}, nil
-	}
+	//currentGen := instance.Generation
+	// if currentGen == 1 {
+	// 	return reconcile.Result{RequeueAfter: common.ReconcileInterval * time.Second}, nil
+	// }
 
 	defaultMeta := metav1.ObjectMeta{
 		Name:      instance.Name,
@@ -197,27 +197,9 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	result, err := r.ReconcileProvides(instance)
-	if err != nil || result != (reconcile.Result{}) {
-		return result, err
-	}
-
-	result, err = r.ReconcileConsumes(instance)
-	if err != nil || result != (reconcile.Result{}) {
-		return result, err
-	}
-
-	if r.IsServiceBindingSupported() {
-		result, err = r.ReconcileBindings(instance)
-		if err != nil || result != (reconcile.Result{}) {
-			return result, err
-		}
-	} else if instance.Spec.Bindings != nil {
-		return r.ManageError(errors.New("failed to reconcile as the operator failed to find Service Binding CRDs"), common.StatusConditionTypeReconciled, instance)
-	}
-	resolvedBindingSecret, err := r.GetResolvedBindingSecret(ba)
+	err = r.ReconcileBindings(instance)
 	if err != nil {
-		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+		return r.ManageError(err, common.StatusConditionTypeReconciled, ba)
 	}
 
 	if instance.Spec.ServiceAccountName == nil || *instance.Spec.ServiceAccountName == "" {
@@ -278,7 +260,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			ksvc := &servingv1.Service{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(ksvc, instance, func() error {
 				appstacksutils.CustomizeKnativeService(ksvc, instance)
-				appstacksutils.CustomizeServiceBinding(resolvedBindingSecret, &ksvc.Spec.Template.Spec.PodSpec, instance)
 				return nil
 			})
 
@@ -345,7 +326,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			appstacksutils.CustomizeStatefulSet(statefulSet, instance)
 			appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, instance)
 			appstacksutils.CustomizePersistence(statefulSet, instance)
-			appstacksutils.CustomizeServiceBinding(resolvedBindingSecret, &statefulSet.Spec.Template.Spec, instance)
 			return nil
 		})
 		if err != nil {
@@ -374,7 +354,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		err = r.CreateOrUpdate(deploy, instance, func() error {
 			appstacksutils.CustomizeDeployment(deploy, instance)
 			appstacksutils.CustomizePodSpec(&deploy.Spec.Template, instance)
-			appstacksutils.CustomizeServiceBinding(resolvedBindingSecret, &deploy.Spec.Template.Spec, instance)
 			return nil
 		})
 		if err != nil {
@@ -501,14 +480,6 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			}
 			fullName := fmt.Sprintf("%s/%s", imageNamespace, image.Name)
 			return []string{fullName}
-		}
-		return nil
-	})
-	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta2.RuntimeComponent{}, indexFieldBindingsResourceRef, func(obj client.Object) []string {
-		instance := obj.(*appstacksv1beta2.RuntimeComponent)
-
-		if instance.Spec.Bindings != nil && instance.Spec.Bindings.ResourceRef != "" {
-			return []string{instance.Spec.Bindings.ResourceRef}
 		}
 		return nil
 	})

@@ -6,7 +6,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // StatusConditionType ...
@@ -16,9 +15,6 @@ type StatusConditionType string
 type StatusCondition interface {
 	GetLastTransitionTime() *metav1.Time
 	SetLastTransitionTime(*metav1.Time)
-
-	GetLastUpdateTime() metav1.Time
-	SetLastUpdateTime(metav1.Time)
 
 	GetReason() string
 	SetReason(string)
@@ -39,25 +35,15 @@ type BaseComponentStatus interface {
 	GetCondition(StatusConditionType) StatusCondition
 	SetCondition(StatusCondition)
 	NewCondition() StatusCondition
-	GetConsumedServices() ConsumedServices
-	SetConsumedServices(ConsumedServices)
-	GetResolvedBindings() []string
-	SetResolvedBindings([]string)
 	GetImageReference() string
 	SetImageReference(string)
 	GetBinding() *corev1.LocalObjectReference
 	SetBinding(*corev1.LocalObjectReference)
 }
 
-// ConsumedServices stores status of the service binding dependencies
-type ConsumedServices map[ServiceBindingCategory][]string
-
 const (
 	// StatusConditionTypeReconciled ...
 	StatusConditionTypeReconciled StatusConditionType = "Reconciled"
-
-	// StatusConditionTypeDependenciesSatisfied ...
-	StatusConditionTypeDependenciesSatisfied StatusConditionType = "DependenciesSatisfied"
 )
 
 // BaseComponentAutoscaling represents basic HPA configuration
@@ -83,9 +69,8 @@ type BaseComponentService interface {
 	GetNodePort() *int32
 	GetPorts() []corev1.ServicePort
 	GetAnnotations() map[string]string
-	GetProvides() ServiceBindingProvides
-	GetConsumes() []ServiceBindingConsumes
 	GetCertificateSecretRef() *string
+	GetBindable() *bool
 }
 
 // BaseComponentMonitoring represents basic service monitoring configuration
@@ -103,49 +88,6 @@ type BaseComponentRoute interface {
 	GetPath() string
 	GetCertificateSecretRef() *string
 }
-
-// ServiceBindingProvides represents a service to be provided
-type ServiceBindingProvides interface {
-	GetCategory() ServiceBindingCategory
-	GetContext() string
-	GetProtocol() string
-	GetAuth() ServiceBindingAuth
-}
-
-// ServiceBindingConsumes represents a service to be consumed
-type ServiceBindingConsumes interface {
-	GetName() string
-	GetNamespace() string
-	GetCategory() ServiceBindingCategory
-	GetMountPath() string
-}
-
-// ServiceBindingAuth represents authentication info when binding services
-type ServiceBindingAuth interface {
-	GetUsername() corev1.SecretKeySelector
-	GetPassword() corev1.SecretKeySelector
-}
-
-// BaseComponentBindings represents Service Binding information
-type BaseComponentBindings interface {
-	GetAutoDetect() *bool
-	GetResourceRef() string
-	GetEmbedded() *runtime.RawExtension
-	GetExpose() BaseComponentExpose
-}
-
-// BaseComponentExpose represents authentication info when binding services
-type BaseComponentExpose interface {
-	GetEnabled() *bool
-}
-
-// ServiceBindingCategory ...
-type ServiceBindingCategory string
-
-const (
-	// ServiceBindingCategoryOpenAPI ...
-	ServiceBindingCategoryOpenAPI ServiceBindingCategory = "openapi"
-)
 
 // BaseComponentAffinity describes deployment and pod affinity
 type BaseComponentAffinity interface {
@@ -191,7 +133,7 @@ type BaseComponent interface {
 	GetService() BaseComponentService
 	GetDeployment() BaseComponentDeployment
 	GetStatefulSet() BaseComponentStatefulSet
-	GetVersion() string
+	GetApplicationVersion() string
 	GetApplicationName() string
 	GetMonitoring() BaseComponentMonitoring
 	GetLabels() map[string]string
@@ -201,6 +143,5 @@ type BaseComponent interface {
 	GetSidecarContainers() []corev1.Container
 	GetGroupName() string
 	GetRoute() BaseComponentRoute
-	GetBindings() BaseComponentBindings
 	GetAffinity() BaseComponentAffinity
 }

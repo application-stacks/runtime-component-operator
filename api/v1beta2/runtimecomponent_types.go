@@ -25,7 +25,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -34,17 +33,17 @@ import (
 type RuntimeComponentSpec struct {
 
 	// The name of the application this resource is part of. If not specified, it defaults to the name of the CR.
-	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Appliation Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Application Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	ApplicationName string `json:"applicationName,omitempty"`
 
 	// Application image to be installed.
-	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="Appliation Image",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="Application Image",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	ApplicationImage string `json:"applicationImage"`
 
-	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Appliation Version",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
-	Version string `json:"version,omitempty"`
+	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Application Version",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	ApplicationVersion string `json:"applicationVersion,omitempty"`
 
-	// Policy for pulling container images. Defaults to IfNotPresent. Parameters autoscaling.maxReplicas and resourceConstraints.requests.cpu must be specified.
+	// Policy for pulling container images. Defaults to IfNotPresent.
 	// +operator-sdk:csv:customresourcedefinitions:order=4,type=spec,displayName="Pull Policy",xDescriptors="urn:alm:descriptor:com.tectonic.ui:imagePullPolicy"
 	PullPolicy *corev1.PullPolicy `json:"pullPolicy,omitempty"`
 
@@ -84,9 +83,6 @@ type RuntimeComponentSpec struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:order=37,type=spec,displayName="Route"
 	Route *RuntimeComponentRoute `json:"route,omitempty"`
-
-	// +operator-sdk:csv:customresourcedefinitions:order=44,type=spec,displayName="Bindings"
-	Bindings *RuntimeComponentBindings `json:"bindings,omitempty"`
 
 	// A boolean to toggle the creation of Knative resources and usage of Knative serving.
 	// +operator-sdk:csv:customresourcedefinitions:order=48,type=spec,displayName="Create Knative Service",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
@@ -175,7 +171,7 @@ type RuntimeComponentAffinity struct {
 // Configures the desired resource consumption of pods.
 type RuntimeComponentAutoScaling struct {
 
-	// Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler.
+	// Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler. Parameter spec.resourceConstraints.requests.cpu must also be specified.
 	// +kubebuilder:validation:Minimum=1
 	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Max Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
 	MaxReplicas int32 `json:"maxReplicas,omitempty"`
@@ -228,9 +224,8 @@ type RuntimeComponentService struct {
 	// An array consisting of service ports.
 	Ports []corev1.ServicePort `json:"ports,omitempty"`
 
-	// +listType=atomic
-	Consumes []ServiceBindingConsumes `json:"consumes,omitempty"`
-	Provides *ServiceBindingProvides  `json:"provides,omitempty"`
+	// A boolean to toggle whether the operator expose the application as a bindable service. The default value for this parameter is false.
+	Bindable *bool `json:"bindable,omitempty"`
 }
 
 // Defines the desired state and cycle of applications.
@@ -256,35 +251,6 @@ type RuntimeComponentStatefulSet struct {
 
 	// Annotations to be added only to the StatefulSet and resources owned by the StatefulSet.
 	Annotations map[string]string `json:"annotations,omitempty"`
-}
-
-// Configures the OpenAPI information to expose.
-type ServiceBindingProvides struct {
-	// Service binding type to be provided by this CR. At this time, the only allowed value is openapi.
-	Category common.ServiceBindingCategory `json:"category"`
-
-	// Specifies context root of the service.
-	Context string `json:"context,omitempty"`
-
-	// Protocol of the provided service. Defauts to http.
-	Protocol string `json:"protocol,omitempty"`
-
-	Auth *ServiceBindingAuth `json:"auth,omitempty"`
-}
-
-// Represents a service to be consumed.
-type ServiceBindingConsumes struct {
-	// The name of the service to be consumed. If binding to a RuntimeComponent, then this would be the provider’s CR name.
-	Name string `json:"name"`
-
-	// The namespace of the service to be consumed. If binding to a RuntimeComponent, then this would be the provider’s CR namespace.
-	Namespace string `json:"namespace,omitempty"`
-
-	// The type of service binding to be consumed. At this time, the only allowed value is openapi.
-	Category common.ServiceBindingCategory `json:"category"`
-
-	// Optional field to specify which location in the pod, service binding secret should be mounted.
-	MountPath string `json:"mountPath,omitempty"`
 }
 
 // Defines settings of persisted storage for StatefulSets.
@@ -345,48 +311,13 @@ type RuntimeComponentRoute struct {
 	InsecureEdgeTerminationPolicy *routev1.InsecureEdgeTerminationPolicyType `json:"insecureEdgeTerminationPolicy,omitempty"`
 }
 
-// Allows a service to provide authentication information.
-type ServiceBindingAuth struct {
-	// The secret that contains the username for authenticating.
-	Username corev1.SecretKeySelector `json:"username,omitempty"`
-	// The secret that contains the password for authenticating.
-	Password corev1.SecretKeySelector `json:"password,omitempty"`
-}
-
-// Represents service binding related parameters.
-type RuntimeComponentBindings struct {
-	// A boolean to toggle whether the operator should automatically detect and use a ServiceBindingRequest resource with <CR_NAME>-binding naming format.
-	// +operator-sdk:csv:customresourcedefinitions:order=45,type=spec,displayName="Bindings Autodetect",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
-	AutoDetect *bool `json:"autoDetect,omitempty"`
-
-	// The name of a ServiceBindingRequest custom resource created manually in the same namespace as the application.
-	// +operator-sdk:csv:customresourcedefinitions:order=46,type=spec,displayName="Bindings Resource Ref",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
-	ResourceRef string `json:"resourceRef,omitempty"`
-
-	// A boolean to toggle whether the operator expose the application as a bindable service.
-	// +operator-sdk:csv:customresourcedefinitions:order=47,type=spec,displayName="Bindings Expose Enabled",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
-	Expose *RuntimeComponentBindingExpose `json:"expose,omitempty"`
-
-	// A YAML object that represents a ServiceBindingRequest custom resource.
-	Embedded *runtime.RawExtension `json:"embedded,omitempty"`
-}
-
-// Encapsulates information exposed by the application.
-type RuntimeComponentBindingExpose struct {
-	// A boolean to toggle whether the operator expose the application as a bindable service. The default value for this parameter is false.
-	Enabled *bool `json:"enabled,omitempty"`
-}
-
 // Defines the observed state of RuntimeComponent.
 type RuntimeComponentStatus struct {
 	// +listType=atomic
 
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Status Conditions",xDescriptors="urn:alm:descriptor:io.kubernetes.conditions"
-	Conditions       []StatusCondition       `json:"conditions,omitempty"`
-	ConsumedServices common.ConsumedServices `json:"consumedServices,omitempty"`
-	// +listType=set
-	ResolvedBindings []string `json:"resolvedBindings,omitempty"`
-	ImageReference   string   `json:"imageReference,omitempty"`
+	Conditions     []StatusCondition `json:"conditions,omitempty"`
+	ImageReference string            `json:"imageReference,omitempty"`
 
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Service Binding Secret",xDescriptors="urn:alm:descriptor:io.kubernetes:Secret"
 	Binding *corev1.LocalObjectReference `json:"binding,omitempty"`
@@ -395,7 +326,6 @@ type RuntimeComponentStatus struct {
 // Defines possible status conditions.
 type StatusCondition struct {
 	LastTransitionTime *metav1.Time           `json:"lastTransitionTime,omitempty"`
-	LastUpdateTime     metav1.Time            `json:"lastUpdateTime,omitempty"`
 	Reason             string                 `json:"reason,omitempty"`
 	Message            string                 `json:"message,omitempty"`
 	Status             corev1.ConditionStatus `json:"status,omitempty"`
@@ -408,9 +338,6 @@ type StatusConditionType string
 const (
 	// StatusConditionTypeReconciled ...
 	StatusConditionTypeReconciled StatusConditionType = "Reconciled"
-
-	// StatusConditionTypeDependenciesSatisfied ...
-	StatusConditionTypeDependenciesSatisfied StatusConditionType = "DependenciesSatisfied"
 )
 
 // +kubebuilder:object:root=true
@@ -542,9 +469,9 @@ func (cr *RuntimeComponent) GetService() common.BaseComponentService {
 	return cr.Spec.Service
 }
 
-// GetVersion returns application version
-func (cr *RuntimeComponent) GetVersion() string {
-	return cr.Spec.Version
+// GetApplicationVersion returns application version
+func (cr *RuntimeComponent) GetApplicationVersion() string {
+	return cr.Spec.ApplicationVersion
 }
 
 // GetApplicationName returns Application name to be used for integration with kAppNav
@@ -586,14 +513,6 @@ func (cr *RuntimeComponent) GetRoute() common.BaseComponentRoute {
 		return nil
 	}
 	return cr.Spec.Route
-}
-
-// GetBindings returns binding configuration for RuntimeComponent
-func (cr *RuntimeComponent) GetBindings() common.BaseComponentBindings {
-	if cr.Spec.Bindings == nil {
-		return nil
-	}
-	return cr.Spec.Bindings
 }
 
 // GetAffinity returns deployment's node and pod affinity settings
@@ -638,29 +557,6 @@ func (cr *RuntimeComponentStatefulSet) GetStatefulSetUpdateStrategy() *appsv1.St
 // GetAnnotations returns annotations to be added only to the StatefulSet and its child resources
 func (rcss *RuntimeComponentStatefulSet) GetAnnotations() map[string]string {
 	return rcss.Annotations
-}
-
-// GetResolvedBindings returns a map of all the service names to be consumed by the application
-func (s *RuntimeComponentStatus) GetResolvedBindings() []string {
-	return s.ResolvedBindings
-}
-
-// SetResolvedBindings sets ConsumedServices
-func (s *RuntimeComponentStatus) SetResolvedBindings(rb []string) {
-	s.ResolvedBindings = rb
-}
-
-// GetConsumedServices returns a map of all the service names to be consumed by the application
-func (s *RuntimeComponentStatus) GetConsumedServices() common.ConsumedServices {
-	if s.ConsumedServices == nil {
-		return nil
-	}
-	return s.ConsumedServices
-}
-
-// SetConsumedServices sets ConsumedServices
-func (s *RuntimeComponentStatus) SetConsumedServices(c common.ConsumedServices) {
-	s.ConsumedServices = c
 }
 
 // GetImageReference returns Docker image reference to be deployed by the CR
@@ -755,79 +651,14 @@ func (s *RuntimeComponentService) GetPorts() []corev1.ServicePort {
 	return s.Ports
 }
 
-// GetProvides returns service provider configuration
-func (s *RuntimeComponentService) GetProvides() common.ServiceBindingProvides {
-	if s.Provides == nil {
-		return nil
-	}
-	return s.Provides
-}
-
 // GetCertificateSecretRef returns a secret reference with a certificate
 func (s *RuntimeComponentService) GetCertificateSecretRef() *string {
 	return s.CertificateSecretRef
 }
 
-// GetCategory returns category of a service provider configuration
-func (p *ServiceBindingProvides) GetCategory() common.ServiceBindingCategory {
-	return p.Category
-}
-
-// GetContext returns context of a service provider configuration
-func (p *ServiceBindingProvides) GetContext() string {
-	return p.Context
-}
-
-// GetAuth returns secret of a service provider configuration
-func (p *ServiceBindingProvides) GetAuth() common.ServiceBindingAuth {
-	if p.Auth == nil {
-		return nil
-	}
-	return p.Auth
-}
-
-// GetProtocol returns protocol of a service provider configuration
-func (p *ServiceBindingProvides) GetProtocol() string {
-	return p.Protocol
-}
-
-// GetConsumes returns a list of service consumers' configuration
-func (s *RuntimeComponentService) GetConsumes() []common.ServiceBindingConsumes {
-	consumes := make([]common.ServiceBindingConsumes, len(s.Consumes))
-	for i := range s.Consumes {
-		consumes[i] = &s.Consumes[i]
-	}
-	return consumes
-}
-
-// GetName returns service name of a service consumer configuration
-func (c *ServiceBindingConsumes) GetName() string {
-	return c.Name
-}
-
-// GetNamespace returns namespace of a service consumer configuration
-func (c *ServiceBindingConsumes) GetNamespace() string {
-	return c.Namespace
-}
-
-// GetCategory returns category of a service consumer configuration
-func (c *ServiceBindingConsumes) GetCategory() common.ServiceBindingCategory {
-	return common.ServiceBindingCategoryOpenAPI
-}
-
-// GetMountPath returns mount path of a service consumer configuration
-func (c *ServiceBindingConsumes) GetMountPath() string {
-	return c.MountPath
-}
-
-// GetUsername returns username of a service binding auth object
-func (a *ServiceBindingAuth) GetUsername() corev1.SecretKeySelector {
-	return a.Username
-}
-
-// GetPassword returns password of a service binding auth object
-func (a *ServiceBindingAuth) GetPassword() corev1.SecretKeySelector {
-	return a.Password
+// GetBindable returns whether the application should be exposable as a service
+func (s *RuntimeComponentService) GetBindable() *bool {
+	return s.Bindable
 }
 
 // GetLabels returns labels to be added on ServiceMonitor
@@ -868,34 +699,6 @@ func (r *RuntimeComponentRoute) GetHost() string {
 // GetPath returns path to use for the route
 func (r *RuntimeComponentRoute) GetPath() string {
 	return r.Path
-}
-
-// GetAutoDetect returns a boolean to specify if the operator should auto-detect ServiceBinding CRs with the same name as the RuntimeComponent CR
-func (r *RuntimeComponentBindings) GetAutoDetect() *bool {
-	return r.AutoDetect
-}
-
-// GetResourceRef returns name of ServiceBinding CRs created manually in the same namespace as the RuntimeComponent CR
-func (r *RuntimeComponentBindings) GetResourceRef() string {
-	return r.ResourceRef
-}
-
-// GetEmbedded returns the embedded underlying Service Binding resource
-func (r *RuntimeComponentBindings) GetEmbedded() *runtime.RawExtension {
-	return r.Embedded
-}
-
-// GetExpose returns the map used making this application a bindable service
-func (r *RuntimeComponentBindings) GetExpose() common.BaseComponentExpose {
-	if r.Expose == nil {
-		return nil
-	}
-	return r.Expose
-}
-
-// GetEnabled returns whether the application should be exposable as a service
-func (e *RuntimeComponentBindingExpose) GetEnabled() *bool {
-	return e.Enabled
 }
 
 // GetNodeAffinity returns node affinity
@@ -961,10 +764,6 @@ func (cr *RuntimeComponent) Initialize() {
 		cr.Spec.Service.Port = 8080
 	}
 
-	if cr.Spec.Service.Provides != nil && cr.Spec.Service.Provides.Protocol == "" {
-		cr.Spec.Service.Provides.Protocol = "http"
-	}
-
 }
 
 // GetLabels returns set of labels to be added to all resources
@@ -977,18 +776,14 @@ func (cr *RuntimeComponent) GetLabels() map[string]string {
 		"app.kubernetes.io/part-of":    cr.Spec.ApplicationName,
 	}
 
-	if cr.Spec.Version != "" {
-		labels["app.kubernetes.io/version"] = cr.Spec.Version
+	if cr.Spec.ApplicationVersion != "" {
+		labels["app.kubernetes.io/version"] = cr.Spec.ApplicationVersion
 	}
 
 	for key, value := range cr.Labels {
 		if key != "app.kubernetes.io/instance" {
 			labels[key] = value
 		}
-	}
-
-	if cr.Spec.Service != nil && cr.Spec.Service.Provides != nil {
-		labels["service.rc.app.stacks/bindable"] = "true"
 	}
 
 	return labels
@@ -1022,16 +817,6 @@ func (c *StatusCondition) GetLastTransitionTime() *metav1.Time {
 // SetLastTransitionTime sets time of last status change
 func (c *StatusCondition) SetLastTransitionTime(t *metav1.Time) {
 	c.LastTransitionTime = t
-}
-
-// GetLastUpdateTime return time of last status update
-func (c *StatusCondition) GetLastUpdateTime() metav1.Time {
-	return c.LastUpdateTime
-}
-
-// SetLastUpdateTime sets time of last status update
-func (c *StatusCondition) SetLastUpdateTime(t metav1.Time) {
-	c.LastUpdateTime = t
 }
 
 // GetMessage return condition's message
@@ -1103,7 +888,6 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 		condition.SetLastTransitionTime(&metav1.Time{Time: time.Now()})
 	}
 
-	condition.SetLastUpdateTime(metav1.Time{Time: time.Now()})
 	condition.SetReason(c.GetReason())
 	condition.SetMessage(c.GetMessage())
 	condition.SetStatus(c.GetStatus())
@@ -1117,8 +901,6 @@ func convertToCommonStatusConditionType(c StatusConditionType) common.StatusCond
 	switch c {
 	case StatusConditionTypeReconciled:
 		return common.StatusConditionTypeReconciled
-	case StatusConditionTypeDependenciesSatisfied:
-		return common.StatusConditionTypeDependenciesSatisfied
 	default:
 		panic(c)
 	}
@@ -1128,8 +910,6 @@ func convertFromCommonStatusConditionType(c common.StatusConditionType) StatusCo
 	switch c {
 	case common.StatusConditionTypeReconciled:
 		return StatusConditionTypeReconciled
-	case common.StatusConditionTypeDependenciesSatisfied:
-		return StatusConditionTypeDependenciesSatisfied
 	default:
 		panic(c)
 	}

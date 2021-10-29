@@ -301,20 +301,20 @@ spec:
       name: runtimecomponents.rc.app.stacks
       specDescriptors:
       - description: The name of the application this resource is part of. If not specified, it defaults to the name of the CR.
-        displayName: Appliation Name
+        displayName: Application Name
         path: applicationName
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Application image to be installed.
-        displayName: Appliation Image
+        displayName: Application Image
         path: applicationImage
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - displayName: Appliation Version
-        path: version
+      - displayName: Application Version
+        path: applicationVersion
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Policy for pulling container images. Defaults to IfNotPresent. Parameters autoscaling.maxReplicas and resourceConstraints.requests.cpu must be specified.
+      - description: Policy for pulling container images. Defaults to IfNotPresent.
         displayName: Pull Policy
         path: pullPolicy
         x-descriptors:
@@ -372,7 +372,7 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:text
       - displayName: Auto Scaling
         path: autoscaling
-      - description: Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler.
+      - description: Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler. Parameter spec.resourceConstraints.requests.cpu must also be specified.
         displayName: Max Replicas
         path: autoscaling.maxReplicas
         x-descriptors:
@@ -489,23 +489,6 @@ spec:
         path: route.insecureEdgeTerminationPolicy
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - displayName: Bindings
-        path: bindings
-      - description: A boolean to toggle whether the operator should automatically detect and use a ServiceBindingRequest resource with <CR_NAME>-binding naming format.
-        displayName: Bindings Autodetect
-        path: bindings.autoDetect
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: The name of a ServiceBindingRequest custom resource created manually in the same namespace as the application.
-        displayName: Bindings Resource Ref
-        path: bindings.resourceRef
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
-      - description: A boolean to toggle whether the operator expose the application as a bindable service.
-        displayName: Bindings Expose Enabled
-        path: bindings.expose
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: A boolean to toggle the creation of Knative resources and usage of Knative serving.
         displayName: Create Knative Service
         path: createKnativeService
@@ -662,8 +645,6 @@ spec:
     name: Artur Dzmitryieu
   - email: leojc@ca.ibm.com
     name: Leo Christy Jesuraj
-  - email: arthurdm@ca.ibm.com
-    name: Arthur De Magalhaes
   maturity: beta
   provider:
     name: Community
