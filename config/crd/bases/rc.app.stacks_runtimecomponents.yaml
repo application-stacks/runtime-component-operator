@@ -2660,34 +2660,6 @@ spec:
                     description: "\tA name of a secret that already contains TLS key,
                       certificate and CA to be mounted in the pod."
                     type: string
-                  consumes:
-                    items:
-                      description: Represents a service to be consumed.
-                      properties:
-                        category:
-                          description: The type of service binding to be consumed.
-                            At this time, the only allowed value is openapi.
-                          type: string
-                        mountPath:
-                          description: Optional field to specify which location in
-                            the pod, service binding secret should be mounted.
-                          type: string
-                        name:
-                          description: The name of the service to be consumed. If
-                            binding to a RuntimeComponent, then this would be the
-                            provider’s CR name.
-                          type: string
-                        namespace:
-                          description: The namespace of the service to be consumed.
-                            If binding to a RuntimeComponent, then this would be the
-                            provider’s CR namespace.
-                          type: string
-                      required:
-                      - category
-                      - name
-                      type: object
-                    type: array
-                    x-kubernetes-list-type: atomic
                   nodePort:
                     description: Node proxies this port into your service.
                     format: int32
@@ -2761,67 +2733,6 @@ spec:
                       - port
                       type: object
                     type: array
-                  provides:
-                    description: Configures the OpenAPI information to expose.
-                    properties:
-                      auth:
-                        description: Allows a service to provide authentication information.
-                        properties:
-                          password:
-                            description: The secret that contains the password for
-                              authenticating.
-                            properties:
-                              key:
-                                description: The key of the secret to select from.  Must
-                                  be a valid secret key.
-                                type: string
-                              name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
-                                type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
-                            required:
-                            - key
-                            type: object
-                          username:
-                            description: The secret that contains the username for
-                              authenticating.
-                            properties:
-                              key:
-                                description: The key of the secret to select from.  Must
-                                  be a valid secret key.
-                                type: string
-                              name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
-                                type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
-                            required:
-                            - key
-                            type: object
-                        type: object
-                      category:
-                        description: Service binding type to be provided by this CR.
-                          At this time, the only allowed value is openapi.
-                        type: string
-                      context:
-                        description: Specifies context root of the service.
-                        type: string
-                      protocol:
-                        description: Protocol of the provided service. Defauts to
-                          http.
-                        type: string
-                    required:
-                    - category
-                    type: object
                   targetPort:
                     description: The port that the operator assigns to containers
                       inside pods. Defaults to the value of service.port.
@@ -5860,14 +5771,6 @@ spec:
                   type: object
                 type: array
                 x-kubernetes-list-type: atomic
-              consumedServices:
-                additionalProperties:
-                  items:
-                    type: string
-                  type: array
-                description: ConsumedServices stores status of the service binding
-                  dependencies
-                type: object
               imageReference:
                 type: string
               resolvedBindings:

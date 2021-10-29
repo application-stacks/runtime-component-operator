@@ -197,18 +197,8 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	result, err := r.ReconcileProvides(instance)
-	if err != nil || result != (reconcile.Result{}) {
-		return result, err
-	}
-
-	result, err = r.ReconcileConsumes(instance)
-	if err != nil || result != (reconcile.Result{}) {
-		return result, err
-	}
-
 	if r.IsServiceBindingSupported() {
-		result, err = r.ReconcileBindings(instance)
+		result, err := r.ReconcileBindings(instance)
 		if err != nil || result != (reconcile.Result{}) {
 			return result, err
 		}

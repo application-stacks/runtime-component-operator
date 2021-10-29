@@ -227,10 +227,6 @@ type RuntimeComponentService struct {
 
 	// An array consisting of service ports.
 	Ports []corev1.ServicePort `json:"ports,omitempty"`
-
-	// +listType=atomic
-	Consumes []ServiceBindingConsumes `json:"consumes,omitempty"`
-	Provides *ServiceBindingProvides  `json:"provides,omitempty"`
 }
 
 // Defines the desired state and cycle of applications.
@@ -256,35 +252,6 @@ type RuntimeComponentStatefulSet struct {
 
 	// Annotations to be added only to the StatefulSet and resources owned by the StatefulSet.
 	Annotations map[string]string `json:"annotations,omitempty"`
-}
-
-// Configures the OpenAPI information to expose.
-type ServiceBindingProvides struct {
-	// Service binding type to be provided by this CR. At this time, the only allowed value is openapi.
-	Category common.ServiceBindingCategory `json:"category"`
-
-	// Specifies context root of the service.
-	Context string `json:"context,omitempty"`
-
-	// Protocol of the provided service. Defauts to http.
-	Protocol string `json:"protocol,omitempty"`
-
-	Auth *ServiceBindingAuth `json:"auth,omitempty"`
-}
-
-// Represents a service to be consumed.
-type ServiceBindingConsumes struct {
-	// The name of the service to be consumed. If binding to a RuntimeComponent, then this would be the provider’s CR name.
-	Name string `json:"name"`
-
-	// The namespace of the service to be consumed. If binding to a RuntimeComponent, then this would be the provider’s CR namespace.
-	Namespace string `json:"namespace,omitempty"`
-
-	// The type of service binding to be consumed. At this time, the only allowed value is openapi.
-	Category common.ServiceBindingCategory `json:"category"`
-
-	// Optional field to specify which location in the pod, service binding secret should be mounted.
-	MountPath string `json:"mountPath,omitempty"`
 }
 
 // Defines settings of persisted storage for StatefulSets.
@@ -382,8 +349,7 @@ type RuntimeComponentStatus struct {
 	// +listType=atomic
 
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Status Conditions",xDescriptors="urn:alm:descriptor:io.kubernetes.conditions"
-	Conditions       []StatusCondition       `json:"conditions,omitempty"`
-	ConsumedServices common.ConsumedServices `json:"consumedServices,omitempty"`
+	Conditions []StatusCondition `json:"conditions,omitempty"`
 	// +listType=set
 	ResolvedBindings []string `json:"resolvedBindings,omitempty"`
 	ImageReference   string   `json:"imageReference,omitempty"`
@@ -650,19 +616,6 @@ func (s *RuntimeComponentStatus) SetResolvedBindings(rb []string) {
 	s.ResolvedBindings = rb
 }
 
-// GetConsumedServices returns a map of all the service names to be consumed by the application
-func (s *RuntimeComponentStatus) GetConsumedServices() common.ConsumedServices {
-	if s.ConsumedServices == nil {
-		return nil
-	}
-	return s.ConsumedServices
-}
-
-// SetConsumedServices sets ConsumedServices
-func (s *RuntimeComponentStatus) SetConsumedServices(c common.ConsumedServices) {
-	s.ConsumedServices = c
-}
-
 // GetImageReference returns Docker image reference to be deployed by the CR
 func (s *RuntimeComponentStatus) GetImageReference() string {
 	return s.ImageReference
@@ -755,69 +708,9 @@ func (s *RuntimeComponentService) GetPorts() []corev1.ServicePort {
 	return s.Ports
 }
 
-// GetProvides returns service provider configuration
-func (s *RuntimeComponentService) GetProvides() common.ServiceBindingProvides {
-	if s.Provides == nil {
-		return nil
-	}
-	return s.Provides
-}
-
 // GetCertificateSecretRef returns a secret reference with a certificate
 func (s *RuntimeComponentService) GetCertificateSecretRef() *string {
 	return s.CertificateSecretRef
-}
-
-// GetCategory returns category of a service provider configuration
-func (p *ServiceBindingProvides) GetCategory() common.ServiceBindingCategory {
-	return p.Category
-}
-
-// GetContext returns context of a service provider configuration
-func (p *ServiceBindingProvides) GetContext() string {
-	return p.Context
-}
-
-// GetAuth returns secret of a service provider configuration
-func (p *ServiceBindingProvides) GetAuth() common.ServiceBindingAuth {
-	if p.Auth == nil {
-		return nil
-	}
-	return p.Auth
-}
-
-// GetProtocol returns protocol of a service provider configuration
-func (p *ServiceBindingProvides) GetProtocol() string {
-	return p.Protocol
-}
-
-// GetConsumes returns a list of service consumers' configuration
-func (s *RuntimeComponentService) GetConsumes() []common.ServiceBindingConsumes {
-	consumes := make([]common.ServiceBindingConsumes, len(s.Consumes))
-	for i := range s.Consumes {
-		consumes[i] = &s.Consumes[i]
-	}
-	return consumes
-}
-
-// GetName returns service name of a service consumer configuration
-func (c *ServiceBindingConsumes) GetName() string {
-	return c.Name
-}
-
-// GetNamespace returns namespace of a service consumer configuration
-func (c *ServiceBindingConsumes) GetNamespace() string {
-	return c.Namespace
-}
-
-// GetCategory returns category of a service consumer configuration
-func (c *ServiceBindingConsumes) GetCategory() common.ServiceBindingCategory {
-	return common.ServiceBindingCategoryOpenAPI
-}
-
-// GetMountPath returns mount path of a service consumer configuration
-func (c *ServiceBindingConsumes) GetMountPath() string {
-	return c.MountPath
 }
 
 // GetUsername returns username of a service binding auth object
@@ -961,10 +854,6 @@ func (cr *RuntimeComponent) Initialize() {
 		cr.Spec.Service.Port = 8080
 	}
 
-	if cr.Spec.Service.Provides != nil && cr.Spec.Service.Provides.Protocol == "" {
-		cr.Spec.Service.Provides.Protocol = "http"
-	}
-
 }
 
 // GetLabels returns set of labels to be added to all resources
@@ -985,10 +874,6 @@ func (cr *RuntimeComponent) GetLabels() map[string]string {
 		if key != "app.kubernetes.io/instance" {
 			labels[key] = value
 		}
-	}
-
-	if cr.Spec.Service != nil && cr.Spec.Service.Provides != nil {
-		labels["service.rc.app.stacks/bindable"] = "true"
 	}
 
 	return labels
