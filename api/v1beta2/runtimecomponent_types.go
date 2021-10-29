@@ -33,17 +33,17 @@ import (
 type RuntimeComponentSpec struct {
 
 	// The name of the application this resource is part of. If not specified, it defaults to the name of the CR.
-	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Appliation Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Application Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	ApplicationName string `json:"applicationName,omitempty"`
 
 	// Application image to be installed.
-	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="Appliation Image",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="Application Image",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	ApplicationImage string `json:"applicationImage"`
 
-	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Appliation Version",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Application Version",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Version string `json:"version,omitempty"`
 
-	// Policy for pulling container images. Defaults to IfNotPresent. Parameters autoscaling.maxReplicas and resourceConstraints.requests.cpu must be specified.
+	// Policy for pulling container images. Defaults to IfNotPresent.
 	// +operator-sdk:csv:customresourcedefinitions:order=4,type=spec,displayName="Pull Policy",xDescriptors="urn:alm:descriptor:com.tectonic.ui:imagePullPolicy"
 	PullPolicy *corev1.PullPolicy `json:"pullPolicy,omitempty"`
 
@@ -171,7 +171,7 @@ type RuntimeComponentAffinity struct {
 // Configures the desired resource consumption of pods.
 type RuntimeComponentAutoScaling struct {
 
-	// Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler.
+	// Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler. Parameter spec.resourceConstraints.requests.cpu must also be specified.
 	// +kubebuilder:validation:Minimum=1
 	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Max Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
 	MaxReplicas int32 `json:"maxReplicas,omitempty"`

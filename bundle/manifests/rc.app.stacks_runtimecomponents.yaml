@@ -398,7 +398,7 @@ spec:
                 description: Configures the desired resource consumption of pods.
                 properties:
                   maxReplicas:
-                    description: Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler.
+                    description: Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler. Parameter spec.resourceConstraints.requests.cpu must also be specified.
                     format: int32
                     minimum: 1
                     type: integer
@@ -1647,7 +1647,7 @@ spec:
                     type: object
                 type: object
               pullPolicy:
-                description: Policy for pulling container images. Defaults to IfNotPresent. Parameters autoscaling.maxReplicas and resourceConstraints.requests.cpu must be specified.
+                description: Policy for pulling container images. Defaults to IfNotPresent.
                 type: string
               pullSecret:
                 description: Name of the Secret to use to pull images from the specified repository. It is not required if the cluster is configured with a global image pull secret.

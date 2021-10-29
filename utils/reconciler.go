@@ -214,9 +214,9 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 
 	// StatusReasonInvalid means the requested create or update operation cannot be
 	// completed due to invalid data provided as part of the request. Don't retry.
-	if apierrors.IsInvalid(issue) {
-		return reconcile.Result{}, nil
-	}
+	// if apierrors.IsInvalid(issue) {
+	// 	return reconcile.Result{}, nil
+	// }
 
 	var retryInterval time.Duration
 	if lastUpdate.IsZero() || lastStatus == corev1.ConditionTrue {
@@ -263,7 +263,7 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 			Requeue:      true,
 		}, nil
 	}
-	return reconcile.Result{}, nil
+	return reconcile.Result{RequeueAfter: 15 * time.Second}, nil
 }
 
 // IsGroupVersionSupported ...

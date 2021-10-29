@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/apex/log"
 	"github.com/application-stacks/runtime-component-operator/common"
@@ -154,7 +155,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	if currentGen == 1 {
-		return reconcile.Result{}, nil
+		return reconcile.Result{RequeueAfter: 15 * time.Second}, nil
 	}
 
 	defaultMeta := metav1.ObjectMeta{
