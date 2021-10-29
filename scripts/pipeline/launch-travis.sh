@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -x
-
 TRAVIS_TOKEN=
 LAUNCH_TRAVIS=
 MONITOR_TRAVIS=yes
@@ -105,6 +103,7 @@ function launch_travis() {
                             \"arch\": \"ppc64le\",
                             \"script\": [
                                 \"make build-multiarch-image\",
+                                \"make push-pipeline-multiarch-image\"
                             ]
                         },
                         {
@@ -113,6 +112,7 @@ function launch_travis() {
                             \"arch\": \"s390x\",
                             \"script\": [
                                 \"make build-multiarch-image\",
+                                \"make push-pipeline-multiarch-image\"
                             ]
                         }
                     ]

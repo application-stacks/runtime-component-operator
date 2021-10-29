@@ -5,6 +5,8 @@ VERSION ?= 1.0.0
 
 OPERATOR_IMAGE ?= applicationstacks/operator
 OPERATOR_IMAGE_TAG ?= daily
+PIPELINE_OPERATOR_IMAGE ?= runtimecomponentoperator/operator
+PIPELINE_REGISTRY ?= us.icr.io
 
 # Default bundle image tag
 BUNDLE_IMG ?= applicationstacks/operator:bundle-daily
@@ -147,12 +149,20 @@ build-multiarch-image: ## Build operator image
 push-multiarch-image: ## Push operator image
 	./scripts/build-releases.sh --push -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
 
+build-pipeline-multiarch-image: ## Build operator image
+	./scripts/build-releases.sh -u "${PIPELINE_USERNAME}" -p "${PIPELINE_PASSWORD}" --registry "${PIPELINE_REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}"
+
+push-pipeline-multiarch-image: ## Push operator image
+	./scripts/build-releases.sh --push -u "${PIPELINE_USERNAME}" -p "${PIPELINE_PASSWORD}" --registry "${PIPELINE_REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}"
 
 docker-login:
 	docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" 
 	
 build-manifest: setup-manifest
 	./scripts/build-manifest.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
+
+build-pipeline-manifest: setup-manifest
+	./scripts/build-manifest.sh -u "${PIPELINE_USERNAME}" -p "${PIPELINE_PASSWORD}" --registry "${PIPELINE_REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}"
 
 setup-manifest:
 	./scripts/installers/install-manifest-tool.sh

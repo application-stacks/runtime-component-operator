@@ -42,8 +42,12 @@ main() {
     ;;
   esac
 
-  ## login to docker
-  echo "${PASS}" | docker login -u "${USER}" --password-stdin
+  ## login to docker 
+  if [[ -z "${REGISTRY}" ]]; then 
+    echo "${PASS}" | docker login -u "${USER}" --password-stdin
+  else
+    echo "${PASS}" | docker login "${REGISTRY}" -u "${USER}" --password-stdin
+  fi  
 
   ## build or push latest master branch
   if [[ "${IS_PUSH}" != true ]]; then
@@ -90,9 +94,13 @@ push_release() {
   if [[ "${TRAVIS}" = "true" && "${TRAVIS_PULL_REQUEST}" = "false" && "${TRAVIS_BRANCH}" = "master" ]]; then
     echo "****** Pushing image: ${IMAGE}:${release}-${arch}"
     docker push "${IMAGE}:${release}-${arch}"
-  else
+  else  
     echo "****** Skipping push for branch ${TRAVIS_BRANCH}"
   fi
+
+  if [[ -n "${REGISTRY}" ]]; then
+    echo "****** Pushing image to scan: ${IMAGE}:${release}-${arch}"
+    docker push "${REGISTRY}/${IMAGE}:${release}-${arch}"
 }
 
 parse_args() {
@@ -106,6 +114,10 @@ parse_args() {
       shift
       readonly PASS="${1}"
       ;;
+    --registry)
+      shift
+      readonly REGISTRY="${1}"
+      ;;  
     --image)
       shift
       readonly IMAGE="${1}"
