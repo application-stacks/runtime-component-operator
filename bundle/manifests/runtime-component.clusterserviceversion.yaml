@@ -236,23 +236,6 @@ spec:
         path: route.insecureEdgeTerminationPolicy
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - displayName: Bindings
-        path: bindings
-      - description: A boolean to toggle whether the operator should automatically detect and use a ServiceBindingRequest resource with <CR_NAME>-binding naming format.
-        displayName: Bindings Autodetect
-        path: bindings.autoDetect
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: The name of a ServiceBindingRequest custom resource created manually in the same namespace as the application.
-        displayName: Bindings Resource Ref
-        path: bindings.resourceRef
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
-      - description: A boolean to toggle whether the operator expose the application as a bindable service.
-        displayName: Bindings Expose Enabled
-        path: bindings.expose
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: A boolean to toggle the creation of Knative resources and usage of Knative serving.
         displayName: Create Knative Service
         path: createKnativeService

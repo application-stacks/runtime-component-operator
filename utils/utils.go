@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -13,6 +14,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/application-stacks/runtime-component-operator/common"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -25,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 )
@@ -432,26 +435,6 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		CustomizeAffinity(pts.Spec.Affinity, ba)
 	} else {
 		pts.Spec.Affinity = nil
-	}
-}
-
-// CustomizeServiceBinding ...
-func CustomizeServiceBinding(secret *corev1.Secret, podSpec *corev1.PodSpec, ba common.BaseComponent) {
-	if len(ba.GetStatus().GetResolvedBindings()) != 0 {
-		appContainer := GetAppContainer(podSpec.Containers)
-		binding := ba.GetStatus().GetResolvedBindings()[0]
-		bindingSecret := corev1.EnvFromSource{
-			SecretRef: &corev1.SecretEnvSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: binding,
-				}},
-		}
-		appContainer.EnvFrom = append(appContainer.EnvFrom, bindingSecret)
-
-		secretRev := corev1.EnvVar{
-			Name:  "RESOLVED_BINDING_SECRET_REV",
-			Value: secret.ResourceVersion}
-		appContainer.Env = append(appContainer.Env, secretRev)
 	}
 }
 
@@ -1023,4 +1006,28 @@ func GetOperatorNamespace() (string, error) {
 		return "", fmt.Errorf("%s must be set", podNamespaceEnvVar)
 	}
 	return ns, nil
+}
+
+func equals(sl1, sl2 []string) bool {
+	if len(sl1) != len(sl2) {
+		return false
+	}
+	for i, v := range sl1 {
+		if v != sl2[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func (r *ReconcilerBase) toJSONFromRaw(content *runtime.RawExtension) (map[string]interface{}, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal(content.Raw, &data); err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func isRequeue(res reconcile.Result, err error) bool {
+	return err != nil || res.Requeue
 }

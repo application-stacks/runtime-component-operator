@@ -674,33 +674,6 @@ spec:
                     format: int32
                     type: integer
                 type: object
-              bindings:
-                description: Represents service binding related parameters.
-                properties:
-                  autoDetect:
-                    description: A boolean to toggle whether the operator should automatically
-                      detect and use a ServiceBindingRequest resource with <CR_NAME>-binding
-                      naming format.
-                    type: boolean
-                  embedded:
-                    description: A YAML object that represents a ServiceBindingRequest
-                      custom resource.
-                    type: object
-                  expose:
-                    description: A boolean to toggle whether the operator expose the
-                      application as a bindable service.
-                    properties:
-                      enabled:
-                        description: A boolean to toggle whether the operator expose
-                          the application as a bindable service. The default value
-                          for this parameter is false.
-                        type: boolean
-                    type: object
-                  resourceRef:
-                    description: The name of a ServiceBindingRequest custom resource
-                      created manually in the same namespace as the application.
-                    type: string
-                type: object
               createKnativeService:
                 description: A boolean to toggle the creation of Knative resources
                   and usage of Knative serving.
@@ -2656,6 +2629,11 @@ spec:
                       type: string
                     description: Annotations to be added to the service.
                     type: object
+                  bindable:
+                    description: A boolean to toggle whether the operator expose the
+                      application as a bindable service. The default value for this
+                      parameter is false.
+                    type: boolean
                   certificateSecretRef:
                     description: "\tA name of a secret that already contains TLS key,
                       certificate and CA to be mounted in the pod."
@@ -5773,11 +5751,6 @@ spec:
                 x-kubernetes-list-type: atomic
               imageReference:
                 type: string
-              resolvedBindings:
-                items:
-                  type: string
-                type: array
-                x-kubernetes-list-type: set
             type: object
         type: object
     served: true

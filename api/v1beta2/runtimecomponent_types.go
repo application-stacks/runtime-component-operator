@@ -25,7 +25,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -84,9 +83,6 @@ type RuntimeComponentSpec struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:order=37,type=spec,displayName="Route"
 	Route *RuntimeComponentRoute `json:"route,omitempty"`
-
-	// +operator-sdk:csv:customresourcedefinitions:order=44,type=spec,displayName="Bindings"
-	Bindings *RuntimeComponentBindings `json:"bindings,omitempty"`
 
 	// A boolean to toggle the creation of Knative resources and usage of Knative serving.
 	// +operator-sdk:csv:customresourcedefinitions:order=48,type=spec,displayName="Create Knative Service",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
@@ -227,6 +223,9 @@ type RuntimeComponentService struct {
 
 	// An array consisting of service ports.
 	Ports []corev1.ServicePort `json:"ports,omitempty"`
+
+	// A boolean to toggle whether the operator expose the application as a bindable service. The default value for this parameter is false.
+	Bindable *bool `json:"bindable,omitempty"`
 }
 
 // Defines the desired state and cycle of applications.
@@ -312,47 +311,13 @@ type RuntimeComponentRoute struct {
 	InsecureEdgeTerminationPolicy *routev1.InsecureEdgeTerminationPolicyType `json:"insecureEdgeTerminationPolicy,omitempty"`
 }
 
-// Allows a service to provide authentication information.
-type ServiceBindingAuth struct {
-	// The secret that contains the username for authenticating.
-	Username corev1.SecretKeySelector `json:"username,omitempty"`
-	// The secret that contains the password for authenticating.
-	Password corev1.SecretKeySelector `json:"password,omitempty"`
-}
-
-// Represents service binding related parameters.
-type RuntimeComponentBindings struct {
-	// A boolean to toggle whether the operator should automatically detect and use a ServiceBindingRequest resource with <CR_NAME>-binding naming format.
-	// +operator-sdk:csv:customresourcedefinitions:order=45,type=spec,displayName="Bindings Autodetect",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
-	AutoDetect *bool `json:"autoDetect,omitempty"`
-
-	// The name of a ServiceBindingRequest custom resource created manually in the same namespace as the application.
-	// +operator-sdk:csv:customresourcedefinitions:order=46,type=spec,displayName="Bindings Resource Ref",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
-	ResourceRef string `json:"resourceRef,omitempty"`
-
-	// A boolean to toggle whether the operator expose the application as a bindable service.
-	// +operator-sdk:csv:customresourcedefinitions:order=47,type=spec,displayName="Bindings Expose Enabled",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
-	Expose *RuntimeComponentBindingExpose `json:"expose,omitempty"`
-
-	// A YAML object that represents a ServiceBindingRequest custom resource.
-	Embedded *runtime.RawExtension `json:"embedded,omitempty"`
-}
-
-// Encapsulates information exposed by the application.
-type RuntimeComponentBindingExpose struct {
-	// A boolean to toggle whether the operator expose the application as a bindable service. The default value for this parameter is false.
-	Enabled *bool `json:"enabled,omitempty"`
-}
-
 // Defines the observed state of RuntimeComponent.
 type RuntimeComponentStatus struct {
 	// +listType=atomic
 
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Status Conditions",xDescriptors="urn:alm:descriptor:io.kubernetes.conditions"
-	Conditions []StatusCondition `json:"conditions,omitempty"`
-	// +listType=set
-	ResolvedBindings []string `json:"resolvedBindings,omitempty"`
-	ImageReference   string   `json:"imageReference,omitempty"`
+	Conditions     []StatusCondition `json:"conditions,omitempty"`
+	ImageReference string            `json:"imageReference,omitempty"`
 
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Service Binding Secret",xDescriptors="urn:alm:descriptor:io.kubernetes:Secret"
 	Binding *corev1.LocalObjectReference `json:"binding,omitempty"`
@@ -374,9 +339,6 @@ type StatusConditionType string
 const (
 	// StatusConditionTypeReconciled ...
 	StatusConditionTypeReconciled StatusConditionType = "Reconciled"
-
-	// StatusConditionTypeDependenciesSatisfied ...
-	StatusConditionTypeDependenciesSatisfied StatusConditionType = "DependenciesSatisfied"
 )
 
 // +kubebuilder:object:root=true
@@ -554,14 +516,6 @@ func (cr *RuntimeComponent) GetRoute() common.BaseComponentRoute {
 	return cr.Spec.Route
 }
 
-// GetBindings returns binding configuration for RuntimeComponent
-func (cr *RuntimeComponent) GetBindings() common.BaseComponentBindings {
-	if cr.Spec.Bindings == nil {
-		return nil
-	}
-	return cr.Spec.Bindings
-}
-
 // GetAffinity returns deployment's node and pod affinity settings
 func (cr *RuntimeComponent) GetAffinity() common.BaseComponentAffinity {
 	if cr.Spec.Affinity == nil {
@@ -604,16 +558,6 @@ func (cr *RuntimeComponentStatefulSet) GetStatefulSetUpdateStrategy() *appsv1.St
 // GetAnnotations returns annotations to be added only to the StatefulSet and its child resources
 func (rcss *RuntimeComponentStatefulSet) GetAnnotations() map[string]string {
 	return rcss.Annotations
-}
-
-// GetResolvedBindings returns a map of all the service names to be consumed by the application
-func (s *RuntimeComponentStatus) GetResolvedBindings() []string {
-	return s.ResolvedBindings
-}
-
-// SetResolvedBindings sets ConsumedServices
-func (s *RuntimeComponentStatus) SetResolvedBindings(rb []string) {
-	s.ResolvedBindings = rb
 }
 
 // GetImageReference returns Docker image reference to be deployed by the CR
@@ -713,14 +657,9 @@ func (s *RuntimeComponentService) GetCertificateSecretRef() *string {
 	return s.CertificateSecretRef
 }
 
-// GetUsername returns username of a service binding auth object
-func (a *ServiceBindingAuth) GetUsername() corev1.SecretKeySelector {
-	return a.Username
-}
-
-// GetPassword returns password of a service binding auth object
-func (a *ServiceBindingAuth) GetPassword() corev1.SecretKeySelector {
-	return a.Password
+// GetBindable returns whether the application should be exposable as a service
+func (s *RuntimeComponentService) GetBindable() *bool {
+	return s.Bindable
 }
 
 // GetLabels returns labels to be added on ServiceMonitor
@@ -761,34 +700,6 @@ func (r *RuntimeComponentRoute) GetHost() string {
 // GetPath returns path to use for the route
 func (r *RuntimeComponentRoute) GetPath() string {
 	return r.Path
-}
-
-// GetAutoDetect returns a boolean to specify if the operator should auto-detect ServiceBinding CRs with the same name as the RuntimeComponent CR
-func (r *RuntimeComponentBindings) GetAutoDetect() *bool {
-	return r.AutoDetect
-}
-
-// GetResourceRef returns name of ServiceBinding CRs created manually in the same namespace as the RuntimeComponent CR
-func (r *RuntimeComponentBindings) GetResourceRef() string {
-	return r.ResourceRef
-}
-
-// GetEmbedded returns the embedded underlying Service Binding resource
-func (r *RuntimeComponentBindings) GetEmbedded() *runtime.RawExtension {
-	return r.Embedded
-}
-
-// GetExpose returns the map used making this application a bindable service
-func (r *RuntimeComponentBindings) GetExpose() common.BaseComponentExpose {
-	if r.Expose == nil {
-		return nil
-	}
-	return r.Expose
-}
-
-// GetEnabled returns whether the application should be exposable as a service
-func (e *RuntimeComponentBindingExpose) GetEnabled() *bool {
-	return e.Enabled
 }
 
 // GetNodeAffinity returns node affinity
@@ -1002,8 +913,6 @@ func convertToCommonStatusConditionType(c StatusConditionType) common.StatusCond
 	switch c {
 	case StatusConditionTypeReconciled:
 		return common.StatusConditionTypeReconciled
-	case StatusConditionTypeDependenciesSatisfied:
-		return common.StatusConditionTypeDependenciesSatisfied
 	default:
 		panic(c)
 	}
@@ -1013,8 +922,6 @@ func convertFromCommonStatusConditionType(c common.StatusConditionType) StatusCo
 	switch c {
 	case common.StatusConditionTypeReconciled:
 		return StatusConditionTypeReconciled
-	case common.StatusConditionTypeDependenciesSatisfied:
-		return StatusConditionTypeDependenciesSatisfied
 	default:
 		panic(c)
 	}

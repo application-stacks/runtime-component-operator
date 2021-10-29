@@ -6,7 +6,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // StatusConditionType ...
@@ -39,8 +38,6 @@ type BaseComponentStatus interface {
 	GetCondition(StatusConditionType) StatusCondition
 	SetCondition(StatusCondition)
 	NewCondition() StatusCondition
-	GetResolvedBindings() []string
-	SetResolvedBindings([]string)
 	GetImageReference() string
 	SetImageReference(string)
 	GetBinding() *corev1.LocalObjectReference
@@ -50,9 +47,6 @@ type BaseComponentStatus interface {
 const (
 	// StatusConditionTypeReconciled ...
 	StatusConditionTypeReconciled StatusConditionType = "Reconciled"
-
-	// StatusConditionTypeDependenciesSatisfied ...
-	StatusConditionTypeDependenciesSatisfied StatusConditionType = "DependenciesSatisfied"
 )
 
 // BaseComponentAutoscaling represents basic HPA configuration
@@ -79,6 +73,7 @@ type BaseComponentService interface {
 	GetPorts() []corev1.ServicePort
 	GetAnnotations() map[string]string
 	GetCertificateSecretRef() *string
+	GetBindable() *bool
 }
 
 // BaseComponentMonitoring represents basic service monitoring configuration
@@ -95,25 +90,6 @@ type BaseComponentRoute interface {
 	GetHost() string
 	GetPath() string
 	GetCertificateSecretRef() *string
-}
-
-// ServiceBindingAuth represents authentication info when binding services
-type ServiceBindingAuth interface {
-	GetUsername() corev1.SecretKeySelector
-	GetPassword() corev1.SecretKeySelector
-}
-
-// BaseComponentBindings represents Service Binding information
-type BaseComponentBindings interface {
-	GetAutoDetect() *bool
-	GetResourceRef() string
-	GetEmbedded() *runtime.RawExtension
-	GetExpose() BaseComponentExpose
-}
-
-// BaseComponentExpose represents authentication info when binding services
-type BaseComponentExpose interface {
-	GetEnabled() *bool
 }
 
 // BaseComponentAffinity describes deployment and pod affinity
@@ -170,6 +146,5 @@ type BaseComponent interface {
 	GetSidecarContainers() []corev1.Container
 	GetGroupName() string
 	GetRoute() BaseComponentRoute
-	GetBindings() BaseComponentBindings
 	GetAffinity() BaseComponentAffinity
 }

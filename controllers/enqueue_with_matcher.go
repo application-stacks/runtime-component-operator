@@ -19,9 +19,7 @@ import (
 var _ handler.EventHandler = &EnqueueRequestsForCustomIndexField{}
 
 const (
-	indexFieldImageStreamName     = "spec.applicationImage"
-	indexFieldBindingsResourceRef = "spec.bindings.resourceRef"
-	bindingSecretSuffix           = "-binding"
+	indexFieldImageStreamName = "spec.applicationImage"
 )
 
 // EnqueueRequestsForCustomIndexField enqueues reconcile Requests Runtime Components if the app is relying on
