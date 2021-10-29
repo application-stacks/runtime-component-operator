@@ -311,7 +311,7 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - displayName: Application Version
-        path: version
+        path: applicationVersion
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Policy for pulling container images. Defaults to IfNotPresent.

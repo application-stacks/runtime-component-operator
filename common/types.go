@@ -136,7 +136,7 @@ type BaseComponent interface {
 	GetService() BaseComponentService
 	GetDeployment() BaseComponentDeployment
 	GetStatefulSet() BaseComponentStatefulSet
-	GetVersion() string
+	GetApplicationVersion() string
 	GetApplicationName() string
 	GetMonitoring() BaseComponentMonitoring
 	GetLabels() map[string]string

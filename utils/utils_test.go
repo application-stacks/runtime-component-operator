@@ -715,8 +715,8 @@ func TestGetWatchNamespaces(t *testing.T) {
 // Unconditionally set the proper tags for an enabled runtime omponent
 func createAppDefinitionTags(app *appstacksv1beta2.RuntimeComponent) (map[string]string, map[string]string) {
 	// The purpose of this function demands all fields configured
-	if app.Spec.Version == "" {
-		app.Spec.Version = "v1alpha"
+	if app.Spec.ApplicationVersion == "" {
+		app.Spec.ApplicationVersion = "v1alpha"
 	}
 	// set fields
 	label := map[string]string{
@@ -727,7 +727,7 @@ func createAppDefinitionTags(app *appstacksv1beta2.RuntimeComponent) (map[string
 		"kappnav.app.auto-create.kinds":         "Deployment, StatefulSet, Service, Route, Ingress, ConfigMap",
 		"kappnav.app.auto-create.label":         "app.kubernetes.io/part-of",
 		"kappnav.app.auto-create.labels-values": app.Spec.ApplicationName,
-		"kappnav.app.auto-create.version":       app.Spec.Version,
+		"kappnav.app.auto-create.version":       app.Spec.ApplicationVersion,
 	}
 	return label, annotations
 }

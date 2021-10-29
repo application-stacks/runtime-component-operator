@@ -388,6 +388,8 @@ spec:
               applicationName:
                 description: The name of the application this resource is part of. If not specified, it defaults to the name of the CR.
                 type: string
+              applicationVersion:
+                type: string
               architecture:
                 description: An array of architectures to be considered for deployment. Their position in the array indicates preference.
                 items:
@@ -2877,8 +2879,6 @@ spec:
                         type: string
                     type: object
                 type: object
-              version:
-                type: string
               volumeMounts:
                 description: Represents where to mount the volumes into containers.
                 items:

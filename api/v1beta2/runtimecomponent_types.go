@@ -41,7 +41,7 @@ type RuntimeComponentSpec struct {
 	ApplicationImage string `json:"applicationImage"`
 
 	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Application Version",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
-	Version string `json:"version,omitempty"`
+	ApplicationVersion string `json:"applicationVersion,omitempty"`
 
 	// Policy for pulling container images. Defaults to IfNotPresent.
 	// +operator-sdk:csv:customresourcedefinitions:order=4,type=spec,displayName="Pull Policy",xDescriptors="urn:alm:descriptor:com.tectonic.ui:imagePullPolicy"
@@ -470,9 +470,9 @@ func (cr *RuntimeComponent) GetService() common.BaseComponentService {
 	return cr.Spec.Service
 }
 
-// GetVersion returns application version
-func (cr *RuntimeComponent) GetVersion() string {
-	return cr.Spec.Version
+// GetApplicationVersion returns application version
+func (cr *RuntimeComponent) GetApplicationVersion() string {
+	return cr.Spec.ApplicationVersion
 }
 
 // GetApplicationName returns Application name to be used for integration with kAppNav
@@ -777,8 +777,8 @@ func (cr *RuntimeComponent) GetLabels() map[string]string {
 		"app.kubernetes.io/part-of":    cr.Spec.ApplicationName,
 	}
 
-	if cr.Spec.Version != "" {
-		labels["app.kubernetes.io/version"] = cr.Spec.Version
+	if cr.Spec.ApplicationVersion != "" {
+		labels["app.kubernetes.io/version"] = cr.Spec.ApplicationVersion
 	}
 
 	for key, value := range cr.Labels {
