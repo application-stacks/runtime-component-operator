@@ -64,6 +64,7 @@ jobs:
       stage: build
       os: linux
       arch: amd64
+      if: type != pull_request
       script:
         - make bundle-build bundle-push
     ## in case there were concurrency issues with building manifest lists
