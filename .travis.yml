@@ -9,65 +9,56 @@ services:
   - docker
 
 stages:
-  - name: test
-  # Builds are split into 'build and test' and 'build' to allow e2e tests to run first. If e2e fails, don't bother
+  - name: unit-test
+  # Builds are split into 'e2e-test' and 'build' to allow e2e tests to run first. If e2e fails, don't bother
   # building and pushing the images for the other architectures.
-  - name: build and test
+  - name: e2e-test
     if: branch = master AND fork = false
   - name: build
-    if: branch = master AND fork = false
-  - name: build manifest
+    if: branch = master AND fork = false AND type != pull_request
+  - name: build-manifest
     if: branch = master AND fork = false AND type != pull_request
 
 jobs:
   include:
     - name: Unit testing
-      stage: test
+      stage: unit-test
       script: make unit-test
-    - name: Verify operator image build
-      script: 
-        - make docker-login
-        - make build-image
-#      if: branch != master OR fork = true OR type = pull_request
-#    - name: E2E testing on Minikube
-#      script: make test-minikube
-#    - name: E2E testing on OCP 4.3
-#      script: make test-e2e
-#      if: fork = false
-    ## if master branch build and push images on all three archs
-    - name: Build image on amd64
-      stage: build and test
+    - name: Build image on amd64 and test
+      stage: e2e-test
       os: linux
       arch: amd64
       script:
         - make build-multiarch-image
         - travis_wait 45 make setup test-e2e || travis_terminate 1
-        - make build-manifest
-        - make push-multiarch-image
     - name: Build image on ppc64le
       stage: build
       os: linux
       arch: ppc64le
       script:
         - make build-multiarch-image
-        - make build-manifest
         - make push-multiarch-image
+        - make build-manifest
     - name: Build image on s390x
       stage: build
       os: linux
       arch: s390x
       script:
         - make build-multiarch-image
-        - make build-manifest
         - make push-multiarch-image
-    - name: Build bundle and push
+        - make build-manifest
+    - name: Build image and bundle on amd64
       stage: build
       os: linux
       arch: amd64
+      if: type != pull_request
       script:
+        - make build-multiarch-image
+        - make push-multiarch-image
+        - make build-manifest
         - make bundle-build bundle-push
     ## in case there were concurrency issues with building manifest lists
     ## in previous steps, create FAT manifests one last time
     - name: Verify manifest lists
-      stage: build manifest
+      stage: build-manifest
       script: make build-manifest
