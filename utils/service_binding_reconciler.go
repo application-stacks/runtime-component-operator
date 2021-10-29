@@ -27,7 +27,7 @@ func (r *ReconcilerBase) ReconcileBindings(ba common.BaseComponent) (reconcile.R
 	if res, err := r.reconcileExpose(ba); isRequeue(res, err) {
 		return res, err
 	}
-	return reconcile.Result{RequeueAfter: 15 * time.Second}, nil
+	return reconcile.Result{RequeueAfter: common.ReconcileInterval * time.Second}, nil
 }
 
 func (r *ReconcilerBase) reconcileExpose(ba common.BaseComponent) (reconcile.Result, error) {
@@ -58,7 +58,7 @@ func (r *ReconcilerBase) reconcileExpose(ba common.BaseComponent) (reconcile.Res
 
 		// Update binding status
 		r.updateBindingStatus(bindingSecret.Name, ba)
-		return reconcile.Result{RequeueAfter: 15 * time.Second}, nil
+		return reconcile.Result{RequeueAfter: common.ReconcileInterval * time.Second}, nil
 	}
 
 	// Update status
@@ -67,7 +67,7 @@ func (r *ReconcilerBase) reconcileExpose(ba common.BaseComponent) (reconcile.Res
 	if err := r.DeleteResource(bindingSecret); client.IgnoreNotFound(err) != nil {
 		return r.requeueError(ba, err)
 	}
-	return reconcile.Result{RequeueAfter: 15 * time.Second}, nil
+	return reconcile.Result{RequeueAfter: common.ReconcileInterval * time.Second}, nil
 }
 
 func (r *ReconcilerBase) getCustomValuesToExpose(secret *corev1.Secret, ba common.BaseComponent) error {

@@ -263,7 +263,7 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 			Requeue:      true,
 		}, nil
 	}
-	return reconcile.Result{RequeueAfter: 15 * time.Second}, nil
+	return reconcile.Result{RequeueAfter: common.ReconcileInterval * time.Second}, nil
 }
 
 // IsGroupVersionSupported ...

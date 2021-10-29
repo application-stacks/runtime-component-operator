@@ -4,6 +4,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+const (
+	ReconcileInterval = 15
+)
+
 // OpConfig stored operator configuration
 type OpConfig map[string]string
 

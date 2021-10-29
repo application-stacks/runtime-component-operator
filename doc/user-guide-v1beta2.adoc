@@ -6,13 +6,12 @@ This documentation refers to the latest codebase.  For documentation and samples
 
 == Operator installation
 
-Use the instructions for one of the link:++../deploy/releases++[releases] to install the operator into a Kubernetes cluster.
+//Use the instructions for one of the link:++../deploy/releases++[releases] to install the operator into a Kubernetes cluster.
 
 The Runtime Component Operator can be installed to:
 
 * watch own namespace
 * watch another namespace
-* watch multiple namespaces
 * watch all namespaces in the cluster
 
 Appropriate cluster roles and bindings are required to watch another namespace, watch multiple namespaces or watch all namespaces.
@@ -27,7 +26,7 @@ Each instance of `RuntimeComponent` CR represents the application to be deployed
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -120,7 +119,7 @@ To deploy a Docker image that contains a runtime component to a Kubernetes envir
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -147,7 +146,7 @@ To deploy an image from an image stream, use the following CR:
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -197,7 +196,7 @@ your CR as key/value pairs.
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -221,7 +220,7 @@ To add new annotations into all resources created for a `RuntimeComponent`, spec
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -250,7 +249,7 @@ override any environment variables specified in the container image.
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -305,7 +304,7 @@ The primary port is under the `service` field and the additional ports can be sp
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -352,7 +351,7 @@ The operator will also create a volume mount for the `StatefulSet` mounting to `
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -372,7 +371,7 @@ It is also possible to create multiple volume mount points for persistent volume
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -412,7 +411,7 @@ _This feature is only available if you have Service Binding Operator installed o
 A `RuntimeComponent` application can be configured to behave as a link:++https://github.com/k8s-service-bindings/spec#provisioned-service++[Provisioned Service] defined by the link:++https://github.com/k8s-service-bindings/spec++[Service Binding Specification].
 
 According to the specification, a Provisioned Service resource must define a `.status.binding.name` which is a reference to a Secret.
-To expose your application as a Provisioned Service, set the `.spec.bindings.expose.enabled` parameter to a value of `true`. The Runtime Component Operator creates a *binding secret* named `<CR_NAME>-expose-binding` and adds the following entries to the secret: `host`, `port`, `protocol`, `basePath` and `uri`.
+To expose your application as a Provisioned Service, set the `.spec.service.bindable` parameter to a value of `true`. The Runtime Component Operator creates a *binding secret* named `<CR_NAME>-expose-binding` and adds the following entries to the secret: `host`, `port`, `protocol`, `basePath` and `uri`.
 
 To override the default values for the entries in the binding secret or to add new entries to the secret, create an *override secret* named `<CR_NAME>-expose-binding-override` and add any entries to the secret. The operator reads the content of the override secret and overrides the default values in the binding secret.
 
@@ -430,7 +429,7 @@ At minimum, a label needs to be provided that Prometheus expects to be set on `S
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -447,7 +446,7 @@ For advanced scenarios, it is possible to set many `ServicerMonitor` settings su
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -477,7 +476,7 @@ To create Knative service, set `createKnativeService` to `true`:
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -504,7 +503,7 @@ To expose your application externally, set `expose` to `true`:
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -534,7 +533,7 @@ To use the Ingress resource, set the `defaultHostName` variable in the _runtime-
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -553,7 +552,7 @@ _Note: You must install the cert-manager controller to automatically generate a 
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -573,7 +572,7 @@ You can provide an existing TLS secret and set a custom hostname.
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -606,7 +605,7 @@ To expose your application as a Knative service externally, set `expose` to `tru
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -682,7 +681,7 @@ spec:
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -706,7 +705,7 @@ It will contain private key, certificate and CA certificate. It is up to the app
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -727,7 +726,7 @@ In this example we are overriding Issuer to be used for application. Certificate
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -754,7 +753,7 @@ In this case the cert-manager is not required.
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -803,7 +802,7 @@ Use `nodeAffinityLabels` field to set required labels for pod scheduling on spec
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -822,7 +821,7 @@ The following example requires a node type of _Large_ and preferences for two zo
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -863,7 +862,7 @@ The following example shows that pod affinity is required and that the pods for 
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: Service-B
@@ -911,7 +910,7 @@ Example:
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeOperation
 metadata:
   name: example-runtime-operation

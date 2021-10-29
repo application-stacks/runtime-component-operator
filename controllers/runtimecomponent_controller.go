@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/apex/log"
 	"github.com/application-stacks/runtime-component-operator/common"
@@ -147,16 +146,16 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		instance.Annotations = appstacksutils.MergeMaps(instance.Annotations, appstacksutils.GetOpenShiftAnnotations(instance))
 	}
 
-	currentGen := instance.Generation
 	err = r.GetClient().Update(context.TODO(), instance)
 	if err != nil {
 		reqLogger.Error(err, "Error updating RuntimeComponent")
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
-	if currentGen == 1 {
-		return reconcile.Result{RequeueAfter: 15 * time.Second}, nil
-	}
+	//currentGen := instance.Generation
+	// if currentGen == 1 {
+	// 	return reconcile.Result{RequeueAfter: common.ReconcileInterval * time.Second}, nil
+	// }
 
 	defaultMeta := metav1.ObjectMeta{
 		Name:      instance.Name,
