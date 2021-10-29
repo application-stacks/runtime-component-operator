@@ -5,7 +5,7 @@ metadata:
   name: runtimecomponent-editor-role
 rules:
 - apiGroups:
-  - app.stacks
+  - rc.app.stacks
   resources:
   - runtimecomponents
   verbs:
@@ -17,7 +17,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - app.stacks
+  - rc.app.stacks
   resources:
   - runtimecomponents/status
   verbs:

@@ -34,13 +34,12 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 
-	"github.com/application-stacks/runtime-component-operator/utils"
 	appstacksutils "github.com/application-stacks/runtime-component-operator/utils"
 	"github.com/go-logr/logr"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/api/v1beta1"
+	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -63,27 +62,23 @@ type RuntimeComponentReconciler struct {
 	watchNamespaces []string
 }
 
-// +kubebuilder:rbac:groups=app.stacks,resources=runtimecomponents;runtimecomponents/status;runtimecomponents/finalizers,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=rc.app.stacks,resources=runtimecomponents;runtimecomponents/status;runtimecomponents/finalizers,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=apps,resources=deployments;statefulsets,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=apps,resources=deployments/finalizers;statefulsets,verbs=update,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=core,resources=services;secrets;serviceaccounts;configmaps,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=route.openshift.io,resources=routes;routes/custom-host,verbs=*,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=cert-manager.io,resources=certificates,verbs=*,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=certmanager.k8s.io,resources=certificates,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=image.openshift.io,resources=imagestreams;imagestreamtags,verbs=get;list;watch,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=*,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=app.k8s.io,resources=applications,verbs=*,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=apps.openshift.io,resources=servicebindingrequests,verbs=*,namespace=runtime-component-operator
 
 func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 
 	reqLogger := r.Log.WithValues("Request.Namespace", req.Namespace, "Request.Name", req.Name)
 	reqLogger.Info("Reconciling RuntimeComponent")
 
-	ns, err := utils.GetOperatorNamespace()
+	ns, err := appstacksutils.GetOperatorNamespace()
 	// When running the operator locally, `ns` will be empty string
 	if ns == "" {
 		// Since this method can be called directly from unit test, populate `watchNamespaces`.
@@ -119,7 +114,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	// Fetch the RuntimeComponent instance
-	instance := &appstacksv1beta1.RuntimeComponent{}
+	instance := &appstacksv1beta2.RuntimeComponent{}
 	var ba common.BaseComponent
 	ba = instance
 	err = r.GetClient().Get(context.TODO(), req.NamespacedName, instance)
@@ -496,8 +491,8 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 // SetupWithManager initializes reconciler
 func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
-	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta1.RuntimeComponent{}, indexFieldImageStreamName, func(obj client.Object) []string {
-		instance := obj.(*appstacksv1beta1.RuntimeComponent)
+	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta2.RuntimeComponent{}, indexFieldImageStreamName, func(obj client.Object) []string {
+		instance := obj.(*appstacksv1beta2.RuntimeComponent)
 		image, err := imageutil.ParseDockerImageReference(instance.Spec.ApplicationImage)
 		if err == nil {
 			imageNamespace := image.Namespace
@@ -509,8 +504,8 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		}
 		return nil
 	})
-	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta1.RuntimeComponent{}, indexFieldBindingsResourceRef, func(obj client.Object) []string {
-		instance := obj.(*appstacksv1beta1.RuntimeComponent)
+	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta2.RuntimeComponent{}, indexFieldBindingsResourceRef, func(obj client.Object) []string {
+		instance := obj.(*appstacksv1beta2.RuntimeComponent)
 
 		if instance.Spec.Bindings != nil && instance.Spec.Bindings.ResourceRef != "" {
 			return []string{instance.Spec.Bindings.ResourceRef}
@@ -578,7 +573,7 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	var b *builder.Builder
-	b = ctrl.NewControllerManagedBy(mgr).For(&appstacksv1beta1.RuntimeComponent{}, builder.WithPredicates(pred)).
+	b = ctrl.NewControllerManagedBy(mgr).For(&appstacksv1beta2.RuntimeComponent{}, builder.WithPredicates(pred)).
 		Owns(&corev1.Service{}, builder.WithPredicates(predSubResource)).
 		Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource)).
 		Owns(&appsv1.Deployment{}, builder.WithPredicates(predSubResWithGenCheck)).

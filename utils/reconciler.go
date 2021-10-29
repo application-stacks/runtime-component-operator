@@ -6,7 +6,7 @@ import (
 	"math"
 	"time"
 
-	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/api/v1beta1"
+	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
 	"github.com/application-stacks/runtime-component-operator/common"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -176,7 +176,7 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 
 	oldCondition := s.GetCondition(conditionType)
 	if oldCondition == nil {
-		oldCondition = &appstacksv1beta1.StatusCondition{LastUpdateTime: metav1.Time{}}
+		oldCondition = &appstacksv1beta2.StatusCondition{LastUpdateTime: metav1.Time{}}
 	}
 
 	lastUpdate := oldCondition.GetLastUpdateTime().Time
@@ -236,7 +236,7 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 	s := ba.GetStatus()
 	oldCondition := s.GetCondition(conditionType)
 	if oldCondition == nil {
-		oldCondition = &appstacksv1beta1.StatusCondition{LastUpdateTime: metav1.Time{}}
+		oldCondition = &appstacksv1beta2.StatusCondition{LastUpdateTime: metav1.Time{}}
 	}
 
 	// Keep the old `LastTransitionTime` when status has not changed

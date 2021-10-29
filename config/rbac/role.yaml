@@ -8,28 +8,6 @@ metadata:
   namespace: runtime-component-operator
 rules:
 - apiGroups:
-  - app.k8s.io
-  resources:
-  - applications
-  verbs:
-  - '*'
-- apiGroups:
-  - app.stacks
-  resources:
-  - runtimecomponents
-  - runtimecomponents/finalizers
-  - runtimecomponents/status
-  verbs:
-  - '*'
-- apiGroups:
-  - app.stacks
-  resources:
-  - runtimeoperations
-  - runtimeoperations/finalizers
-  - runtimeoperations/status
-  verbs:
-  - '*'
-- apiGroups:
   - apps
   resources:
   - deployments
@@ -44,27 +22,9 @@ rules:
   verbs:
   - update
 - apiGroups:
-  - apps.openshift.io
-  resources:
-  - servicebindingrequests
-  verbs:
-  - '*'
-- apiGroups:
   - autoscaling
   resources:
   - horizontalpodautoscalers
-  verbs:
-  - '*'
-- apiGroups:
-  - cert-manager.io
-  resources:
-  - certificates
-  verbs:
-  - '*'
-- apiGroups:
-  - certmanager.k8s.io
-  resources:
-  - certificates
   verbs:
   - '*'
 - apiGroups:
@@ -107,6 +67,22 @@ rules:
   - networking.k8s.io
   resources:
   - ingresses
+  verbs:
+  - '*'
+- apiGroups:
+  - rc.app.stacks
+  resources:
+  - runtimecomponents
+  - runtimecomponents/finalizers
+  - runtimecomponents/status
+  verbs:
+  - '*'
+- apiGroups:
+  - rc.app.stacks
+  resources:
+  - runtimeoperations
+  - runtimeoperations/finalizers
+  - runtimeoperations/status
   verbs:
   - '*'
 - apiGroups:
