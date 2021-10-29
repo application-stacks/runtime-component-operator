@@ -3856,7 +3856,6 @@ spec:
                     message:
                       type: string
                     reason:
-                      description: LastUpdateTime     metav1.Time            `json:"lastUpdateTime,omitempty"`
                       type: string
                     status:
                       type: string

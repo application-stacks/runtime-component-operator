@@ -182,7 +182,6 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 		oldCondition = &appstacksv1beta2.StatusCondition{}
 	}
 
-	// lastUpdate := oldCondition.GetLastUpdateTime().Time
 	lastStatus := oldCondition.GetStatus()
 
 	// Keep the old `LastTransitionTime` when status has not changed
@@ -194,7 +193,6 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 
 	newCondition := s.NewCondition()
 	newCondition.SetLastTransitionTime(transitionTime)
-	// newCondition.SetLastUpdateTime(nowTime)
 	newCondition.SetReason(string(apierrors.ReasonForError(issue)))
 	newCondition.SetType(conditionType)
 	newCondition.SetMessage(issue.Error())
@@ -225,7 +223,7 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 	if lastStatus == corev1.ConditionTrue {
 		retryInterval = time.Second
 	} else {
-		retryInterval = 5 * time.Second //newCondition.GetLastUpdateTime().Sub(lastUpdate).Round(time.Second)
+		retryInterval = 5 * time.Second
 	}
 
 	return reconcile.Result{
@@ -240,7 +238,6 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 	s := ba.GetStatus()
 	oldCondition := s.GetCondition(conditionType)
 	if oldCondition == nil {
-		//oldCondition = &appstacksv1beta2.StatusCondition{LastUpdateTime: metav1.Time{}}
 		oldCondition = &appstacksv1beta2.StatusCondition{}
 	}
 
@@ -253,7 +250,6 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 
 	statusCondition := s.NewCondition()
 	statusCondition.SetLastTransitionTime(transitionTime)
-	// statusCondition.SetLastUpdateTime(nowTime)
 	statusCondition.SetReason("")
 	statusCondition.SetMessage("")
 	statusCondition.SetStatus(corev1.ConditionTrue)

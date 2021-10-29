@@ -16,9 +16,6 @@ type StatusCondition interface {
 	GetLastTransitionTime() *metav1.Time
 	SetLastTransitionTime(*metav1.Time)
 
-	// GetLastUpdateTime() metav1.Time
-	// SetLastUpdateTime(metav1.Time)
-
 	GetReason() string
 	SetReason(string)
 
