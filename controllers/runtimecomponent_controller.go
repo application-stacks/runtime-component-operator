@@ -197,9 +197,9 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	result, err := r.ReconcileBindings(instance)
-	if err != nil || result != (reconcile.Result{}) {
-		return result, err
+	err = r.ReconcileBindings(instance)
+	if err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, ba)
 	}
 
 	if instance.Spec.ServiceAccountName == nil || *instance.Spec.ServiceAccountName == "" {

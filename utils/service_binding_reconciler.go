@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/application-stacks/runtime-component-operator/common"
-	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // String constants
@@ -23,14 +20,14 @@ const (
 )
 
 // ReconcileBindings goes through the reconcile logic for service binding
-func (r *ReconcilerBase) ReconcileBindings(ba common.BaseComponent) (reconcile.Result, error) {
-	if res, err := r.reconcileExpose(ba); isRequeue(res, err) {
-		return res, err
+func (r *ReconcilerBase) ReconcileBindings(ba common.BaseComponent) error {
+	if err := r.reconcileExpose(ba); err != nil {
+		return err
 	}
-	return reconcile.Result{RequeueAfter: common.ReconcileInterval * time.Second}, nil
+	return nil
 }
 
-func (r *ReconcilerBase) reconcileExpose(ba common.BaseComponent) (reconcile.Result, error) {
+func (r *ReconcilerBase) reconcileExpose(ba common.BaseComponent) error {
 	mObj := ba.(metav1.Object)
 	bindingSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -53,21 +50,21 @@ func (r *ReconcilerBase) reconcileExpose(ba common.BaseComponent) (reconcile.Res
 			return nil
 		})
 		if err != nil {
-			return r.requeueError(ba, err)
+			return err
 		}
 
 		// Update binding status
 		r.updateBindingStatus(bindingSecret.Name, ba)
-		return reconcile.Result{RequeueAfter: common.ReconcileInterval * time.Second}, nil
+		return nil
 	}
 
 	// Update status
 	r.updateBindingStatus("", ba)
 	// Remove binding secret
 	if err := r.DeleteResource(bindingSecret); client.IgnoreNotFound(err) != nil {
-		return r.requeueError(ba, err)
+		return err
 	}
-	return reconcile.Result{RequeueAfter: common.ReconcileInterval * time.Second}, nil
+	return nil
 }
 
 func (r *ReconcilerBase) getCustomValuesToExpose(secret *corev1.Secret, ba common.BaseComponent) error {
@@ -132,12 +129,6 @@ func (r *ReconcilerBase) updateBindingStatus(bindingSecretName string, ba common
 		bindingStatus = &corev1.LocalObjectReference{Name: bindingSecretName}
 	}
 	ba.GetStatus().SetBinding(bindingStatus)
-}
-
-// requeueError simply calls ManageError when dependency is not fulfilled
-func (r *ReconcilerBase) requeueError(ba common.BaseComponent, err error) (reconcile.Result, error) {
-	r.ManageError(err, common.StatusConditionTypeReconciled, ba)
-	return r.ManageError(errors.New("dependency not satisfied"), common.StatusConditionTypeReconciled, ba)
 }
 
 func getOverrideExposeBindingSecretName(ba common.BaseComponent) string {

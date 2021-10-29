@@ -26,6 +26,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+const (
+	ReconcileInterval = 15
+)
+
 // ReconcilerBase base reconciler with some common behaviour
 type ReconcilerBase struct {
 	apiReader  client.Reader
@@ -263,7 +267,7 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 			Requeue:      true,
 		}, nil
 	}
-	return reconcile.Result{RequeueAfter: common.ReconcileInterval * time.Second}, nil
+	return reconcile.Result{RequeueAfter: ReconcileInterval * time.Second}, nil
 }
 
 // IsGroupVersionSupported ...
