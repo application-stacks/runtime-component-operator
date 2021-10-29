@@ -3,7 +3,6 @@ package utils
 import (
 	"context"
 	"fmt"
-	"math"
 	"time"
 
 	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
@@ -180,10 +179,10 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 
 	oldCondition := s.GetCondition(conditionType)
 	if oldCondition == nil {
-		oldCondition = &appstacksv1beta2.StatusCondition{LastUpdateTime: metav1.Time{}}
+		oldCondition = &appstacksv1beta2.StatusCondition{}
 	}
 
-	lastUpdate := oldCondition.GetLastUpdateTime().Time
+	// lastUpdate := oldCondition.GetLastUpdateTime().Time
 	lastStatus := oldCondition.GetStatus()
 
 	// Keep the old `LastTransitionTime` when status has not changed
@@ -195,7 +194,7 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 
 	newCondition := s.NewCondition()
 	newCondition.SetLastTransitionTime(transitionTime)
-	newCondition.SetLastUpdateTime(nowTime)
+	// newCondition.SetLastUpdateTime(nowTime)
 	newCondition.SetReason(string(apierrors.ReasonForError(issue)))
 	newCondition.SetType(conditionType)
 	newCondition.SetMessage(issue.Error())
@@ -223,14 +222,15 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 	// }
 
 	var retryInterval time.Duration
-	if lastUpdate.IsZero() || lastStatus == corev1.ConditionTrue {
+	if lastStatus == corev1.ConditionTrue {
 		retryInterval = time.Second
 	} else {
-		retryInterval = newCondition.GetLastUpdateTime().Sub(lastUpdate).Round(time.Second)
+		retryInterval = 5 * time.Second //newCondition.GetLastUpdateTime().Sub(lastUpdate).Round(time.Second)
 	}
 
 	return reconcile.Result{
-		RequeueAfter: time.Duration(math.Min(float64(retryInterval.Nanoseconds()*2), float64(time.Hour.Nanoseconds()*6))),
+		//RequeueAfter: time.Duration(math.Min(float64(retryInterval.Nanoseconds()*2), float64(time.Hour.Nanoseconds()*6))),
+		RequeueAfter: retryInterval,
 		Requeue:      true,
 	}, nil
 }
@@ -240,7 +240,8 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 	s := ba.GetStatus()
 	oldCondition := s.GetCondition(conditionType)
 	if oldCondition == nil {
-		oldCondition = &appstacksv1beta2.StatusCondition{LastUpdateTime: metav1.Time{}}
+		//oldCondition = &appstacksv1beta2.StatusCondition{LastUpdateTime: metav1.Time{}}
+		oldCondition = &appstacksv1beta2.StatusCondition{}
 	}
 
 	// Keep the old `LastTransitionTime` when status has not changed
@@ -252,7 +253,7 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 
 	statusCondition := s.NewCondition()
 	statusCondition.SetLastTransitionTime(transitionTime)
-	statusCondition.SetLastUpdateTime(nowTime)
+	// statusCondition.SetLastUpdateTime(nowTime)
 	statusCondition.SetReason("")
 	statusCondition.SetMessage("")
 	statusCondition.SetStatus(corev1.ConditionTrue)

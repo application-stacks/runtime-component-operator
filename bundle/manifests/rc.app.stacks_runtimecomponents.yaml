@@ -3853,12 +3853,10 @@ spec:
                     lastTransitionTime:
                       format: date-time
                       type: string
-                    lastUpdateTime:
-                      format: date-time
-                      type: string
                     message:
                       type: string
                     reason:
+                      description: LastUpdateTime     metav1.Time            `json:"lastUpdateTime,omitempty"`
                       type: string
                     status:
                       type: string

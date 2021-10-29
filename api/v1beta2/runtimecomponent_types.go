@@ -325,12 +325,12 @@ type RuntimeComponentStatus struct {
 
 // Defines possible status conditions.
 type StatusCondition struct {
-	LastTransitionTime *metav1.Time           `json:"lastTransitionTime,omitempty"`
-	LastUpdateTime     metav1.Time            `json:"lastUpdateTime,omitempty"`
-	Reason             string                 `json:"reason,omitempty"`
-	Message            string                 `json:"message,omitempty"`
-	Status             corev1.ConditionStatus `json:"status,omitempty"`
-	Type               StatusConditionType    `json:"type,omitempty"`
+	LastTransitionTime *metav1.Time `json:"lastTransitionTime,omitempty"`
+	//LastUpdateTime     metav1.Time            `json:"lastUpdateTime,omitempty"`
+	Reason  string                 `json:"reason,omitempty"`
+	Message string                 `json:"message,omitempty"`
+	Status  corev1.ConditionStatus `json:"status,omitempty"`
+	Type    StatusConditionType    `json:"type,omitempty"`
 }
 
 // Defines the type of status condition.
@@ -820,15 +820,15 @@ func (c *StatusCondition) SetLastTransitionTime(t *metav1.Time) {
 	c.LastTransitionTime = t
 }
 
-// GetLastUpdateTime return time of last status update
-func (c *StatusCondition) GetLastUpdateTime() metav1.Time {
-	return c.LastUpdateTime
-}
+// // GetLastUpdateTime return time of last status update
+// func (c *StatusCondition) GetLastUpdateTime() metav1.Time {
+// 	return c.LastUpdateTime
+// }
 
-// SetLastUpdateTime sets time of last status update
-func (c *StatusCondition) SetLastUpdateTime(t metav1.Time) {
-	c.LastUpdateTime = t
-}
+// // SetLastUpdateTime sets time of last status update
+// func (c *StatusCondition) SetLastUpdateTime(t metav1.Time) {
+// 	c.LastUpdateTime = t
+// }
 
 // GetMessage return condition's message
 func (c *StatusCondition) GetMessage() string {
@@ -899,7 +899,7 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 		condition.SetLastTransitionTime(&metav1.Time{Time: time.Now()})
 	}
 
-	condition.SetLastUpdateTime(metav1.Time{Time: time.Now()})
+	// condition.SetLastUpdateTime(metav1.Time{Time: time.Now()})
 	condition.SetReason(c.GetReason())
 	condition.SetMessage(c.GetMessage())
 	condition.SetStatus(c.GetStatus())
