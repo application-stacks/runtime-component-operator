@@ -102,7 +102,7 @@ function launch_travis() {
                             \"os\": \"linux\",
                             \"arch\": \"ppc64le\",
                             \"script\": [
-                                \"make build-multiarch-image\",
+                                \"make build-pipeline-multiarch-image\",
                                 \"make push-pipeline-multiarch-image\"
                             ]
                         },
@@ -111,7 +111,7 @@ function launch_travis() {
                             \"os\": \"linux\",
                             \"arch\": \"s390x\",
                             \"script\": [
-                                \"make build-multiarch-image\",
+                                \"make build-pipeline-multiarch-image\",
                                 \"make push-pipeline-multiarch-image\"
                             ]
                         }
