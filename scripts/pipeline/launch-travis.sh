@@ -89,6 +89,15 @@ function launch_travis() {
             \"branch\":\"$BRANCH\",
             \"merge_mode\":\"replace\",
             \"config\": {
+                \"dist\": \"xenial\",
+                \"language\": \"go\",
+                \"go\": [
+                    \"1.16.x\"
+                ],
+                \"go_import_path\": \"github.com/application-stacks/runtime-component-operator\",
+                \"services\": [
+                    \"docker\"
+                ],    
                 \"stages\": [
                     {
                         \"name\": \"build\"
