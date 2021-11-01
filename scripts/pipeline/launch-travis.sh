@@ -89,6 +89,15 @@ function launch_travis() {
             \"branch\":\"$BRANCH\",
             \"merge_mode\":\"replace\",
             \"config\": {
+                \"dist\": \"xenial\",
+                \"language\": \"go\",
+                \"go\": [
+                    \"1.16.x\"
+                ],
+                \"go_import_path\": \"github.com/application-stacks/runtime-component-operator\",
+                \"services\": [
+                    \"docker\"
+                ],    
                 \"stages\": [
                     {
                         \"name\": \"build\"
@@ -102,7 +111,7 @@ function launch_travis() {
                             \"os\": \"linux\",
                             \"arch\": \"ppc64le\",
                             \"script\": [
-                                \"make build-multiarch-image\",
+                                \"make build-pipeline-multiarch-image\",
                                 \"make push-pipeline-multiarch-image\"
                             ]
                         },
@@ -111,7 +120,7 @@ function launch_travis() {
                             \"os\": \"linux\",
                             \"arch\": \"s390x\",
                             \"script\": [
-                                \"make build-multiarch-image\",
+                                \"make build-pipeline-multiarch-image\",
                                 \"make push-pipeline-multiarch-image\"
                             ]
                         }
