@@ -84,6 +84,8 @@ build_release() {
   local full_image="${IMAGE}:${release}-${arch}"
   echo "*** Building ${full_image} for ${arch}"
   docker build -t "${full_image}" .
+  if [[ -n "${REGISTRY}" ]]; then
+    docker tag "${full_image}" "${REGISTRY}/${full_image}"
   return $?
 
 }
