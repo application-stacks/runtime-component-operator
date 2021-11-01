@@ -70,7 +70,7 @@ containerize:
     # Build manifest
     ##make build-pipeline-manifest
     # Save artifacts
-    declare -a tags=("daily-amd64" "daily-ppc64le" "daily-s390x" "bundle-daily") 
+    declare -a tags=("daily-amd64" "daily-ppc64le" "daily-s390x") 
     for i in "${tags[@]}"
     do
       IMAGE=us.icr.io/runtimecomponentoperator/operator:$i
