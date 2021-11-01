@@ -57,24 +57,25 @@ containerize:
     export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
     export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key)    
     # Build amd64 image
-    make build-pipeline-multiarch-image
-    make push-pipeline-multiarch-image
+    ##make build-pipeline-multiarch-image
+    ##make push-pipeline-multiarch-image
     # Build ppc64le and s390x images
-    ./scripts/pipeline/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
+    ##./scripts/pipeline/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
     # Build bundle image
-    echo $(get_env ibmcloud-api-key) | docker login us.icr.io -u "$(get_env ibmcloud-api-user)" --password-stdin
-    make bundle-build
-    BUNDLE_IMAGE=us.icr.io/runtimecomponentoperator/operator:bundle-daily
-    docker tag applicationstacks/operator:bundle-daily $BUNDLE_IMAGE
-    docker push $BUNDLE_IMAGE
+    ##echo $(get_env ibmcloud-api-key) | docker login us.icr.io -u "$(get_env ibmcloud-api-user)" --password-stdin
+    ##make bundle-build
+    ##BUNDLE_IMAGE=us.icr.io/runtimecomponentoperator/operator:bundle-daily
+    ##docker tag applicationstacks/operator:bundle-daily $BUNDLE_IMAGE
+    ##docker push $BUNDLE_IMAGE
     # Build manifest
-    make build-pipeline-manifest
+    ##make build-pipeline-manifest
     # Save artifacts
     declare -a tags=("daily-amd64" "daily-ppc64le" "daily-s390x" "bundle-daily") 
     for i in "${tags[@]}"
     do
       IMAGE=us.icr.io/runtimecomponentoperator/operator:$i
       DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
+      echo "Saving artifact $i name=$IMAGE digest=$DIGEST"
       save_artifact $i type=image name="$IMAGE" "digest=$DIGEST"    
     done
  
