@@ -86,8 +86,8 @@ build_release() {
   docker build -t "${full_image}" .
   if [[ -n "${REGISTRY}" ]]; then
     docker tag "${full_image}" "${REGISTRY}/${full_image}"
+  fi  
   return $?
-
 }
 
 push_release() {
