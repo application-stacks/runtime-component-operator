@@ -78,17 +78,6 @@ containerize:
       echo "Saving artifact $i name=$IMAGE digest=$DIGEST"
       save_artifact $i type=image name="$IMAGE" "digest=$DIGEST"    
     done
-    if which list_artifacts >/dev/null; then
-      list_artifacts | while IFS= read -r artifact; do
-        image="$(load_artifact "$artifact" "name")"
-        type="$(load_artifact "$artifact" "type")"
-        digest="$(load_artifact "$artifact" "digest")"
-
-        if [ "$type" == "image" ]; then
-          echo "$artifact $image $digest"  
-          echo "$artifact $image $digest" >>"$artifact_list"
-      done
-    fi   
 
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
@@ -132,12 +121,12 @@ acceptance-test:
     ##make setup
     ##make test-e2e
 
-scan-artifact:
-  abort_on_failure: false
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.6@sha256:7f588468622a981f89cf5e1212aaf75fface9da6169b5345ca52ab63d8215907
-  script: |
+#scan-artifact:
+#  abort_on_failure: false
+#  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.6@sha256:7f588468622a981f89cf5e1212aaf75fface9da6169b5345ca52ab63d8215907
+#  script: |
     #!/usr/bin/env bash
-    . /opt/one-pipeline/internal/container-registry/va_scan    
+    #. /opt/one-pipeline/internal/container-registry/va_scan    
     #./scripts/twistlock-scan.sh    
 
 
