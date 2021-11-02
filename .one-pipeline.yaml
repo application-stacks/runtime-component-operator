@@ -85,13 +85,9 @@ containerize:
         digest="$(load_artifact "$artifact" "digest")"
 
         if [ "$type" == "image" ]; then
+          echo "$artifact $image $digest"  
           echo "$artifact $image $digest" >>"$artifact_list"
-        elif
-          echo "Type is not image"
-        fi  
       done
-    elif
-      echo "list_artifact not found"
     fi   
 
 deploy:
