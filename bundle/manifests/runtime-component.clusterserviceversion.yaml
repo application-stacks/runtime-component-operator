@@ -46,6 +46,22 @@ spec:
       displayName: Runtime Component
       kind: RuntimeComponent
       name: runtimecomponents.rc.app.stacks
+      resources:
+      - kind: Deployment
+        name: ""
+        version: v1
+      - kind: HorizontalPodAutoscaler
+        name: ""
+        version: v1
+      - kind: Route
+        name: ""
+        version: v1
+      - kind: Service
+        name: ""
+        version: v1
+      - kind: StatefulSet
+        name: ""
+        version: v1
       specDescriptors:
       - description: The name of the application this resource is part of. If not specified, it defaults to the name of the CR.
         displayName: Application Name

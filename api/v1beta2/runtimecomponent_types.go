@@ -344,6 +344,7 @@ const (
 // +kubebuilder:subresource:status
 
 // RuntimeComponent is the Schema for the runtimecomponents API.
+//+operator-sdk:csv:customresourcedefinitions:displayName="Runtime Component",resources={{Deployment,v1,},{Service,v1,},{StatefulSet,v1,},{Route,v1,},{HorizontalPodAutoscaler,v1,}}
 type RuntimeComponent struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
