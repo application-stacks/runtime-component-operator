@@ -114,12 +114,12 @@ acceptance-test:
     export PATH=$PATH:/usr/local/go/bin
     apt-get update
     apt-get -y install build-essential     
-    ##export DOCKER_USERNAME=$(get_env docker-username)
-    ##export DOCKER_PASSWORD=$(get_env docker-password)  
-    ##export CLUSTER_URL=$(get_env test-cluster-url)
-    ##export CLUSTER_TOKEN=$(get_env test-cluster-token)    
-    ##make setup
-    ##make test-e2e
+    export DOCKER_USERNAME=$(get_env docker-username)
+    export DOCKER_PASSWORD=$(get_env docker-password)  
+    export CLUSTER_URL=$(get_env test-cluster-url)
+    export CLUSTER_TOKEN=$(get_env test-cluster-token)    
+    make setup
+    make test-e2e
 
 #scan-artifact:
 #  abort_on_failure: false
