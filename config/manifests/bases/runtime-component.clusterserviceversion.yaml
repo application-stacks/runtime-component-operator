@@ -15,7 +15,7 @@ spec:
   customresourcedefinitions:
     owned:
     - description: RuntimeComponent is the Schema for the runtimecomponents API.
-      displayName: Runtime Component
+      displayName: RuntimeComponent
       kind: RuntimeComponent
       name: runtimecomponents.rc.app.stacks
       resources:
@@ -28,7 +28,13 @@ spec:
       - kind: Route
         name: ""
         version: v1
+      - kind: Secret
+        name: ""
+        version: v1
       - kind: Service
+        name: ""
+        version: v1
+      - kind: ServiceAccount
         name: ""
         version: v1
       - kind: StatefulSet
@@ -275,7 +281,7 @@ spec:
         - urn:alm:descriptor:io.kubernetes.conditions
       version: v1beta2
     - description: RuntimeOperation is the Schema for the runtimeoperations API.
-      displayName: Runtime Operation
+      displayName: RuntimeOperation
       kind: RuntimeOperation
       name: runtimeoperations.rc.app.stacks
       specDescriptors:
