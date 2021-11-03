@@ -47,6 +47,7 @@ type RuntimeOperationStatus struct {
 // +kubebuilder:subresource:status
 
 // RuntimeOperation is the Schema for the runtimeoperations API.
+//+operator-sdk:csv:customresourcedefinitions:displayName="RuntimeOperation"
 type RuntimeOperation struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
