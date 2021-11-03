@@ -126,21 +126,16 @@ type RuntimeComponentSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=56,type=spec,displayName="Env From"
 	EnvFrom []corev1.EnvFromSource `json:"envFrom,omitempty"`
 
-	// An array of architectures to be considered for deployment. Their position in the array indicates preference.
-	// +listType=set
-	// +operator-sdk:csv:customresourcedefinitions:order=57,type=spec,displayName="Architecture"
-	Architecture []string `json:"architecture,omitempty"`
-
 	// List of containers that run before other containers in a pod.
 	// +listType=map
 	// +listMapKey=name
-	// +operator-sdk:csv:customresourcedefinitions:order=58,type=spec,displayName="Init Containers"
+	// +operator-sdk:csv:customresourcedefinitions:order=57,type=spec,displayName="Init Containers"
 	InitContainers []corev1.Container `json:"initContainers,omitempty"`
 
 	// The list of sidecar containers. These are additional containers to be added to the pods.
 	// +listType=map
 	// +listMapKey=name
-	// +operator-sdk:csv:customresourcedefinitions:order=59,type=spec,displayName="Sidecar Containers"
+	// +operator-sdk:csv:customresourcedefinitions:order=58,type=spec,displayName="Sidecar Containers"
 	SidecarContainers []corev1.Container `json:"sidecarContainers,omitempty"`
 }
 
@@ -439,11 +434,6 @@ func (cr *RuntimeComponent) GetEnvFrom() []corev1.EnvFromSource {
 // GetCreateKnativeService returns flag that toggles Knative service
 func (cr *RuntimeComponent) GetCreateKnativeService() *bool {
 	return cr.Spec.CreateKnativeService
-}
-
-// GetArchitecture returns slice of architectures
-func (cr *RuntimeComponent) GetArchitecture() []string {
-	return cr.Spec.Architecture
 }
 
 // GetAutoscaling returns autoscaling settings

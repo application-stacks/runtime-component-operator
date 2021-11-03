@@ -240,16 +240,14 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 // CustomizeAffinity ...
 func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 
-	archs := ba.GetArchitecture()
+	var archs []string
 
 	if ba.GetAffinity() != nil {
 		affinity.NodeAffinity = ba.GetAffinity().GetNodeAffinity()
 		affinity.PodAffinity = ba.GetAffinity().GetPodAffinity()
 		affinity.PodAntiAffinity = ba.GetAffinity().GetPodAntiAffinity()
 
-		if len(archs) == 0 {
-			archs = ba.GetAffinity().GetArchitecture()
-		}
+		archs = ba.GetAffinity().GetArchitecture()
 
 		if len(ba.GetAffinity().GetNodeAffinityLabels()) > 0 {
 			if affinity.NodeAffinity == nil {
@@ -429,7 +427,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	pts.Spec.RestartPolicy = corev1.RestartPolicyAlways
 	pts.Spec.DNSPolicy = corev1.DNSClusterFirst
 
-	if len(ba.GetArchitecture()) > 0 || ba.GetAffinity() != nil {
+	if ba.GetAffinity() != nil {
 		pts.Spec.Affinity = &corev1.Affinity{}
 		CustomizeAffinity(pts.Spec.Affinity, ba)
 	} else {

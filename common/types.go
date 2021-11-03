@@ -128,7 +128,6 @@ type BaseComponent interface {
 	GetEnv() []corev1.EnvVar
 	GetEnvFrom() []corev1.EnvFromSource
 	GetCreateKnativeService() *bool
-	GetArchitecture() []string
 	GetAutoscaling() BaseComponentAutoscaling
 	GetService() BaseComponentService
 	GetDeployment() BaseComponentDeployment

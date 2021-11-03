@@ -365,6 +365,9 @@ func TestCustomizePodSpec(t *testing.T) {
 	noCont := len(pts.Spec.Containers)
 	noPorts := len(pts.Spec.Containers[0].Ports)
 	ptsSAN := pts.Spec.ServiceAccountName
+	affinityConfig := appstacksv1beta2.RuntimeComponentAffinity{
+		Architecture: arch,
+	}
 	// if cond
 	spec = appstacksv1beta2.RuntimeComponentSpec{
 		ApplicationImage: appImage,
@@ -382,8 +385,8 @@ func TestCustomizePodSpec(t *testing.T) {
 		Env:                 env,
 		EnvFrom:             envFrom,
 		Volumes:             []corev1.Volume{volume},
-		Architecture:        arch,
 		ServiceAccountName:  &serviceAccountName,
+		Affinity:            &affinityConfig,
 	}
 	runtime = createRuntimeComponent(name, namespace, spec)
 	CustomizePodSpec(pts, runtime)
