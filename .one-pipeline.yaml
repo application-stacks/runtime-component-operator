@@ -143,11 +143,11 @@ release:
 
 twistlock-scan:
   abort_on_failure: false
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.15@sha256:f4bff8348fbfdb738c3c681cb6da04cb215f742abe5e09b5d2f5ef07dcfbf21b
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     #!/usr/bin/env bash
     echo "twistlock-scan task"
-    ./scripts/twistlock-scan.sh
+    ./scripts/pipeline/twistlock-scan.sh
 
 
 #owasp-zap-api:
