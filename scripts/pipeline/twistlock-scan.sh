@@ -4,8 +4,8 @@
     DEBIAN_FRONTEND=noninteractive apt-get -y update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y install uuid-runtime file jq && \
     # Install 'gh'
-    curl -Lo /tmp/gh_1.10.2_linux_amd64.deb https://github.com/cli/cli/releases/download/v1.10.2/gh_1.10.2_linux_amd64.deb && \
-    dpkg -i /tmp/gh_1.10.2_linux_amd64.deb && \
+    #curl -Lo /tmp/gh_1.10.2_linux_amd64.deb https://github.com/cli/cli/releases/download/v1.10.2/gh_1.10.2_linux_amd64.deb && \
+    #dpkg -i /tmp/gh_1.10.2_linux_amd64.deb && \
     # Install 'tt' - Twistlock service cli
     wget --no-check-certificate https://twistlock-service.cloudpaklab.ibm.com/download/tt_latest.zip && \
     unzip -l tt_latest.zip | grep linux_x86_64/tt | awk '{print $4}' | xargs unzip -j tt_latest.zip -d /usr/local/bin
@@ -37,7 +37,7 @@ for artifact_image in $(list_artifacts); do
   # the results will be dumped to file here.
 
   # twistlock command
-  tt images pull-and-scan ${IMAGE_LOCATION} --iam-api-key $IBMCLOUD_API_KEY -u "$(get_env twistlock-user-id):$(get_env twistlock-api-key)" -g "Runtime Component Operator - OnePipeline" 
+  tt images pull-and-scan ${IMAGE_LOCATION} --iam-api-key $IBMCLOUD_API_KEY -u "$(get_env twistlock-user-id):$(get_env twistlock-api-key)" -g "websphere" 
 
   # save the artifact
   for i in twistlock-scan-results*; do save_result scan-artifact ${i}; done
