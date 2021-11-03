@@ -75,8 +75,9 @@ containerize:
     do
       IMAGE=us.icr.io/runtimecomponentoperator/operator:$i
       DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
+      ARCH=$(echo $i | cut -d'-' -f 2)
       echo "Saving artifact $i name=$IMAGE digest=$DIGEST"
-      save_artifact $i type=image name="$IMAGE" "digest=$DIGEST"    
+      save_artifact $i type=image name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"   
     done
 
     # launch the sub-pipeline to do the twistlock scanning on the amd64 container image    
