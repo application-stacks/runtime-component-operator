@@ -390,12 +390,6 @@ spec:
                 type: string
               applicationVersion:
                 type: string
-              architecture:
-                description: An array of architectures to be considered for deployment. Their position in the array indicates preference.
-                items:
-                  type: string
-                type: array
-                x-kubernetes-list-type: set
               autoscaling:
                 description: Configures the desired resource consumption of pods.
                 properties:

@@ -267,9 +267,6 @@ spec:
       - description: An array of references to ConfigMap or Secret resources containing environment variables.
         displayName: Env From
         path: envFrom
-      - description: An array of architectures to be considered for deployment. Their position in the array indicates preference.
-        displayName: Architecture
-        path: architecture
       - description: List of containers that run before other containers in a pod.
         displayName: Init Containers
         path: initContainers

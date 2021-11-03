@@ -437,11 +437,6 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	if in.Architecture != nil {
-		in, out := &in.Architecture, &out.Architecture
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
 	if in.InitContainers != nil {
 		in, out := &in.InitContainers, &out.InitContainers
 		*out = make([]v1.Container, len(*in))
