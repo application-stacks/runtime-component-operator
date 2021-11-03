@@ -79,6 +79,10 @@ containerize:
       save_artifact $i type=image name="$IMAGE" "digest=$DIGEST"    
     done
 
+    # launch the sub-pipeline to do the twistlock scanning on the amd64 container image    
+    source "${ONE_PIPELINE_PATH}"/tools/trigger-task
+    trigger-task "twistlock-scan" "Twistlock container image scan"    
+
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
@@ -136,6 +140,15 @@ release:
   script: |
     #!/usr/bin/env bash
     echo "release" 
+
+twistlock-scan:
+  abort_on_failure: false
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.15@sha256:f4bff8348fbfdb738c3c681cb6da04cb215f742abe5e09b5d2f5ef07dcfbf21b
+  script: |
+    #!/usr/bin/env bash
+    echo "twistlock-scan task"
+    ./scripts/twistlock-scan.sh
+
 
 #owasp-zap-api:
 #  dind: true
