@@ -5,12 +5,14 @@ metadata:
   annotations:
     bar2: foo2
     foo1: bar1  
+    conflict: statefulSet
 spec:
   template:
     metadata:
       annotations:
         bar2: foo2
         foo1: bar1
+        conflict: statefulSet
 status:
   readyReplicas: 1
 ---
@@ -27,3 +29,4 @@ metadata:
   annotations:
     bar2: foo2
     foo1: bar1
+    conflict: statefulSet
