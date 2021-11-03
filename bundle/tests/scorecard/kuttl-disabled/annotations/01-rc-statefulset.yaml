@@ -11,4 +11,4 @@ spec:
   statefulSet:
     annotations:
       bar2: foo2
-
+      conflict: statefulSet
