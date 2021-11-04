@@ -88,7 +88,7 @@ type RuntimeComponentSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=48,type=spec,displayName="Create Knative Service",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	CreateKnativeService *bool `json:"createKnativeService,omitempty"`
 
-	// Detects if the services needs to be restarted.
+	// Detects if the services need to be restarted.
 	// +operator-sdk:csv:customresourcedefinitions:order=49,type=spec,displayName="Liveness Probe"
 	LivenessProbe *corev1.Probe `json:"livenessProbe,omitempty"`
 
@@ -154,7 +154,7 @@ type RuntimeComponentAffinity struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=35,type=spec,displayName="Pod Anti Affinity",xDescriptors="urn:alm:descriptor:com.tectonic.ui:podAntiAffinity"
 	PodAntiAffinity *corev1.PodAntiAffinity `json:"podAntiAffinity,omitempty"`
 
-	// A YAML object that contains set of required labels and their values.
+	// A YAML object that contains a set of required labels and their values.
 	// +operator-sdk:csv:customresourcedefinitions:order=36,type=spec,displayName="Node Affinity Labels",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	NodeAffinityLabels map[string]string `json:"nodeAffinityLabels,omitempty"`
 
@@ -205,13 +205,13 @@ type RuntimeComponentService struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=13,type=spec,displayName="Service Annotations",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Annotations map[string]string `json:"annotations,omitempty"`
 
-	// The port that the operator assigns to containers inside pods. Defaults to the value of service.port.
+	// The port that the operator assigns to containers inside pods. Defaults to the value of spec.service.port.
 	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:validation:Minimum=1
 	// +operator-sdk:csv:customresourcedefinitions:order=14,type=spec,displayName="Target Port",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
 	TargetPort *int32 `json:"targetPort,omitempty"`
 
-	// 	A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.
+	// A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.
 	// +k8s:openapi-gen=true
 	// +operator-sdk:csv:customresourcedefinitions:order=15,type=spec,displayName="Certificate Secret Reference",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
@@ -219,7 +219,7 @@ type RuntimeComponentService struct {
 	// An array consisting of service ports.
 	Ports []corev1.ServicePort `json:"ports,omitempty"`
 
-	// A boolean to toggle whether the operator expose the application as a bindable service. The default value for this parameter is false.
+	// Expose the application as a bindable service. Defaults to false.
 	Bindable *bool `json:"bindable,omitempty"`
 }
 
@@ -273,6 +273,7 @@ type RuntimeComponentMonitoring struct {
 	Labels map[string]string `json:"labels,omitempty"`
 
 	// A YAML snippet representing an array of Endpoint component from ServiceMonitor.
+	// +listType=atomic
 	// +operator-sdk:csv:customresourcedefinitions:order=31,type=spec,displayName="Monitoring Endpoints",xDescriptors="urn:alm:descriptor:com.tectonic.ui:endpointList"
 	Endpoints []prometheusv1.Endpoint `json:"endpoints,omitempty"`
 }
@@ -335,11 +336,18 @@ const (
 	StatusConditionTypeReconciled StatusConditionType = "Reconciled"
 )
 
+// +kubebuilder:resource:path=runtimecomponents,scope=Namespaced,shortName=comp;comps
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Image",type="string",JSONPath=".spec.applicationImage",priority=0,description="Absolute name of the deployed image containing registry and tag"
+// +kubebuilder:printcolumn:name="Exposed",type="boolean",JSONPath=".spec.expose",priority=0,description="Specifies whether deployment is exposed externally via default Route"
+// +kubebuilder:printcolumn:name="Reconciled",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].status",priority=0,description="Status of the reconcile condition"
+// +kubebuilder:printcolumn:name="Reason",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].reason",priority=1,description="Reason for the failure of reconcile condition"
+// +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].message",priority=1,description="Failure message from reconcile condition"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",priority=0,description="Age of the resource"
 
-// RuntimeComponent is the Schema for the runtimecomponents API.
 //+operator-sdk:csv:customresourcedefinitions:displayName="RuntimeComponent",resources={{Deployment,v1},{Service,v1},{StatefulSet,v1},{Route,v1},{HorizontalPodAutoscaler,v1},{ServiceAccount,v1},{Secret,v1}}
+// RuntimeComponent is the Schema for the runtimecomponents API.
 type RuntimeComponent struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -488,7 +496,7 @@ func (cr *RuntimeComponent) GetInitContainers() []corev1.Container {
 	return cr.Spec.InitContainers
 }
 
-// GetSidecarContainers returns list of user specified containers
+// GetSidecarContainers returns list of sidecar containers
 func (cr *RuntimeComponent) GetSidecarContainers() []corev1.Container {
 	return cr.Spec.SidecarContainers
 }
@@ -498,7 +506,7 @@ func (cr *RuntimeComponent) GetGroupName() string {
 	return "rc.app.stacks"
 }
 
-// GetRoute returns route configuration for RuntimeComponent
+// GetRoute returns route
 func (cr *RuntimeComponent) GetRoute() common.BaseComponentRoute {
 	if cr.Spec.Route == nil {
 		return nil
@@ -620,10 +628,6 @@ func (s *RuntimeComponentService) GetNodePort() *int32 {
 
 // GetTargetPort returns the internal target port for containers
 func (s *RuntimeComponentService) GetTargetPort() *int32 {
-	if s.TargetPort == nil {
-		return nil
-	}
-
 	return s.TargetPort
 }
 

@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/apex/log"
 	"github.com/application-stacks/runtime-component-operator/common"
 	"github.com/pkg/errors"
 
@@ -72,7 +71,8 @@ type RuntimeComponentReconciler struct {
 // +kubebuilder:rbac:groups=image.openshift.io,resources=imagestreams;imagestreamtags,verbs=get;list;watch,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=*,namespace=runtime-component-operator
-
+// Reconcile is part of the main kubernetes reconciliation loop which aims to
+// move the current state of the cluster closer to the desired state.
 func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 
 	reqLogger := r.Log.WithValues("Request.Namespace", req.Namespace, "Request.Name", req.Name)
@@ -96,7 +96,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	configMap, err := r.GetOpConfigMap("runtime-component-operator", ns)
 	if err != nil {
-		r.Log.Info("Failed to find runtime-component-operator config map")
+		reqLogger.Info("Failed to find runtime-component-operator config map")
 		common.Config = common.DefaultOpConfig()
 		configMap = &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "runtime-component-operator", Namespace: ns}}
 		configMap.Data = common.Config
@@ -110,13 +110,12 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	})
 
 	if err != nil {
-		log.Info("Failed to update runtime-component-operator config map")
+		reqLogger.Info("Failed to update runtime-component-operator config map")
 	}
 
 	// Fetch the RuntimeComponent instance
 	instance := &appstacksv1beta2.RuntimeComponent{}
-	var ba common.BaseComponent
-	ba = instance
+	var ba common.BaseComponent = instance
 	err = r.GetClient().Get(context.TODO(), req.NamespacedName, instance)
 	if err != nil {
 		if kerrors.IsNotFound(err) {
@@ -289,9 +288,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		if instance.Spec.Monitoring != nil {
 			svc.Labels[monitoringEnabledLabelName] = "true"
 		} else {
-			if _, ok := svc.Labels[monitoringEnabledLabelName]; ok {
-				delete(svc.Labels, monitoringEnabledLabelName)
-			}
+			delete(svc.Labels, monitoringEnabledLabelName)
 		}
 		return nil
 	})
@@ -464,6 +461,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported", prometheusv1.SchemeGroupVersion.String()))
 	}
 
+	reqLogger.Info("Reconcile RuntimeComponent - completed")
 	return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)
 }
 
@@ -543,8 +541,7 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	}
 
-	var b *builder.Builder
-	b = ctrl.NewControllerManagedBy(mgr).For(&appstacksv1beta2.RuntimeComponent{}, builder.WithPredicates(pred)).
+	b := ctrl.NewControllerManagedBy(mgr).For(&appstacksv1beta2.RuntimeComponent{}, builder.WithPredicates(pred)).
 		Owns(&corev1.Service{}, builder.WithPredicates(predSubResource)).
 		Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource)).
 		Owns(&appsv1.Deployment{}, builder.WithPredicates(predSubResWithGenCheck)).
