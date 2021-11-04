@@ -123,7 +123,9 @@ acceptance-test:
     export DOCKER_PASSWORD=$(get_env docker-password)  
     export CLUSTER_URL=$(get_env test-cluster-url)
     export CLUSTER_TOKEN=$(get_env test-cluster-token) 
-    export TRAVIS_BUILD_NUMBER=$(get_env PIPELINE_RUN_ID)   
+    echo $CLUSTER_TOKEN
+    export TRAVIS_BUILD_NUMBER=${PIPELINE_RUN_ID}   
+    echo $TRAVIS_BUILD_NUMBER
     make setup
     make test-e2e
 
