@@ -5,6 +5,12 @@ setup:
   script: |
     #!/usr/bin/env bash
     echo "setup"
+    echo "Pipeline Run ID $PIPELINE_RUN_ID"
+    echo "Build ID $BUILD_NUMBER"
+    echo "Pipeline ID $PIPELINE_ID"
+    TOKEN=$(get_env test-cluster-token)
+    echo "Fyre $(get_env test-cluster-token)"
+    echo $($TOKEN | base64))
   
 test:
   dind: true
@@ -125,7 +131,6 @@ acceptance-test:
     export CLUSTER_TOKEN=$(get_env test-cluster-token) 
     echo $CLUSTER_TOKEN
     export TRAVIS_BUILD_NUMBER=${PIPELINE_RUN_ID}   
-    echo $TRAVIS_BUILD_NUMBER
     make setup
     make test-e2e
 
