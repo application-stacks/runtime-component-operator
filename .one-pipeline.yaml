@@ -10,7 +10,7 @@ setup:
     echo "Pipeline ID $PIPELINE_ID"
     TOKEN=$(get_env test-cluster-token)
     echo "Fyre $(get_env test-cluster-token)"
-    echo $($TOKEN | base64))
+    echo $($TOKEN | base64)
   
 test:
   dind: true
