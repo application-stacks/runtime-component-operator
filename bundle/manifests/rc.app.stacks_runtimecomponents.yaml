@@ -11,10 +11,40 @@ spec:
     kind: RuntimeComponent
     listKind: RuntimeComponentList
     plural: runtimecomponents
+    shortNames:
+    - comp
+    - comps
     singular: runtimecomponent
   scope: Namespaced
   versions:
-  - name: v1beta2
+  - additionalPrinterColumns:
+    - description: Absolute name of the deployed image containing registry and tag
+      jsonPath: .spec.applicationImage
+      name: Image
+      type: string
+    - description: Specifies whether deployment is exposed externally via default Route
+      jsonPath: .spec.expose
+      name: Exposed
+      type: boolean
+    - description: Status of the reconcile condition
+      jsonPath: .status.conditions[?(@.type=='Reconciled')].status
+      name: Reconciled
+      type: string
+    - description: Reason for the failure of reconcile condition
+      jsonPath: .status.conditions[?(@.type=='Reconciled')].reason
+      name: Reason
+      priority: 1
+      type: string
+    - description: Failure message from reconcile condition
+      jsonPath: .status.conditions[?(@.type=='Reconciled')].message
+      name: Message
+      priority: 1
+      type: string
+    - description: Age of the resource
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1beta2
     schema:
       openAPIV3Schema:
         description: RuntimeComponent is the Schema for the runtimecomponents API.
@@ -161,7 +191,7 @@ spec:
                   nodeAffinityLabels:
                     additionalProperties:
                       type: string
-                    description: A YAML object that contains set of required labels and their values.
+                    description: A YAML object that contains a set of required labels and their values.
                     type: object
                   podAffinity:
                     description: Controls the nodes the pod are scheduled to run on, based on labels on the pods that are already running on the node.
@@ -1289,7 +1319,7 @@ spec:
                 - name
                 x-kubernetes-list-type: map
               livenessProbe:
-                description: Detects if the services needs to be restarted.
+                description: Detects if the services need to be restarted.
                 properties:
                   exec:
                     description: One and only one of the following should be specified. Exec specifies the action to take.
@@ -1636,6 +1666,7 @@ spec:
                           type: object
                       type: object
                     type: array
+                    x-kubernetes-list-type: atomic
                   labels:
                     additionalProperties:
                       type: string
@@ -1792,10 +1823,10 @@ spec:
                     description: Annotations to be added to the service.
                     type: object
                   bindable:
-                    description: A boolean to toggle whether the operator expose the application as a bindable service. The default value for this parameter is false.
+                    description: Expose the application as a bindable service. Defaults to false.
                     type: boolean
                   certificateSecretRef:
-                    description: "\tA name of a secret that already contains TLS key, certificate and CA to be mounted in the pod."
+                    description: A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.
                     type: string
                   nodePort:
                     description: Node proxies this port into your service.
@@ -1846,7 +1877,7 @@ spec:
                       type: object
                     type: array
                   targetPort:
-                    description: The port that the operator assigns to containers inside pods. Defaults to the value of service.port.
+                    description: The port that the operator assigns to containers inside pods. Defaults to the value of spec.service.port.
                     format: int32
                     maximum: 65535
                     minimum: 1
