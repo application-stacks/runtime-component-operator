@@ -5,7 +5,7 @@ setup:
   script: |
     #!/usr/bin/env bash
     echo "setup"
-    echo "$(get_env VERSIONS)
+    echo "$(get_env VERSIONS)"
   
 test:
   dind: true
