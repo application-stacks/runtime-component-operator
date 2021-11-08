@@ -22,10 +22,10 @@ metadata:
           },
           "spec": {
             "command": [
-              "./script.sh"
+              "./your_script.sh"
             ],
             "containerName": "app",
-            "podName": "app-74b69786dd-xhnlw"
+            "podName": "Specify_Pod_Name_Here"
           }
         }
       ]
@@ -491,11 +491,6 @@ spec:
           - ""
           resources:
           - pods
-          verbs:
-          - get
-        - apiGroups:
-          - ""
-          resources:
           - pods/exec
           verbs:
           - '*'
