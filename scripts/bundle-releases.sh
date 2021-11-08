@@ -19,7 +19,7 @@ main() {
   parse_args "$@"
 
   if [[ -z "${IMAGE}" ]]; then
-    echo "****** Missing target image for operator build, see usage"
+    echo "****** Missing target image for bundle build, see usage"
     echo "${usage}"
     exit 1
   fi
@@ -32,10 +32,10 @@ main() {
 
   echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
-  # Build, bundle, and create index for daily
-  "${script_dir}/build-release.sh" -u "${USER}" -p "${PASS}" --release "daily" --image "${IMAGE}"
+  # Bundle and create index for daily
+  bundle_release "daily"
 
-  # Build previous releases
+  # Bundle and create index for previous releases
   tags="$(git tag -l)"
   while read -r tag; do
     if [[ -z "${tag}" ]]; then
@@ -48,9 +48,27 @@ main() {
       continue
     fi
 
-    local release_tag="${tag#*v}"
-    "${script_dir}/build-release.sh" -u "${USER}" -p "${PASS}" --release "${release_tag}" --image "${IMAGE}"
+    bundle_release "${tag}"
   done <<< "${tags}"
+}
+
+bundle_release() {
+  local tag="${1}"
+  local release_tag="${tag#*v}"
+  local operator_ref="${IMAGE}:${tag}"
+
+  # Switch to release tag
+  if [[ "${tag}" != "daily" ]]; then
+    git switch -q "${tag}"
+  fi
+
+  # Build the bundle
+  local bundle_ref="${IMAGE}:bundle-${release_tag}"
+  make bundle-build-podman bundle-push-podman IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}"
+
+  # Build the catalog
+  local catalog_ref="${IMAGE}:catalog-${release_tag}"
+  make build-catalog push-catalog IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}" CATALOG_IMG="${catalog_ref}"
 }
 
 parse_args() {

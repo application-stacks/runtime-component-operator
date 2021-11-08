@@ -3,6 +3,7 @@
 readonly usage="Usage: e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace>"
 readonly SERVICE_ACCOUNT="travis-tests"
 readonly OC_CLIENT_VERSION="4.6.0"
+readonly CONTROLLER_MANAGER_NAME="rco-controller-manager"
 
 # setup_env: Download oc cli, log into our persistent cluster, and create a test project
 setup_env() {
@@ -17,7 +18,7 @@ setup_env() {
 
     # Set variables for rest of script to use
     readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
-    readonly TEST_NAMESPACE="runtime-operator-test-${TRAVIS_BUILD_NUMBER}"
+    readonly TEST_NAMESPACE="runtime-operator-test-${TEST_TAG}"
     readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/runtime-operator
     readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle:latest"
 
@@ -97,12 +98,12 @@ main() {
     }
 
     # Wait for operator deployment to be ready
-    while [[ $(oc get deploy rco-controller-manager -o jsonpath='{ .status.readyReplicas }') -ne "1" ]]; do
-        echo "****** Waiting for rco-controller-manager to be ready..."
+    while [[ $(oc get deploy "${CONTROLLER_MANAGER_NAME}" -o jsonpath='{ .status.readyReplicas }') -ne "1" ]]; do
+        echo "****** Waiting for ${CONTROLLER_MANAGER_NAME} to be ready..."
         sleep 10
     done
 
-    echo "****** rco-controller-manager deployment is ready..."
+    echo "****** ${CONTROLLER_MANAGER_NAME} deployment is ready..."
 
     echo "****** Starting scorecard tests..."
     operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --service-account scorecard-kuttl --wait-time 30m ./bundle || {
@@ -118,7 +119,7 @@ main() {
 }
 
 parse_args() {
-    while [ $# -gt 0 ]; do
+  while [ $# -gt 0 ]; do
     case "$1" in
     -u)
       shift
@@ -143,6 +144,10 @@ parse_args() {
     --registry-namespace)
       shift
       readonly REGISTRY_NAMESPACE="${1}"
+      ;;
+    --test-tag)
+      shift
+      readonly TEST_TAG="${1}"
       ;;
     *)
       echo "Error: Invalid argument - $1"

@@ -1,4 +1,4 @@
-dist: xenial
+dist: focal
 language: go
 go:
   - 1.16.x
@@ -8,16 +8,23 @@ go_import_path: github.com/application-stacks/runtime-component-operator
 services:
   - docker
 
+before_install:
+  - sudo apt-get update
+
 stages:
   - name: unit-test
   # Builds are split into 'e2e-test' and 'build' to allow e2e tests to run first. If e2e fails, don't bother
   # building and pushing the images for the other architectures.
   - name: e2e-test
-    if: branch = master AND fork = false
+    if: branch = master AND fork = false AND type != cron
   - name: build
-    if: branch = master AND fork = false AND type != pull_request
+    if: branch = master AND fork = false AND type = push
   - name: build-manifest
-    if: branch = master AND fork = false AND type != pull_request
+    if: branch = master AND fork = false AND type = push
+  - name: release-build
+    if: branch = master AND type = cron
+  - name: release-bundle
+    if: branch = master AND type = cron
 
 jobs:
   include:
@@ -36,25 +43,21 @@ jobs:
       os: linux
       arch: ppc64le
       script:
-        - make build-multiarch-image
-        - make push-multiarch-image
+        - make build-and-push-multiarch-image
         - make build-manifest
     - name: Build image on s390x
       stage: build
       os: linux
       arch: s390x
       script:
-        - make build-multiarch-image
-        - make push-multiarch-image
+        - make build-and-push-multiarch-image
         - make build-manifest
     - name: Build image and bundle on amd64
       stage: build
       os: linux
       arch: amd64
-      if: type != pull_request
       script:
-        - make build-multiarch-image
-        - make push-multiarch-image
+        - make build-and-push-multiarch-image
         - make build-manifest
         - make bundle-build bundle-push
     ## in case there were concurrency issues with building manifest lists
@@ -62,3 +65,31 @@ jobs:
     - name: Verify manifest lists
       stage: build-manifest
       script: make build-manifest
+    - name: Build releases on ppc64le
+      stage: release-build
+      os: linux
+      arch: ppc64le
+      script: make build-releases
+    - name: Build releases on s390x
+      stage: release-build
+      os: linux
+      arch: s390x
+      script: make build-releases
+    - name: Build releases on amd64
+      stage: release-build
+      os: linux
+      arch: amd64
+      before_install:
+        - sudo apt-get install -qq -y software-properties-common uidmap
+        - make install-podman
+      script: make build-releases
+    - name: Bundle releases
+      stage: release-bundle
+      os: linux
+      arch: amd64
+      before_install:
+        - sudo apt-get install -qq -y software-properties-common uidmap
+        - make install-podman
+      script:
+        - make build-manifest
+        - make bundle-releases

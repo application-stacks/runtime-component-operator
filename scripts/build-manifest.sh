@@ -11,10 +11,12 @@
 
 set -Eeo pipefail
 
-readonly usage="Usage: build-manifest.sh -u <docker-username> -p <docker-password> --image repository/image"
+readonly usage="Usage: $0 -u <docker-username> -p <docker-password> --image [registry/]repository/image"
+readonly script_dir="$(dirname "$0")"
+readonly release_blocklist="${script_dir}/release-blocklist.txt"
 
 main() {
-  parse_args $@
+  parse_args "$@"
 
   if [[ -z "${USER}" || -z "${PASS}" ]]; then
     echo "****** Missing docker authentication information, see usage"
@@ -30,31 +32,30 @@ main() {
 
   echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
-  if [[ "${TRAVIS}" != "true" ]] || [[ "${TRAVIS_PULL_REQUEST}" != "false" ]] || [[ "${TRAVIS_BRANCH}" != "master" ]]; then
-    echo "****** Skipping manifest for: daily"
-    exit 0
-  fi
-
-  echo "****** Building manifest for: daily"
+  # Build manifest for daily
   build_manifest "daily"
-}
 
-build_manifests() {
-  local tags=$(git tag -l)
+  # Build manifest for previous releases
+  tags="$(git tag -l)"
   while read -r tag; do
     if [[ -z "${tag}" ]]; then
       break
     fi
 
-    ## Remove potential leading 'v' from tags
-    local dockerTag="${tag#*v}"
-    echo "****** Building manifest list for: ${dockerTag}"
-    build_manifest "${dockerTag}"
+    # Skip any releases listed in the release blocklist
+    if grep -q "^${tag}$" "${release_blocklist}"; then
+      echo "Release ${tag} found in blocklist. Skipping..."
+      continue
+    fi
+
+    local release_tag="${tag#*v}"
+    build_manifest "${release_tag}"
   done <<< "${tags}"
 }
 
 build_manifest() {
   local tag="$1"
+  echo "****** Building manifest for: ${tag}"
 
   ## try to build manifest but allow failure
   ## this allows new release builds
@@ -63,7 +64,7 @@ build_manifest() {
     --platforms "linux/amd64,linux/s390x,linux/ppc64le" \
     --template "${target}-ARCH" \
     --target "${target}" \
-    || echo "*** WARN: Target archs not available"
+    || echo "*** WARN: Target architectures not available"
 }
 
 parse_args() {
@@ -91,4 +92,4 @@ parse_args() {
   done
 }
 
-main $@
+main "$@"
