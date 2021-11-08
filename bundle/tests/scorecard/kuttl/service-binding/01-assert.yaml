@@ -2,9 +2,10 @@ apiVersion: kuttl.dev/v1beta1
 kind: TestAssert
 timeout: 60
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Service
 metadata:
   name: service-binding-rc
-status:
-  readyReplicas: 1
+spec:
+  ports:
+  - port: 8080
