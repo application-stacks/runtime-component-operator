@@ -121,7 +121,8 @@ acceptance-test:
     apt-get update
     apt-get -y install build-essential    
     host=$(echo "$(get_env test-cluster-url)" | cut -d ':' -f1 | cut -d '.' -f2-)
-    echo '{ "insecure-registries" : ["default-route-openshift-image-registry.apps.$host"] }' > /etc/docker/daemon.json
+    mkdir -p /etc/docker
+    printf '{\n  "insecure-registries" : ["default-route-openshift-image-registry.apps.$host"]\n}' > /etc/docker/daemon.json
     cat /etc/docker/daemon.json
     systemctl restart docker   
     export DOCKER_USERNAME=$(get_env docker-username)
