@@ -122,16 +122,16 @@ acceptance-test:
     apt-get -y install build-essential    
     host=$(echo "$(get_env test-cluster-url)" | cut -d ':' -f1 | cut -d '.' -f2-)
     mkdir -p /etc/docker
-    printf '{\n  "insecure-registries" : ["default-route-openshift-image-registry.apps.$host"]\n}' > /etc/docker/daemon.json
+    printf "{\n  \"insecure-registries\" : [\"default-route-openshift-image-registry.apps.$host\"]\n}" > /etc/docker/daemon.json
     cat /etc/docker/daemon.json
     systemctl restart docker   
-    export DOCKER_USERNAME=$(get_env docker-username)
-    export DOCKER_PASSWORD=$(get_env docker-password)  
+    export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
+    export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key)  
     export CLUSTER_URL=$(get_env test-cluster-url)
     export CLUSTER_TOKEN=$(get_env test-cluster-token) 
     export TRAVIS_BUILD_NUMBER=$BUILD_NUMBER   
     make setup
-    make test-e2e
+    make test-pipeline-e2e
 
 #scan-artifact:
 #  abort_on_failure: false
