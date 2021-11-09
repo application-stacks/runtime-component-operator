@@ -34,10 +34,13 @@ main() {
     echo "${PASS}" | docker login "${REGISTRY}" -u "${USER}" --password-stdin
   fi  
 
+  if [[ "${TRAVIS}" != "true" ]] || [[ "${TRAVIS_PULL_REQUEST}" != "false" ]] || [[ "${TRAVIS_BRANCH}" != "master" ]]; then
+    echo "****** Skipping manifest for: daily"
+    exit 0
+  fi
+
   echo "****** Building manifest for: daily"
   build_manifest "daily"
-
-
 }
 
 build_manifests() {

@@ -3,10 +3,9 @@ package utils
 import (
 	"context"
 	"fmt"
-	"math"
 	"time"
 
-	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/api/v1beta1"
+	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
 	"github.com/application-stacks/runtime-component-operator/common"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -24,6 +23,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+)
+
+const (
+	ReconcileInterval = 15
 )
 
 // ReconcilerBase base reconciler with some common behaviour
@@ -176,10 +179,9 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 
 	oldCondition := s.GetCondition(conditionType)
 	if oldCondition == nil {
-		oldCondition = &appstacksv1beta1.StatusCondition{LastUpdateTime: metav1.Time{}}
+		oldCondition = &appstacksv1beta2.StatusCondition{}
 	}
 
-	lastUpdate := oldCondition.GetLastUpdateTime().Time
 	lastStatus := oldCondition.GetStatus()
 
 	// Keep the old `LastTransitionTime` when status has not changed
@@ -191,7 +193,6 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 
 	newCondition := s.NewCondition()
 	newCondition.SetLastTransitionTime(transitionTime)
-	newCondition.SetLastUpdateTime(nowTime)
 	newCondition.SetReason(string(apierrors.ReasonForError(issue)))
 	newCondition.SetType(conditionType)
 	newCondition.SetMessage(issue.Error())
@@ -214,19 +215,20 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 
 	// StatusReasonInvalid means the requested create or update operation cannot be
 	// completed due to invalid data provided as part of the request. Don't retry.
-	if apierrors.IsInvalid(issue) {
-		return reconcile.Result{}, nil
-	}
+	// if apierrors.IsInvalid(issue) {
+	// 	return reconcile.Result{}, nil
+	// }
 
 	var retryInterval time.Duration
-	if lastUpdate.IsZero() || lastStatus == corev1.ConditionTrue {
+	if lastStatus == corev1.ConditionTrue {
 		retryInterval = time.Second
 	} else {
-		retryInterval = newCondition.GetLastUpdateTime().Sub(lastUpdate).Round(time.Second)
+		retryInterval = 5 * time.Second
 	}
 
 	return reconcile.Result{
-		RequeueAfter: time.Duration(math.Min(float64(retryInterval.Nanoseconds()*2), float64(time.Hour.Nanoseconds()*6))),
+		//RequeueAfter: time.Duration(math.Min(float64(retryInterval.Nanoseconds()*2), float64(time.Hour.Nanoseconds()*6))),
+		RequeueAfter: retryInterval,
 		Requeue:      true,
 	}, nil
 }
@@ -236,7 +238,7 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 	s := ba.GetStatus()
 	oldCondition := s.GetCondition(conditionType)
 	if oldCondition == nil {
-		oldCondition = &appstacksv1beta1.StatusCondition{LastUpdateTime: metav1.Time{}}
+		oldCondition = &appstacksv1beta2.StatusCondition{}
 	}
 
 	// Keep the old `LastTransitionTime` when status has not changed
@@ -248,7 +250,6 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 
 	statusCondition := s.NewCondition()
 	statusCondition.SetLastTransitionTime(transitionTime)
-	statusCondition.SetLastUpdateTime(nowTime)
 	statusCondition.SetReason("")
 	statusCondition.SetMessage("")
 	statusCondition.SetStatus(corev1.ConditionTrue)
@@ -263,7 +264,7 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 			Requeue:      true,
 		}, nil
 	}
-	return reconcile.Result{}, nil
+	return reconcile.Result{RequeueAfter: ReconcileInterval * time.Second}, nil
 }
 
 // IsGroupVersionSupported ...

@@ -59,7 +59,6 @@ If the operator is running fine, check the status of the `RuntimeComponent` Cust
   status:
     conditions:
     - lastTransitionTime: 2019-08-21T22:20:49Z
-      lastUpdateTime: 2019-08-21T22:39:42Z
       status: "True"
       type: Reconciled
 ----

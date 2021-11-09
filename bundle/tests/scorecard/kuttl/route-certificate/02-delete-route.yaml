@@ -1,4 +1,4 @@
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: route-with-cert-rc

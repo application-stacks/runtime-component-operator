@@ -1,4 +1,4 @@
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: rc-deployment-annotations
@@ -11,4 +11,4 @@ spec:
   statefulSet:
     annotations:
       bar2: foo2
-
+      conflict: statefulSet

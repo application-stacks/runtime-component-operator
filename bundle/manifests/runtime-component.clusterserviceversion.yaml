@@ -5,7 +5,7 @@ metadata:
     alm-examples: |-
       [
         {
-          "apiVersion": "app.stacks/v1beta1",
+          "apiVersion": "rc.app.stacks/v1beta2",
           "kind": "RuntimeComponent",
           "metadata": {
             "name": "runtimecomponent-sample"
@@ -15,7 +15,7 @@ metadata:
           }
         },
         {
-          "apiVersion": "app.stacks/v1beta1",
+          "apiVersion": "rc.app.stacks/v1beta2",
           "kind": "RuntimeOperation",
           "metadata": {
             "name": "runtimeoperation-sample"
@@ -36,32 +36,54 @@ metadata:
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
-  name: runtime-component.v1.0.0
+  name: runtime-component.v0.8.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
     - description: RuntimeComponent is the Schema for the runtimecomponents API.
-      displayName: Runtime Component
+      displayName: RuntimeComponent
       kind: RuntimeComponent
-      name: runtimecomponents.app.stacks
+      name: runtimecomponents.rc.app.stacks
+      resources:
+      - kind: Deployment
+        name: ""
+        version: v1
+      - kind: HorizontalPodAutoscaler
+        name: ""
+        version: v1
+      - kind: Route
+        name: ""
+        version: v1
+      - kind: Secret
+        name: ""
+        version: v1
+      - kind: Service
+        name: ""
+        version: v1
+      - kind: ServiceAccount
+        name: ""
+        version: v1
+      - kind: StatefulSet
+        name: ""
+        version: v1
       specDescriptors:
       - description: The name of the application this resource is part of. If not specified, it defaults to the name of the CR.
-        displayName: Appliation Name
+        displayName: Application Name
         path: applicationName
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Application image to be installed.
-        displayName: Appliation Image
+        displayName: Application Image
         path: applicationImage
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - displayName: Appliation Version
-        path: version
+      - displayName: Application Version
+        path: applicationVersion
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Policy for pulling container images. Defaults to IfNotPresent. Parameters autoscaling.maxReplicas and resourceConstraints.requests.cpu must be specified.
+      - description: Policy for pulling container images. Defaults to IfNotPresent.
         displayName: Pull Policy
         path: pullPolicy
         x-descriptors:
@@ -107,19 +129,19 @@ spec:
         path: service.annotations
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: The port that the operator assigns to containers inside pods. Defaults to the value of service.port.
+      - description: The port that the operator assigns to containers inside pods. Defaults to the value of spec.service.port.
         displayName: Target Port
         path: service.targetPort
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
-      - description: "\tA name of a secret that already contains TLS key, certificate and CA to be mounted in the pod."
+      - description: A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.
         displayName: Certificate Secret Reference
         path: service.certificateSecretRef
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - displayName: Auto Scaling
         path: autoscaling
-      - description: Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler.
+      - description: Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler. Parameter spec.resourceConstraints.requests.cpu must also be specified.
         displayName: Max Replicas
         path: autoscaling.maxReplicas
         x-descriptors:
@@ -199,7 +221,7 @@ spec:
         path: affinity.podAntiAffinity
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:podAntiAffinity
-      - description: A YAML object that contains set of required labels and their values.
+      - description: A YAML object that contains a set of required labels and their values.
         displayName: Node Affinity Labels
         path: affinity.nodeAffinityLabels
         x-descriptors:
@@ -236,29 +258,12 @@ spec:
         path: route.insecureEdgeTerminationPolicy
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - displayName: Bindings
-        path: bindings
-      - description: A boolean to toggle whether the operator should automatically detect and use a ServiceBindingRequest resource with <CR_NAME>-binding naming format.
-        displayName: Bindings Autodetect
-        path: bindings.autoDetect
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: The name of a ServiceBindingRequest custom resource created manually in the same namespace as the application.
-        displayName: Bindings Resource Ref
-        path: bindings.resourceRef
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
-      - description: A boolean to toggle whether the operator expose the application as a bindable service.
-        displayName: Bindings Expose Enabled
-        path: bindings.expose
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: A boolean to toggle the creation of Knative resources and usage of Knative serving.
         displayName: Create Knative Service
         path: createKnativeService
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: Detects if the services needs to be restarted.
+      - description: Detects if the services need to be restarted.
         displayName: Liveness Probe
         path: livenessProbe
       - description: Detects if the services are ready to serve.
@@ -284,9 +289,6 @@ spec:
       - description: An array of references to ConfigMap or Secret resources containing environment variables.
         displayName: Env From
         path: envFrom
-      - description: An array of architectures to be considered for deployment. Their position in the array indicates preference.
-        displayName: Architecture
-        path: architecture
       - description: List of containers that run before other containers in a pod.
         displayName: Init Containers
         path: initContainers
@@ -302,11 +304,11 @@ spec:
         path: conditions
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes.conditions
-      version: v1beta1
+      version: v1beta2
     - description: RuntimeOperation is the Schema for the runtimeoperations API.
-      displayName: Runtime Operation
+      displayName: RuntimeOperation
       kind: RuntimeOperation
-      name: runtimeoperations.app.stacks
+      name: runtimeoperations.rc.app.stacks
       specDescriptors:
       - description: Command to execute. Not executed within a shell.
         displayName: Command
@@ -322,7 +324,7 @@ spec:
         path: podName
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      version: v1beta1
+      version: v1beta2
   description: |
     This advanced Operator is capable of deploying any runtime component image with consistent, production-grade QoS. It enables enterprise architects to govern the way their applications get deployed & managed in the cluster, while dramatically reducing the learning curve for developers to deploy into Kubernetes - allowing them to focus on writing the code!
     Here are some key features:
@@ -391,18 +393,6 @@ spec:
             spec:
               containers:
               - args:
-                - --secure-listen-address=0.0.0.0:8443
-                - --upstream=http://127.0.0.1:8080/
-                - --logtostderr=true
-                - --v=10
-                image: gcr.io/kubebuilder/kube-rbac-proxy:v0.5.0
-                name: kube-rbac-proxy
-                ports:
-                - containerPort: 8443
-                  name: https
-                resources: {}
-              - args:
-                - --metrics-addr=127.0.0.1:8080
                 - --enable-leader-election
                 command:
                 - /manager
@@ -425,7 +415,7 @@ spec:
                   requests:
                     cpu: 100m
                     memory: 20Mi
-              serviceAccountName: rco-sa
+              serviceAccountName: rco-controller-manager
               terminationGracePeriodSeconds: 10
       permissions:
       - rules:
@@ -469,28 +459,6 @@ spec:
           - patch
           - delete
         - apiGroups:
-          - app.k8s.io
-          resources:
-          - applications
-          verbs:
-          - '*'
-        - apiGroups:
-          - app.stacks
-          resources:
-          - runtimecomponents
-          - runtimecomponents/finalizers
-          - runtimecomponents/status
-          verbs:
-          - '*'
-        - apiGroups:
-          - app.stacks
-          resources:
-          - runtimeoperations
-          - runtimeoperations/finalizers
-          - runtimeoperations/status
-          verbs:
-          - '*'
-        - apiGroups:
           - apps
           resources:
           - deployments
@@ -505,27 +473,9 @@ spec:
           verbs:
           - update
         - apiGroups:
-          - apps.openshift.io
-          resources:
-          - servicebindingrequests
-          verbs:
-          - '*'
-        - apiGroups:
           - autoscaling
           resources:
           - horizontalpodautoscalers
-          verbs:
-          - '*'
-        - apiGroups:
-          - cert-manager.io
-          resources:
-          - certificates
-          verbs:
-          - '*'
-        - apiGroups:
-          - certmanager.k8s.io
-          resources:
-          - certificates
           verbs:
           - '*'
         - apiGroups:
@@ -571,6 +521,22 @@ spec:
           verbs:
           - '*'
         - apiGroups:
+          - rc.app.stacks
+          resources:
+          - runtimecomponents
+          - runtimecomponents/finalizers
+          - runtimecomponents/status
+          verbs:
+          - '*'
+        - apiGroups:
+          - rc.app.stacks
+          resources:
+          - runtimeoperations
+          - runtimeoperations/finalizers
+          - runtimeoperations/status
+          verbs:
+          - '*'
+        - apiGroups:
           - route.openshift.io
           resources:
           - routes
@@ -583,7 +549,7 @@ spec:
           - services
           verbs:
           - '*'
-        serviceAccountName: rco-sa
+        serviceAccountName: rco-controller-manager
     strategy: deployment
   installModes:
   - supported: true
@@ -616,9 +582,7 @@ spec:
     name: Artur Dzmitryieu
   - email: leojc@ca.ibm.com
     name: Leo Christy Jesuraj
-  - email: arthurdm@ca.ibm.com
-    name: Arthur De Magalhaes
   maturity: beta
   provider:
     name: Community
-  version: 1.0.0
+  version: 0.8.0
