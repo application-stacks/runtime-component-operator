@@ -35,7 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/api/v1beta1"
+	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
 	"github.com/application-stacks/runtime-component-operator/utils"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -49,7 +49,7 @@ type RuntimeOperationReconciler struct {
 	RestConfig *rest.Config
 }
 
-// +kubebuilder:rbac:groups=app.stacks,resources=runtimeoperations;runtimeoperations/status;runtimeoperations/finalizers,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=rc.app.stacks,resources=runtimeoperations;runtimeoperations/status;runtimeoperations/finalizers,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=core,resources=pods/exec,verbs=*,namespace=runtime-component-operator
 
@@ -58,7 +58,7 @@ func (r *RuntimeOperationReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	reqLogger.Info("Reconciling RuntimeOperation")
 
 	// Fetch the RuntimeOperation instance
-	instance := &appstacksv1beta1.RuntimeOperation{}
+	instance := &appstacksv1beta2.RuntimeOperation{}
 	err := r.Client.Get(context.TODO(), req.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -72,7 +72,7 @@ func (r *RuntimeOperationReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	//do not reconcile if the RuntimeOperation already completed
-	oc := appstacksv1beta1.GetOperationCondition(instance.Status.Conditions, appstacksv1beta1.OperationStatusConditionTypeCompleted)
+	oc := appstacksv1beta2.GetOperationCondition(instance.Status.Conditions, appstacksv1beta2.OperationStatusConditionTypeCompleted)
 	if oc != nil && oc.Status == corev1.ConditionTrue {
 		message := "RuntimeOperation '" + instance.Name + "' in namespace '" + req.Namespace + "' already completed. Create another RuntimeOperation instance to execute the command."
 		r.Log.Info(message)
@@ -81,7 +81,7 @@ func (r *RuntimeOperationReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	//do not reconcile if the RuntimeOperation already started
-	oc = appstacksv1beta1.GetOperationCondition(instance.Status.Conditions, appstacksv1beta1.OperationStatusConditionTypeStarted)
+	oc = appstacksv1beta2.GetOperationCondition(instance.Status.Conditions, appstacksv1beta2.OperationStatusConditionTypeStarted)
 	if oc != nil && oc.Status == corev1.ConditionTrue {
 		message := "RuntimeOperation '" + instance.Name + "' in namespace '" + req.Namespace + "' already started and it can not be modified. Create another RuntimeOperation instance to execute the command."
 		r.Log.Info(message)
@@ -120,12 +120,12 @@ func (r *RuntimeOperationReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return handleStartErrorAndRequeue(r, instance, nil, message)
 	}
 
-	c := appstacksv1beta1.OperationStatusCondition{
-		Type:   appstacksv1beta1.OperationStatusConditionTypeStarted,
+	c := appstacksv1beta2.OperationStatusCondition{
+		Type:   appstacksv1beta2.OperationStatusConditionTypeStarted,
 		Status: corev1.ConditionTrue,
 	}
 
-	instance.Status.Conditions = appstacksv1beta1.SetOperationCondition(instance.Status.Conditions, c)
+	instance.Status.Conditions = appstacksv1beta2.SetOperationCondition(instance.Status.Conditions, c)
 	r.Client.Status().Update(context.TODO(), instance)
 
 	_, err = utils.ExecuteCommandInContainer(r.RestConfig, pod.Name, pod.Namespace, containerName, instance.Spec.Command)
@@ -133,24 +133,24 @@ func (r *RuntimeOperationReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		//handle error
 		r.Log.Error(err, "Execute command failed", "RuntimeOperation name", instance.Name, "command", instance.Spec.Command)
 		r.Recorder.Event(instance, "Warning", "ProcessingError", err.Error())
-		c = appstacksv1beta1.OperationStatusCondition{
-			Type:    appstacksv1beta1.OperationStatusConditionTypeCompleted,
+		c = appstacksv1beta2.OperationStatusCondition{
+			Type:    appstacksv1beta2.OperationStatusConditionTypeCompleted,
 			Status:  corev1.ConditionFalse,
 			Reason:  "Error",
 			Message: err.Error(),
 		}
-		instance.Status.Conditions = appstacksv1beta1.SetOperationCondition(instance.Status.Conditions, c)
+		instance.Status.Conditions = appstacksv1beta2.SetOperationCondition(instance.Status.Conditions, c)
 		r.Client.Status().Update(context.TODO(), instance)
 		return reconcile.Result{}, nil
 
 	}
 
-	c = appstacksv1beta1.OperationStatusCondition{
-		Type:   appstacksv1beta1.OperationStatusConditionTypeCompleted,
+	c = appstacksv1beta2.OperationStatusCondition{
+		Type:   appstacksv1beta2.OperationStatusConditionTypeCompleted,
 		Status: corev1.ConditionTrue,
 	}
 
-	instance.Status.Conditions = appstacksv1beta1.SetOperationCondition(instance.Status.Conditions, c)
+	instance.Status.Conditions = appstacksv1beta2.SetOperationCondition(instance.Status.Conditions, c)
 	r.Client.Status().Update(context.TODO(), instance)
 	return reconcile.Result{}, nil
 }
@@ -188,31 +188,31 @@ func (r *RuntimeOperationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&appstacksv1beta1.RuntimeOperation{}, builder.WithPredicates(pred)).
+		For(&appstacksv1beta2.RuntimeOperation{}, builder.WithPredicates(pred)).
 		Complete(r)
 }
 
 // handleStartErrorAndRequeue updates OperationStatusConditionTypeStarted and requeues. It doubles the retry interval when the failure is due to same error.
-func handleStartErrorAndRequeue(r *RuntimeOperationReconciler, instance *appstacksv1beta1.RuntimeOperation, err error, message string) (reconcile.Result, error) {
+func handleStartErrorAndRequeue(r *RuntimeOperationReconciler, instance *appstacksv1beta2.RuntimeOperation, err error, message string) (reconcile.Result, error) {
 	r.Log.Error(err, message)
 	r.Recorder.Event(instance, "Warning", "ProcessingError", message)
 
-	c := appstacksv1beta1.OperationStatusCondition{
-		Type:    appstacksv1beta1.OperationStatusConditionTypeStarted,
+	c := appstacksv1beta2.OperationStatusCondition{
+		Type:    appstacksv1beta2.OperationStatusConditionTypeStarted,
 		Status:  corev1.ConditionFalse,
 		Reason:  "Error",
 		Message: message,
 	}
 
 	var retryInterval time.Duration
-	oldCondition := appstacksv1beta1.GetOperationCondition(instance.Status.Conditions, c.Type)
+	oldCondition := appstacksv1beta2.GetOperationCondition(instance.Status.Conditions, c.Type)
 	if oldCondition == nil || oldCondition.LastUpdateTime.Time.IsZero() || oldCondition.Message != c.Message {
 		retryInterval = time.Second
 	} else {
 		retryInterval = time.Now().Sub(oldCondition.LastUpdateTime.Time).Round(time.Second)
 	}
 
-	instance.Status.Conditions = appstacksv1beta1.SetOperationCondition(instance.Status.Conditions, c)
+	instance.Status.Conditions = appstacksv1beta2.SetOperationCondition(instance.Status.Conditions, c)
 	r.Client.Status().Update(context.TODO(), instance)
 	return reconcile.Result{
 		RequeueAfter: time.Duration(math.Min(float64(retryInterval.Nanoseconds()*2), float64(time.Hour.Nanoseconds()*6))),

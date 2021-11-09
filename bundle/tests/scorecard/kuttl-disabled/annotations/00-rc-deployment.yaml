@@ -1,9 +1,10 @@
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: rc-deployment-annotations
   annotations:
     foo1: bar1
+    conflict: component
 spec:
   # Add fields here
   applicationImage: 'k8s.gcr.io/pause:2.0'
@@ -11,4 +12,5 @@ spec:
   deployment:
     annotations:
       bar2: foo2
+      conflict: deployment
 

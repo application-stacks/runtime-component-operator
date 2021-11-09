@@ -28,7 +28,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/api/v1beta1"
+	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
 	"github.com/application-stacks/runtime-component-operator/controllers"
 	"github.com/application-stacks/runtime-component-operator/utils"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -46,7 +46,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(appstacksv1beta1.AddToScheme(scheme))
+	utilruntime.Must(appstacksv1beta2.AddToScheme(scheme))
 
 	utilruntime.Must(routev1.AddToScheme(scheme))
 
@@ -59,9 +59,9 @@ func init() {
 }
 
 func main() {
-	var metricsAddr string
+	//var metricsAddr string
 	var enableLeaderElection bool
-	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
+	//flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -77,7 +77,7 @@ func main() {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
-		MetricsBindAddress: metricsAddr,
+		MetricsBindAddress: "0",
 		Port:               9443,
 		LeaderElection:     enableLeaderElection,
 		LeaderElectionID:   "c407d44e.apps.stacks",

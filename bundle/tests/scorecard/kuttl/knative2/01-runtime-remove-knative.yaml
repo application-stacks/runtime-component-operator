@@ -1,6 +1,6 @@
 # Check that the knative service is removed when the appropriate
 # field is updated to false
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: knative2-rc

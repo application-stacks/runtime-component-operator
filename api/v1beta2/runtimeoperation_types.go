@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package v1beta2
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,6 +47,7 @@ type RuntimeOperationStatus struct {
 // +kubebuilder:subresource:status
 
 // RuntimeOperation is the Schema for the runtimeoperations API.
+//+operator-sdk:csv:customresourcedefinitions:displayName="RuntimeOperation"
 type RuntimeOperation struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

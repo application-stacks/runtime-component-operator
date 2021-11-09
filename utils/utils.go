@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -17,7 +18,7 @@ import (
 	"github.com/application-stacks/runtime-component-operator/common"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
-	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/api/v1beta1"
+	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
@@ -25,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 )
@@ -235,54 +237,17 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	}
 }
 
-// CustomizeServiceBindingSecret ...
-func CustomizeServiceBindingSecret(secret *corev1.Secret, auth map[string]string, ba common.BaseComponent) {
-	obj := ba.(metav1.Object)
-	secret.Labels = ba.GetLabels()
-	secret.Annotations = MergeMaps(secret.Annotations, ba.GetAnnotations())
-
-	secretdata := map[string][]byte{}
-	hostname := fmt.Sprintf("%s.%s.svc.cluster.local", obj.GetName(), obj.GetNamespace())
-	secretdata["hostname"] = []byte(hostname)
-	protocol := ba.GetService().GetProvides().GetProtocol()
-	secretdata["protocol"] = []byte(protocol)
-	url := fmt.Sprintf("%s://%s", protocol, hostname)
-	if ba.GetCreateKnativeService() == nil || *(ba.GetCreateKnativeService()) == false {
-		port := strconv.Itoa(int(ba.GetService().GetPort()))
-		secretdata["port"] = []byte(port)
-		url = fmt.Sprintf("%s:%s", url, port)
-	}
-	if ba.GetService().GetProvides().GetContext() != "" {
-		context := strings.TrimPrefix(ba.GetService().GetProvides().GetContext(), "/")
-		secretdata["context"] = []byte(context)
-		url = fmt.Sprintf("%s/%s", url, context)
-	}
-	secretdata["url"] = []byte(url)
-	if auth != nil {
-		if username, ok := auth["username"]; ok {
-			secretdata["username"] = []byte(username)
-		}
-		if password, ok := auth["password"]; ok {
-			secretdata["password"] = []byte(password)
-		}
-	}
-
-	secret.Data = secretdata
-}
-
 // CustomizeAffinity ...
 func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 
-	archs := ba.GetArchitecture()
+	var archs []string
 
 	if ba.GetAffinity() != nil {
 		affinity.NodeAffinity = ba.GetAffinity().GetNodeAffinity()
 		affinity.PodAffinity = ba.GetAffinity().GetPodAffinity()
 		affinity.PodAntiAffinity = ba.GetAffinity().GetPodAntiAffinity()
 
-		if len(archs) == 0 {
-			archs = ba.GetAffinity().GetArchitecture()
-		}
+		archs = ba.GetAffinity().GetArchitecture()
 
 		if len(ba.GetAffinity().GetNodeAffinityLabels()) > 0 {
 			if affinity.NodeAffinity == nil {
@@ -454,8 +419,6 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 
 	pts.Spec.Containers = append([]corev1.Container{appContainer}, ba.GetSidecarContainers()...)
 
-	CustomizeConsumedServices(&pts.Spec, ba)
-
 	if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
 		pts.Spec.ServiceAccountName = *ba.GetServiceAccountName()
 	} else {
@@ -464,84 +427,11 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	pts.Spec.RestartPolicy = corev1.RestartPolicyAlways
 	pts.Spec.DNSPolicy = corev1.DNSClusterFirst
 
-	if len(ba.GetArchitecture()) > 0 || ba.GetAffinity() != nil {
+	if ba.GetAffinity() != nil {
 		pts.Spec.Affinity = &corev1.Affinity{}
 		CustomizeAffinity(pts.Spec.Affinity, ba)
 	} else {
 		pts.Spec.Affinity = nil
-	}
-}
-
-// CustomizeServiceBinding ...
-func CustomizeServiceBinding(secret *corev1.Secret, podSpec *corev1.PodSpec, ba common.BaseComponent) {
-	if len(ba.GetStatus().GetResolvedBindings()) != 0 {
-		appContainer := GetAppContainer(podSpec.Containers)
-		binding := ba.GetStatus().GetResolvedBindings()[0]
-		bindingSecret := corev1.EnvFromSource{
-			SecretRef: &corev1.SecretEnvSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: binding,
-				}},
-		}
-		appContainer.EnvFrom = append(appContainer.EnvFrom, bindingSecret)
-
-		secretRev := corev1.EnvVar{
-			Name:  "RESOLVED_BINDING_SECRET_REV",
-			Value: secret.ResourceVersion}
-		appContainer.Env = append(appContainer.Env, secretRev)
-	}
-}
-
-// CustomizeConsumedServices ...
-func CustomizeConsumedServices(podSpec *corev1.PodSpec, ba common.BaseComponent) {
-	if ba.GetStatus().GetConsumedServices() != nil {
-		appContainer := GetAppContainer(podSpec.Containers)
-		for _, svc := range ba.GetStatus().GetConsumedServices()[common.ServiceBindingCategoryOpenAPI] {
-			c, err := findConsumes(svc, ba)
-			if err != nil {
-				continue
-			}
-			if c.GetMountPath() != "" {
-				actualMountPath := strings.Join([]string{c.GetMountPath(), c.GetNamespace(), c.GetName()}, "/")
-				volMount := corev1.VolumeMount{Name: svc, MountPath: actualMountPath, ReadOnly: true}
-				appContainer.VolumeMounts = append(appContainer.VolumeMounts, volMount)
-
-				vol := corev1.Volume{
-					Name: svc,
-					VolumeSource: corev1.VolumeSource{
-						Secret: &corev1.SecretVolumeSource{
-							SecretName: svc,
-						},
-					},
-				}
-				podSpec.Volumes = append(podSpec.Volumes, vol)
-			} else {
-				// The characters allowed in names are: digits (0-9), lower case letters (a-z), -, and ..
-				var keyPrefix string
-				if c.GetNamespace() == "" {
-					keyPrefix = normalizeEnvVariableName(c.GetName() + "_")
-				} else {
-					keyPrefix = normalizeEnvVariableName(c.GetNamespace() + "_" + c.GetName() + "_")
-				}
-				keys := []string{"username", "password", "url", "hostname", "protocol", "port", "context"}
-				trueVal := true
-				for _, k := range keys {
-					env := corev1.EnvVar{
-						Name: keyPrefix + strings.ToUpper(k),
-						ValueFrom: &corev1.EnvVarSource{
-							SecretKeyRef: &corev1.SecretKeySelector{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: svc,
-								},
-								Key:      k,
-								Optional: &trueVal,
-							},
-						},
-					}
-					appContainer.Env = append(appContainer.Env, env)
-				}
-			}
-		}
 	}
 }
 
@@ -659,7 +549,6 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 
 	ksvc.Spec.Template.Spec.Containers[0].VolumeMounts = ba.GetVolumeMounts()
 	ksvc.Spec.Template.Spec.Volumes = ba.GetVolumes()
-	CustomizeConsumedServices(&ksvc.Spec.Template.Spec.PodSpec, ba)
 
 	if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
 		ksvc.Spec.Template.Spec.ServiceAccountName = *ba.GetServiceAccountName()
@@ -825,7 +714,7 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComp
 }
 
 // GetCondition ...
-func GetCondition(conditionType appstacksv1beta1.StatusConditionType, status *appstacksv1beta1.RuntimeComponentStatus) *appstacksv1beta1.StatusCondition {
+func GetCondition(conditionType appstacksv1beta2.StatusConditionType, status *appstacksv1beta2.RuntimeComponentStatus) *appstacksv1beta2.StatusCondition {
 	for i := range status.Conditions {
 		if status.Conditions[i].Type == conditionType {
 			return &status.Conditions[i]
@@ -836,7 +725,7 @@ func GetCondition(conditionType appstacksv1beta1.StatusConditionType, status *ap
 }
 
 // SetCondition ...
-func SetCondition(condition appstacksv1beta1.StatusCondition, status *appstacksv1beta1.RuntimeComponentStatus) {
+func SetCondition(condition appstacksv1beta2.StatusCondition, status *appstacksv1beta2.RuntimeComponentStatus) {
 	for i := range status.Conditions {
 		if status.Conditions[i].Type == condition.Type {
 			status.Conditions[i] = condition
@@ -881,22 +770,6 @@ func MergeMaps(maps ...map[string]string) map[string]string {
 // BuildServiceBindingSecretName returns secret name of a consumable service
 func BuildServiceBindingSecretName(name, namespace string) string {
 	return fmt.Sprintf("%s-%s", namespace, name)
-}
-
-func findConsumes(secretName string, ba common.BaseComponent) (common.ServiceBindingConsumes, error) {
-	for _, v := range ba.GetService().GetConsumes() {
-		namespace := ""
-		if v.GetNamespace() == "" {
-			namespace = ba.(metav1.Object).GetNamespace()
-		} else {
-			namespace = v.GetNamespace()
-		}
-		if BuildServiceBindingSecretName(v.GetName(), namespace) == secretName {
-			return v, nil
-		}
-	}
-
-	return nil, fmt.Errorf("Failed to find mountPath value")
 }
 
 // ContainsString returns true if `s` is in the slice. Otherwise, returns false
@@ -965,22 +838,6 @@ func normalizeEnvVariableName(name string) string {
 	return strings.NewReplacer("-", "_", ".", "_").Replace(strings.ToUpper(name))
 }
 
-// GetConnectToAnnotation returns a map containing a key-value annotatio. The key is `app.openshift.io/connects-to`.
-// The value is a comma-seperated list of applications `ba` is connectiong to based on `spec.service.consumes`.
-func GetConnectToAnnotation(ba common.BaseComponent) map[string]string {
-	connectTo := []string{}
-	for _, con := range ba.GetService().GetConsumes() {
-		if ba.(metav1.Object).GetNamespace() == con.GetNamespace() {
-			connectTo = append(connectTo, con.GetName())
-		}
-	}
-	anno := map[string]string{}
-	if len(connectTo) > 0 {
-		anno["app.openshift.io/connects-to"] = strings.Join(connectTo, ",")
-	}
-	return anno
-}
-
 // GetOpenShiftAnnotations returns OpenShift specific annotations
 func GetOpenShiftAnnotations(ba common.BaseComponent) map[string]string {
 	// Conversion table between the pseudo Open Container Initiative <-> OpenShift annotations
@@ -996,7 +853,7 @@ func GetOpenShiftAnnotations(ba common.BaseComponent) map[string]string {
 		}
 	}
 
-	return MergeMaps(annos, GetConnectToAnnotation(ba))
+	return annos
 }
 
 // IsClusterWide returns true if watchNamespaces is set to [""]
@@ -1146,4 +1003,24 @@ func GetOperatorNamespace() (string, error) {
 		return "", fmt.Errorf("%s must be set", podNamespaceEnvVar)
 	}
 	return ns, nil
+}
+
+func equals(sl1, sl2 []string) bool {
+	if len(sl1) != len(sl2) {
+		return false
+	}
+	for i, v := range sl1 {
+		if v != sl2[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func (r *ReconcilerBase) toJSONFromRaw(content *runtime.RawExtension) (map[string]interface{}, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal(content.Raw, &data); err != nil {
+		return nil, err
+	}
+	return data, nil
 }

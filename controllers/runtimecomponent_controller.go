@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/apex/log"
 	"github.com/application-stacks/runtime-component-operator/common"
 	"github.com/pkg/errors"
 
@@ -34,13 +33,12 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 
-	"github.com/application-stacks/runtime-component-operator/utils"
 	appstacksutils "github.com/application-stacks/runtime-component-operator/utils"
 	"github.com/go-logr/logr"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	appstacksv1beta1 "github.com/application-stacks/runtime-component-operator/api/v1beta1"
+	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -63,27 +61,25 @@ type RuntimeComponentReconciler struct {
 	watchNamespaces []string
 }
 
-// +kubebuilder:rbac:groups=app.stacks,resources=runtimecomponents;runtimecomponents/status;runtimecomponents/finalizers,verbs=*,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=rc.app.stacks,resources=runtimecomponents;runtimecomponents/status;runtimecomponents/finalizers,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=apps,resources=deployments;statefulsets,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=apps,resources=deployments/finalizers;statefulsets,verbs=update,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=core,resources=services;secrets;serviceaccounts;configmaps,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=route.openshift.io,resources=routes;routes/custom-host,verbs=*,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=cert-manager.io,resources=certificates,verbs=*,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=certmanager.k8s.io,resources=certificates,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=image.openshift.io,resources=imagestreams;imagestreamtags,verbs=get;list;watch,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=*,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=*,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=app.k8s.io,resources=applications,verbs=*,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=apps.openshift.io,resources=servicebindingrequests,verbs=*,namespace=runtime-component-operator
 
+// Reconcile is part of the main kubernetes reconciliation loop which aims to
+// move the current state of the cluster closer to the desired state.
 func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 
 	reqLogger := r.Log.WithValues("Request.Namespace", req.Namespace, "Request.Name", req.Name)
 	reqLogger.Info("Reconciling RuntimeComponent")
 
-	ns, err := utils.GetOperatorNamespace()
+	ns, err := appstacksutils.GetOperatorNamespace()
 	// When running the operator locally, `ns` will be empty string
 	if ns == "" {
 		// Since this method can be called directly from unit test, populate `watchNamespaces`.
@@ -101,7 +97,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	configMap, err := r.GetOpConfigMap("runtime-component-operator", ns)
 	if err != nil {
-		r.Log.Info("Failed to find runtime-component-operator config map")
+		reqLogger.Info("Failed to find runtime-component-operator config map")
 		common.Config = common.DefaultOpConfig()
 		configMap = &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "runtime-component-operator", Namespace: ns}}
 		configMap.Data = common.Config
@@ -115,13 +111,12 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	})
 
 	if err != nil {
-		log.Info("Failed to update runtime-component-operator config map")
+		reqLogger.Info("Failed to update runtime-component-operator config map")
 	}
 
 	// Fetch the RuntimeComponent instance
-	instance := &appstacksv1beta1.RuntimeComponent{}
-	var ba common.BaseComponent
-	ba = instance
+	instance := &appstacksv1beta2.RuntimeComponent{}
+	var ba common.BaseComponent = instance
 	err = r.GetClient().Get(context.TODO(), req.NamespacedName, instance)
 	if err != nil {
 		if kerrors.IsNotFound(err) {
@@ -151,16 +146,16 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		instance.Annotations = appstacksutils.MergeMaps(instance.Annotations, appstacksutils.GetOpenShiftAnnotations(instance))
 	}
 
-	currentGen := instance.Generation
 	err = r.GetClient().Update(context.TODO(), instance)
 	if err != nil {
 		reqLogger.Error(err, "Error updating RuntimeComponent")
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
-	if currentGen == 1 {
-		return reconcile.Result{}, nil
-	}
+	//currentGen := instance.Generation
+	// if currentGen == 1 {
+	// 	return reconcile.Result{RequeueAfter: common.ReconcileInterval * time.Second}, nil
+	// }
 
 	defaultMeta := metav1.ObjectMeta{
 		Name:      instance.Name,
@@ -202,27 +197,9 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	result, err := r.ReconcileProvides(instance)
-	if err != nil || result != (reconcile.Result{}) {
-		return result, err
-	}
-
-	result, err = r.ReconcileConsumes(instance)
-	if err != nil || result != (reconcile.Result{}) {
-		return result, err
-	}
-
-	if r.IsServiceBindingSupported() {
-		result, err = r.ReconcileBindings(instance)
-		if err != nil || result != (reconcile.Result{}) {
-			return result, err
-		}
-	} else if instance.Spec.Bindings != nil {
-		return r.ManageError(errors.New("failed to reconcile as the operator failed to find Service Binding CRDs"), common.StatusConditionTypeReconciled, instance)
-	}
-	resolvedBindingSecret, err := r.GetResolvedBindingSecret(ba)
+	err = r.ReconcileBindings(instance)
 	if err != nil {
-		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+		return r.ManageError(err, common.StatusConditionTypeReconciled, ba)
 	}
 
 	if instance.Spec.ServiceAccountName == nil || *instance.Spec.ServiceAccountName == "" {
@@ -283,7 +260,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			ksvc := &servingv1.Service{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(ksvc, instance, func() error {
 				appstacksutils.CustomizeKnativeService(ksvc, instance)
-				appstacksutils.CustomizeServiceBinding(resolvedBindingSecret, &ksvc.Spec.Template.Spec.PodSpec, instance)
 				return nil
 			})
 
@@ -313,9 +289,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		if instance.Spec.Monitoring != nil {
 			svc.Labels[monitoringEnabledLabelName] = "true"
 		} else {
-			if _, ok := svc.Labels[monitoringEnabledLabelName]; ok {
-				delete(svc.Labels, monitoringEnabledLabelName)
-			}
+			delete(svc.Labels, monitoringEnabledLabelName)
 		}
 		return nil
 	})
@@ -350,7 +324,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			appstacksutils.CustomizeStatefulSet(statefulSet, instance)
 			appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, instance)
 			appstacksutils.CustomizePersistence(statefulSet, instance)
-			appstacksutils.CustomizeServiceBinding(resolvedBindingSecret, &statefulSet.Spec.Template.Spec, instance)
 			return nil
 		})
 		if err != nil {
@@ -379,7 +352,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		err = r.CreateOrUpdate(deploy, instance, func() error {
 			appstacksutils.CustomizeDeployment(deploy, instance)
 			appstacksutils.CustomizePodSpec(&deploy.Spec.Template, instance)
-			appstacksutils.CustomizeServiceBinding(resolvedBindingSecret, &deploy.Spec.Template.Spec, instance)
 			return nil
 		})
 		if err != nil {
@@ -490,14 +462,15 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported", prometheusv1.SchemeGroupVersion.String()))
 	}
 
+	reqLogger.Info("Reconcile RuntimeComponent - completed")
 	return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)
 }
 
 // SetupWithManager initializes reconciler
 func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
-	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta1.RuntimeComponent{}, indexFieldImageStreamName, func(obj client.Object) []string {
-		instance := obj.(*appstacksv1beta1.RuntimeComponent)
+	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta2.RuntimeComponent{}, indexFieldImageStreamName, func(obj client.Object) []string {
+		instance := obj.(*appstacksv1beta2.RuntimeComponent)
 		image, err := imageutil.ParseDockerImageReference(instance.Spec.ApplicationImage)
 		if err == nil {
 			imageNamespace := image.Namespace
@@ -506,14 +479,6 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			}
 			fullName := fmt.Sprintf("%s/%s", imageNamespace, image.Name)
 			return []string{fullName}
-		}
-		return nil
-	})
-	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta1.RuntimeComponent{}, indexFieldBindingsResourceRef, func(obj client.Object) []string {
-		instance := obj.(*appstacksv1beta1.RuntimeComponent)
-
-		if instance.Spec.Bindings != nil && instance.Spec.Bindings.ResourceRef != "" {
-			return []string{instance.Spec.Bindings.ResourceRef}
 		}
 		return nil
 	})
@@ -577,8 +542,7 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	}
 
-	var b *builder.Builder
-	b = ctrl.NewControllerManagedBy(mgr).For(&appstacksv1beta1.RuntimeComponent{}, builder.WithPredicates(pred)).
+	b := ctrl.NewControllerManagedBy(mgr).For(&appstacksv1beta2.RuntimeComponent{}, builder.WithPredicates(pred)).
 		Owns(&corev1.Service{}, builder.WithPredicates(predSubResource)).
 		Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource)).
 		Owns(&appsv1.Deployment{}, builder.WithPredicates(predSubResWithGenCheck)).

@@ -6,13 +6,12 @@ This documentation refers to the latest codebase.  For documentation and samples
 
 == Operator installation
 
-Use the instructions for one of the link:++../deploy/releases++[releases] to install the operator into a Kubernetes cluster.
+//Use the instructions for one of the link:++../deploy/releases++[releases] to install the operator into a Kubernetes cluster.
 
 The Runtime Component Operator can be installed to:
 
 * watch own namespace
 * watch another namespace
-* watch multiple namespaces
 * watch all namespaces in the cluster
 
 Appropriate cluster roles and bindings are required to watch another namespace, watch multiple namespaces or watch all namespaces.
@@ -27,7 +26,7 @@ Each instance of `RuntimeComponent` CR represents the application to be deployed
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -55,20 +54,16 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 |===
 | Parameter | Description
 
-| `version` | The current version of the application. Label `app.kubernetes.io/version` will be added to all resources when the version is defined.
+| `applicationVersion` | The current version of the application. Label `app.kubernetes.io/version` will be added to all resources when the version is defined.
 | `serviceAccountName` | The name of the OpenShift service account to be used during deployment.
 | `applicationImage` | The Docker image name to be deployed. On OpenShift, it can also be set to `<project name>/<image stream name>[:<tag>]` to reference an image from an image stream. If `<project name>` and `<tag>` values are not defined, they default to the namespace of the CR and the value of `latest`, respectively.
 | `applicationName` | The name of the application this resource is part of. If not specified, it defaults to the name of the CR.
-| `createAppDefinition`   | A boolean to toggle the automatic configuration of Kubernetes resources for the `RuntimeComponent` CR to allow creation of an application definition by link:++https://kappnav.io++[kAppNav]. The default value is `true`. See link:++#kubernetes-application-navigator-kappnav-support++[Application Navigator] for more information.
 | `pullPolicy` | The policy used when pulling the image.  One of: `Always`, `Never`, and `IfNotPresent`.
 | `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials.
 | `initContainers` | The list of link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#container-v1-core++[Init Container] definitions.
 | `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`.
 | `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference.
-| `bindings.embedded` | A YAML object that represents a `ServiceBindingRequest` custom resource.
-| `bindings.autoDetect` | A boolean to toggle whether the operator should automatically detect and use a `ServiceBindingRequest` resource with `<CR_NAME>-binding` naming format. The default value for this parameter is `true`.
-| `bindings.resourceRef` | The name of a `ServiceBindingRequest` custom resource created manually in the same namespace as the application.
-| `bindings.expose.enabled` | A boolean to toggle whether the operator expose the application as a bindable service. The default value for this parameter is `false`.
+| `service.bindable` | A boolean to toggle whether the operator expose the application as a bindable service. The default value for this parameter is `false`.
 | `service.port` | The port exposed by the container.
 | `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`.
 | `service.portName` | The name for the port exposed by the container.
@@ -76,18 +71,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `service.type` | The Kubernetes link:++https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types++[Service Type].
 | `service.nodePort` | Node proxies this port into your service. Please note once this port is set to a non-zero value it cannot be reset to zero.
 | `service.annotations` | Annotations to be added to the service.
-| `service.certificate` | A YAML object that represents a link:++https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec++[Certificate].
 | `service.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.
-| `service.provides.category` | Service binding type to be provided by this CR. At this time, the only allowed value is `openapi`.
-| `service.provides.protocol` | Protocol of the provided service. Defauts to `http`.
-| `service.provides.context` | Specifies context root of the service.
-| `service.provides.auth.username` | Optional value to specify username as link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core++[SecretKeySelector].
-| `service.provides.auth.password` | Optional value to specify password as link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core++[SecretKeySelector].
-| `service.consumes` | An array consisting of services to be consumed by the `RuntimeComponent`.
-| `service.consumes[].category` | The type of service binding to be consumed. At this time, the only allowed value is `openapi`.
-| `service.consumes[].name` | The name of the service to be consumed. If binding to a `RuntimeComponent`, then this would be the provider's CR name.
-| `service.consumes[].namespace` | The namespace of the service to be consumed. If binding to a `RuntimeComponent`, then this would be the provider's CR namespace.
-| `service.consumes[].mountPath` | Optional field to specify which location in the pod, service binding secret should be mounted. If not specified, the secret keys would be injected as environment variables.
 | `createKnativeService`   | A boolean to toggle the creation of Knative resources and usage of Knative serving.
 | `expose`   | A boolean that toggles the external exposure of this deployment via a Route or a Knative Route resource.
 | `deployment.updateStrategy`   | A field to specify the update strategy of the deployment. For more information, see link:++https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy++[updateStrategy]
@@ -96,6 +80,9 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `statefulSet.updateStrategy`   | A field to specify the update strategy of the StatefulSet. For more information, see link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies++[updateStrategy]
 | `statefulSet.updateStrategy.type`   | The type of update strategy of the StatefulSet. The type can be set to `RollingUpdate` or `OnDelete`, where `RollingUpdate` is the default update strategy.
 | `statefulSet.annotations`   | Annotations to be added only to the StatefulSet and resources owned by the StatefulSet.
+| `statefulSet.storage.size` | A convenient field to set the size of the persisted storage. Can be overridden by the `storage.volumeClaimTemplate` property.
+| `statefulSet.storage.mountPath` | The directory inside the container where this persisted storage will be bound to.
+| `statefulSet.storage.volumeClaimTemplate` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components++[volumeClaimTemplate] component of a `StatefulSet`.
 | `replicas` | The static number of desired replica pods that run simultaneously.
 | `autoscaling.maxReplicas` | Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler. It cannot be lower than the minimum number of replicas.
 | `autoscaling.minReplicas`   | Lower limit for the number of pods that can be set by the autoscaler.
@@ -111,9 +98,6 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `startupProbe` | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes++[Kubernetes startup probe] that controls when Kubernetes needs to startup the pod on its first initialization.
 | `volumes` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/storage/volumes++[pod volume].
 | `volumeMounts` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/storage/volumes/++[pod volumeMount].
-| `statefulSet.storage.size` | A convenient field to set the size of the persisted storage. Can be overridden by the `storage.volumeClaimTemplate` property.
-| `statefulSet.storage.mountPath` | The directory inside the container where this persisted storage will be bound to.
-| `statefulSet.storage.volumeClaimTemplate` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components++[volumeClaimTemplate] component of a `StatefulSet`.
 | `monitoring.labels` | Labels to set on link:++https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitor++[ServiceMonitor].
 | `monitoring.endpoints` | A YAML snippet representing an array of link:++https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#endpoint++[Endpoint] component from ServiceMonitor.
 | `route.annotations` | Annotations to be added to the Route.
@@ -121,7 +105,6 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `route.path`   | Path to be used for Route.
 | `route.termination`   | TLS termination policy. Can be one of `edge`, `reencrypt` and `passthrough`.
 | `route.insecureEdgeTerminationPolicy`   | HTTP traffic policy with TLS enabled. Can be one of `Allow`, `Redirect` and `None`.
-| `route.certificate`  | A YAML object that represents a link:++https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec++[Certificate].
 | `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
 | `affinity.nodeAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#nodeaffinity-v1-core++[NodeAffinity].
 | `affinity.nodeAffinityLabels` | A YAML object that contains set of required labels and their values.
@@ -136,7 +119,7 @@ To deploy a Docker image that contains a runtime component to a Kubernetes envir
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -163,7 +146,7 @@ To deploy an image from an image stream, use the following CR:
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -213,7 +196,7 @@ your CR as key/value pairs.
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -237,7 +220,7 @@ To add new annotations into all resources created for a `RuntimeComponent`, spec
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -266,7 +249,7 @@ override any environment variables specified in the container image.
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -321,7 +304,7 @@ The primary port is under the `service` field and the additional ports can be sp
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -368,7 +351,7 @@ The operator will also create a volume mount for the `StatefulSet` mounting to `
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -388,7 +371,7 @@ It is also possible to create multiple volume mount points for persistent volume
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -421,71 +404,6 @@ spec:
 
 The link:++https://github.com/redhat-developer/service-binding-operator++[Service Binding Operator] enables application developers to bind applications together with operator-managed backing services. This can be achieved by creating a `ServiceBindingRequest` custom resource.
 
-
-For the Runtime Component Operator to pass the binding information to the application, define your `ServiceBindingRequest` custom resource in one of the following two ways:
-
-. Define the `ServiceBindingRequest` custom resource YAML within the `bindings.embedded` parameter in your `RuntimeComponent` custom resource.
-. Create the `ServiceBindingRequest` custom resource manually and either refer to it explicitly in your `RuntimeComponent` custom resource or let the operator detect it automatically. The auto-detection mechanism works only if the `ServiceBindingRequest` custom resource follows the `<CR_NAME>-binding` naming convention.
-
-===== Embedding the Service Binding resource
-
-Define your `ServiceBindingRequest` custom resource within your `RuntimeComponent` custom resource:
-
-[source,yaml]
-----
-apiVersion: app.stacks/v1beta1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  bindings:
-    embedded:
-      apiVersion: apps.openshift.io/v1alpha1
-      kind: ServiceBindingRequest
-      spec:
-        backingServiceSelectors:
-          - group: kafka.strimzi.io
-            kind: Kafka
-            resourceRef: my-cluster
-            version: v1beta1
-----
-
-After the Runtime Component Operator processes the `RuntimeComponent` custom resource, it creates a `ServiceBindingRequest` custom resource named `my-app-binding`.
-
-After the Service Binding Operator processes the `my-app` custom resource of the `ServiceBindingRequest` type, it creates a `Secret` object. The `Secret` resource contains binding information that the backing service provides. The Runtime Component Operator injects the `Secret` resource as an environment variable into application pods.
-
-The YAML definition specified in the `bindings.embedded` parameter must not include a `metadata` section because the Runtime Component operator adds a `metadata` section. If the YAML definition does not include an `apiVersion` field or a `kind` field, the Runtime Component operator uses the default `GroupVersionKind` value specified in the Operator Config Map.
-
-===== Creating the Service Binding resource externally
-
-Create your `ServiceBindingRequest` custom resource in a separate YAML definition and then refer to the resource within your `RuntimeComponent` custom resource:
-
-[source,yaml]
-----
-apiVersion: app.stacks/v1beta1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  bindings:
-    resourceRef: my-binding
-----
-
-After the Service Binding Operator, as defined previously, processes the `my-binding` custom resource of the `ServiceBindingRequest` type, it creates a `Secret` object. The `Secret` resource contains binding information that the backing service provides. The Runtime Component Operator injects the `Secret` resource as an environment variable into application pods.
-
-The Runtime Component Operator can also _automatically detect_ if a `ServiceBindingRequest` custom resource exists in the application namespace and is named `<CR_NAME>-binding` (e.g. `my-app-binding`). If the operator detects the custom resource, it injects the binding secret into the application container.
-
-Users can turn off the auto-detection mechanism by setting the `bindings.autoDetect` parameter to a value of `false`. The `bindings.resourceRef` parameter takes precedence over the `bindings.autoDetect` parameter. In other words, the Runtime Component Operator, injects secrets from the `my-binding` resource, even if a `ServiceBindingRequest` resource named `my-app-binding` exists:
-
-[source,yaml]
-----
-  bindings:
-    autoDetect: true
-    resourceRef: my-binding
-----
-
 _This feature is only available if you have Service Binding Operator installed on your cluster._
 
 ==== Exposing `RuntimeComponent` applications as Provisioned Services
@@ -493,79 +411,11 @@ _This feature is only available if you have Service Binding Operator installed o
 A `RuntimeComponent` application can be configured to behave as a link:++https://github.com/k8s-service-bindings/spec#provisioned-service++[Provisioned Service] defined by the link:++https://github.com/k8s-service-bindings/spec++[Service Binding Specification].
 
 According to the specification, a Provisioned Service resource must define a `.status.binding.name` which is a reference to a Secret.
-To expose your application as a Provisioned Service, set the `.spec.bindings.expose.enabled` parameter to a value of `true`. The Runtime Component Operator creates a *binding secret* named `<CR_NAME>-expose-binding` and adds the following entries to the secret: `host`, `port`, `protocol`, `basePath` and `uri`.
+To expose your application as a Provisioned Service, set the `.spec.service.bindable` parameter to a value of `true`. The Runtime Component Operator creates a *binding secret* named `<CR_NAME>-expose-binding` and adds the following entries to the secret: `host`, `port`, `protocol`, `basePath` and `uri`.
 
 To override the default values for the entries in the binding secret or to add new entries to the secret, create an *override secret* named `<CR_NAME>-expose-binding-override` and add any entries to the secret. The operator reads the content of the override secret and overrides the default values in the binding secret.
 
 Once a `RuntimeComponent` application is exposed as a Provisioned Service, a service binding request can refer to the application as a backing service.
-
-==== Binding to `RuntimeComponent` applications
-
-Runtime Component Operator can be used to help with service binding in a cluster. The operator creates a secret on behalf of the **provider** `RuntimeComponent` and injects the secret into pods of the **consumer** `RuntimeComponent` as either environment variable or mounted files. See link:++https://docs.google.com/document/d/1riOX0iTnBBJpTKAHcQShYVMlgkaTNKb4m8fY7W1GqMA/edit++[Runtime Component Operator Design for Service Binding] for more information on the architecture. At this time, the only supported service binding type is `openapi`.
-
-The provider lists information about the REST API it provides:
-
-[source,yaml]
-----
-apiVersion: app.stacks/v1beta1
-kind: RuntimeComponent
-metadata:
-  name: my-provider
-  namespace: pro-namespace
-spec:
-  applicationImage: quay.io/my-repo/my-provider:1.0
-  service:
-    port: 3000
-    provides:
-      category: openapi
-      context: /my-context
-      auth:
-        password:
-          name: my-secret
-          key: password
-        username:
-          name: my-secret
-          key: username
----
-kind: Secret
-apiVersion: v1
-metadata:
-  name: my-secret
-  namespace: pro-namespace
-data:
-  password: bW9vb29vb28=
-  username: dGhlbGF1Z2hpbmdjb3c=
-type: Opaque
-----
-
-And the consumer lists the services it is intending to consume:
-
-[source,yaml]
-----
-apiVersion: app.stacks/v1beta1
-kind: RuntimeComponent
-metadata:
-  name: my-consumer
-  namespace: con-namespace
-spec:
-  applicationImage: quay.io/my-repo/my-consumer:1.0
-  expose: true
-  service:
-    port: 9080
-    consumes:
-    - category: openapi
-      name: my-provider
-      namespace: pro-namespace
-      mountPath: /sample
-----
-
-In the above example, the operator creates a secret named `pro-namespace-my-provider` and adds the following key-value pairs: `username`, `password`, `url`, `context`, `protocol` and `hostname`. The `url` value format is `<protocol>://<name>.<namespace>.svc.cluster.local:<port>/<context>`. Since the provider and the consumer are in two different namespaces, the operator copies the provider secret into consumer's namespace. The operator then mounts the provider secret into a directory with the pattern `<mountPath>/<namespace>/<service_name>` on application container within pods. In the above example, the secret will be serialized into `/sample/pro-namespace/my-provider`, which means we will have a file for each key, where the filename is the key and the content is the key's value.
-
-If the `namespace` is not provided in the above example under `consumes`, then the operator mounts the provider secret into a directory with pattern `<mountPath>/<service_name>`.
-
-If consumer's CR does not include `mountPath`, the secret will be bound to environment variables with the pattern `<NAMESPACE>_<SERVICE-NAME>_<KEY>`, and the value of that env var is the key’s value. Due to syntax restrictions for Kubernetes environment variables, the string representing the namespace and the string representing the service name will have to be normalized by turning any non-`[azAZ09]` characters to become an underscore `(_)` character.
-
-NOTE: The operator requires `ClusterRole` permissions if the provider application is in another namespace.
 
 === Monitoring
 
@@ -579,7 +429,7 @@ At minimum, a label needs to be provided that Prometheus expects to be set on `S
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -596,7 +446,7 @@ For advanced scenarios, it is possible to set many `ServicerMonitor` settings su
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -626,7 +476,7 @@ To create Knative service, set `createKnativeService` to `true`:
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -653,7 +503,7 @@ To expose your application externally, set `expose` to `true`:
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -683,7 +533,7 @@ To use the Ingress resource, set the `defaultHostName` variable in the _runtime-
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -702,7 +552,7 @@ _Note: You must install the cert-manager controller to automatically generate a 
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -722,7 +572,7 @@ You can provide an existing TLS secret and set a custom hostname.
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -755,7 +605,7 @@ To expose your application as a Knative service externally, set `expose` to `tru
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -831,7 +681,7 @@ spec:
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -855,7 +705,7 @@ It will contain private key, certificate and CA certificate. It is up to the app
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -876,7 +726,7 @@ In this example we are overriding Issuer to be used for application. Certificate
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -903,7 +753,7 @@ In this case the cert-manager is not required.
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -952,7 +802,7 @@ Use `nodeAffinityLabels` field to set required labels for pod scheduling on spec
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -971,7 +821,7 @@ The following example requires a node type of _Large_ and preferences for two zo
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: my-app
@@ -1012,7 +862,7 @@ The following example shows that pod affinity is required and that the pods for 
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: Service-B
@@ -1060,7 +910,7 @@ Example:
 
 [source,yaml]
 ----
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeOperation
 metadata:
   name: example-runtime-operation

@@ -1,6 +1,6 @@
 # Check that when minReplicas is set to less that one that the update is rejected
 # There should be no change to the existing autoscale resource
-apiVersion: app.stacks/v1beta1
+apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: autoscaling1-rc

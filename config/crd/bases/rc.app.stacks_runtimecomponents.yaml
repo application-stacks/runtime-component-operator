@@ -6,17 +6,48 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.0
   creationTimestamp: null
-  name: runtimecomponents.app.stacks
+  name: runtimecomponents.rc.app.stacks
 spec:
-  group: app.stacks
+  group: rc.app.stacks
   names:
     kind: RuntimeComponent
     listKind: RuntimeComponentList
     plural: runtimecomponents
+    shortNames:
+    - comp
+    - comps
     singular: runtimecomponent
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - description: Absolute name of the deployed image containing registry and tag
+      jsonPath: .spec.applicationImage
+      name: Image
+      type: string
+    - description: Specifies whether deployment is exposed externally via default
+        Route
+      jsonPath: .spec.expose
+      name: Exposed
+      type: boolean
+    - description: Status of the reconcile condition
+      jsonPath: .status.conditions[?(@.type=='Reconciled')].status
+      name: Reconciled
+      type: string
+    - description: Reason for the failure of reconcile condition
+      jsonPath: .status.conditions[?(@.type=='Reconciled')].reason
+      name: Reason
+      priority: 1
+      type: string
+    - description: Failure message from reconcile condition
+      jsonPath: .status.conditions[?(@.type=='Reconciled')].message
+      name: Message
+      priority: 1
+      type: string
+    - description: Age of the resource
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1beta2
     schema:
       openAPIV3Schema:
         description: RuntimeComponent is the Schema for the runtimecomponents API.
@@ -253,7 +284,7 @@ spec:
                   nodeAffinityLabels:
                     additionalProperties:
                       type: string
-                    description: A YAML object that contains set of required labels
+                    description: A YAML object that contains a set of required labels
                       and their values.
                     type: object
                   podAffinity:
@@ -647,19 +678,15 @@ spec:
                 description: The name of the application this resource is part of.
                   If not specified, it defaults to the name of the CR.
                 type: string
-              architecture:
-                description: An array of architectures to be considered for deployment.
-                  Their position in the array indicates preference.
-                items:
-                  type: string
-                type: array
-                x-kubernetes-list-type: set
+              applicationVersion:
+                type: string
               autoscaling:
                 description: Configures the desired resource consumption of pods.
                 properties:
                   maxReplicas:
                     description: Required field for autoscaling. Upper limit for the
-                      number of pods that can be set by the autoscaler.
+                      number of pods that can be set by the autoscaler. Parameter
+                      spec.resourceConstraints.requests.cpu must also be specified.
                     format: int32
                     minimum: 1
                     type: integer
@@ -673,33 +700,6 @@ spec:
                       percentage of requested CPU) over all the pods.
                     format: int32
                     type: integer
-                type: object
-              bindings:
-                description: Represents service binding related parameters.
-                properties:
-                  autoDetect:
-                    description: A boolean to toggle whether the operator should automatically
-                      detect and use a ServiceBindingRequest resource with <CR_NAME>-binding
-                      naming format.
-                    type: boolean
-                  embedded:
-                    description: A YAML object that represents a ServiceBindingRequest
-                      custom resource.
-                    type: object
-                  expose:
-                    description: A boolean to toggle whether the operator expose the
-                      application as a bindable service.
-                    properties:
-                      enabled:
-                        description: A boolean to toggle whether the operator expose
-                          the application as a bindable service. The default value
-                          for this parameter is false.
-                        type: boolean
-                    type: object
-                  resourceRef:
-                    description: The name of a ServiceBindingRequest custom resource
-                      created manually in the same namespace as the application.
-                    type: string
                 type: object
               createKnativeService:
                 description: A boolean to toggle the creation of Knative resources
@@ -2003,7 +2003,7 @@ spec:
                 - name
                 x-kubernetes-list-type: map
               livenessProbe:
-                description: Detects if the services needs to be restarted.
+                description: Detects if the services need to be restarted.
                 properties:
                   exec:
                     description: One and only one of the following should be specified.
@@ -2464,6 +2464,7 @@ spec:
                           type: object
                       type: object
                     type: array
+                    x-kubernetes-list-type: atomic
                   labels:
                     additionalProperties:
                       type: string
@@ -2472,8 +2473,6 @@ spec:
                 type: object
               pullPolicy:
                 description: Policy for pulling container images. Defaults to IfNotPresent.
-                  Parameters autoscaling.maxReplicas and resourceConstraints.requests.cpu
-                  must be specified.
                 type: string
               pullSecret:
                 description: Name of the Secret to use to pull images from the specified
@@ -2656,38 +2655,14 @@ spec:
                       type: string
                     description: Annotations to be added to the service.
                     type: object
+                  bindable:
+                    description: Expose the application as a bindable service. Defaults
+                      to false.
+                    type: boolean
                   certificateSecretRef:
-                    description: "\tA name of a secret that already contains TLS key,
-                      certificate and CA to be mounted in the pod."
+                    description: A name of a secret that already contains TLS key,
+                      certificate and CA to be mounted in the pod.
                     type: string
-                  consumes:
-                    items:
-                      description: Represents a service to be consumed.
-                      properties:
-                        category:
-                          description: The type of service binding to be consumed.
-                            At this time, the only allowed value is openapi.
-                          type: string
-                        mountPath:
-                          description: Optional field to specify which location in
-                            the pod, service binding secret should be mounted.
-                          type: string
-                        name:
-                          description: The name of the service to be consumed. If
-                            binding to a RuntimeComponent, then this would be the
-                            provider’s CR name.
-                          type: string
-                        namespace:
-                          description: The namespace of the service to be consumed.
-                            If binding to a RuntimeComponent, then this would be the
-                            provider’s CR namespace.
-                          type: string
-                      required:
-                      - category
-                      - name
-                      type: object
-                    type: array
-                    x-kubernetes-list-type: atomic
                   nodePort:
                     description: Node proxies this port into your service.
                     format: int32
@@ -2761,70 +2736,9 @@ spec:
                       - port
                       type: object
                     type: array
-                  provides:
-                    description: Configures the OpenAPI information to expose.
-                    properties:
-                      auth:
-                        description: Allows a service to provide authentication information.
-                        properties:
-                          password:
-                            description: The secret that contains the password for
-                              authenticating.
-                            properties:
-                              key:
-                                description: The key of the secret to select from.  Must
-                                  be a valid secret key.
-                                type: string
-                              name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
-                                type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
-                            required:
-                            - key
-                            type: object
-                          username:
-                            description: The secret that contains the username for
-                              authenticating.
-                            properties:
-                              key:
-                                description: The key of the secret to select from.  Must
-                                  be a valid secret key.
-                                type: string
-                              name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
-                                type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
-                            required:
-                            - key
-                            type: object
-                        type: object
-                      category:
-                        description: Service binding type to be provided by this CR.
-                          At this time, the only allowed value is openapi.
-                        type: string
-                      context:
-                        description: Specifies context root of the service.
-                        type: string
-                      protocol:
-                        description: Protocol of the provided service. Defauts to
-                          http.
-                        type: string
-                    required:
-                    - category
-                    type: object
                   targetPort:
                     description: The port that the operator assigns to containers
-                      inside pods. Defaults to the value of service.port.
+                      inside pods. Defaults to the value of spec.service.port.
                     format: int32
                     maximum: 65535
                     minimum: 1
@@ -4322,8 +4236,6 @@ spec:
                         type: string
                     type: object
                 type: object
-              version:
-                type: string
               volumeMounts:
                 description: Represents where to mount the volumes into containers.
                 items:
@@ -5845,9 +5757,6 @@ spec:
                     lastTransitionTime:
                       format: date-time
                       type: string
-                    lastUpdateTime:
-                      format: date-time
-                      type: string
                     message:
                       type: string
                     reason:
@@ -5860,21 +5769,8 @@ spec:
                   type: object
                 type: array
                 x-kubernetes-list-type: atomic
-              consumedServices:
-                additionalProperties:
-                  items:
-                    type: string
-                  type: array
-                description: ConsumedServices stores status of the service binding
-                  dependencies
-                type: object
               imageReference:
                 type: string
-              resolvedBindings:
-                items:
-                  type: string
-                type: array
-                x-kubernetes-list-type: set
             type: object
         type: object
     served: true
