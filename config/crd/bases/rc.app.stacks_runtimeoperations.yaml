@@ -19,7 +19,7 @@ spec:
   - name: v1beta2
     schema:
       openAPIV3Schema:
-        description: RuntimeOperation is the Schema for the runtimeoperations API.
+        description: Day-2 operation to execute on an instance of runtime component
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation

@@ -97,7 +97,7 @@ type RuntimeComponentSpec struct {
 	ReadinessProbe *corev1.Probe `json:"readinessProbe,omitempty"`
 
 	// Protects slow starting containers from livenessProbe.
-	// +operator-sdk:csv:customresourcedefinitions:order=51,type=spec,displayName="StartupProbe Probe"
+	// +operator-sdk:csv:customresourcedefinitions:order=51,type=spec,displayName="Startup Probe"
 	StartupProbe *corev1.Probe `json:"startupProbe,omitempty"`
 
 	// Name of the Secret to use to pull images from the specified repository. It is not required if the cluster is configured with a global image pull secret.
@@ -345,9 +345,9 @@ const (
 // +kubebuilder:printcolumn:name="Reason",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].reason",priority=1,description="Reason for the failure of reconcile condition"
 // +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].message",priority=1,description="Failure message from reconcile condition"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",priority=0,description="Age of the resource"
-
 //+operator-sdk:csv:customresourcedefinitions:displayName="RuntimeComponent",resources={{Deployment,v1},{Service,v1},{StatefulSet,v1},{Route,v1},{HorizontalPodAutoscaler,v1},{ServiceAccount,v1},{Secret,v1}}
-// RuntimeComponent is the Schema for the runtimecomponents API.
+
+// Represents the deployment of a runtime component
 type RuntimeComponent struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

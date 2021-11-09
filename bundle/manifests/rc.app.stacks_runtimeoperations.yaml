@@ -4,6 +4,10 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.0
   creationTimestamp: null
+  labels:
+    app.kubernetes.io/instance: runtime-component-operator
+    app.kubernetes.io/managed-by: olm
+    app.kubernetes.io/name: runtime-component-operator
   name: runtimeoperations.rc.app.stacks
 spec:
   group: rc.app.stacks
@@ -17,7 +21,7 @@ spec:
   - name: v1beta2
     schema:
       openAPIV3Schema:
-        description: RuntimeOperation is the Schema for the runtimeoperations API.
+        description: Day-2 operation to execute on an instance of runtime component
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'

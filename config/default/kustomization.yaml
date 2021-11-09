@@ -9,8 +9,10 @@ namespace: rco-system
 namePrefix: rco-
 
 # Labels to add to all resources and selectors.
-#commonLabels:
-#  someName: someValue
+commonLabels:
+  app.kubernetes.io/instance: runtime-component-operator
+  app.kubernetes.io/managed-by: olm
+  app.kubernetes.io/name: runtime-component-operator
 
 bases:
 - ../crd
