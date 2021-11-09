@@ -1,6 +1,6 @@
 #!/bin/bash
 
-readonly usage="Usage: e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace>"
+readonly usage="Usage: e2e.sh -u <registry-username> -p <registry-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace>"
 readonly SERVICE_ACCOUNT="travis-tests"
 readonly OC_CLIENT_VERSION="4.6.0"
 
@@ -13,13 +13,13 @@ setup_env() {
 
     # Start a cluster and login
     echo "****** Logging into remote cluster..."
-    oc login "${OC_URL}" --token="${OC_TOKEN}" --insecure-skip-tls-verify=true
+    oc login "${OC_URL}" --token="${OC_TOKEN}"
 
     # Set variables for rest of script to use
-    readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
+    #readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
     readonly TEST_NAMESPACE="runtime-operator-test-${TRAVIS_BUILD_NUMBER}"
-    readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/runtime-operator
-    readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle:latest"
+    readonly BUILD_IMAGE="${REGISTRY_NAME}/${REGISTRY_NAMESPACE}/operator:daily"
+    readonly BUNDLE_IMAGE="${REGISTRY_NAME}/${REGISTRY_NAMESPACE}/operator:bundle-daily"
 
     echo "****** Creating test namespace: ${TEST_NAMESPACE}"
     oc new-project "${TEST_NAMESPACE}" || oc project "${TEST_NAMESPACE}"
@@ -79,17 +79,21 @@ main() {
     setup_env
 
     ## login to docker to avoid rate limiting during build
-    echo "${PASS}" | docker login -u "${USER}" --password-stdin
+    #echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
-    echo "****** Building image"
-    docker build -t "${BUILD_IMAGE}" .
+    #echo "****** Building image"
+    #docker build -t "${BUILD_IMAGE}" .
 
-    echo "****** Building bundle..."
-    IMG="${BUILD_IMAGE}" BUNDLE_IMG="${BUNDLE_IMAGE}" make kustomize bundle bundle-build
+    #echo "****** Building bundle..."
+    #IMG="${BUILD_IMAGE}" BUNDLE_IMG="${BUNDLE_IMAGE}" make kustomize bundle bundle-build
 
     echo "****** Pushing operator and operator bundle images into registry..."
-    push_images
+    #push_images
 
+    echo "****** Logging into private registry..."
+    echo "${PASS}" | docker login ${REGISTRY_NAME} -u "${USER}" --password-stdin
+    echo "****** Creating pull secret using Docker config..."
+    oc create secret generic regcred --from-file=.dockerconfigjson="${HOME}/.docker/config.json" --type=kubernetes.io/dockerconfigjson
     echo "****** Installing bundle..."
     operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}" || {
         echo "****** Installing bundle failed..."
