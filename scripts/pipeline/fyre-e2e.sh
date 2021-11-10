@@ -81,13 +81,13 @@ main() {
     # login to docker to avoid rate limiting during build
     #echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
-    echo "****** Building image"
-    docker build -t "${BUILD_IMAGE}" .
+    #echo "****** Building image"
+    #docker build -t "${BUILD_IMAGE}" .
 
-    echo "****** Building bundle..."
-    IMG="${BUILD_IMAGE}" BUNDLE_IMG="${BUNDLE_IMAGE}" make kustomize bundle bundle-build
+    #echo "****** Building bundle..."
+    #IMG="${BUILD_IMAGE}" BUNDLE_IMG="${BUNDLE_IMAGE}" make kustomize bundle bundle-build
 
-    echo "****** Pushing operator and operator bundle images into registry..."
+    #echo "****** Pushing operator and operator bundle images into registry..."
     #push_images
 
     echo "****** Logging into private registry..."
@@ -109,7 +109,7 @@ main() {
     echo "****** rco-controller-manager deployment is ready..."
 
     echo "****** Starting scorecard tests..."
-    operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --service-account scorecard-kuttl --wait-time 30m ./bundle || {
+    operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --service-account scorecard-kuttl --wait-time 30m "${BUNDLE_IMAGE}" || {
         echo "****** Scorecard tests failed..."
         exit 1
     }
