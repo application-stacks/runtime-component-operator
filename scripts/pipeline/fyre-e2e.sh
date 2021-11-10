@@ -78,11 +78,11 @@ main() {
     echo "****** Setting up test environment..."
     setup_env
 
-    ## login to docker to avoid rate limiting during build
+    # login to docker to avoid rate limiting during build
     #echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
-    #echo "****** Building image"
-    #docker build -t "${BUILD_IMAGE}" .
+    echo "****** Building image"
+    docker build -t "${BUILD_IMAGE}" .
 
     echo "****** Building bundle..."
     IMG="${BUILD_IMAGE}" BUNDLE_IMG="${BUNDLE_IMAGE}" make kustomize bundle bundle-build
