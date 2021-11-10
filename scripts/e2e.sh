@@ -13,7 +13,7 @@ setup_env() {
 
     # Start a cluster and login
     echo "****** Logging into remote cluster..."
-    oc login "${OC_URL}" --token="${OC_TOKEN}" --insecure-skip-tls-verify=true
+    oc login "${OC_URL}" --token="${OC_TOKEN}" 
 
     # Set variables for rest of script to use
     readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
