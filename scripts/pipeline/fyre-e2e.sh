@@ -92,8 +92,8 @@ main() {
 
     echo "****** Logging into private registry..."
     echo "${PASS}" | docker login ${REGISTRY_NAME} -u "${USER}" --password-stdin
-    echo "****** Creating pull secret using Docker config..."
-    oc create secret generic regcred --from-file=.dockerconfigjson="${HOME}/.docker/config.json" --type=kubernetes.io/dockerconfigjson
+    echo "****** Creating pull secret..."
+    oc create secret docker-registry regcred --docker-server=${REGISTRY_NAME} "--docker-username=${USER}" "--docker-password=${PASS}" --docker-email=unused
     echo "****** Installing bundle..."
     operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}" || {
         echo "****** Installing bundle failed..."
