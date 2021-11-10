@@ -14,7 +14,7 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
-    - description: RuntimeComponent is the Schema for the runtimecomponents API.
+    - description: Represents the deployment of a runtime component
       displayName: RuntimeComponent
       kind: RuntimeComponent
       name: runtimecomponents.rc.app.stacks
@@ -242,7 +242,7 @@ spec:
         displayName: Readiness Probe
         path: readinessProbe
       - description: Protects slow starting containers from livenessProbe.
-        displayName: StartupProbe Probe
+        displayName: Startup Probe
         path: startupProbe
       - description: Name of the Secret to use to pull images from the specified repository. It is not required if the cluster is configured with a global image pull secret.
         displayName: Pull Secret
@@ -277,7 +277,7 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes.conditions
       version: v1beta2
-    - description: RuntimeOperation is the Schema for the runtimeoperations API.
+    - description: Day-2 operation to execute on an instance of runtime component
       displayName: RuntimeOperation
       kind: RuntimeOperation
       name: runtimeoperations.rc.app.stacks

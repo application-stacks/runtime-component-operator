@@ -45,9 +45,9 @@ type RuntimeOperationStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-
-// RuntimeOperation is the Schema for the runtimeoperations API.
 //+operator-sdk:csv:customresourcedefinitions:displayName="RuntimeOperation"
+
+// Day-2 operation to execute on an instance of runtime component
 type RuntimeOperation struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

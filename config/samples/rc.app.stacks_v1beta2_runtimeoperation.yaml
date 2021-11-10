@@ -3,8 +3,7 @@ kind: RuntimeOperation
 metadata:
   name: runtimeoperation-sample
 spec:
-  # Add fields here
-  podName: app-74b69786dd-xhnlw
+  podName: Specify_Pod_Name_Here
   containerName: app
   command:
-    - ./script.sh
+    - ./your_script.sh

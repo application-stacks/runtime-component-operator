@@ -50,7 +50,7 @@ spec:
     name: v1beta2
     schema:
       openAPIV3Schema:
-        description: RuntimeComponent is the Schema for the runtimecomponents API.
+        description: Represents the deployment of a runtime component
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
