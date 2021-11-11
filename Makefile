@@ -179,6 +179,7 @@ test-e2e:
                      --registry-name default-route --registry-namespace openshift-image-registry
 
 test-pipeline-e2e:
-	./scripts/pipeline/fyre-e2e.sh -u "${PIPELINE_USERNAME}" -p "${PIPELINE_PASSWORD}" \
+	./scripts/pipeline/fyre-e2e.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" \
                      --cluster-url "${CLUSTER_URL}" --cluster-token "${CLUSTER_TOKEN}" \
-                     --registry-name us.icr.io --registry-namespace runtimecomponentoperator					 
+                     --registry-name us.icr.io --registry-namespace runtimecomponentoperator \
+					 --registry-user "${PIPELINE_USERNAME}" --registry-password "${PIPELINE_PASSWORD}"					 

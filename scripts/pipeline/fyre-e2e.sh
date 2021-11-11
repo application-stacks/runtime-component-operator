@@ -1,8 +1,8 @@
 #!/bin/bash
 
-readonly usage="Usage: e2e.sh -u <registry-username> -p <registry-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace>"
-readonly SERVICE_ACCOUNT="travis-tests"
-readonly OC_CLIENT_VERSION="4.6.0"
+readonly usage="Usage: e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace> --registry-user <user> --registry-password <password>"
+#readonly SERVICE_ACCOUNT="travis-tests"
+readonly OC_CLIENT_VERSION="4.7.0"
 
 # setup_env: Download oc cli, log into our persistent cluster, and create a test project
 setup_env() {
@@ -13,7 +13,7 @@ setup_env() {
 
     # Start a cluster and login
     echo "****** Logging into remote cluster..."
-    oc login "${OC_URL}" --token="${OC_TOKEN}" --insecure-skip-tls-verify=true
+    oc login "${OC_URL}" -u kubeadmin -p "${OC_TOKEN}" --insecure-skip-tls-verify=true
 
     # Set variables for rest of script to use
     #readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
@@ -33,26 +33,26 @@ cleanup_env() {
   oc delete project "${TEST_NAMESPACE}"
 }
 
-push_images() {
-    echo "****** Logging into private registry..."
-    oc sa get-token "${SERVICE_ACCOUNT}" -n default | docker login -u unused --password-stdin "${DEFAULT_REGISTRY}" || {
-        echo "Failed to log into docker registry as ${SERVICE_ACCOUNT}, exiting..."
-        exit 1
-    }
+#push_images() {
+#    echo "****** Logging into private registry..."
+#    oc sa get-token "${SERVICE_ACCOUNT}" -n default | docker login -u unused --password-stdin "${DEFAULT_REGISTRY}" || {
+#        echo "Failed to log into docker registry as ${SERVICE_ACCOUNT}, exiting..."
+#        exit 1
+#    }
 
-    echo "****** Creating pull secret using Docker config..."
-    oc create secret generic regcred --from-file=.dockerconfigjson="${HOME}/.docker/config.json" --type=kubernetes.io/dockerconfigjson
+#    echo "****** Creating pull secret using Docker config..."
+#    oc create secret generic regcred --from-file=.dockerconfigjson="${HOME}/.docker/config.json" --type=kubernetes.io/dockerconfigjson
 
-    docker push "${BUILD_IMAGE}" || {
-        echo "Failed to push ref: ${BUILD_IMAGE} to docker registry, exiting..."
-        exit 1
-    }
+#    docker push "${BUILD_IMAGE}" || {
+#        echo "Failed to push ref: ${BUILD_IMAGE} to docker registry, exiting..."
+#        exit 1
+#    }
 
-    docker push "${BUNDLE_IMAGE}" || {
-        echo "Failed to push ref: ${BUNDLE_IMAGE} to docker registry, exiting..."
-        exit 1
-    }
-}
+#    docker push "${BUNDLE_IMAGE}" || {
+#        echo "Failed to push ref: ${BUNDLE_IMAGE} to docker registry, exiting..."
+#        exit 1
+#    }
+#}
 
 main() {
     parse_args "$@"
@@ -70,7 +70,13 @@ main() {
     fi
 
     if [[ -z "${REGISTRY_NAME}" ]] || [[ -z "${REGISTRY_NAMESPACE}" ]]; then
-        echo "****** Missing OCP registry name or registry namespace, see usage"
+        echo "****** Missing registry name or registry namespace, see usage"
+        echo "${usage}"
+        exit 1
+    fi
+
+    if [[ -z "${REGISTRY_USER}" ]] || [[ -z "${REGISTRY_PASSWORD}" ]]; then
+        echo "****** Missing registry authentication information, see usage"
         echo "${usage}"
         exit 1
     fi
@@ -79,21 +85,21 @@ main() {
     setup_env
 
     # login to docker to avoid rate limiting during build
-    #echo "${PASS}" | docker login -u "${USER}" --password-stdin
+    echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
-    #echo "****** Building image"
-    #docker build -t "${BUILD_IMAGE}" .
+    echo "****** Building image"
+    docker build -t "${BUILD_IMAGE}" .
 
-    #echo "****** Building bundle..."
-    #IMG="${BUILD_IMAGE}" BUNDLE_IMG="${BUNDLE_IMAGE}" make kustomize bundle bundle-build
+    echo "****** Building bundle..."
+    IMG="${BUILD_IMAGE}" BUNDLE_IMG="${BUNDLE_IMAGE}" make kustomize bundle bundle-build
 
     #echo "****** Pushing operator and operator bundle images into registry..."
     #push_images
 
-    echo "****** Logging into private registry..."
-    echo "${PASS}" | docker login ${REGISTRY_NAME} -u "${USER}" --password-stdin
+    #echo "****** Logging into private registry..."
+    #echo "${REGISTRY_PASSWORD}" | docker login ${REGISTRY_NAME} -u "${REGISTRY_USER}" --password-stdin
     echo "****** Creating pull secret..."
-    oc create secret docker-registry regcred --docker-server=${REGISTRY_NAME} "--docker-username=${USER}" "--docker-password=${PASS}" --docker-email=unused
+    oc create secret docker-registry regcred --docker-server=${REGISTRY_NAME} "--docker-username=${REGISTRY_USER}" "--docker-password=${REGISTRY_PASSWORD}" --docker-email=unused
     echo "****** Installing bundle..."
     operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}" || {
         echo "****** Installing bundle failed..."
@@ -109,7 +115,7 @@ main() {
     echo "****** rco-controller-manager deployment is ready..."
 
     echo "****** Starting scorecard tests..."
-    operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --service-account scorecard-kuttl --wait-time 30m "${BUNDLE_IMAGE}" || {
+    operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --service-account scorecard-kuttl --wait-time 30m ./bundle || {
         echo "****** Scorecard tests failed..."
         exit 1
     }
@@ -148,6 +154,14 @@ parse_args() {
       shift
       readonly REGISTRY_NAMESPACE="${1}"
       ;;
+    --registry-user)
+      shift
+      readonly REGISTRY_USER="${1}"
+      ;;
+    --registry-password)
+      shift
+      readonly REGISTRY_PASSWORD="${1}"
+      ;;      
     *)
       echo "Error: Invalid argument - $1"
       echo "$usage"
