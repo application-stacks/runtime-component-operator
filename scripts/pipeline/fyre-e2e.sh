@@ -96,8 +96,8 @@ main() {
     #echo "****** Pushing operator and operator bundle images into registry..."
     #push_images
 
-    #echo "****** Logging into private registry..."
-    #echo "${REGISTRY_PASSWORD}" | docker login ${REGISTRY_NAME} -u "${REGISTRY_USER}" --password-stdin
+    echo "****** Logging into private registry..."
+    echo "${REGISTRY_PASSWORD}" | docker login ${REGISTRY_NAME} -u "${REGISTRY_USER}" --password-stdin
     echo "****** Creating pull secret..."
     oc create secret docker-registry regcred --docker-server=${REGISTRY_NAME} "--docker-username=${REGISTRY_USER}" "--docker-password=${REGISTRY_PASSWORD}" --docker-email=unused
     echo "****** Installing bundle..."
