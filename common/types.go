@@ -111,6 +111,13 @@ type BaseComponentStatefulSet interface {
 	GetAnnotations() map[string]string
 }
 
+// BaseComponentProbes describes the probes for application container
+type BaseComponentProbes interface {
+	GetLivenessProbe() *corev1.Probe
+	GetReadinessProbe() *corev1.Probe
+	GetStartupProbe() *corev1.Probe
+}
+
 // BaseComponent represents basic kubernetes application
 type BaseComponent interface {
 	GetApplicationImage() string
@@ -118,9 +125,7 @@ type BaseComponent interface {
 	GetPullSecret() *string
 	GetServiceAccountName() *string
 	GetReplicas() *int32
-	GetLivenessProbe() *corev1.Probe
-	GetReadinessProbe() *corev1.Probe
-	GetStartupProbe() *corev1.Probe
+	GetProbes() BaseComponentProbes
 	GetVolumes() []corev1.Volume
 	GetVolumeMounts() []corev1.VolumeMount
 	GetResourceConstraints() *corev1.ResourceRequirements

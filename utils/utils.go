@@ -381,9 +381,16 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	if ba.GetResourceConstraints() != nil {
 		appContainer.Resources = *ba.GetResourceConstraints()
 	}
-	appContainer.ReadinessProbe = ba.GetReadinessProbe()
-	appContainer.LivenessProbe = ba.GetLivenessProbe()
-	appContainer.StartupProbe = ba.GetStartupProbe()
+
+	if ba.GetProbes() != nil {
+		appContainer.ReadinessProbe = ba.GetProbes().GetReadinessProbe()
+		appContainer.LivenessProbe = ba.GetProbes().GetLivenessProbe()
+		appContainer.StartupProbe = ba.GetProbes().GetStartupProbe()
+	} else {
+		appContainer.ReadinessProbe = nil
+		appContainer.LivenessProbe = nil
+		appContainer.StartupProbe = nil
+	}
 
 	if ba.GetPullPolicy() != nil {
 		appContainer.ImagePullPolicy = *ba.GetPullPolicy()
@@ -540,9 +547,17 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	ksvc.Spec.Template.Spec.Containers[0].Image = ba.GetStatus().GetImageReference()
 	// Knative sets its own resource constraints
 	//ksvc.Spec.Template.Spec.Containers[0].Resources = *cr.Spec.ResourceConstraints
-	ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe = ba.GetReadinessProbe()
-	ksvc.Spec.Template.Spec.Containers[0].LivenessProbe = ba.GetLivenessProbe()
-	ksvc.Spec.Template.Spec.Containers[0].StartupProbe = ba.GetStartupProbe()
+
+	if ba.GetProbes() != nil {
+		ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe = ba.GetProbes().GetReadinessProbe()
+		ksvc.Spec.Template.Spec.Containers[0].LivenessProbe = ba.GetProbes().GetLivenessProbe()
+		ksvc.Spec.Template.Spec.Containers[0].StartupProbe = ba.GetProbes().GetStartupProbe()
+	} else {
+		ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe = nil
+		ksvc.Spec.Template.Spec.Containers[0].LivenessProbe = nil
+		ksvc.Spec.Template.Spec.Containers[0].StartupProbe = nil
+	}
+
 	ksvc.Spec.Template.Spec.Containers[0].ImagePullPolicy = *ba.GetPullPolicy()
 	ksvc.Spec.Template.Spec.Containers[0].Env = ba.GetEnv()
 	ksvc.Spec.Template.Spec.Containers[0].EnvFrom = ba.GetEnvFrom()

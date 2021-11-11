@@ -9,20 +9,21 @@ spec:
     type: "ClusterIP"
     port: 3000
   replicas: 1
-  startupProbe:
-    failureThreshold: 10
-    periodSeconds: 5
-    httpGet:
-      path: "/"
-      port: 3000
-  livenessProbe:
-    initialDelaySeconds: 4
-    httpGet:
-      path: "/"
-      port: 3000
-  readinessProbe:
-    initialDelaySeconds: 1
-    httpGet:
-      path: "/"
-      port: 3000
+  probes:
+    startup:
+      failureThreshold: 10
+      periodSeconds: 5
+      httpGet:
+        path: "/"
+        port: 3000
+    liveness:
+      initialDelaySeconds: 4
+      httpGet:
+        path: "/"
+        port: 3000
+    readiness:
+      initialDelaySeconds: 1
+      httpGet:
+        path: "/"
+        port: 3000
 
