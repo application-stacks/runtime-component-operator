@@ -122,6 +122,8 @@ acceptance-test:
     apt-get -y install build-essential    
     export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
     export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key)  
+    export DOCKER_USERNAME=$(get_env docker-username)
+    export DOCKER_PASSWORD=$(get_env docker-password)    
     export CLUSTER_URL=$(get_env test-cluster-url)
     export CLUSTER_TOKEN=$(get_env test-cluster-token) 
     export TRAVIS_BUILD_NUMBER=$BUILD_NUMBER   
