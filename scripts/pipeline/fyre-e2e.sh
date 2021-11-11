@@ -115,7 +115,8 @@ main() {
     echo "****** rco-controller-manager deployment is ready..."
 
     echo "****** Starting scorecard tests..."
-    operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --service-account scorecard-kuttl --wait-time 30m ./bundle || {
+    echo "operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace=${TEST_NAMESPACE} --service-account=scorecard-kuttl --wait-time 30m ./bundle"
+    operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace="${TEST_NAMESPACE}" --service-account="scorecard-kuttl" --wait-time 30m ./bundle || {
         echo "****** Scorecard tests failed..."
         exit 1
     }
