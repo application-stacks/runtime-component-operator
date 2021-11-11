@@ -158,7 +158,7 @@ build-multiarch-image: ## Build operator image
 	./scripts/build-release.sh --skip-push -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}" --release "${OPERATOR_IMAGE_TAG}"
 
 build-and-push-multiarch-image: ## Build and push operator image
-	./scripts/build-release.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}" --release "${OPERATOR_IMAGE_TAG}"
+	./scripts/build-release.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}" --release "${OPERATOR_IMAGE_TAG}"
 
 docker-login:
 	docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" 
