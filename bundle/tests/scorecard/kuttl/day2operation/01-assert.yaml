@@ -1,0 +1,10 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeOperation
+metadata:
+  name: example-runtime-operation-0
+spec:
+  podName: day2-operation-rc-0
+  containerName: app
+status:
+  conditions:
+    - status: 'True'
