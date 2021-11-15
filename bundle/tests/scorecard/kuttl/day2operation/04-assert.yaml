@@ -19,3 +19,4 @@ spec:
 status:
   conditions:
     - status: 'True'
+    - type: Completed

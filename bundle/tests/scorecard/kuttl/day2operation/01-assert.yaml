@@ -7,4 +7,5 @@ spec:
   containerName: app
 status:
   conditions:
-    - status: 'True'
+     - status: 'True'
+     - type: Completed
