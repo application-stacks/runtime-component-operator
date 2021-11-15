@@ -25,6 +25,7 @@ setup:
       else
         printf "Using default 'sonar-project.properties' file"  
       fi  
+    done  
   
 test:
   dind: true
