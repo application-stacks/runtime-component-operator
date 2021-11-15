@@ -5,6 +5,15 @@ setup:
   script: |
     #!/usr/bin/env bash
     echo "setup"
+    read -r SONAR_HOST_URL <<< "$(get_env sonarqube | jq -r '.parameters.dashboard_url' | sed 's:/*$::')"
+    SONARQUBE_INSTANCE_ID=$(get_env sonarqube | jq -r '.instance_id')
+    read -r SONAR_PASS <<< "$(jq -r --arg sonar_instance "$SONARQUBE_INSTANCE_ID" '[.services[] | select(."service_id"=="sonarqube")][] | select(."instance_id"==$sonar_instance) | .parameters.user_password' /toolchain/toolchain.json)"  
+    touch sonar-project.properties    cat << EOF > sonar-project.properties
+    sonar.projectKey=runtime-component-operator
+    sonar.host.url=$SONAR_HOST_URL
+    sonar.sources=.
+    sonar.login=$SONAR_PASS
+    EOF
   
 test:
   dind: true
