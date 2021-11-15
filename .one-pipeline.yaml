@@ -14,6 +14,7 @@ setup:
     sonar.sources=.
     sonar.login=$SONAR_PASS
     EOF
+    echo $(ls -l)
   
 test:
   dind: true
@@ -21,6 +22,7 @@ test:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     #!/usr/bin/env bash
+    echo $(ls -l)
     # Download and configure golang
     wget --header "Accept: application/octet-stream"  "https://golang.org/dl/go1.16.linux-amd64.tar.gz" 
     rm -rf /usr/local/go && tar -C /usr/local -xf go1.16.linux-amd64.tar.gz
