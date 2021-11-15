@@ -14,10 +14,10 @@ setup:
       path="$(load_repo "$repo" path)"
       touch "$WORKSPACE"/"$path"/sonar-project.properties   
       cat << EOF > "$WORKSPACE"/"$path"/sonar-project.properties
-      sonar.projectKey=runtime-component-operator
-      sonar.host.url=$SONAR_HOST_URL
-      sonar.sources=.
-      sonar.login=$SONAR_PASS
+        sonar.projectKey=runtime-component-operator
+        sonar.host.url=$SONAR_HOST_URL
+        sonar.sources=.
+        sonar.login=$SONAR_PASS
       EOF
       chmod -x sonar-project.properties
     done  
