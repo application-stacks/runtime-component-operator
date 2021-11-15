@@ -4,6 +4,4 @@ metadata:
   name: probes-rc
 spec:
   # Add fields here
-  livenessProbe: null
-  readinessProbe: null
-  startupProbe: null
+  probes:
