@@ -19,7 +19,7 @@ setup:
       url="$(load_repo "$repo" url)"
       name=$(echo "$url" | cut -f5 -d/)
       path="$(load_repo "$repo" path)"
-      echo $(ls -l "$WORKSPACE"/"$path")
+      echo "$WORKSPACE"/"$path"
       if [ -f "$WORKSPACE"/"$path"/sonar-project.properties ]; then
         printf "Using user provided 'sonar-project.properties' file" 
       else
