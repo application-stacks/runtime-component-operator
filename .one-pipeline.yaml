@@ -8,16 +8,15 @@ setup:
     read -r SONAR_HOST_URL <<< "$(get_env sonarqube | jq -r '.parameters.dashboard_url' | sed 's:/*$::')"
     SONARQUBE_INSTANCE_ID=$(get_env sonarqube | jq -r '.instance_id')
     read -r SONAR_PASS <<< "$(jq -r --arg sonar_instance "$SONARQUBE_INSTANCE_ID" '[.services[] | select(."service_id"=="sonarqube")][] | select(."instance_id"==$sonar_instance) | .parameters.user_password' /toolchain/toolchain.json)"  
-    touch sonar-project.properties   
-    cat << EOF > sonar-project.properties
+    touch "$WORKSPACE"/app/runtime-component-operator/sonar-project.properties   
+    cat << EOF > "$WORKSPACE"/app/runtime-component-operator/sonar-project.properties
     sonar.projectKey=runtime-component-operator
     sonar.host.url=$SONAR_HOST_URL
     sonar.sources=.
     sonar.login=$SONAR_PASS
     EOF
-    chmod -x sonar-project.properties
-    echo $(pwd)
-    if [ -f sonar-project.properties ]; then
+    chmod -x "$WORKSPACE"/app/runtime-component-operator/sonar-project.properties
+    if [ -f "$WORKSPACE"/app/runtime-component-operator/sonar-project.properties ]; then
       printf "Using user provided 'sonar-project.properties' file" 
     else
       printf "Using default 'sonar-project.properties' file"  
