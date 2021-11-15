@@ -87,7 +87,7 @@ main() {
     # login to docker to avoid rate limiting during build
     echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
-    echo "****** Building image"
+    echo "****** Building image..."
     docker build -t "${BUILD_IMAGE}" .
 
     echo "****** Building bundle..."
@@ -115,8 +115,7 @@ main() {
     echo "****** rco-controller-manager deployment is ready..."
 
     echo "****** Starting scorecard tests..."
-    echo "operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace=${TEST_NAMESPACE} --service-account=scorecard-kuttl --wait-time 30m ./bundle"
-    operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace="${TEST_NAMESPACE}" --service-account="scorecard-kuttl" --wait-time 30m ./bundle || {
+    operator-sdk scorecard --verbose --kubeconfig  ${HOME}/.kube/config --selector=suite=kuttlsuite --namespace="${TEST_NAMESPACE}" --service-account="scorecard-kuttl" --wait-time 30m ./bundle || {
         echo "****** Scorecard tests failed..."
         exit 1
     }
