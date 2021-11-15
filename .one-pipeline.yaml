@@ -12,7 +12,8 @@ setup:
       url="$(load_repo "$repo" url)"
       name=$(echo "$url" | cut -f5 -d/)
       path="$(load_repo "$repo" path)"
-      touch "$WORKSPACE"/"$path"/sonar-project.properties    cat << EOF > "$WORKSPACE"/"$path"/sonar-project.properties
+      touch "$WORKSPACE"/"$path"/sonar-project.properties   
+      cat << EOF > "$WORKSPACE"/"$path"/sonar-project.properties
       sonar.projectKey=runtime-component-operator
       sonar.host.url=$SONAR_HOST_URL
       sonar.sources=.
