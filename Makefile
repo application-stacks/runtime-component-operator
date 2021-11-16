@@ -173,10 +173,10 @@ setup-manifest:
 	./scripts/installers/install-manifest-tool.sh
 
 test-e2e:
-	./scripts/e2e.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" \
+	./scripts/e2e-release.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" \
                      --cluster-url "${CLUSTER_URL}" --cluster-token "${CLUSTER_TOKEN}" \
                      --registry-name default-route --registry-namespace openshift-image-registry \
-                     --test-tag "${TRAVIS_BUILD_NUMBER}"
+                     --test-tag "${TRAVIS_BUILD_NUMBER}" --target "${RELEASE_TARGET}"
 
 build-releases:
 	./scripts/build-releases.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}" --target "${RELEASE_TARGET}"

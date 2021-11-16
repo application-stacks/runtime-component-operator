@@ -1,6 +1,6 @@
 #!/bin/bash
 
-readonly usage="Usage: e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace>"
+readonly usage="Usage: e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace> --release <daily|release-tag> --test-tag <test-id>"
 readonly SERVICE_ACCOUNT="travis-tests"
 readonly OC_CLIENT_VERSION="4.6.0"
 readonly CONTROLLER_MANAGER_NAME="rco-controller-manager"
@@ -22,8 +22,13 @@ setup_env() {
     readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/runtime-operator
     readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle:latest"
 
-    echo "****** Creating test namespace: ${TEST_NAMESPACE}"
+    echo "****** Creating test namespace ${TEST_NAMESPACE} for release ${RELEASE}"
     oc new-project "${TEST_NAMESPACE}" || oc project "${TEST_NAMESPACE}"
+
+    ## Switch to release branch
+    if [[ "${RELEASE}" != "daily" ]]; then
+      git switch -q "${RELEASE}"
+    fi
 
     ## Create service account for Kuttl tests
     oc apply -f config/rbac/kuttl-rbac.yaml
@@ -58,6 +63,10 @@ push_images() {
 main() {
     parse_args "$@"
 
+    if [[ -z "${RELEASE}" ]]; then
+        echo "****** Missing docker authentication information, see usage"
+      fi
+
     if [[ -z "${USER}" || -z "${PASS}" ]]; then
         echo "****** Missing docker authentication information, see usage"
         echo "${usage}"
@@ -72,6 +81,12 @@ main() {
 
     if [[ -z "${REGISTRY_NAME}" ]] || [[ -z "${REGISTRY_NAMESPACE}" ]]; then
         echo "****** Missing OCP registry name or registry namespace, see usage"
+        echo "${usage}"
+        exit 1
+    fi
+
+    if [[ -z "${TEST_TAG}" ]]; then
+        echo "****** Missing test tag, see usage"
         echo "${usage}"
         exit 1
     fi
@@ -144,6 +159,10 @@ parse_args() {
     --registry-namespace)
       shift
       readonly REGISTRY_NAMESPACE="${1}"
+      ;;
+    --release-tag)
+      shift
+      readonly RELEASE="${1}"
       ;;
     --test-tag)
       shift
