@@ -37,7 +37,6 @@ jobs:
       os: linux
       arch: amd64
       script:
-        - make build-multiarch-image
         - travis_wait 45 make setup test-e2e || travis_terminate 1
     - name: Build image on ppc64le
       stage: build
