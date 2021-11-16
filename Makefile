@@ -6,6 +6,9 @@ VERSION ?= 0.8.0
 OPERATOR_IMAGE ?= applicationstacks/operator
 OPERATOR_IMAGE_TAG ?= daily
 
+# Type of release. Can be "daily", "releases", or a release tag.
+RELEASE_TARGET := $(or ${RELEASE_TARGET}, ${TRAVIS_TAG}, daily)
+
 PUBLISH_REGISTRY=docker.io
 
 # Default bundle image tag
@@ -164,7 +167,7 @@ docker-login:
 	docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" 
 	
 build-manifest: setup-manifest
-	./scripts/build-manifest.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}"
+	./scripts/build-manifest.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}" --target "${RELEASE_TARGET}"
 
 setup-manifest:
 	./scripts/installers/install-manifest-tool.sh
@@ -176,10 +179,10 @@ test-e2e:
                      --test-tag "${TRAVIS_BUILD_NUMBER}"
 
 build-releases:
-	./scripts/build-releases.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}"
+	./scripts/build-releases.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}" --target "${RELEASE_TARGET}"
 
 bundle-releases:
-	./scripts/bundle-releases.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}"
+	./scripts/bundle-releases.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}" --target "${RELEASE_TARGET}"
 
 install-podman:
 	./scripts/installers/install-podman.sh

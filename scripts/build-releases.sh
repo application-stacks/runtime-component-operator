@@ -11,12 +11,18 @@
 
 set -Eeo pipefail
 
-readonly usage="Usage: $0 -u <docker-username> -p <docker-password> --image [registry/]<repository>/<image>"
+readonly usage="Usage: $0 -u <docker-username> -p <docker-password> --image [registry/]<repository>/<image> --target <daily|releases|release-tag>"
 readonly script_dir="$(dirname "$0")"
 readonly release_blocklist="${script_dir}/release-blocklist.txt"
 
 main() {
   parse_args "$@"
+
+  if [[ -z "${TARGET}" ]]; then
+    echo "****** Missing target release for operator build, see usage"
+    echo "${usage}"
+    exit 1
+  fi
 
   if [[ -z "${IMAGE}" ]]; then
     echo "****** Missing target image for operator build, see usage"
@@ -32,10 +38,15 @@ main() {
 
   echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
-  # Build, bundle, and create index for daily
-  "${script_dir}/build-release.sh" -u "${USER}" -p "${PASS}" --release "daily" --image "${IMAGE}"
+  # Build target release(s)
+  if [[ "${TARGET}" != "releases" ]]; then
+    "${script_dir}/build-release.sh" -u "${USER}" -p "${PASS}" --release "${TARGET}" --image "${IMAGE}"
+  else
+    build_releases
+  fi
+}
 
-  # Build previous releases
+build_releases() {
   tags="$(git tag -l)"
   while read -r tag; do
     if [[ -z "${tag}" ]]; then
@@ -67,6 +78,10 @@ parse_args() {
     --image)
       shift
       readonly IMAGE="${1}"
+      ;;
+    --target)
+      shift
+      readonly TARGET="${1}"
       ;;
     *)
       echo "Error: Invalid argument - $1"

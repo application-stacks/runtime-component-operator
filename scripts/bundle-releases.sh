@@ -11,12 +11,18 @@
 
 set -Eeo pipefail
 
-readonly usage="Usage: $0 -u <docker-username> -p <docker-password> --image [registry/]<repository>/<image>"
+readonly usage="Usage: $0 -u <docker-username> -p <docker-password> --image [registry/]<repository>/<image> --target <daily|releases|release-tag>"
 readonly script_dir="$(dirname "$0")"
 readonly release_blocklist="${script_dir}/release-blocklist.txt"
 
 main() {
   parse_args "$@"
+
+  if [[ -z "${TARGET}" ]]; then
+    echo "****** Missing target release for bundle build, see usage"
+    echo "${usage}"
+    exit 1
+  fi
 
   if [[ -z "${IMAGE}" ]]; then
     echo "****** Missing target image for bundle build, see usage"
@@ -32,24 +38,12 @@ main() {
 
   echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
-  # Bundle and create index for daily
-  bundle_release "daily"
-
-  # Bundle and create index for previous releases
-  tags="$(git tag -l)"
-  while read -r tag; do
-    if [[ -z "${tag}" ]]; then
-      break
-    fi
-
-    # Skip any releases listed in the release blocklist
-    if grep -q "^${tag}$" "${release_blocklist}"; then
-      echo "Release ${tag} found in blocklist. Skipping..."
-      continue
-    fi
-
-    bundle_release "${tag}"
-  done <<< "${tags}"
+  # Bundle target release(s)
+  if [[ "${TARGET}" != "releases" ]]; then
+    bundle_release "${TARGET}"
+  else
+    bundle_releases
+  fi
 }
 
 bundle_release() {
@@ -71,6 +65,23 @@ bundle_release() {
   make build-catalog push-catalog IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}" CATALOG_IMG="${catalog_ref}"
 }
 
+bundle_releases() {
+  tags="$(git tag -l)"
+  while read -r tag; do
+    if [[ -z "${tag}" ]]; then
+      break
+    fi
+
+    # Skip any releases listed in the release blocklist
+    if grep -q "^${tag}$" "${release_blocklist}"; then
+      echo "Release ${tag} found in blocklist. Skipping..."
+      continue
+    fi
+
+    bundle_release "${tag}"
+  done <<< "${tags}"
+}
+
 parse_args() {
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -85,6 +96,10 @@ parse_args() {
     --image)
       shift
       readonly IMAGE="${1}"
+      ;;
+    --target)
+      shift
+      readonly TARGET="${1}"
       ;;
     *)
       echo "Error: Invalid argument - $1"

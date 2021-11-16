@@ -18,13 +18,14 @@ stages:
   - name: e2e-test
     if: branch = master AND fork = false AND type != cron
   - name: build
-    if: branch = master AND fork = false AND type = push
+    if: branch = master AND fork = false AND type != pull_request
   - name: build-manifest
-    if: branch = master AND fork = false AND type = push
-  - name: release-build
-    if: branch = master AND type = cron
-  - name: release-bundle
-    if: branch = master AND type = cron
+    if: branch = master AND fork = false AND type != pull_request
+  # Do release builds for master branch for cron jobs or for a release
+  - name: release-builds
+    if: branch = master AND fork = false AND type = cron
+  - name: release-bundles
+    if: branch = master AND fork = false AND type = cron
 
 jobs:
   include:
@@ -56,40 +57,42 @@ jobs:
       stage: build
       os: linux
       arch: amd64
+      before_install:
+        - sudo apt-get install -qq -y software-properties-common uidmap
+        - make install-podman
       script:
         - make build-and-push-multiarch-image
         - make build-manifest
-        - make bundle-build bundle-push
+        - make bundle-releases
     ## in case there were concurrency issues with building manifest lists
     ## in previous steps, create FAT manifests one last time
     - name: Verify manifest lists
       stage: build-manifest
       script: make build-manifest
+    # Build all non-ignored releases
     - name: Build releases on ppc64le
-      stage: release-build
+      stage: release-builds
       os: linux
       arch: ppc64le
-      script: make build-releases
+      script: make build-releases RELEASE_TARGET="releases"
     - name: Build releases on s390x
-      stage: release-build
+      stage: release-builds
       os: linux
       arch: s390x
-      script: make build-releases
+      script: make build-releases RELEASE_TARGET="releases"
     - name: Build releases on amd64
-      stage: release-build
+      stage: release-builds
       os: linux
       arch: amd64
-      before_install:
-        - sudo apt-get install -qq -y software-properties-common uidmap
-        - make install-podman
-      script: make build-releases
+      script: make build-releases RELEASE_TARGET="releases"
+    # Bundle all non-ignored releases
     - name: Bundle releases
-      stage: release-bundle
+      stage: release-bundles
       os: linux
       arch: amd64
       before_install:
         - sudo apt-get install -qq -y software-properties-common uidmap
         - make install-podman
       script:
-        - make build-manifest
-        - make bundle-releases
+        - make build-manifest RELEASE_TARGET="releases"
+        - make bundle-releases RELEASE_TARGET="releases"

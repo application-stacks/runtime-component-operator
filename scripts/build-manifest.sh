@@ -18,6 +18,12 @@ readonly release_blocklist="${script_dir}/release-blocklist.txt"
 main() {
   parse_args "$@"
 
+  if [[ -z "${TARGET}" ]]; then
+    echo "****** Missing target release for operator manifest lists, see usage"
+    echo "${usage}"
+    exit 1
+  fi
+
   if [[ -z "${USER}" || -z "${PASS}" ]]; then
     echo "****** Missing docker authentication information, see usage"
     echo "${usage}"
@@ -32,10 +38,30 @@ main() {
 
   echo "${PASS}" | docker login -u "${USER}" --password-stdin
 
-  # Build manifest for daily
-  build_manifest "daily"
+  # Build manifest for target release(s)
+  if [[ "${TARGET}" != "releases" ]]; then
+    build_manifest "${TARGET}"
+  else
+    build_manifests
+  fi
+}
 
-  # Build manifest for previous releases
+build_manifest() {
+  local tag="$1"
+  echo "****** Building manifest for: ${tag}"
+
+  ## try to build manifest but allow failure
+  ## this allows new release builds
+  local target="${IMAGE}:${tag}"
+  manifest-tool push from-args \
+    --platforms "linux/amd64,linux/s390x,linux/ppc64le" \
+    --template "${target}-ARCH" \
+    --target "${target}" \
+    || echo "*** WARN: Target architectures not available"
+}
+
+# Build manifest for previous releases
+build_manifests() {
   tags="$(git tag -l)"
   while read -r tag; do
     if [[ -z "${tag}" ]]; then
@@ -53,20 +79,6 @@ main() {
   done <<< "${tags}"
 }
 
-build_manifest() {
-  local tag="$1"
-  echo "****** Building manifest for: ${tag}"
-
-  ## try to build manifest but allow failure
-  ## this allows new release builds
-  local target="${IMAGE}:${tag}"
-  manifest-tool push from-args \
-    --platforms "linux/amd64,linux/s390x,linux/ppc64le" \
-    --template "${target}-ARCH" \
-    --target "${target}" \
-    || echo "*** WARN: Target architectures not available"
-}
-
 parse_args() {
     while [ $# -gt 0 ]; do
     case "$1" in
@@ -81,6 +93,10 @@ parse_args() {
     --image)
       shift
       readonly IMAGE="${1}"
+      ;;
+    --target)
+      shift
+      readonly TARGET="${1}"
       ;;
     *)
       echo "Error: Invalid argument - $1"
