@@ -23,6 +23,7 @@ setup:
     else
       printf "Using default 'sonar-project.properties' file"  
     fi  
+    curl --fail --silent --show-error --location -K- <<< "-u ${SONAR_USER}:${SONAR_PASS}" --max-time 5 "${SONAR_HOST_URL}/api/system/status"
   
 test:
   dind: true
