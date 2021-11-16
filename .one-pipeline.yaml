@@ -39,8 +39,7 @@ static-scan:
     sonar.projectKey=runtime-component-operator
     sonar.host.url=$SONAR_HOST_URL
     sonar.sources=.
-    sonar.login=$SONAR_USER
-    sonar.password=$SONAR_PASS
+    sonar.login=$SONAR_PASS
     EOF
     chmod -x "$WORKSPACE"/runtime-component-operator/sonar-project.properties
     if [ -f "$WORKSPACE"/runtime-component-operator/sonar-project.properties ]; then
