@@ -49,6 +49,7 @@ static-scan:
       printf "Using default 'sonar-project.properties' file"  
     fi  
     echo insecure >> $HOME/.curlrc
+    echo "$SONAR_PASS" >> /tmp/sonarqube-token
     "${ONE_PIPELINE_PATH}"/internal/sonarqube/sonarqube_run    
 containerize:
   dind: true
