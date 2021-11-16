@@ -64,7 +64,7 @@ main() {
     parse_args "$@"
 
     if [[ -z "${RELEASE}" ]]; then
-        echo "****** Missing docker authentication information, see usage"
+        echo "****** Missing release, see usage"
       fi
 
     if [[ -z "${USER}" || -z "${PASS}" ]]; then
@@ -160,7 +160,7 @@ parse_args() {
       shift
       readonly REGISTRY_NAMESPACE="${1}"
       ;;
-    --release-tag)
+    --release)
       shift
       readonly RELEASE="${1}"
       ;;

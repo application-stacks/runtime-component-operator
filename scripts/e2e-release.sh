@@ -108,9 +108,9 @@ parse_args() {
       shift
       readonly REGISTRY_NAMESPACE="${1}"
       ;;
-    --release-tag)
+    --target)
       shift
-      readonly RELEASE="${1}"
+      readonly TARGET="${1}"
       ;;
     --test-tag)
       shift
