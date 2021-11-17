@@ -25,13 +25,13 @@ main() {
     echo "****** Missing docker authentication information, see usage"
   fi
 
-  if [[ -z "${USER}" || -z "${PASS}" ]]; then
+  if [[ -z "${DOCKER_USERNAME}" || -z "${DOCKER_PASSWORD}" ]]; then
     echo "****** Missing docker authentication information, see usage"
     echo "${usage}"
     exit 1
   fi
 
-  if [[ -z "${OC_URL}" ]] || [[ -z "${OC_TOKEN}" ]]; then
+  if [[ -z "${CLUSTER_URL}" ]] || [[ -z "${CLUSTER_TOKEN}" ]]; then
     echo "****** Missing OCP URL or token, see usage"
     echo "${usage}"
     exit 1
@@ -59,8 +59,9 @@ main() {
 
 run_e2e() {
   local tag="${1}"
-  "${script_dir}/e2e.sh" -u "${USER}" -p "${PASS}" --cluster-url "${OC_URL}" --cluster-token "${OC_TOKEN}" \
-                         --registry-name default-route --registry-namespace openshift-image-registry \
+  "${script_dir}/e2e.sh" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" \
+                         --cluster-url "${CLUSTER_URL}" --cluster-token "${CLUSTER_TOKEN}" \
+                         --registry-name "${REGISTRY_NAME}" --registry-namespace "${REGISTRY_NAMESPACE}" \
                          --test-tag "${tag}-${TEST_TAG}" --release "${tag}"
 }
 
@@ -86,19 +87,19 @@ parse_args() {
     case "$1" in
     -u)
       shift
-      readonly USER="${1}"
+      readonly DOCKER_USERNAME="${1}"
       ;;
     -p)
       shift
-      readonly PASS="${1}"
+      readonly DOCKER_PASSWORD="${1}"
       ;;
     --cluster-url)
       shift
-      readonly OC_URL="${1}"
+      readonly CLUSTER_URL="${1}"
       ;;
     --cluster-token)
       shift
-      readonly OC_TOKEN="${1}"
+      readonly CLUSTER_TOKEN="${1}"
       ;;
     --registry-name)
       shift

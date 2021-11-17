@@ -30,13 +30,13 @@ main() {
     exit 1
   fi
 
-  if [[ -z "${USER}" || -z "${PASS}" ]]; then
+  if [[ -z "${DOCKER_USERNAME}" || -z "${DOCKER_PASSWORD}" ]]; then
     echo "****** Missing docker authentication information, see usage"
     echo "${usage}"
     exit 1
   fi
 
-  echo "${PASS}" | docker login -u "${USER}" --password-stdin
+  echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
   # Bundle target release(s)
   if [[ "${TARGET}" != "releases" ]]; then
@@ -87,11 +87,11 @@ parse_args() {
     case "$1" in
     -u)
       shift
-      readonly USER="${1}"
+      readonly DOCKER_USERNAME="${1}"
       ;;
     -p)
       shift
-      readonly PASS="${1}"
+      readonly DOCKER_PASSWORD="${1}"
       ;;
     --image)
       shift

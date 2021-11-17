@@ -14,7 +14,7 @@ setup_env() {
 
     # Start a cluster and login
     echo "****** Logging into remote cluster..."
-    oc login "${OC_URL}" --token="${OC_TOKEN}"
+    oc login "${CLUSTER_URL}" --token="${CLUSTER_TOKEN}"
 
     # Set variables for rest of script to use
     readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
@@ -67,13 +67,13 @@ main() {
         echo "****** Missing release, see usage"
       fi
 
-    if [[ -z "${USER}" || -z "${PASS}" ]]; then
+    if [[ -z "${DOCKER_USERNAME}" || -z "${DOCKER_PASSWORD}" ]]; then
         echo "****** Missing docker authentication information, see usage"
         echo "${usage}"
         exit 1
     fi
 
-    if [[ -z "${OC_URL}" ]] || [[ -z "${OC_TOKEN}" ]]; then
+    if [[ -z "${CLUSTER_URL}" ]] || [[ -z "${CLUSTER_TOKEN}" ]]; then
         echo "****** Missing OCP URL or token, see usage"
         echo "${usage}"
         exit 1
@@ -95,7 +95,7 @@ main() {
     setup_env
 
     ## login to docker to avoid rate limiting during build
-    echo "${PASS}" | docker login -u "${USER}" --password-stdin
+    echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
     echo "****** Building image"
     docker build -t "${BUILD_IMAGE}" .
@@ -138,19 +138,19 @@ parse_args() {
     case "$1" in
     -u)
       shift
-      readonly USER="${1}"
+      readonly DOCKER_USERNAME="${1}"
       ;;
     -p)
       shift
-      readonly PASS="${1}"
+      readonly DOCKER_PASSWORD="${1}"
       ;;
     --cluster-url)
       shift
-      readonly OC_URL="${1}"
+      readonly CLUSTER_URL="${1}"
       ;;
     --cluster-token)
       shift
-      readonly OC_TOKEN="${1}"
+      readonly CLUSTER_TOKEN="${1}"
       ;;
     --registry-name)
       shift

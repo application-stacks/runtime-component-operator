@@ -29,7 +29,7 @@ main() {
     exit 1
   fi
 
-  if [[ -z "${USER}" || -z "${PASS}" ]]; then
+  if [[ -z "${DOCKER_USERNAME}" || -z "${DOCKER_PASSWORD}" ]]; then
     echo "****** Missing docker authentication information, see usage"
     echo "${usage}"
     exit 1
@@ -51,7 +51,7 @@ main() {
   readonly full_image="${IMAGE}:${RELEASE}-${arch}"
 
   ## login to docker
-  echo "${PASS}" | docker login -u "${USER}" --password-stdin
+  echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
   ## build or push latest master branch
   echo "****** Building release: ${RELEASE}"
@@ -91,11 +91,11 @@ parse_args() {
     case "$1" in
     -u)
       shift
-      readonly USER="${1}"
+      readonly DOCKER_USERNAME="${1}"
       ;;
     -p)
       shift
-      readonly PASS="${1}"
+      readonly DOCKER_PASSWORD="${1}"
       ;;
     --image)
       shift
