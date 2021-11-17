@@ -40,9 +40,11 @@ static-scan:
     sonar.host.url=$SONAR_HOST_URL
     sonar.sources=.
     sonar.login=$SONAR_PASS
+    sonar.c.file.suffixes=-
+    sonar.cpp.file.suffixes=-
+    sonar.objc.file.suffixes=-
     EOF
     chmod -x "$WORKSPACE"/runtime-component-operator/sonar-project.properties
-    #echo insecure >> $HOME/.curlrc
     echo "$SONAR_PASS" >> /tmp/sonarqube-token
     "${ONE_PIPELINE_PATH}"/internal/sonarqube/sonarqube_run    
 containerize:
