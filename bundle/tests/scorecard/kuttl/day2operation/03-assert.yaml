@@ -7,4 +7,6 @@ spec:
   containerName: app
 status:
   conditions:
-    - status: 'False'
+    - reason: Error
+      status: 'False'
+      type: Started

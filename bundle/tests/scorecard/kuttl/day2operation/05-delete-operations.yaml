@@ -5,12 +5,12 @@ delete:
   - apiVersion: rc.app.stacks/v1beta2
     kind: RuntimeOperation
     metadata:
-      name: example-runtime-operation-0
+    name: example-runtime-operation-0
   - apiVersion: rc.app.stacks/v1beta2
     kind: RuntimeOperation
     metadata:
-      name: example-runtime-operation-1
+    name: example-runtime-operation-1
   - apiVersion: rc.app.stacks/v1beta2
     kind: RuntimeComponent
     metadata:
-      name: day2-operation-rc
+    name: day2-operation-rc

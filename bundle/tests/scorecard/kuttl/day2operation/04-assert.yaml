@@ -19,4 +19,6 @@ spec:
 status:
   conditions:
     - status: 'True'
-    - type: Completed
+      type: Started
+    - status: 'True'
+      type: Completed
