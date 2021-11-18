@@ -5,8 +5,10 @@ VERSION ?= 0.8.0
 
 OPERATOR_IMAGE ?= applicationstacks/operator
 OPERATOR_IMAGE_TAG ?= daily
-PIPELINE_OPERATOR_IMAGE ?= runtimecomponentoperator/operator
-PIPELINE_REGISTRY ?= us.icr.io
+PIPELINE_REGISTRY ?= cp.stg.icr.io
+PIPELINE_REGISTRY_NAMESPACE ?= cp
+PIPELINE_OPERATOR_IMAGE ?= ${PIPELINE_REGISTRY_NAMESPACE}/rco-operator
+
 
 # Default bundle image tag
 BUNDLE_IMG ?= applicationstacks/operator:bundle-daily
@@ -181,5 +183,5 @@ test-e2e:
 test-pipeline-e2e:
 	./scripts/pipeline/fyre-e2e.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" \
                      --cluster-url "${CLUSTER_URL}" --cluster-token "${CLUSTER_TOKEN}" \
-                     --registry-name us.icr.io --registry-namespace runtimecomponentoperator \
+                     --registry-name "${PIPELINE_REGISTRY}" --registry-namespace "${PIPELINE_REGISTRY_NAMESPACE}" \
 					 --registry-user "${PIPELINE_USERNAME}" --registry-password "${PIPELINE_PASSWORD}"					 

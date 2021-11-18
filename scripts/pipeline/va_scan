@@ -241,8 +241,3 @@ start_va_scan() {
 
   cat "${ARTIFACT_SCAN_RESULTS_JSON_PATH}"
 }
-
-
-
-
-

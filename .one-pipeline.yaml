@@ -1,27 +1,10 @@
 version: '1'
 
 setup:
-  dind: true
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     #!/usr/bin/env bash
     echo "setup"
-    echo "acceptance-test"
-    # Download and configure golang
-    wget --header "Accept: application/octet-stream"  "https://golang.org/dl/go1.16.linux-amd64.tar.gz" 
-    rm -rf /usr/local/go && tar -C /usr/local -xf go1.16.linux-amd64.tar.gz
-    export PATH=$PATH:/usr/local/go/bin
-    apt-get update
-    apt-get -y install build-essential    
-    export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
-    export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key)  
-    export DOCKER_USERNAME=$(get_env docker-username)
-    export DOCKER_PASSWORD=$(get_env docker-password)    
-    export CLUSTER_URL=$(get_env test-cluster-url)
-    export CLUSTER_TOKEN=$(get_env test-cluster-token) 
-    export TRAVIS_BUILD_NUMBER=$BUILD_NUMBER   
-    make setup
-    make test-pipeline-e2e    
   
 test:
   dind: true
@@ -42,6 +25,28 @@ test:
     make docker-login
     make build-image
 
+static-scan:
+  dind: true
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
+  script: |
+    #!/usr/bin/env bash
+    read -r SONAR_HOST_URL <<< "$(get_env sonarqube | jq -r '.parameters.dashboard_url' | sed 's:/*$::')"
+    read -r SONAR_USER <<< "$(get_env sonarqube | jq -r '.parameters.user_login')"
+    SONARQUBE_INSTANCE_ID=$(get_env sonarqube | jq -r '.instance_id')
+    read -r SONAR_PASS <<< "$(jq -r --arg sonar_instance "$SONARQUBE_INSTANCE_ID" '[.services[] | select(."service_id"=="sonarqube")][] | select(."instance_id"==$sonar_instance) | .parameters.user_password' /toolchain/toolchain.json)"  
+    touch "$WORKSPACE"/runtime-component-operator/sonar-project.properties   
+    cat << EOF > "$WORKSPACE"/runtime-component-operator/sonar-project.properties
+    sonar.projectKey=runtime-component-operator
+    sonar.host.url=$SONAR_HOST_URL
+    sonar.sources=.
+    sonar.login=$SONAR_PASS
+    sonar.c.file.suffixes=-
+    sonar.cpp.file.suffixes=-
+    sonar.objc.file.suffixes=-
+    EOF
+    chmod -x "$WORKSPACE"/runtime-component-operator/sonar-project.properties
+    echo "$SONAR_PASS" >> /tmp/sonarqube-token
+    "${ONE_PIPELINE_PATH}"/internal/sonarqube/sonarqube_run    
 containerize:
   dind: true
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
@@ -72,25 +77,28 @@ containerize:
     fi  
     # Build images
     export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
-    export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key)    
+    export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key)  
+    PIPELINE_REGISTRY=$(get_env pipeline-registry)
+    PIPELINE_OPERATOR_IMAGE=$(get_env pipeline-operator-image)  
     # Build amd64 image
-    ##make build-pipeline-multiarch-image
-    ##make push-pipeline-multiarch-image
+    make build-pipeline-multiarch-image
+    make push-pipeline-multiarch-image
     # Build ppc64le and s390x images
     ##./scripts/pipeline/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
     # Build bundle image
-    echo $(get_env ibmcloud-api-key) | docker login us.icr.io -u "$(get_env ibmcloud-api-user)" --password-stdin
-    ##make bundle-build
-    ##BUNDLE_IMAGE=us.icr.io/runtimecomponentoperator/operator:bundle-daily
-    ##docker tag applicationstacks/operator:bundle-daily $BUNDLE_IMAGE
-    ##docker push $BUNDLE_IMAGE
+    echo $(get_env ibmcloud-api-key) | docker login $PIPELINE_REGISTRY -u "$(get_env ibmcloud-api-user)" --password-stdin
+    make bundle-build
+    BUNDLE_IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE:bundle-daily
+    docker tag applicationstacks/operator:bundle-daily $BUNDLE_IMAGE
+    docker push $BUNDLE_IMAGE
     # Build manifest
     ##make build-pipeline-manifest
     # Save artifacts
-    declare -a tags=("daily-amd64" "daily-ppc64le" "daily-s390x") 
+    ##declare -a tags=("daily-amd64" "daily-ppc64le" "daily-s390x") 
+    declare -a tags=("daily-amd64") 
     for i in "${tags[@]}"
     do
-      IMAGE=us.icr.io/runtimecomponentoperator/operator:$i
+      IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE:$i
       DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
       ARCH=$(echo $i | cut -d'-' -f 2)
       echo "Saving artifact $i name=$IMAGE digest=$DIGEST"
@@ -98,8 +106,8 @@ containerize:
     done
 
     # launch the sub-pipeline to do the twistlock scanning on the amd64 container image    
-    source "${ONE_PIPELINE_PATH}"/tools/trigger-task
-    trigger-task "twistlock-scan" "Twistlock container image scan"    
+    #source "${ONE_PIPELINE_PATH}"/tools/trigger-task
+    #trigger-task "twistlock-scan" "Twistlock container image scan"    
 
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
@@ -147,14 +155,29 @@ acceptance-test:
     make setup
     make test-pipeline-e2e
 
-#scan-artifact:
-#  abort_on_failure: false
-#  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.6@sha256:7f588468622a981f89cf5e1212aaf75fface9da6169b5345ca52ab63d8215907
-#  script: |
+scan-artifact:
+  abort_on_failure: false
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.6@sha256:7f588468622a981f89cf5e1212aaf75fface9da6169b5345ca52ab63d8215907
+  script: |
     #!/usr/bin/env bash
-    #. /opt/one-pipeline/internal/container-registry/va_scan    
-    #./scripts/twistlock-scan.sh    
+    echo "twistlock-scan"
+    ./scripts/pipeline/twistlock-scan.sh 
+    echo "VA scan" 
+    . scripts/pipeline/va_scan
+    if which list_artifacts >/dev/null; then
+      list_artifacts | while IFS= read -r artifact; do
+        image="$(load_artifact "$artifact" "name")"
+        type="$(load_artifact "$artifact" "type")"
+        digest="$(load_artifact "$artifact" "digest")"
+        name="$(echo "$artifact" | awk '{print $1}')"
 
+        if [[ "$type" == "image" ]]; then
+          if [[ "$image" == *"icr.io"* ]]; then
+            start_va_scan "$name" "$image" "$digest"
+          fi
+        fi
+      done
+    fi
 
 release:
   abort_on_failure: false
@@ -163,13 +186,13 @@ release:
     #!/usr/bin/env bash
     echo "release" 
 
-twistlock-scan:
-  abort_on_failure: false
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
-  script: |
+#twistlock-scan:
+#  abort_on_failure: false
+#  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
+#  script: |
     #!/usr/bin/env bash
-    echo "twistlock-scan task"
-    ./scripts/pipeline/twistlock-scan.sh
+#    echo "twistlock-scan task"
+#    ./scripts/pipeline/twistlock-scan.sh
 
 
 #owasp-zap-api:
