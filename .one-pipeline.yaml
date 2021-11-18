@@ -163,7 +163,7 @@ scan-artifact:
     echo "twistlock-scan"
     ./scripts/pipeline/twistlock-scan.sh 
     echo "VA scan" 
-    "${ONE_PIPELINE_PATH}"/internal/container-registry/va_scan
+    "${ONE_PIPELINE_PATH}"/internal/artifact-scan/scan
 
 
 release:
