@@ -6,8 +6,8 @@ VERSION ?= 0.8.0
 OPERATOR_IMAGE ?= applicationstacks/operator
 OPERATOR_IMAGE_TAG ?= daily
 PIPELINE_REGISTRY ?= cp.stg.icr.io
-PIPELINE_REGISTY_NAMESPACE ?= cp/wshe
-PIPELINE_OPERATOR_IMAGE ?= cp/wshe/rco-operator
+PIPELINE_REGISTRY_NAMESPACE ?= cp/wshe
+PIPELINE_OPERATOR_IMAGE ?= ${PIPELINE_REGISTRY_NAMESPACE}/rco-operator
 
 
 # Default bundle image tag
