@@ -106,8 +106,8 @@ containerize:
     done
 
     # launch the sub-pipeline to do the twistlock scanning on the amd64 container image    
-    source "${ONE_PIPELINE_PATH}"/tools/trigger-task
-    trigger-task "twistlock-scan" "Twistlock container image scan"    
+    #source "${ONE_PIPELINE_PATH}"/tools/trigger-task
+    #trigger-task "twistlock-scan" "Twistlock container image scan"    
 
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
@@ -155,13 +155,15 @@ acceptance-test:
     make setup
     make test-pipeline-e2e
 
-#scan-artifact:
-#  abort_on_failure: false
-#  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.6@sha256:7f588468622a981f89cf5e1212aaf75fface9da6169b5345ca52ab63d8215907
-#  script: |
+scan-artifact:
+  abort_on_failure: false
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.6@sha256:7f588468622a981f89cf5e1212aaf75fface9da6169b5345ca52ab63d8215907
+  script: |
     #!/usr/bin/env bash
-    #. /opt/one-pipeline/internal/container-registry/va_scan    
-    #./scripts/twistlock-scan.sh    
+    echo "twistlock-scan"
+    ./scripts/pipeline/twistlock-scan.sh 
+    echo "VA scan" 
+    "${ONE_PIPELINE_PATH}"/internal/container-registry/va_scan
 
 
 release:
@@ -171,13 +173,13 @@ release:
     #!/usr/bin/env bash
     echo "release" 
 
-twistlock-scan:
-  abort_on_failure: false
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
-  script: |
+#twistlock-scan:
+#  abort_on_failure: false
+#  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
+#  script: |
     #!/usr/bin/env bash
-    echo "twistlock-scan task"
-    ./scripts/pipeline/twistlock-scan.sh
+#    echo "twistlock-scan task"
+#    ./scripts/pipeline/twistlock-scan.sh
 
 
 #owasp-zap-api:
