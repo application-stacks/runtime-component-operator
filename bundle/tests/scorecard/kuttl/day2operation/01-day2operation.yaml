@@ -1,0 +1,11 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeOperation
+metadata:
+  name: example-runtime-operation-0
+spec:
+  podName: day2-operation-rc-0
+  containerName: app
+  command:
+    - /bin/sh
+    - '-c'
+    - echo "Hello" > /tmp/runtime-operation.log

@@ -85,6 +85,7 @@ rules:
   - rc.app.stacks
   resources:
   - runtimecomponents
+  - runtimeoperations
   verbs:
   - get
   - list
