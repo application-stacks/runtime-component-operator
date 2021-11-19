@@ -1,0 +1,12 @@
+# Test to see that if affinity is setup but there is no matching label, no pod is readied
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: affinity-node-rc
+spec:
+  # Add fields here
+  applicationImage: 'k8s.gcr.io/pause:2.0'
+  replicas: 1
+  affinity:
+    nodeAffinityLabels:
+      kuttlTest: error
