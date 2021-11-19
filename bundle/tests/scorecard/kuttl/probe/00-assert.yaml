@@ -20,3 +20,6 @@ spec:
         initialDelaySeconds: 1
       livenessProbe:
         initialDelaySeconds: 4
+metadata:
+  labels:
+    app.kubernetes.io/instance: probes-rc
