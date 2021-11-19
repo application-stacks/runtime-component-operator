@@ -1,7 +1,9 @@
 apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
-  name: probes-rc
+  name: service-binding-rc
 spec:
   # Add fields here
-  probes:
+  replicas: 1
+  service:
+    bindable:
