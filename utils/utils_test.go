@@ -70,6 +70,10 @@ var (
 			TCPSocket: &corev1.TCPSocketAction{},
 		},
 	}
+	probes = &appstacksv1beta2.RuntimeComponentProbes{
+		Readiness: readinessProbe,
+		Liveness:  livenessProbe,
+		Startup:   startupProbe}
 	volume      = corev1.Volume{Name: "runtime-volume"}
 	volumeMount = corev1.VolumeMount{Name: volumeCT.Name, MountPath: storage.MountPath}
 	resLimits   = map[corev1.ResourceName]resource.Quantity{
@@ -284,9 +288,7 @@ func TestCustomizePodSpecAnnotations(t *testing.T) {
 		ApplicationImage:    appImage,
 		Service:             service,
 		ResourceConstraints: resourceContraints,
-		ReadinessProbe:      readinessProbe,
-		LivenessProbe:       livenessProbe,
-		StartupProbe:        startupProbe,
+		Probes:              probes,
 		VolumeMounts:        []corev1.VolumeMount{volumeMount},
 		PullPolicy:          &pullPolicy,
 		Env:                 env,
@@ -350,9 +352,7 @@ func TestCustomizePodSpec(t *testing.T) {
 		ApplicationImage:    appImage,
 		Service:             service,
 		ResourceConstraints: resourceContraints,
-		ReadinessProbe:      readinessProbe,
-		LivenessProbe:       livenessProbe,
-		StartupProbe:        startupProbe,
+		Probes:              probes,
 		VolumeMounts:        []corev1.VolumeMount{volumeMount},
 		PullPolicy:          &pullPolicy,
 		Env:                 env,
@@ -377,9 +377,7 @@ func TestCustomizePodSpec(t *testing.T) {
 			TargetPort: &targetPort,
 		},
 		ResourceConstraints: resourceContraints,
-		ReadinessProbe:      readinessProbe,
-		LivenessProbe:       livenessProbe,
-		StartupProbe:        startupProbe,
+		Probes:              probes,
 		VolumeMounts:        []corev1.VolumeMount{volumeMount},
 		PullPolicy:          &pullPolicy,
 		Env:                 env,
@@ -478,9 +476,7 @@ func TestCustomizeKnativeService(t *testing.T) {
 	spec := appstacksv1beta2.RuntimeComponentSpec{
 		ApplicationImage: appImage,
 		Service:          service,
-		LivenessProbe:    livenessProbe,
-		ReadinessProbe:   readinessProbe,
-		StartupProbe:     startupProbe,
+		Probes:           probes,
 		PullPolicy:       &pullPolicy,
 		Env:              env,
 		EnvFrom:          envFrom,
@@ -508,9 +504,7 @@ func TestCustomizeKnativeService(t *testing.T) {
 		EnvFrom:            envFrom,
 		Volumes:            []corev1.Volume{volume},
 		ServiceAccountName: &serviceAccountName,
-		LivenessProbe:      livenessProbe,
-		ReadinessProbe:     readinessProbe,
-		StartupProbe:       startupProbe,
+		Probes:             probes,
 		Expose:             &expose,
 	}
 	runtime = createRuntimeComponent(name, namespace, spec)

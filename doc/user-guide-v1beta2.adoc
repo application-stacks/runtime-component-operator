@@ -93,9 +93,9 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `resourceConstraints.limits.memory` | The memory upper limit in bytes. Specify integers with suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.
 | `env`   | An array of environment variables following the format of `{name, value}`, where value is a simple string. It may also follow the format of `{name, valueFrom}`, where valueFrom refers to a value in a `ConfigMap` or `Secret` resource. See link:++#environment-variables++[Environment variables] for more info.
 | `envFrom`   | An array of references to `ConfigMap` or `Secret` resources containing environment variables. Keys from `ConfigMap` or `Secret` resources become environment variable names in your container. See link:++#environment-variables++[Environment variables] for more info.
-| `readinessProbe`   | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes++[Kubernetes readiness probe] that controls when the pod is ready to receive traffic.
-| `livenessProbe` | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request++[Kubernetes liveness probe] that controls when Kubernetes needs to restart the pod.
-| `startupProbe` | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes++[Kubernetes startup probe] that controls when Kubernetes needs to startup the pod on its first initialization.
+| `probes.readiness`   | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes++[Kubernetes readiness probe] that controls when the pod is ready to receive traffic.
+| `probes.liveness` | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request++[Kubernetes liveness probe] that controls when Kubernetes needs to restart the pod.
+| `probes.startup` | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes++[Kubernetes startup probe] that controls when Kubernetes needs to startup the pod on its first initialization.
 | `volumes` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/storage/volumes++[pod volume].
 | `volumeMounts` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/storage/volumes/++[pod volumeMount].
 | `monitoring.labels` | Labels to set on link:++https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitor++[ServiceMonitor].
@@ -487,7 +487,7 @@ spec:
 
 By setting this parameter, the operator creates a Knative service in the cluster and populates the resource with applicable `RuntimeComponent` fields. Also, it ensures non-Knative resources including Kubernetes `Service`, `Route`, `Deployment` and etc. are deleted.
 
-The CRD fields which are used to populate the Knative service resource include `applicationImage`, `serviceAccountName`, `livenessProbe`, `readinessProbe`, `service.Port`, `volumes`, `volumeMounts`, `env`, `envFrom`, `pullSecret` and `pullPolicy`. `startupProbe` is not fully supported by Knative and it will not apply when Knative service is enabled.
+The CRD fields which are used to populate the Knative service resource include `applicationImage`, `serviceAccountName`, `probes.liveness`, `probes.readiness`, `service.Port`, `volumes`, `volumeMounts`, `env`, `envFrom`, `pullSecret` and `pullPolicy`. Startup probe is not fully supported by Knative, hence `probes.startup` will not apply when Knative service is enabled.
 
 For more details on how to configure Knative for tasks such as enabling HTTPS connections and setting up a custom domain, checkout link:++https://knative.dev/docs/serving/++[Knative Documentation].
 

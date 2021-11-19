@@ -88,17 +88,8 @@ type RuntimeComponentSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=48,type=spec,displayName="Create Knative Service",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	CreateKnativeService *bool `json:"createKnativeService,omitempty"`
 
-	// Detects if the services need to be restarted.
-	// +operator-sdk:csv:customresourcedefinitions:order=49,type=spec,displayName="Liveness Probe"
-	LivenessProbe *corev1.Probe `json:"livenessProbe,omitempty"`
-
-	// Detects if the services are ready to serve.
-	// +operator-sdk:csv:customresourcedefinitions:order=50,type=spec,displayName="Readiness Probe"
-	ReadinessProbe *corev1.Probe `json:"readinessProbe,omitempty"`
-
-	// Protects slow starting containers from livenessProbe.
-	// +operator-sdk:csv:customresourcedefinitions:order=51,type=spec,displayName="Startup Probe"
-	StartupProbe *corev1.Probe `json:"startupProbe,omitempty"`
+	// +operator-sdk:csv:customresourcedefinitions:order=49,type=spec,displayName="Probes"
+	Probes *RuntimeComponentProbes `json:"probes,omitempty"`
 
 	// Name of the Secret to use to pull images from the specified repository. It is not required if the cluster is configured with a global image pull secret.
 	// +operator-sdk:csv:customresourcedefinitions:order=52,type=spec,displayName="Pull Secret",xDescriptors="urn:alm:descriptor:io.kubernetes:Secret"
@@ -137,6 +128,21 @@ type RuntimeComponentSpec struct {
 	// +listMapKey=name
 	// +operator-sdk:csv:customresourcedefinitions:order=58,type=spec,displayName="Sidecar Containers"
 	SidecarContainers []corev1.Container `json:"sidecarContainers,omitempty"`
+}
+
+// Define health checks on application container to determine whether it is alive or ready to receive traffic
+type RuntimeComponentProbes struct {
+	// Periodic probe of container liveness. Container will be restarted if the probe fails.
+	// +operator-sdk:csv:customresourcedefinitions:order=49,type=spec,displayName="Liveness Probe"
+	Liveness *corev1.Probe `json:"liveness,omitempty"`
+
+	// Periodic probe of container service readiness. Container will be removed from service endpoints if the probe fails.
+	// +operator-sdk:csv:customresourcedefinitions:order=50,type=spec,displayName="Readiness Probe"
+	Readiness *corev1.Probe `json:"readiness,omitempty"`
+
+	// Probe to determine successful initialization. If specified, other probes are not executed until this completes successfully.
+	// +operator-sdk:csv:customresourcedefinitions:order=51,type=spec,displayName="Startup Probe"
+	Startup *corev1.Probe `json:"startup,omitempty"`
 }
 
 // Configures a Pod to run on particular Nodes.
@@ -394,19 +400,26 @@ func (cr *RuntimeComponent) GetReplicas() *int32 {
 	return cr.Spec.Replicas
 }
 
+func (cr *RuntimeComponent) GetProbes() common.BaseComponentProbes {
+	if cr.Spec.Probes == nil {
+		return nil
+	}
+	return cr.Spec.Probes
+}
+
 // GetLivenessProbe returns liveness probe
-func (cr *RuntimeComponent) GetLivenessProbe() *corev1.Probe {
-	return cr.Spec.LivenessProbe
+func (p *RuntimeComponentProbes) GetLivenessProbe() *corev1.Probe {
+	return p.Liveness
 }
 
 // GetReadinessProbe returns readiness probe
-func (cr *RuntimeComponent) GetReadinessProbe() *corev1.Probe {
-	return cr.Spec.ReadinessProbe
+func (p *RuntimeComponentProbes) GetReadinessProbe() *corev1.Probe {
+	return p.Readiness
 }
 
 // GetStartupProbe returns startup probe
-func (cr *RuntimeComponent) GetStartupProbe() *corev1.Probe {
-	return cr.Spec.StartupProbe
+func (p *RuntimeComponentProbes) GetStartupProbe() *corev1.Probe {
+	return p.Startup
 }
 
 // GetVolumes returns volumes slice

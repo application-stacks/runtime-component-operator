@@ -235,15 +235,17 @@ spec:
         path: createKnativeService
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: Detects if the services need to be restarted.
+      - displayName: Probes
+        path: probes
+      - description: Periodic probe of container liveness. Container will be restarted if the probe fails.
         displayName: Liveness Probe
-        path: livenessProbe
-      - description: Detects if the services are ready to serve.
+        path: probes.liveness
+      - description: Periodic probe of container service readiness. Container will be removed from service endpoints if the probe fails.
         displayName: Readiness Probe
-        path: readinessProbe
-      - description: Protects slow starting containers from livenessProbe.
+        path: probes.readiness
+      - description: Probe to determine successful initialization. If specified, other probes are not executed until this completes successfully.
         displayName: Startup Probe
-        path: startupProbe
+        path: probes.startup
       - description: Name of the Secret to use to pull images from the specified repository. It is not required if the cluster is configured with a global image pull secret.
         displayName: Pull Secret
         path: pullSecret
@@ -332,16 +334,11 @@ spec:
     If you need to mount the logs and transaction data from your runtime component to an external volume such as NFS (or any storage supported in your cluster), simply add the following (customizing the folder location and size) to your RuntimeComponent CR:
     ``` storage: size: 2Gi mountPath: "/logs" ```
 
-    #### Integration with OpenShift's Certificate Manager
-    The Runtime Component Operator takes advantage of the [cert-manager tool](https://cert-manager.io/), if it is installed on the cluster. This allows the operator to automatically provision TLS certificates for pods as well as routes.
-    When creating certificates via the RuntimeComponent CR the user can specify a particular issuer name and toggle the scopes between ClusterIssuer (cluster scoped) and Issuer (namespace scoped). If not specified, these values are retrieved from a ConfigMap, with a default value of `self-signed` and `ClusterIssuer`.
-    The certificate is mounted into the container via a Secret so that it is automatically refreshed once the certificate is updated.
     #### Integration with OpenShift Serverless
     Deploy your serverless runtime component using a single toggle.  The Operator will convert all of its generated resources into [Knative](https://knative.dev) resources, allowing your pod to automatically scale to 0 when it is idle.
 
-    #### Integration with Kubernetes Application Navigator (kAppNav) and OpenShift's Topology UI
-    Automatically configures the Kubernetes resources for integration with [kAppNav](https://kappnav.io/), allowing your runtime component to compose an umbrella [Application](https://github.com/kubernetes-sigs/application).  This integration allows users to monitor all constituents resources of the application and receive alerts when the health status of a component changes.  From an integrated panel users can also launch day-2-operations, such as viewing the Kibana / Grafana dashboards, and enabling trace for a component.
-    During this integration we also set the corresponding labels to support OpenShift's Developer Topology UI,which allows you to visualize your entire set of deployments and how they are connected.
+    #### Integration with OpenShift's Topology UI
+    We set the corresponding labels to support OpenShift's Developer Topology UI, which allows you to visualize your entire set of deployments and how they are connected.
 
     See our [**documentation**](https://github.com/application-stacks/runtime-component-operator/tree/master/doc/) for more information.
   displayName: Runtime Component Operator
