@@ -184,6 +184,8 @@ bundle-releases:
 
 install-podman:
 	./scripts/installers/install-podman.sh
+
+install-opm:
 	./scripts/installers/install-opm.sh
 
 bundle-build-podman:

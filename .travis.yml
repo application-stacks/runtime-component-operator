@@ -18,13 +18,15 @@ stages:
   - name: e2e-test
     if: branch = master AND fork = false AND type != cron
   - name: build
-    if: branch = master AND fork = false AND type != pull_request
+    if: branch = master AND fork = false AND type != pull_request AND type != cron
   - name: build-manifest
-    if: branch = master AND fork = false AND type != pull_request
-  # Do release builds for master branch for cron jobs or for a release
-  - name: release-builds
+    if: branch = master AND fork = false AND type != pull_request AND type != cron
+  # Releases are rebuilt weekly via a Travis cron job
+  - name: rebuild-e2e-test
     if: branch = master AND fork = false AND type = cron
-  - name: release-bundles
+  - name: rebuild-releases
+    if: branch = master AND fork = false AND type = cron
+  - name: rebuild-bundles
     if: branch = master AND fork = false AND type = cron
 
 jobs:
@@ -36,8 +38,7 @@ jobs:
       stage: e2e-test
       os: linux
       arch: amd64
-      script:
-        - travis_wait 45 make setup test-e2e || travis_terminate 1
+      script: travis_wait 45 make setup test-e2e || travis_terminate 1
     - name: Build image on ppc64le
       stage: build
       os: linux
@@ -59,6 +60,7 @@ jobs:
       before_install:
         - sudo apt-get install -qq -y software-properties-common uidmap
         - make install-podman
+        - make install-opm
       script:
         - make build-and-push-multiarch-image
         - make build-manifest
@@ -69,31 +71,35 @@ jobs:
       stage: build-manifest
       script: make build-manifest
     # Build all non-ignored releases
+    - name: Build image on amd64 and test
+      stage: rebuild-e2e-test
+      os: linux
+      arch: amd64
+      script: travis_wait 45 make setup test-e2e RELEASE_TARGET="releases" || travis_terminate 1
     - name: Build releases on ppc64le
-      stage: release-builds
+      stage: rebuild-releases
       os: linux
       arch: ppc64le
       script: make build-releases RELEASE_TARGET="releases"
     - name: Build releases on s390x
-      stage: release-builds
+      stage: rebuild-releases
       os: linux
       arch: s390x
       script: make build-releases RELEASE_TARGET="releases"
     - name: Build releases on amd64
-      stage: release-builds
+      stage: rebuild-releases
       os: linux
       arch: amd64
-      script:
-        - make build-releases RELEASE_TARGET="releases"
-        - travis_wait 300 make setup test-e2e RELEASE_TARGET="releases" || travis_terminate 1
+      script: make build-releases RELEASE_TARGET="releases"
     # Bundle all non-ignored releases
     - name: Bundle releases
-      stage: release-bundles
+      stage: rebuild-bundles
       os: linux
       arch: amd64
       before_install:
         - sudo apt-get install -qq -y software-properties-common uidmap
         - make install-podman
+        - make install-opm
       script:
         - make build-manifest RELEASE_TARGET="releases"
         - make bundle-releases RELEASE_TARGET="releases"
