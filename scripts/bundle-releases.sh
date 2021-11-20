@@ -3,7 +3,7 @@
 #########################################################################################
 #
 #
-#           Build manifest list for all releases of operator repository/image
+#           Script to build images for all releases and daily.
 #           Note: Assumed to run under <operator root>/scripts
 #
 #
@@ -11,7 +11,7 @@
 
 set -Eeo pipefail
 
-readonly usage="Usage: $0 -u <docker-username> -p <docker-password> --image [registry/]repository/image"
+readonly usage="Usage: $0 -u <docker-username> -p <docker-password> --image [registry/]<repository>/<image> --target <daily|releases|release-tag>"
 readonly script_dir="$(dirname "$0")"
 readonly release_blocklist="${script_dir}/release-blocklist.txt"
 
@@ -19,7 +19,13 @@ main() {
   parse_args "$@"
 
   if [[ -z "${TARGET}" ]]; then
-    echo "****** Missing target release for operator manifest lists, see usage"
+    echo "****** Missing target release for bundle build, see usage"
+    echo "${usage}"
+    exit 1
+  fi
+
+  if [[ -z "${IMAGE}" ]]; then
+    echo "****** Missing target image for bundle build, see usage"
     echo "${usage}"
     exit 1
   fi
@@ -30,38 +36,36 @@ main() {
     exit 1
   fi
 
-  if [[ -z "${IMAGE}" ]]; then
-    echo "****** Missing target image for operator manifest lists, see usage"
-    echo "${usage}"
-    exit 1
-  fi
-
   echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
-  # Build manifest for target release(s)
+  # Bundle target release(s)
   if [[ "${TARGET}" != "releases" ]]; then
-    build_manifest "${TARGET}"
+    bundle_release "${TARGET}"
   else
-    build_manifests
+    bundle_releases
   fi
 }
 
-build_manifest() {
-  local tag="$1"
-  echo "****** Building manifest for: ${tag}"
+bundle_release() {
+  local tag="${1}"
+  local release_tag="${tag#*v}"
+  local operator_ref="${IMAGE}:${tag}"
 
-  ## try to build manifest but allow failure
-  ## this allows new release builds
-  local target="${IMAGE}:${tag}"
-  manifest-tool push from-args \
-    --platforms "linux/amd64,linux/s390x,linux/ppc64le" \
-    --template "${target}-ARCH" \
-    --target "${target}" \
-    || echo "*** WARN: Target architectures not available"
+  # Switch to release tag
+  if [[ "${tag}" != "daily" ]]; then
+    git switch -q "${tag}"
+  fi
+
+  # Build the bundle
+  local bundle_ref="${IMAGE}:bundle-${release_tag}"
+  make bundle-build-podman bundle-push-podman IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}"
+
+  # Build the catalog
+  local catalog_ref="${IMAGE}:catalog-${release_tag}"
+  make build-catalog push-catalog IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}" CATALOG_IMG="${catalog_ref}"
 }
 
-# Build manifest for previous releases
-build_manifests() {
+bundle_releases() {
   tags="$(git tag -l)"
   while read -r tag; do
     if [[ -z "${tag}" ]]; then
@@ -74,13 +78,12 @@ build_manifests() {
       continue
     fi
 
-    local release_tag="${tag#*v}"
-    build_manifest "${release_tag}"
+    bundle_release "${tag}"
   done <<< "${tags}"
 }
 
 parse_args() {
-    while [ $# -gt 0 ]; do
+  while [ $# -gt 0 ]; do
     case "$1" in
     -u)
       shift

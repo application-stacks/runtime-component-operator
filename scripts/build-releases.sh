@@ -3,8 +3,7 @@
 #########################################################################################
 #
 #
-#           Script to build the multi arch images for operator
-#           To push the image to DockerHub, provide the `--push` flag.
+#           Script to build images for all releases and daily.
 #           Note: Assumed to run under <operator root>/scripts
 #
 #
@@ -12,13 +11,15 @@
 
 set -Eeo pipefail
 
-readonly usage="Usage: build-release.sh -u <docker-username> -p <docker-password> --image repository/image"
+readonly usage="Usage: $0 -u <docker-username> -p <docker-password> --image [registry/]<repository>/<image> --target <daily|releases|release-tag>"
+readonly script_dir="$(dirname "$0")"
+readonly release_blocklist="${script_dir}/release-blocklist.txt"
 
 main() {
-  parse_args $@
+  parse_args "$@"
 
-  if [[ -z "${USER}" || -z "${PASS}" ]]; then
-    echo "****** Missing docker authentication information, see usage"
+  if [[ -z "${TARGET}" ]]; then
+    echo "****** Missing target release for operator build, see usage"
     echo "${usage}"
     exit 1
   fi
@@ -29,89 +30,58 @@ main() {
     exit 1
   fi
 
-  ## Define current arch variable
-  case "$(uname -p)" in
-  "ppc64le")
-    readonly arch="ppc64le"
-    ;;
-  "s390x")
-    readonly arch="s390x"
-    ;;
-  *)
-    readonly arch="amd64"
-    ;;
-  esac
+  if [[ -z "${DOCKER_USERNAME}" || -z "${DOCKER_PASSWORD}" ]]; then
+    echo "****** Missing docker authentication information, see usage"
+    echo "${usage}"
+    exit 1
+  fi
 
-  ## login to docker
-  echo "${PASS}" | docker login -u "${USER}" --password-stdin
+  echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
-  ## build or push latest master branch
-  if [[ "${IS_PUSH}" != true ]]; then
-    echo "****** Building release: daily"
-    build_release "daily"
+  # Build target release(s)
+  if [[ "${TARGET}" != "releases" ]]; then
+    "${script_dir}/build-release.sh" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --release "${TARGET}" --image "${IMAGE}"
   else
-    echo "****** Pushing release: daily"
-    push_release "daily"
+    build_releases
   fi
 }
 
-
-build_previous_releases() {
- ## loop through tagged releases and build
-  local tags=$(git tag -l)
+build_releases() {
+  tags="$(git tag -l)"
   while read -r tag; do
     if [[ -z "${tag}" ]]; then
       break
     fi
 
-    git checkout -q "${tag}"
+    # Skip any releases listed in the release blocklist
+    if grep -q "^${tag}$" "${release_blocklist}"; then
+      echo "Release ${tag} found in blocklist. Skipping..."
+      continue
+    fi
 
-    ## Remove potential leading 'v' from tags
-    local dockerTag="${tag#*v}"
-    echo "****** Building release: ${dockerTag}"
-    build_release "${dockerTag}"
-    echo "****** Pushing release: ${dockerTag}"
-    #push_release "${dockerTag}"
+    local release_tag="${tag#*v}"
+    "${script_dir}/build-release.sh" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --release "${release_tag}" --image "${IMAGE}"
   done <<< "${tags}"
 }
 
-build_release() {
-  local release="$1"
-  local full_image="${IMAGE}:${release}-${arch}"
-  echo "*** Building ${full_image} for ${arch}"
-  docker build -t "${full_image}" .
-  return $?
-
-}
-
-push_release() {
-  local release="$1"
-
-  if [[ "${TRAVIS}" = "true" && "${TRAVIS_PULL_REQUEST}" = "false" && "${TRAVIS_BRANCH}" = "master" ]]; then
-    echo "****** Pushing image: ${IMAGE}:${release}-${arch}"
-    docker push "${IMAGE}:${release}-${arch}"
-  else
-    echo "****** Skipping push for branch ${TRAVIS_BRANCH}"
-  fi
-}
-
 parse_args() {
-    while [ $# -gt 0 ]; do
+  while [ $# -gt 0 ]; do
     case "$1" in
     -u)
       shift
-      readonly USER="${1}"
+      readonly DOCKER_USERNAME="${1}"
       ;;
     -p)
       shift
-      readonly PASS="${1}"
+      readonly DOCKER_PASSWORD="${1}"
       ;;
     --image)
       shift
       readonly IMAGE="${1}"
       ;;
-    --push)
-      readonly IS_PUSH=true
+    --target)
+      shift
+      readonly TARGET="${1}"
       ;;
     *)
       echo "Error: Invalid argument - $1"
@@ -123,4 +93,4 @@ parse_args() {
   done
 }
 
-main $@
+main "$@"

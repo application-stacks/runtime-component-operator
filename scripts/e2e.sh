@@ -1,8 +1,9 @@
 #!/bin/bash
 
-readonly usage="Usage: e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace>"
+readonly usage="Usage: e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace> --release <daily|release-tag> --test-tag <test-id>"
 readonly SERVICE_ACCOUNT="travis-tests"
 readonly OC_CLIENT_VERSION="4.6.0"
+readonly CONTROLLER_MANAGER_NAME="rco-controller-manager"
 
 # setup_env: Download oc cli, log into our persistent cluster, and create a test project
 setup_env() {
@@ -13,16 +14,21 @@ setup_env() {
 
     # Start a cluster and login
     echo "****** Logging into remote cluster..."
-    oc login "${OC_URL}" --token="${OC_TOKEN}"
+    oc login "${CLUSTER_URL}" --token="${CLUSTER_TOKEN}"
 
     # Set variables for rest of script to use
     readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
-    readonly TEST_NAMESPACE="runtime-operator-test-${TRAVIS_BUILD_NUMBER}"
+    readonly TEST_NAMESPACE="runtime-operator-test-${TEST_TAG}"
     readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/runtime-operator
     readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle:latest"
 
-    echo "****** Creating test namespace: ${TEST_NAMESPACE}"
+    echo "****** Creating test namespace ${TEST_NAMESPACE} for release ${RELEASE}"
     oc new-project "${TEST_NAMESPACE}" || oc project "${TEST_NAMESPACE}"
+
+    ## Switch to release branch
+    if [[ "${RELEASE}" != "daily" ]]; then
+      git switch -q "${RELEASE}"
+    fi
 
     ## Create service account for Kuttl tests
     oc apply -f config/rbac/kuttl-rbac.yaml
@@ -57,13 +63,17 @@ push_images() {
 main() {
     parse_args "$@"
 
-    if [[ -z "${USER}" || -z "${PASS}" ]]; then
+    if [[ -z "${RELEASE}" ]]; then
+        echo "****** Missing release, see usage"
+      fi
+
+    if [[ -z "${DOCKER_USERNAME}" || -z "${DOCKER_PASSWORD}" ]]; then
         echo "****** Missing docker authentication information, see usage"
         echo "${usage}"
         exit 1
     fi
 
-    if [[ -z "${OC_URL}" ]] || [[ -z "${OC_TOKEN}" ]]; then
+    if [[ -z "${CLUSTER_URL}" ]] || [[ -z "${CLUSTER_TOKEN}" ]]; then
         echo "****** Missing OCP URL or token, see usage"
         echo "${usage}"
         exit 1
@@ -75,11 +85,17 @@ main() {
         exit 1
     fi
 
+    if [[ -z "${TEST_TAG}" ]]; then
+        echo "****** Missing test tag, see usage"
+        echo "${usage}"
+        exit 1
+    fi
+
     echo "****** Setting up test environment..."
     setup_env
 
     ## login to docker to avoid rate limiting during build
-    echo "${PASS}" | docker login -u "${USER}" --password-stdin
+    echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
     echo "****** Building image"
     docker build -t "${BUILD_IMAGE}" .
@@ -97,12 +113,12 @@ main() {
     }
 
     # Wait for operator deployment to be ready
-    while [[ $(oc get deploy rco-controller-manager -o jsonpath='{ .status.readyReplicas }') -ne "1" ]]; do
-        echo "****** Waiting for rco-controller-manager to be ready..."
+    while [[ $(oc get deploy "${CONTROLLER_MANAGER_NAME}" -o jsonpath='{ .status.readyReplicas }') -ne "1" ]]; do
+        echo "****** Waiting for ${CONTROLLER_MANAGER_NAME} to be ready..."
         sleep 10
     done
 
-    echo "****** rco-controller-manager deployment is ready..."
+    echo "****** ${CONTROLLER_MANAGER_NAME} deployment is ready..."
 
     echo "****** Starting scorecard tests..."
     operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --service-account scorecard-kuttl --wait-time 30m ./bundle || {
@@ -118,23 +134,23 @@ main() {
 }
 
 parse_args() {
-    while [ $# -gt 0 ]; do
+  while [ $# -gt 0 ]; do
     case "$1" in
     -u)
       shift
-      readonly USER="${1}"
+      readonly DOCKER_USERNAME="${1}"
       ;;
     -p)
       shift
-      readonly PASS="${1}"
+      readonly DOCKER_PASSWORD="${1}"
       ;;
     --cluster-url)
       shift
-      readonly OC_URL="${1}"
+      readonly CLUSTER_URL="${1}"
       ;;
     --cluster-token)
       shift
-      readonly OC_TOKEN="${1}"
+      readonly CLUSTER_TOKEN="${1}"
       ;;
     --registry-name)
       shift
@@ -143,6 +159,14 @@ parse_args() {
     --registry-namespace)
       shift
       readonly REGISTRY_NAMESPACE="${1}"
+      ;;
+    --release)
+      shift
+      readonly RELEASE="${1}"
+      ;;
+    --test-tag)
+      shift
+      readonly TEST_TAG="${1}"
       ;;
     *)
       echo "Error: Invalid argument - $1"
