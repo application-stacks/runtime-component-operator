@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -69,6 +70,10 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
+	// see https://github.com/operator-framework/operator-sdk/issues/1813
+	leaseDuration := 30 * time.Second
+	renewDeadline := 20 * time.Second
+
 	watchNamespace, err := getWatchNamespace()
 	if err != nil {
 		setupLog.Error(err, "unable to get WatchNamespace, "+
@@ -80,7 +85,9 @@ func main() {
 		MetricsBindAddress: "0",
 		Port:               9443,
 		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "c407d44e.apps.stacks",
+		LeaderElectionID:   "c407d44e.rc.app.stacks",
+		LeaseDuration:      &leaseDuration,
+		RenewDeadline:      &renewDeadline,
 		Namespace:          watchNamespace,
 	})
 	if err != nil {
