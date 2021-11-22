@@ -30,3 +30,6 @@ metadata:
     bar2: foo2
     foo1: bar1
     conflict: statefulSet
+  labels:
+    app.kubernetes.io/instance: rc-deployment-annotations
+

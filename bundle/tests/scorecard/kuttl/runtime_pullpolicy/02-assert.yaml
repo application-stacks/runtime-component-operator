@@ -14,3 +14,6 @@ kind: Pod
 spec:   
   containers:
   - imagePullPolicy: "Never"
+metadata:
+  labels:
+    app.kubernetes.io/instance: example-runtime-component

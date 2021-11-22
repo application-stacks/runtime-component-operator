@@ -15,3 +15,6 @@ kind: Pod
 spec:
   containers:
   - image: navidsh/demo-day
+metadata:
+  labels:
+    app.kubernetes.io/instance: imagestream-rc

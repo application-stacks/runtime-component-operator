@@ -20,3 +20,6 @@ spec:
       startupProbe:
         failureThreshold: 20
         periodSeconds: 10
+metadata:
+  labels:
+    app.kubernetes.io/instance: probes-rc
