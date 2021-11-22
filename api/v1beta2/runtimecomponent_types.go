@@ -24,6 +24,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -299,6 +300,9 @@ type RuntimeComponentRoute struct {
 	// Path to be used for Route.
 	// +operator-sdk:csv:customresourcedefinitions:order=40,type=spec,displayName="Route Path",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Path string `json:"path,omitempty"`
+
+	// Path type to be used for Ingress.
+	PathType networkingv1.PathType `json:"pathType,omitempty"`
 
 	// A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
 	// +operator-sdk:csv:customresourcedefinitions:order=41,type=spec,displayName="Certificate Secret Reference",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
@@ -707,6 +711,11 @@ func (r *RuntimeComponentRoute) GetHost() string {
 // GetPath returns path to use for the route
 func (r *RuntimeComponentRoute) GetPath() string {
 	return r.Path
+}
+
+// GetPathType returns pathType to use for the route
+func (r *RuntimeComponentRoute) GetPathType() networkingv1.PathType {
+	return r.PathType
 }
 
 // GetNodeAffinity returns node affinity
