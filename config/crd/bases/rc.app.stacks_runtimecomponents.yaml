@@ -2774,7 +2774,7 @@ spec:
                     description: Path to be used for Route.
                     type: string
                   pathType:
-                    description: PathType to be used for Ingress.
+                    description: Path type to be used for Ingress.
                     type: string
                   termination:
                     description: TLS termination policy. Can be one of edge, reencrypt
