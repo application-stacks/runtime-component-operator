@@ -301,7 +301,7 @@ type RuntimeComponentRoute struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=40,type=spec,displayName="Route Path",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Path string `json:"path,omitempty"`
 
-	// Path to be used for Ingress.
+	// PathType to be used for Ingress.
 	PathType networkingv1.PathType `json:"pathType,omitempty"`
 
 	// A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
