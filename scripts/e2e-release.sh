@@ -59,10 +59,11 @@ main() {
 
 run_e2e() {
   local tag="${1}"
+  local release_tag="${tag//\./}"
   "${script_dir}/e2e.sh" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" \
                          --cluster-url "${CLUSTER_URL}" --cluster-token "${CLUSTER_TOKEN}" \
                          --registry-name "${REGISTRY_NAME}" --registry-namespace "${REGISTRY_NAMESPACE}" \
-                         --test-tag "${tag}-${TEST_TAG}" --release "${tag}"
+                         --test-tag "${release_tag}-${TEST_TAG}" --release "${tag}"
 }
 
 test_releases() {
