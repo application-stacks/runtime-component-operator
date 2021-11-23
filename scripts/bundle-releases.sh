@@ -40,13 +40,7 @@ main() {
 
   # Bundle target release(s)
   if [[ "${TARGET}" != "releases" ]]; then
-    # Remove 'v' prefix from any releases matching version regex `\d+\.\d+\.\d+.*`
-    if [[ "${TARGET}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-      readonly release_tag="${TARGET#*v}"
-    else
-      readonly release_tag="${TARGET}"
-    fi
-    bundle_release "${release_tag}"
+    bundle_release "${TARGET}"
   else
     bundle_releases
   fi
@@ -54,8 +48,13 @@ main() {
 
 bundle_release() {
   local tag="${1}"
-  local release_tag="${tag#*v}"
-  local operator_ref="${IMAGE}:${tag}"
+  # Remove 'v' prefix from any releases matching version regex `\d+\.\d+\.\d+.*`
+  if [[ "${tag}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+    local release_tag="${tag#*v}"
+  else
+    local release_tag="${tag}"
+  fi
+  local operator_ref="${IMAGE}:${release_tag}"
 
   # Switch to release tag
   if [[ "${tag}" != "daily" ]]; then
