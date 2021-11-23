@@ -48,7 +48,14 @@ main() {
     ;;
   esac
 
-  readonly full_image="${IMAGE}:${RELEASE}-${arch}"
+  # Remove 'v' prefix from any releases matching version regex `\d+\.\d+\.\d+`
+  if [[ "${RELEASE}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    readonly release_tag="${RELEASE#*v}"
+  else
+    readonly release_tag="${RELEASE}"
+  fi
+
+  readonly full_image="${IMAGE}:${release_tag}-${arch}"
 
   ## login to docker
   echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
@@ -66,11 +73,10 @@ main() {
 }
 
 build_release() {
-  local release="$1"
   echo "*** Building ${full_image} for ${arch}"
 
-  if [[ "${release}" != "daily" ]]; then
-    git checkout -q "v${release}"
+  if [[ "${RELEASE}" != "daily" ]]; then
+    git checkout -q "${RELEASE}"
   fi
 
   docker build -t "${full_image}" .
