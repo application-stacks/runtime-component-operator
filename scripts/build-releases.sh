@@ -59,8 +59,7 @@ build_releases() {
       continue
     fi
 
-    local release_tag="${tag#*v}"
-    "${script_dir}/build-release.sh" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --release "${release_tag}" --image "${IMAGE}"
+    "${script_dir}/build-release.sh" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --release "${tag}" --image "${IMAGE}"
   done <<< "${tags}"
 }
 
