@@ -189,13 +189,13 @@ install-opm:
 	./scripts/installers/install-opm.sh
 
 bundle-build-podman:
-	podman build -f bundle.Dockerfile -t "${PUBLISH_REGISTRY}/${BUNDLE_IMG}"
+	podman build -f bundle.Dockerfile -t "${BUNDLE_IMG}"
 
 bundle-push-podman:
-	podman push "${PUBLISH_REGISTRY}/${BUNDLE_IMG}"
+	podman push "${BUNDLE_IMG}"
 
 build-catalog:
-	opm index add --bundles "${PUBLISH_REGISTRY}/${BUNDLE_IMG}" --tag "${PUBLISH_REGISTRY}/${CATALOG_IMG}"
+	opm index add --bundles "${BUNDLE_IMG}" --tag "${CATALOG_IMG}"
 
 push-catalog: docker-login
-	podman push "${PUBLISH_REGISTRY}/${CATALOG_IMG}"
+	podman push "${CATALOG_IMG}"
