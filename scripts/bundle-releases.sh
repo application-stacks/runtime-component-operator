@@ -40,7 +40,13 @@ main() {
 
   # Bundle target release(s)
   if [[ "${TARGET}" != "releases" ]]; then
-    bundle_release "${TARGET}"
+    # Remove 'v' prefix from any releases matching version regex `\d+\.\d+\.\d+.*`
+    if [[ "${TARGET}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+      readonly release_tag="${TARGET#*v}"
+    else
+      readonly release_tag="${TARGET}"
+    fi
+    bundle_release "${release_tag}"
   else
     bundle_releases
   fi
