@@ -27,7 +27,7 @@ setup_env() {
 
     ## Switch to release branch
     if [[ "${RELEASE}" != "daily" ]]; then
-      git switch -q "${RELEASE}"
+      git checkout -q "${RELEASE}"
     fi
 
     ## Create service account for Kuttl tests

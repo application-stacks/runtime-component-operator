@@ -70,7 +70,7 @@ build_release() {
   echo "*** Building ${full_image} for ${arch}"
 
   if [[ "${release}" != "daily" ]]; then
-    git switch -q "v${release}"
+    git checkout -q "v${release}"
   fi
 
   docker build -t "${full_image}" .
