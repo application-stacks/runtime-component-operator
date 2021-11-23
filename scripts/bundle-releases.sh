@@ -53,7 +53,7 @@ bundle_release() {
 
   # Switch to release tag
   if [[ "${tag}" != "daily" ]]; then
-    git switch -q "${tag}"
+    git checkout -q "${tag}"
   fi
 
   # Build the bundle
