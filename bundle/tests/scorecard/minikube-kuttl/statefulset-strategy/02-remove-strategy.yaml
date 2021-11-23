@@ -1,0 +1,9 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: statefulset-strategy-rc
+spec:
+  # Add fields here
+  replicas: 3
+  statefulSet:
+    updateStrategy:

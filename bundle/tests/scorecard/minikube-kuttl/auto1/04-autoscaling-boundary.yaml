@@ -1,0 +1,12 @@
+# Check that when minReplicas is set to less that one that the update is rejected
+# There should be no change to the existing autoscale resource
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: autoscaling1-rc
+spec:
+  autoscaling:
+    maxReplicas: 4
+    minReplicas: 0
+    targetCPUUtilizationPercentage: 20
+

@@ -1,0 +1,12 @@
+# Removing the storage, and the operator should
+# move from a stateful set back to a deployment
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: storage-rc
+spec:
+  # Add fields here
+  applicationImage: 'k8s.gcr.io/pause:2.0'
+  replicas: 1
+  statefulSet:
+

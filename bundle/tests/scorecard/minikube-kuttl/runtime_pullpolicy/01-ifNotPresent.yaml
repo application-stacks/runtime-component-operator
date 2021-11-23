@@ -1,0 +1,9 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: example-runtime-component
+spec:
+  applicationImage: navidsh/demo-day
+  replicas: 1
+  pullPolicy: "IfNotPresent"
+

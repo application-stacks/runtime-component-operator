@@ -1,0 +1,29 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: probes-rc
+spec:
+  # Add fields here
+  applicationImage: navidsh/demo-day
+  service:
+    type: "ClusterIP"
+    port: 3000
+  replicas: 1
+  probes:
+    startup:
+      failureThreshold: 10
+      periodSeconds: 5
+      httpGet:
+        path: "/"
+        port: 3000
+    liveness:
+      initialDelaySeconds: 4
+      httpGet:
+        path: "/"
+        port: 3000
+    readiness:
+      initialDelaySeconds: 1
+      httpGet:
+        path: "/"
+        port: 3000
+

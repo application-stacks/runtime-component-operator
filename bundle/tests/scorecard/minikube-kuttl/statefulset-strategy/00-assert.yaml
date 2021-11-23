@@ -1,0 +1,15 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 90
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: statefulset-strategy-rc
+spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 2
+status:
+  readyReplicas: 3

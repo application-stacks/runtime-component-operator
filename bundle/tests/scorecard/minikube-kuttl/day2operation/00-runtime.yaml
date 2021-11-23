@@ -1,0 +1,12 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: day2-operation-rc
+spec:
+  # Add fields here
+  applicationImage: 'navidsh/demo-day'
+  replicas: 1
+  statefulSet:
+    storage:
+      size: 100Mi
+      mountPath: /data

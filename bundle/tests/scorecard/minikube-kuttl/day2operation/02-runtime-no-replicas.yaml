@@ -1,0 +1,9 @@
+# Setting replicas to 0 - If no replicas then the day2 Operation should return False but continue to attempt to complete
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: day2-operation-rc
+spec:
+  # Add fields here
+  applicationImage: 'navidsh/demo-day'
+  replicas: 0

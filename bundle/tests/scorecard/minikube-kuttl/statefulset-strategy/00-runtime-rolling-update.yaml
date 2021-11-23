@@ -1,0 +1,16 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: statefulset-strategy-rc
+spec:
+  # Add fields here
+  applicationImage: k8s.gcr.io/pause:2.0
+  replicas: 3
+  statefulSet:
+    updateStrategy:
+      type: RollingUpdate
+      rollingUpdate:
+        partition: 2
+    storage:
+      size: 100Mi
+      mountPath: /data

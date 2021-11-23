@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rc-deployment-annotations
+  annotations:
+    bar2: foo2
+    foo1: bar1  
+    conflict: statefulSet
+spec:
+  template:
+    metadata:
+      annotations:
+        bar2: foo2
+        foo1: bar1
+        conflict: statefulSet
+status:
+  readyReplicas: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rc-deployment-annotations
+  annotations:
+    foo1: bar1
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    bar2: foo2
+    foo1: bar1
+    conflict: statefulSet
+  labels:
+    app.kubernetes.io/instance: rc-deployment-annotations
+

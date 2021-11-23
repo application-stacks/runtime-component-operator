@@ -1,0 +1,10 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: autoscaling1-rc
+spec:
+  autoscaling:
+    maxReplicas: 3
+    minReplicas: 2
+    targetCPUUtilizationPercentage: 30
+

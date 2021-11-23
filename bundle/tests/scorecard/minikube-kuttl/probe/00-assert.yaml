@@ -1,0 +1,25 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 120
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: probes-rc
+status:
+  readyReplicas: 1
+---
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - startupProbe:
+        failureThreshold: 10
+        periodSeconds: 5
+      readinessProbe:
+        initialDelaySeconds: 1
+      livenessProbe:
+        initialDelaySeconds: 4
+metadata:
+  labels:
+    app.kubernetes.io/instance: probes-rc
