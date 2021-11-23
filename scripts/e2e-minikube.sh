@@ -64,7 +64,7 @@ main() {
     mv bundle/tests/scorecard/kuttl/ bundle/tests/scorecard/disable-kuttl/
     mv bundle/tests/scorecard/minikube-kuttl/ bundle/tests/scorecard/kuttl/
     
-    operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --service-account scorecard-kuttl --wait-time 10m ./bundle || {
+    operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --service-account scorecard-kuttl --wait-time 30m ./bundle || {
       echo "****** Scorecard tests failed..."
     }
     result=$?
