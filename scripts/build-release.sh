@@ -84,12 +84,8 @@ build_release() {
 }
 
 push_release() {
-  if [[ "${TRAVIS}" = "true" && "${TRAVIS_PULL_REQUEST}" = "false" && "${TRAVIS_BRANCH}" = "master" ]]; then
-    echo "****** Pushing image: ${full_image}"
-    docker push "${full_image}"
-  else
-    echo "****** Skipping push for branch ${TRAVIS_BRANCH}"
-  fi
+  echo "****** Pushing image: ${full_image}"
+  docker push "${full_image}"
 }
 
 parse_args() {
