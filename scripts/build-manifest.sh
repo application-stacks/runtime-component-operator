@@ -40,7 +40,13 @@ main() {
 
   # Build manifest for target release(s)
   if [[ "${TARGET}" != "releases" ]]; then
-    build_manifest "${TARGET}"
+    # Remove 'v' prefix from any releases matching version regex `\d+\.\d+\.\d+.*`
+    if [[ "${TARGET}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+      readonly release_tag="${TARGET#*v}"
+    else
+      readonly release_tag="${TARGET}"
+    fi
+    build_manifest "${release_tag}"
   else
     build_manifests
   fi

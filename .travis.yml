@@ -43,16 +43,12 @@ jobs:
     #   stage: build
     #   os: linux
     #   arch: ppc64le
-    #   script:
-    #     - make build-releases
-    #     - make build-manifest
+    #   script: make build-releases && make build-manifest
     # - name: Build image on s390x
     #   stage: build
     #   os: linux
     #   arch: s390x
-    #   script:
-    #     - make build-releases
-    #     - make build-manifest
+    #   script: make build-releases && make build-manifest
     - name: Build image and bundle on amd64
       stage: build
       os: linux
@@ -97,5 +93,4 @@ jobs:
         - sudo apt-get install -qq -y software-properties-common uidmap
         - make install-podman
         - make install-opm
-      script:
-        - make build-manifest RELEASE_TARGET="releases" && make bundle-releases RELEASE_TARGET="releases"
+      script: make build-manifest RELEASE_TARGET="releases" && make bundle-releases RELEASE_TARGET="releases"

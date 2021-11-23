@@ -48,8 +48,8 @@ main() {
     ;;
   esac
 
-  # Remove 'v' prefix from any releases matching version regex `\d+\.\d+\.\d+`
-  if [[ "${RELEASE}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  # Remove 'v' prefix from any releases matching version regex `\d+\.\d+\.\d+.*`
+  if [[ "${RELEASE}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
     readonly release_tag="${RELEASE#*v}"
   else
     readonly release_tag="${RELEASE}"
