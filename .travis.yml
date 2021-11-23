@@ -61,10 +61,7 @@ jobs:
         - sudo apt-get install -qq -y software-properties-common uidmap
         - make install-podman
         - make install-opm
-      script:
-        - make build-releases
-        - make build-manifest
-        - make bundle-releases
+      script: make build-releases && make build-manifest && make bundle-releases
     ## in case there were concurrency issues with building manifest lists
     ## in previous steps, create FAT manifests one last time
     - name: Verify manifest lists
@@ -101,5 +98,4 @@ jobs:
         - make install-podman
         - make install-opm
       script:
-        - make build-manifest RELEASE_TARGET="releases"
-        - make bundle-releases RELEASE_TARGET="releases"
+        - make build-manifest RELEASE_TARGET="releases" && make bundle-releases RELEASE_TARGET="releases"
