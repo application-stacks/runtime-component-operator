@@ -16,7 +16,7 @@ spec:
                     - key: app.kubernetes.io/instance
                       operator: In
                       values:
-                        - affinity-node-rc
+                        - node-affinity-label-rc
                 topologyKey: kubernetes.io/hostname
 status:
   replicas: 1

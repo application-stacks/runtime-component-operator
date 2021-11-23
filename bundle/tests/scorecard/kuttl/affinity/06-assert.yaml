@@ -1,21 +1,20 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: affinity-pod-rc
+  name: node-affinity-rc
 spec:
   # Add fields here
   template:
     spec:
       affinity:
-        podAffinity:
+        nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: app.kubernetes.io/instance
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/arch
                     operator: In
                     values:
-                      - node-affinity-label-rc
-              topologyKey: kubernetes.io/hostname
+                      - amd64
 status:
   replicas: 1
   readyReplicas: 1

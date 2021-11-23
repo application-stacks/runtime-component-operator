@@ -2,7 +2,9 @@
 apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
-  name: affinity-node-rc
+  name: node-affinity-label-rc
+  labels:
+    test: affinity
 spec:
   # Add fields here
   applicationImage: 'k8s.gcr.io/pause:2.0'

@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: node-affinity-rc
+spec:
+  # Add fields here
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kuttlTest
+                operator: In
+                values:
+                  - test1
+status:
+  readyReplicas: 1

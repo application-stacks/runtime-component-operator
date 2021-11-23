@@ -3,6 +3,8 @@ apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: anti-affinity-pod-rc
+  labels:
+    test: affinity
 spec:
   # Add fields here
   applicationImage: 'k8s.gcr.io/pause:2.0'
@@ -17,5 +19,5 @@ spec:
             - key: app.kubernetes.io/instance
               operator: In
               values:
-                - affinity-node-rc
+                - node-affinity-label-rc
           topologyKey: kubernetes.io/hostname
