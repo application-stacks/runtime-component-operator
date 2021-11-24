@@ -5,7 +5,6 @@ metadata:
     alm-examples: '[]'
     capabilities: Auto Pilot
     categories: Application Runtime
-    containerImage: applicationstacks/operator:daily
     createdAt: "2021-11-25T09:00:00Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     repository: https://github.com/application-stacks/runtime-component-operator

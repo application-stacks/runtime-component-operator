@@ -31,7 +31,6 @@ metadata:
       ]
     capabilities: Auto Pilot
     categories: Application Runtime
-    containerImage: applicationstacks/operator:daily
     createdAt: "2021-11-25T09:00:00Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     operators.operatorframework.io/builder: operator-sdk-v1.6.1+git
