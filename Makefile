@@ -14,7 +14,7 @@ PUBLISH_REGISTRY=docker.io
 BUNDLE_IMG ?= applicationstacks/operator:bundle-daily
 
 # Options for 'bundle-build'
-CHANNELS ?= beta,beta2
+CHANNELS ?= beta2
 DEFAULT_CHANNEL ?= beta2
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
