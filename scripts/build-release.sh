@@ -60,7 +60,7 @@ main() {
   ## login to docker
   echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
-  ## build or push latest master branch
+  ## build or push latest main branch
   echo "****** Building release: ${RELEASE}"
   build_release "${RELEASE}"
 

@@ -4,7 +4,6 @@ OPERATOR_SDK_RELEASE_VERSION ?= v1.6.4
 VERSION ?= 0.8.0
 
 OPERATOR_IMAGE ?= applicationstacks/operator
-OPERATOR_IMAGE_TAG ?= daily
 
 # Type of release. Can be "daily", "releases", or a release tag.
 RELEASE_TARGET := $(or ${RELEASE_TARGET}, ${TRAVIS_TAG}, daily)
@@ -156,15 +155,6 @@ setup: ## Ensure Operator SDK is installed
 unit-test: ## Run unit tests
 	go test -v -mod=vendor -tags=unit github.com/application-stacks/runtime-component-operator/...
 
-build-image: ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}"
-	docker build -t ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG} .
-
-build-multiarch-image: ## Build operator image
-	./scripts/build-release.sh --skip-push -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}" --release "${OPERATOR_IMAGE_TAG}"
-
-build-and-push-multiarch-image: ## Build and push operator image
-	./scripts/build-release.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}" --release "${OPERATOR_IMAGE_TAG}"
-
 docker-login:
 	docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" 
 	
@@ -190,7 +180,7 @@ install-podman:
 install-opm:
 	./scripts/installers/install-opm.sh
 
-bundle-build-podman:
+bundle-build-podman: bundle
 	podman build -f bundle.Dockerfile -t "${BUNDLE_IMG}"
 
 bundle-push-podman:

@@ -21,7 +21,7 @@ Appropriate cluster role and binding are required to watch another namespace, wa
 +
 [source,sh]
 ----
-    kubectl apply -f https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.6.0/runtime-component-crd.yaml
+    kubectl apply -f https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/deploy/releases/0.6.0/runtime-component-crd.yaml
 ----
 
 . Install the Runtime Component Operator:
@@ -44,7 +44,7 @@ NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY
 +
 [source,sh]
 ----
-    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.6.0/runtime-component-cluster-rbac.yaml \
+    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/deploy/releases/0.6.0/runtime-component-cluster-rbac.yaml \
       | sed -e "s/RUNTIME_COMPONENT_OPERATOR_NAMESPACE/${OPERATOR_NAMESPACE}/" \
       | kubectl apply -f -
 ----
@@ -53,7 +53,7 @@ NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY
 +
 [source,sh]
 ----
-    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/master/deploy/releases/0.6.0/runtime-component-operator.yaml \
+    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/deploy/releases/0.6.0/runtime-component-operator.yaml \
       | sed -e "s/RUNTIME_COMPONENT_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" \
       | kubectl apply -n ${OPERATOR_NAMESPACE} -f -
 ----

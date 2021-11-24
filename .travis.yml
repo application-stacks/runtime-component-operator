@@ -16,18 +16,18 @@ stages:
   # Builds are split into 'e2e-test' and 'build' to allow e2e tests to run first. If e2e fails, don't bother
   # building and pushing the images for the other architectures.
   - name: e2e-test
-    if: (branch = master OR tag =~ ^v) AND fork = false AND type != cron
+    if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
   - name: build
-    if: (branch = master OR tag =~ ^v) AND fork = false AND type != pull_request AND type != cron
+    if: (branch = main OR tag =~ ^v) AND fork = false AND type != pull_request AND type != cron
   - name: build-manifest
-    if: (branch = master OR tag =~ ^v) AND fork = false AND type != pull_request AND type != cron
+    if: (branch = main OR tag =~ ^v) AND fork = false AND type != pull_request AND type != cron
   # Releases are rebuilt weekly via a Travis cron job
   - name: rebuild-e2e-test
-    if: branch = master AND fork = false AND type = cron
+    if: branch = main AND fork = false AND type = cron
   - name: rebuild-releases
-    if: branch = master AND fork = false AND type = cron
+    if: branch = main AND fork = false AND type = cron
   - name: rebuild-bundles
-    if: branch = master AND fork = false AND type = cron
+    if: branch = main AND fork = false AND type = cron
 
 jobs:
   include:
