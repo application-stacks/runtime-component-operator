@@ -1038,7 +1038,7 @@ spec:
           topologyKey: kubernetes.io/hostname
 ----
 
-See link:++https://github.com/application-stacks/runtime-component-operator/blob/master/examples/affinity/README.adoc++[Affinity Example] for more details
+See link:++https://github.com/application-stacks/runtime-component-operator/blob/main/examples/affinity/README.adoc++[Affinity Example] for more details
 
 === Day-2 Operations
 
