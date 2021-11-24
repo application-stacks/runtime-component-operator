@@ -7,7 +7,9 @@ kind: Deployment
 metadata:
   name: autoscaling1-rc
 status:
+  replicas: 1
   readyReplicas: 1
+  updatedReplicas: 1
 ---
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
