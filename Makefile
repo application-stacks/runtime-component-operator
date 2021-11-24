@@ -180,7 +180,7 @@ install-podman:
 install-opm:
 	./scripts/installers/install-opm.sh
 
-bundle-build-podman: bundle
+bundle-build-podman:
 	podman build -f bundle.Dockerfile -t "${BUNDLE_IMG}"
 
 bundle-push-podman:

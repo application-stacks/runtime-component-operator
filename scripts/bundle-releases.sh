@@ -63,7 +63,7 @@ bundle_release() {
 
   # Build the bundle
   local bundle_ref="${IMAGE}:bundle-${release_tag}"
-  make bundle-build-podman bundle-push-podman IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}"
+  make kustomize bundle bundle-build-podman bundle-push-podman IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}"
 
   # Build the catalog
   local catalog_ref="${IMAGE}:catalog-${release_tag}"
