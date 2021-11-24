@@ -14,7 +14,7 @@ PUBLISH_REGISTRY=docker.io
 BUNDLE_IMG ?= applicationstacks/operator:bundle-daily
 
 # Options for 'bundle-build'
-CHANNELS ?= beta,beta2
+CHANNELS ?= beta2
 DEFAULT_CHANNEL ?= beta2
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
@@ -180,7 +180,7 @@ install-podman:
 install-opm:
 	./scripts/installers/install-opm.sh
 
-bundle-build-podman: bundle
+bundle-build-podman:
 	podman build -f bundle.Dockerfile -t "${BUNDLE_IMG}"
 
 bundle-push-podman:
