@@ -17,3 +17,4 @@ spec:
                       - error
 status:
   replicas: 1
+  unavailableReplicas: 1
