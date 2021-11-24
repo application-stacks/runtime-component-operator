@@ -99,8 +99,8 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `probes.startup` | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes++[Kubernetes startup probe] that controls when Kubernetes needs to startup the pod on its first initialization.
 | `volumes` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/storage/volumes++[pod volume].
 | `volumeMounts` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/storage/volumes/++[pod volumeMount].
-| `monitoring.labels` | Labels to set on link:++https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitor++[ServiceMonitor].
-| `monitoring.endpoints` | A YAML snippet representing an array of link:++https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#endpoint++[Endpoint] component from ServiceMonitor.
+| `monitoring.labels` | Labels to set on link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#servicemonitor++[ServiceMonitor].
+| `monitoring.endpoints` | A YAML snippet representing an array of link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#endpoint++[Endpoint] component from ServiceMonitor.
 | `route.annotations` | Annotations to be added to the Route.
 | `route.host`   | Hostname to be used for the Route.
 | `route.path`   | Path to be used for Route.
@@ -444,7 +444,7 @@ spec:
 
 ==== Advanced monitoring specification
 
-For advanced scenarios, it is possible to set many `ServicerMonitor` settings such as authentication secret using link:++https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#endpoint++[Prometheus Endpoint]
+For advanced scenarios, it is possible to set many `ServicerMonitor` settings such as authentication secret using link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#endpoint++[Prometheus Endpoint]
 
 [source,yaml]
 ----
@@ -472,7 +472,7 @@ spec:
 
 === Knative support
 
-Runtime Component Operator can deploy serverless applications with link:++https://knative.dev/docs/++[Knative] on a Kubernetes cluster. To achieve this, the operator creates a link:++https://github.com/knative/serving/blob/master/docs/spec/spec.md#service++[Knative `Service`] resource which manages the whole life cycle of a workload.
+Runtime Component Operator can deploy serverless applications with link:++https://knative.dev/docs/++[Knative] on a Kubernetes cluster. To achieve this, the operator creates a link:++https://github.com/knative/serving/blob/main/docs/spec/spec.md#service++[Knative `Service`] resource which manages the whole life cycle of a workload.
 
 To create Knative service, set `createKnativeService` to `true`:
 
