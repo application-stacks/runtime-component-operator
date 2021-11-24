@@ -5,7 +5,7 @@ kind: RuntimeComponent
 metadata:
   name: scale2-runtime-component
 spec:
-  resourceConstraints:
+  resources:
     requests:
       cpu: "0.2"
   autoscaling:

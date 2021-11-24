@@ -68,7 +68,7 @@ spec:
             description: Defines the desired state of RuntimeComponent.
             properties:
               affinity:
-                description: Configures a Pod to run on particular Nodes.
+                description: Configure pods to run on particular Nodes.
                 properties:
                   architecture:
                     description: An array of architectures to be considered for deployment.
@@ -672,13 +672,14 @@ spec:
                     type: object
                 type: object
               applicationImage:
-                description: Application image to be installed.
+                description: Application image to deploy.
                 type: string
               applicationName:
-                description: The name of the application this resource is part of.
-                  If not specified, it defaults to the name of the CR.
+                description: Name of the application. Defaults to the name of this
+                  custom resource.
                 type: string
               applicationVersion:
+                description: Version of the application.
                 type: string
               autoscaling:
                 description: Configures the desired resource consumption of pods.
@@ -686,7 +687,7 @@ spec:
                   maxReplicas:
                     description: Required field for autoscaling. Upper limit for the
                       number of pods that can be set by the autoscaler. Parameter
-                      spec.resourceConstraints.requests.cpu must also be specified.
+                      .spec.resources.requests.cpu must also be specified.
                     format: int32
                     minimum: 1
                     type: integer
@@ -696,14 +697,13 @@ spec:
                     format: int32
                     type: integer
                   targetCPUUtilizationPercentage:
-                    description: Target average CPU utilization (represented as a
-                      percentage of requested CPU) over all the pods.
+                    description: Target average CPU utilization, represented as a
+                      percentage of requested CPU, over all the pods.
                     format: int32
                     type: integer
                 type: object
               createKnativeService:
-                description: A boolean to toggle the creation of Knative resources
-                  and usage of Knative serving.
+                description: Create Knative resources and use Knative serving.
                 type: boolean
               deployment:
                 description: Defines the desired state and cycle of applications.
@@ -767,8 +767,8 @@ spec:
                     type: object
                 type: object
               env:
-                description: An array of environment variables following the format
-                  of {name, value}, where value is a simple string.
+                description: An array of environment variables for the application
+                  container.
                 items:
                   description: EnvVar represents an environment variable present in
                     a Container.
@@ -874,8 +874,8 @@ spec:
                 - name
                 x-kubernetes-list-type: map
               envFrom:
-                description: An array of references to ConfigMap or Secret resources
-                  containing environment variables.
+                description: List of sources to populate environment variables in
+                  the application container.
                 items:
                   description: EnvFromSource represents the source of a set of ConfigMaps
                   properties:
@@ -909,11 +909,11 @@ spec:
                 type: array
                 x-kubernetes-list-type: atomic
               expose:
-                description: A boolean that toggles the external exposure of this
-                  deployment via a Route or a Knative Route resource.
+                description: Expose the application externally via a Route, a Knative
+                  Route or an Ingress resource.
                 type: boolean
               initContainers:
-                description: List of containers that run before other containers in
+                description: List of containers to run before other containers in
                   a pod.
                 items:
                   description: A single application container that you want to run
@@ -2721,11 +2721,12 @@ spec:
                   a global image pull secret.
                 type: string
               replicas:
-                description: Number of pods to create.
+                description: Number of pods to create. Not applicable when .spec.autoscaling
+                  or .spec.createKnativeService is specified.
                 format: int32
                 type: integer
-              resourceConstraints:
-                description: Limits the amount of required resources.
+              resources:
+                description: Resource requests and limits for the application container.
                 properties:
                   limits:
                     additionalProperties:
@@ -2883,12 +2884,13 @@ spec:
                     type: string
                 type: object
               serviceAccountName:
-                description: The name of the OpenShift service account to be used
-                  during deployment.
+                description: Name of the service account to use for deploying the
+                  application. A service account is automatically created if it's
+                  not specified.
                 type: string
               sidecarContainers:
-                description: The list of sidecar containers. These are additional
-                  containers to be added to the pods.
+                description: List of sidecar containers. These are additional containers
+                  to be added to the pods.
                 items:
                   description: A single application container that you want to run
                     within a pod.
@@ -4261,7 +4263,8 @@ spec:
                     type: object
                 type: object
               volumeMounts:
-                description: Represents where to mount the volumes into containers.
+                description: Represents where to mount the volumes into the application
+                  container.
                 items:
                   description: VolumeMount describes a mounting of a Volume within
                     a container.
@@ -4301,8 +4304,8 @@ spec:
                 type: array
                 x-kubernetes-list-type: atomic
               volumes:
-                description: Represents a pod volume with data that is accessible
-                  to the containers.
+                description: Represents a volume with data that is accessible to the
+                  application container.
                 items:
                   description: Volume represents a named volume in a pod that may
                     be accessed by any container in the pod.

@@ -4,6 +4,8 @@ This generic Operator is capable of deploying any application image and can be i
 
 This documentation refers to the latest codebase.  For documentation and samples of older releases, please check out the link:++https://github.com/application-stacks/runtime-component-operator/releases++[main releases] page and navigate the corresponding tag.
 
+**Important**: This user guide only applies to operator versions 0.7.1 and below. For operator versions 0.8.0 and above, refer to this link:++user-guide-v1beta2.adoc++[user guide].
+
 == Operator installation
 
 Use the instructions for one of the link:++../deploy/releases++[releases] to install the operator into a Kubernetes cluster.
@@ -1036,7 +1038,7 @@ spec:
           topologyKey: kubernetes.io/hostname
 ----
 
-See link:++https://github.com/application-stacks/runtime-component-operator/blob/master/examples/affinity/README.adocd++[Affinity Example] for more details
+See link:++https://github.com/application-stacks/runtime-component-operator/blob/master/examples/affinity/README.adoc++[Affinity Example] for more details
 
 === Day-2 Operations
 
