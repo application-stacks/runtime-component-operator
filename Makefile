@@ -192,10 +192,10 @@ bundle-build-podman:
 	podman build -f bundle.Dockerfile -t "${BUNDLE_IMG}"
 
 bundle-push-podman:
-	podman push "${BUNDLE_IMG}"
+	podman push --format=docker "${BUNDLE_IMG}"
 
 build-catalog:
 	opm index add --bundles "${BUNDLE_IMG}" --tag "${CATALOG_IMG}"
 
 push-catalog: docker-login
-	podman push "${CATALOG_IMG}"
+	podman push --format=docker "${CATALOG_IMG}"
