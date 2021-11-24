@@ -285,15 +285,15 @@ func TestCustomizePodSpecAnnotations(t *testing.T) {
 	logf.SetLogger(logger)
 
 	spec := appstacksv1beta2.RuntimeComponentSpec{
-		ApplicationImage:    appImage,
-		Service:             service,
-		ResourceConstraints: resourceContraints,
-		Probes:              probes,
-		VolumeMounts:        []corev1.VolumeMount{volumeMount},
-		PullPolicy:          &pullPolicy,
-		Env:                 env,
-		EnvFrom:             envFrom,
-		Volumes:             []corev1.Volume{volume},
+		ApplicationImage: appImage,
+		Service:          service,
+		Resources:        resourceContraints,
+		Probes:           probes,
+		VolumeMounts:     []corev1.VolumeMount{volumeMount},
+		PullPolicy:       &pullPolicy,
+		Env:              env,
+		EnvFrom:          envFrom,
+		Volumes:          []corev1.Volume{volume},
 	}
 
 	// No dep or set, annotation should be empty
@@ -349,15 +349,15 @@ func TestCustomizePodSpec(t *testing.T) {
 	logf.SetLogger(logger)
 
 	spec := appstacksv1beta2.RuntimeComponentSpec{
-		ApplicationImage:    appImage,
-		Service:             service,
-		ResourceConstraints: resourceContraints,
-		Probes:              probes,
-		VolumeMounts:        []corev1.VolumeMount{volumeMount},
-		PullPolicy:          &pullPolicy,
-		Env:                 env,
-		EnvFrom:             envFrom,
-		Volumes:             []corev1.Volume{volume},
+		ApplicationImage: appImage,
+		Service:          service,
+		Resources:        resourceContraints,
+		Probes:           probes,
+		VolumeMounts:     []corev1.VolumeMount{volumeMount},
+		PullPolicy:       &pullPolicy,
+		Env:              env,
+		EnvFrom:          envFrom,
+		Volumes:          []corev1.Volume{volume},
 	}
 	pts, runtime := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
 	// else cond
@@ -376,15 +376,15 @@ func TestCustomizePodSpec(t *testing.T) {
 			Port:       8443,
 			TargetPort: &targetPort,
 		},
-		ResourceConstraints: resourceContraints,
-		Probes:              probes,
-		VolumeMounts:        []corev1.VolumeMount{volumeMount},
-		PullPolicy:          &pullPolicy,
-		Env:                 env,
-		EnvFrom:             envFrom,
-		Volumes:             []corev1.Volume{volume},
-		ServiceAccountName:  &serviceAccountName,
-		Affinity:            &affinityConfig,
+		Resources:          resourceContraints,
+		Probes:             probes,
+		VolumeMounts:       []corev1.VolumeMount{volumeMount},
+		PullPolicy:         &pullPolicy,
+		Env:                env,
+		EnvFrom:            envFrom,
+		Volumes:            []corev1.Volume{volume},
+		ServiceAccountName: &serviceAccountName,
+		Affinity:           &affinityConfig,
 	}
 	runtime = createRuntimeComponent(name, namespace, spec)
 	CustomizePodSpec(pts, runtime)

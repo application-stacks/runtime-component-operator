@@ -359,9 +359,19 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		*out = new(v1.PullPolicy)
 		**out = **in
 	}
-	if in.Replicas != nil {
-		in, out := &in.Replicas, &out.Replicas
-		*out = new(int32)
+	if in.PullSecret != nil {
+		in, out := &in.PullSecret, &out.PullSecret
+		*out = new(string)
+		**out = **in
+	}
+	if in.ServiceAccountName != nil {
+		in, out := &in.ServiceAccountName, &out.ServiceAccountName
+		*out = new(string)
+		**out = **in
+	}
+	if in.CreateKnativeService != nil {
+		in, out := &in.CreateKnativeService, &out.CreateKnativeService
+		*out = new(bool)
 		**out = **in
 	}
 	if in.Expose != nil {
@@ -369,19 +379,24 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		*out = new(bool)
 		**out = **in
 	}
-	if in.ResourceConstraints != nil {
-		in, out := &in.ResourceConstraints, &out.ResourceConstraints
-		*out = new(v1.ResourceRequirements)
-		(*in).DeepCopyInto(*out)
-	}
-	if in.Service != nil {
-		in, out := &in.Service, &out.Service
-		*out = new(RuntimeComponentService)
-		(*in).DeepCopyInto(*out)
+	if in.Replicas != nil {
+		in, out := &in.Replicas, &out.Replicas
+		*out = new(int32)
+		**out = **in
 	}
 	if in.Autoscaling != nil {
 		in, out := &in.Autoscaling, &out.Autoscaling
 		*out = new(RuntimeComponentAutoScaling)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Probes != nil {
+		in, out := &in.Probes, &out.Probes
+		*out = new(RuntimeComponentProbes)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Deployment != nil {
@@ -394,19 +409,9 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		*out = new(RuntimeComponentStatefulSet)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.ServiceAccountName != nil {
-		in, out := &in.ServiceAccountName, &out.ServiceAccountName
-		*out = new(string)
-		**out = **in
-	}
-	if in.Monitoring != nil {
-		in, out := &in.Monitoring, &out.Monitoring
-		*out = new(RuntimeComponentMonitoring)
-		(*in).DeepCopyInto(*out)
-	}
-	if in.Affinity != nil {
-		in, out := &in.Affinity, &out.Affinity
-		*out = new(RuntimeComponentAffinity)
+	if in.Service != nil {
+		in, out := &in.Service, &out.Service
+		*out = new(RuntimeComponentService)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Route != nil {
@@ -414,34 +419,10 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		*out = new(RuntimeComponentRoute)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.CreateKnativeService != nil {
-		in, out := &in.CreateKnativeService, &out.CreateKnativeService
-		*out = new(bool)
-		**out = **in
-	}
-	if in.Probes != nil {
-		in, out := &in.Probes, &out.Probes
-		*out = new(RuntimeComponentProbes)
+	if in.Monitoring != nil {
+		in, out := &in.Monitoring, &out.Monitoring
+		*out = new(RuntimeComponentMonitoring)
 		(*in).DeepCopyInto(*out)
-	}
-	if in.PullSecret != nil {
-		in, out := &in.PullSecret, &out.PullSecret
-		*out = new(string)
-		**out = **in
-	}
-	if in.Volumes != nil {
-		in, out := &in.Volumes, &out.Volumes
-		*out = make([]v1.Volume, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
-	}
-	if in.VolumeMounts != nil {
-		in, out := &in.VolumeMounts, &out.VolumeMounts
-		*out = make([]v1.VolumeMount, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
 	}
 	if in.Env != nil {
 		in, out := &in.Env, &out.Env
@@ -453,6 +434,20 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 	if in.EnvFrom != nil {
 		in, out := &in.EnvFrom, &out.EnvFrom
 		*out = make([]v1.EnvFromSource, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.Volumes != nil {
+		in, out := &in.Volumes, &out.Volumes
+		*out = make([]v1.Volume, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.VolumeMounts != nil {
+		in, out := &in.VolumeMounts, &out.VolumeMounts
+		*out = make([]v1.VolumeMount, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -470,6 +465,11 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(RuntimeComponentAffinity)
+		(*in).DeepCopyInto(*out)
 	}
 }
 

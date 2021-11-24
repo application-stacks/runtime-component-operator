@@ -33,14 +33,15 @@ import (
 // Defines the desired state of RuntimeComponent.
 type RuntimeComponentSpec struct {
 
-	// The name of the application this resource is part of. If not specified, it defaults to the name of the CR.
-	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Application Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
-	ApplicationName string `json:"applicationName,omitempty"`
-
-	// Application image to be installed.
-	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="Application Image",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// Application image to deploy.
+	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Application Image",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	ApplicationImage string `json:"applicationImage"`
 
+	// Name of the application. Defaults to the name of this custom resource.
+	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="Application Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	ApplicationName string `json:"applicationName,omitempty"`
+
+	// Version of the application.
 	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Application Version",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	ApplicationVersion string `json:"applicationVersion,omitempty"`
 
@@ -48,105 +49,105 @@ type RuntimeComponentSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=4,type=spec,displayName="Pull Policy",xDescriptors="urn:alm:descriptor:com.tectonic.ui:imagePullPolicy"
 	PullPolicy *corev1.PullPolicy `json:"pullPolicy,omitempty"`
 
-	// Number of pods to create.
-	// +operator-sdk:csv:customresourcedefinitions:order=5,type=spec,displayName="Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:podCount"
-	Replicas *int32 `json:"replicas,omitempty"`
-
-	// A boolean that toggles the external exposure of this deployment via a Route or a Knative Route resource.
-	// +operator-sdk:csv:customresourcedefinitions:order=6,type=spec,displayName="Expose",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
-	Expose *bool `json:"expose,omitempty"`
-
-	// Limits the amount of required resources.
-	// +operator-sdk:csv:customresourcedefinitions:order=7,type=spec,displayName="Resource Requirements",xDescriptors="urn:alm:descriptor:com.tectonic.ui:resourceRequirements"
-	ResourceConstraints *corev1.ResourceRequirements `json:"resourceConstraints,omitempty"`
-
-	// +operator-sdk:csv:customresourcedefinitions:order=8,type=spec,displayName="Service"
-	Service *RuntimeComponentService `json:"service,omitempty"`
-
-	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec,displayName="Auto Scaling"
-	Autoscaling *RuntimeComponentAutoScaling `json:"autoscaling,omitempty"`
-
-	// +operator-sdk:csv:customresourcedefinitions:order=20,type=spec,displayName="Deployment"
-	Deployment *RuntimeComponentDeployment `json:"deployment,omitempty"`
-
-	// +operator-sdk:csv:customresourcedefinitions:order=22,type=spec,displayName="StatefulSet"
-	StatefulSet *RuntimeComponentStatefulSet `json:"statefulSet,omitempty"`
-
-	// The name of the OpenShift service account to be used during deployment.
-	// +operator-sdk:csv:customresourcedefinitions:order=28,type=spec,displayName="Service Account Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
-	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
-
-	// +operator-sdk:csv:customresourcedefinitions:order=29,type=spec,displayName="Monitoring"
-	Monitoring *RuntimeComponentMonitoring `json:"monitoring,omitempty"`
-
-	// +operator-sdk:csv:customresourcedefinitions:order=32,type=spec,displayName="Affinity"
-	Affinity *RuntimeComponentAffinity `json:"affinity,omitempty"`
-
-	// +operator-sdk:csv:customresourcedefinitions:order=37,type=spec,displayName="Route"
-	Route *RuntimeComponentRoute `json:"route,omitempty"`
-
-	// A boolean to toggle the creation of Knative resources and usage of Knative serving.
-	// +operator-sdk:csv:customresourcedefinitions:order=48,type=spec,displayName="Create Knative Service",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
-	CreateKnativeService *bool `json:"createKnativeService,omitempty"`
-
-	// +operator-sdk:csv:customresourcedefinitions:order=49,type=spec,displayName="Probes"
-	Probes *RuntimeComponentProbes `json:"probes,omitempty"`
-
 	// Name of the Secret to use to pull images from the specified repository. It is not required if the cluster is configured with a global image pull secret.
-	// +operator-sdk:csv:customresourcedefinitions:order=52,type=spec,displayName="Pull Secret",xDescriptors="urn:alm:descriptor:io.kubernetes:Secret"
+	// +operator-sdk:csv:customresourcedefinitions:order=5,type=spec,displayName="Pull Secret",xDescriptors="urn:alm:descriptor:io.kubernetes:Secret"
 	PullSecret *string `json:"pullSecret,omitempty"`
 
-	// Represents a pod volume with data that is accessible to the containers.
+	// Name of the service account to use for deploying the application. A service account is automatically created if it's not specified.
+	// +operator-sdk:csv:customresourcedefinitions:order=6,type=spec,displayName="Service Account Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
+
+	// Create Knative resources and use Knative serving.
+	// +operator-sdk:csv:customresourcedefinitions:order=7,type=spec,displayName="Create Knative Service",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	CreateKnativeService *bool `json:"createKnativeService,omitempty"`
+
+	// Expose the application externally via a Route, a Knative Route or an Ingress resource.
+	// +operator-sdk:csv:customresourcedefinitions:order=8,type=spec,displayName="Expose",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	Expose *bool `json:"expose,omitempty"`
+
+	// Number of pods to create. Not applicable when .spec.autoscaling or .spec.createKnativeService is specified.
+	// +operator-sdk:csv:customresourcedefinitions:order=9,type=spec,displayName="Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:podCount"
+	Replicas *int32 `json:"replicas,omitempty"`
+
+	// +operator-sdk:csv:customresourcedefinitions:order=10,type=spec,displayName="Auto Scaling"
+	Autoscaling *RuntimeComponentAutoScaling `json:"autoscaling,omitempty"`
+
+	// Resource requests and limits for the application container.
+	// +operator-sdk:csv:customresourcedefinitions:order=11,type=spec,displayName="Resource Requirements",xDescriptors="urn:alm:descriptor:com.tectonic.ui:resourceRequirements"
+	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
+
+	// +operator-sdk:csv:customresourcedefinitions:order=12,type=spec,displayName="Probes"
+	Probes *RuntimeComponentProbes `json:"probes,omitempty"`
+
+	// +operator-sdk:csv:customresourcedefinitions:order=13,type=spec,displayName="Deployment"
+	Deployment *RuntimeComponentDeployment `json:"deployment,omitempty"`
+
+	// +operator-sdk:csv:customresourcedefinitions:order=14,type=spec,displayName="StatefulSet"
+	StatefulSet *RuntimeComponentStatefulSet `json:"statefulSet,omitempty"`
+
+	// +operator-sdk:csv:customresourcedefinitions:order=15,type=spec,displayName="Service"
+	Service *RuntimeComponentService `json:"service,omitempty"`
+
+	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec,displayName="Route"
+	Route *RuntimeComponentRoute `json:"route,omitempty"`
+
+	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Monitoring"
+	Monitoring *RuntimeComponentMonitoring `json:"monitoring,omitempty"`
+
+	// An array of environment variables for the application container.
 	// +listType=map
 	// +listMapKey=name
-	// +operator-sdk:csv:customresourcedefinitions:order=53,type=spec,displayName="Volume"
-	Volumes []corev1.Volume `json:"volumes,omitempty"`
-
-	// Represents where to mount the volumes into containers.
-	// +listType=atomic
-	// +operator-sdk:csv:customresourcedefinitions:order=54,type=spec,displayName="Volume Mounts"
-	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
-
-	// An array of environment variables following the format of {name, value}, where value is a simple string.
-	// +listType=map
-	// +listMapKey=name
-	// +operator-sdk:csv:customresourcedefinitions:order=55,type=spec,displayName="Env Var"
+	// +operator-sdk:csv:customresourcedefinitions:order=18,type=spec,displayName="Environment Variables"
 	Env []corev1.EnvVar `json:"env,omitempty"`
 
-	// An array of references to ConfigMap or Secret resources containing environment variables.
+	// List of sources to populate environment variables in the application container.
 	// +listType=atomic
-	// +operator-sdk:csv:customresourcedefinitions:order=56,type=spec,displayName="Env From"
+	// +operator-sdk:csv:customresourcedefinitions:order=19,type=spec,displayName="Environment Variables from Sources"
 	EnvFrom []corev1.EnvFromSource `json:"envFrom,omitempty"`
 
-	// List of containers that run before other containers in a pod.
+	// Represents a volume with data that is accessible to the application container.
 	// +listType=map
 	// +listMapKey=name
-	// +operator-sdk:csv:customresourcedefinitions:order=57,type=spec,displayName="Init Containers"
+	// +operator-sdk:csv:customresourcedefinitions:order=20,type=spec,displayName="Volumes"
+	Volumes []corev1.Volume `json:"volumes,omitempty"`
+
+	// Represents where to mount the volumes into the application container.
+	// +listType=atomic
+	// +operator-sdk:csv:customresourcedefinitions:order=21,type=spec,displayName="Volume Mounts"
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
+
+	// List of containers to run before other containers in a pod.
+	// +listType=map
+	// +listMapKey=name
+	// +operator-sdk:csv:customresourcedefinitions:order=22,type=spec,displayName="Init Containers"
 	InitContainers []corev1.Container `json:"initContainers,omitempty"`
 
-	// The list of sidecar containers. These are additional containers to be added to the pods.
+	// List of sidecar containers. These are additional containers to be added to the pods.
 	// +listType=map
 	// +listMapKey=name
-	// +operator-sdk:csv:customresourcedefinitions:order=58,type=spec,displayName="Sidecar Containers"
+	// +operator-sdk:csv:customresourcedefinitions:order=23,type=spec,displayName="Sidecar Containers"
 	SidecarContainers []corev1.Container `json:"sidecarContainers,omitempty"`
+
+	// +operator-sdk:csv:customresourcedefinitions:order=24,type=spec,displayName="Affinity"
+	Affinity *RuntimeComponentAffinity `json:"affinity,omitempty"`
 }
 
 // Define health checks on application container to determine whether it is alive or ready to receive traffic
 type RuntimeComponentProbes struct {
 	// Periodic probe of container liveness. Container will be restarted if the probe fails.
-	// +operator-sdk:csv:customresourcedefinitions:order=49,type=spec,displayName="Liveness Probe"
+	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Liveness Probe"
 	Liveness *corev1.Probe `json:"liveness,omitempty"`
 
 	// Periodic probe of container service readiness. Container will be removed from service endpoints if the probe fails.
-	// +operator-sdk:csv:customresourcedefinitions:order=50,type=spec,displayName="Readiness Probe"
+	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="Readiness Probe"
 	Readiness *corev1.Probe `json:"readiness,omitempty"`
 
 	// Probe to determine successful initialization. If specified, other probes are not executed until this completes successfully.
-	// +operator-sdk:csv:customresourcedefinitions:order=51,type=spec,displayName="Startup Probe"
+	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Startup Probe"
 	Startup *corev1.Probe `json:"startup,omitempty"`
 }
 
-// Configures a Pod to run on particular Nodes.
+// Configure pods to run on particular Nodes.
 type RuntimeComponentAffinity struct {
 
 	// Controls which nodes the pod are scheduled to run on, based on labels on the node.
@@ -172,18 +173,17 @@ type RuntimeComponentAffinity struct {
 
 // Configures the desired resource consumption of pods.
 type RuntimeComponentAutoScaling struct {
-
-	// Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler. Parameter spec.resourceConstraints.requests.cpu must also be specified.
+	// Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler. Parameter .spec.resources.requests.cpu must also be specified.
 	// +kubebuilder:validation:Minimum=1
-	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Max Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
+	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Max Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
 	MaxReplicas int32 `json:"maxReplicas,omitempty"`
 
 	// Lower limit for the number of pods that can be set by the autoscaler.
-	// +operator-sdk:csv:customresourcedefinitions:order=18,type=spec,displayName="Min Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
+	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="Min Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
 	MinReplicas *int32 `json:"minReplicas,omitempty"`
 
-	// Target average CPU utilization (represented as a percentage of requested CPU) over all the pods.
-	// +operator-sdk:csv:customresourcedefinitions:order=19,type=spec,displayName="Target CPU Utilization Percentage",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
+	// Target average CPU utilization, represented as a percentage of requested CPU, over all the pods.
+	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Target CPU Utilization Percentage",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
 	TargetCPUUtilizationPercentage *int32 `json:"targetCPUUtilizationPercentage,omitempty"`
 }
 
@@ -224,9 +224,11 @@ type RuntimeComponentService struct {
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
 
 	// An array consisting of service ports.
+	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec
 	Ports []corev1.ServicePort `json:"ports,omitempty"`
 
 	// Expose the application as a bindable service. Defaults to false.
+	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Bindable",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	Bindable *bool `json:"bindable,omitempty"`
 }
 
@@ -325,7 +327,7 @@ type RuntimeComponentStatus struct {
 	Conditions     []StatusCondition `json:"conditions,omitempty"`
 	ImageReference string            `json:"imageReference,omitempty"`
 
-	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Service Binding Secret",xDescriptors="urn:alm:descriptor:io.kubernetes:Secret"
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Service Binding"
 	Binding *corev1.LocalObjectReference `json:"binding,omitempty"`
 }
 
@@ -438,7 +440,7 @@ func (cr *RuntimeComponent) GetVolumeMounts() []corev1.VolumeMount {
 
 // GetResourceConstraints returns resource constraints
 func (cr *RuntimeComponent) GetResourceConstraints() *corev1.ResourceRequirements {
-	return cr.Spec.ResourceConstraints
+	return cr.Spec.Resources
 }
 
 // GetExpose returns expose flag
@@ -490,7 +492,7 @@ func (cr *RuntimeComponent) GetApplicationVersion() string {
 	return cr.Spec.ApplicationVersion
 }
 
-// GetApplicationName returns Application name to be used for integration with kAppNav
+// GetApplicationName returns Application name
 func (cr *RuntimeComponent) GetApplicationName() string {
 	return cr.Spec.ApplicationName
 }
@@ -750,8 +752,8 @@ func (cr *RuntimeComponent) Initialize() {
 		cr.Spec.PullPolicy = &pp
 	}
 
-	if cr.Spec.ResourceConstraints == nil {
-		cr.Spec.ResourceConstraints = &corev1.ResourceRequirements{}
+	if cr.Spec.Resources == nil {
+		cr.Spec.Resources = &corev1.ResourceRequirements{}
 	}
 
 	// Default applicationName to cr.Name, if a user sets createAppDefinition to true but doesn't set applicationName

@@ -4,6 +4,8 @@ This generic Operator is capable of deploying any application image and can be i
 
 This documentation refers to the latest codebase.  For documentation and samples of older releases, please check out the link:++https://github.com/application-stacks/runtime-component-operator/releases++[main releases] page and navigate the corresponding tag.
 
+**Important**: This user guide only applies to operator versions 0.8.0 and above. For operator versions 0.7.1 and below, refer to this link:++user-guide.adoc++[user guide].
+
 == Operator installation
 
 //Use the instructions for one of the link:++../deploy/releases++[releases] to install the operator into a Kubernetes cluster.
@@ -62,7 +64,6 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials.
 | `initContainers` | The list of link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#container-v1-core++[Init Container] definitions.
 | `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`.
-| `architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference.
 | `service.bindable` | A boolean to toggle whether the operator expose the application as a bindable service. The default value for this parameter is `false`.
 | `service.port` | The port exposed by the container.
 | `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`.
@@ -87,10 +88,10 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `autoscaling.maxReplicas` | Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler. It cannot be lower than the minimum number of replicas.
 | `autoscaling.minReplicas`   | Lower limit for the number of pods that can be set by the autoscaler.
 | `autoscaling.targetCPUUtilizationPercentage`   | Target average CPU utilization (represented as a percentage of requested CPU) over all the pods.
-| `resourceConstraints.requests.cpu` | The minimum required CPU core. Specify integers, fractions (e.g. 0.5), or millicore values(e.g. 100m, where 100m is equivalent to .1 core). Required field for autoscaling.
-| `resourceConstraints.requests.memory` | The minimum memory in bytes. Specify integers with one of these suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.
-| `resourceConstraints.limits.cpu` | The upper limit of CPU core. Specify integers, fractions (e.g. 0.5), or millicores values(e.g. 100m, where 100m is equivalent to .1 core).
-| `resourceConstraints.limits.memory` | The memory upper limit in bytes. Specify integers with suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.
+| `resources.requests.cpu` | The minimum required CPU core. Specify integers, fractions (e.g. 0.5), or millicore values(e.g. 100m, where 100m is equivalent to .1 core). Required field for autoscaling.
+| `resources.requests.memory` | The minimum memory in bytes. Specify integers with one of these suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.
+| `resources.limits.cpu` | The upper limit of CPU core. Specify integers, fractions (e.g. 0.5), or millicores values(e.g. 100m, where 100m is equivalent to .1 core).
+| `resources.limits.memory` | The memory upper limit in bytes. Specify integers with suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.
 | `env`   | An array of environment variables following the format of `{name, value}`, where value is a simple string. It may also follow the format of `{name, valueFrom}`, where valueFrom refers to a value in a `ConfigMap` or `Secret` resource. See link:++#environment-variables++[Environment variables] for more info.
 | `envFrom`   | An array of references to `ConfigMap` or `Secret` resources containing environment variables. Keys from `ConfigMap` or `Secret` resources become environment variable names in your container. See link:++#environment-variables++[Environment variables] for more info.
 | `probes.readiness`   | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes++[Kubernetes readiness probe] that controls when the pod is ready to receive traffic.
@@ -110,6 +111,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `affinity.nodeAffinityLabels` | A YAML object that contains set of required labels and their values.
 | `affinity.podAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podaffinity-v1-core++[PodAffinity].
 | `affinity.podAntiAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podantiaffinity-v1-core++[PodAntiAffinity].
+| `affinity.architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference.
 
 |===
 
@@ -291,7 +293,7 @@ Run multiple instances of your application for high availability using one of th
 __OR__
 
   - configure auto-scaling to create (and delete) instances based on resource consumption using the `autoscaling` parameter.
-  - Parameters `autoscaling.maxReplicas` and `resourceConstraints.requests.cpu` MUST be specified for auto-scaling.
+  - Parameters `.spec.autoscaling.maxReplicas` and `.spec.resources.requests.cpu` MUST be specified for auto-scaling.
 
 === Service ports
 
@@ -631,7 +633,7 @@ If it fails to find any, it searches the whole cluster to find `Application` CRs
 - The `Application` CRs have the same name as the value of the `applicationName` parameter.
 - The `RuntimeComponent` CR namespace is listed in the value of the `kappnav.component.namespaces` annotation.
 
-After the operator finds any `Application` CRs in the previous steps, it adds labels to the `RuntimeComponent` CR. These labels are listed in the `spec.selector.matchLabels` parameter. However, if the operator fails to find any `Application` CRs, and if the `createAppDefinition` parameter is not set to `false`, the operator configures the Kubernetes resources it generates. These Kubernetes resources are configured to allow automatic creation of an `Application` definition.
+After the operator finds any `Application` CRs in the previous steps, it adds labels to the `RuntimeComponent` CR. These labels are listed in the `.spec.selector.matchLabels` parameter. However, if the operator fails to find any `Application` CRs, and if the `createAppDefinition` parameter is not set to `false`, the operator configures the Kubernetes resources it generates. These Kubernetes resources are configured to allow automatic creation of an `Application` definition.
 
 _This feature is only available if you have kAppNav installed on your cluster. Auto creation of an application definition is not supported when Knative service is created_
 
@@ -892,7 +894,7 @@ spec:
           topologyKey: kubernetes.io/hostname
 ----
 
-See link:++https://github.com/application-stacks/runtime-component-operator/blob/master/examples/affinity/README.adocd++[Affinity Example] for more details
+See link:++https://github.com/application-stacks/runtime-component-operator/blob/master/examples/affinity/README.adoc++[Affinity Example] for more details
 
 === Day-2 Operations
 
