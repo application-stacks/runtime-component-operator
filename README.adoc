@@ -1,4 +1,4 @@
-image:https://travis-ci.org/application-stacks/runtime-component-operator.svg?branch=main["Build Status", link="https://travis-ci.org/application-stacks/runtime-component-operator"]
+image:https://travis-ci.com/application-stacks/runtime-component-operator.svg?branch=main["Build Status", link="https://travis-ci.com/application-stacks/runtime-component-operator"]
 
 = Runtime Component Operator
 
