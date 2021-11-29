@@ -78,7 +78,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `service.nodePort` | Node proxies this port into your service. Please note once this port is set to a non-zero value it cannot be reset to zero.
 | `service.annotations` | Annotations to be added to the service.
 | `service.certificate` | A YAML object that represents a link:++https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec++[Certificate].
-| `service.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.
+| `service.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod. The following keys are valid in the secret: `ca.crt`, `tls.crt`, and `tls.key`.
 | `service.provides.category` | Service binding type to be provided by this CR. At this time, the only allowed value is `openapi`.
 | `service.provides.protocol` | Protocol of the provided service. Defauts to `http`.
 | `service.provides.context` | Specifies context root of the service.
@@ -120,7 +120,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `route.termination`   | TLS termination policy. Can be one of `edge`, `reencrypt` and `passthrough`.
 | `route.insecureEdgeTerminationPolicy`   | HTTP traffic policy with TLS enabled. Can be one of `Allow`, `Redirect` and `None`.
 | `route.certificate`  | A YAML object that represents a link:++https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1alpha2.CertificateSpec++[Certificate].
-| `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
+| `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the route. It can also contain destination CA certificate. The following keys are valid in the secret: `ca.crt`, `destCA.crt`, `tls.crt`, and `tls.key`.
 | `affinity.nodeAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#nodeaffinity-v1-core++[NodeAffinity].
 | `affinity.nodeAffinityLabels` | A YAML object that contains set of required labels and their values.
 | `affinity.podAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podaffinity-v1-core++[PodAffinity].

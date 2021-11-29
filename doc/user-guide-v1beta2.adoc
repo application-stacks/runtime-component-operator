@@ -74,7 +74,7 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `service.type` | The Kubernetes link:++https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types++[Service Type].
 | `service.nodePort` | Node proxies this port into your service. Please note once this port is set to a non-zero value it cannot be reset to zero.
 | `service.annotations` | Annotations to be added to the service.
-| `service.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.
+| `service.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod. The following keys are valid in the secret: `ca.crt`, `tls.crt`, and `tls.key`.
 | `createKnativeService`   | A boolean to toggle the creation of Knative resources and usage of Knative serving.
 | `expose`   | A boolean that toggles the external exposure of this deployment via a Route or a Knative Route resource.
 | `deployment.updateStrategy`   | A field to specify the update strategy of the deployment. For more information, see link:++https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy++[updateStrategy]
@@ -109,7 +109,7 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `route.pathType`   | Path type to be used. Required field for Ingress. See link:++https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types++[Ingress path types].
 | `route.termination`   | TLS termination policy. Can be one of `edge`, `reencrypt` and `passthrough`.
 | `route.insecureEdgeTerminationPolicy`   | HTTP traffic policy with TLS enabled. Can be one of `Allow`, `Redirect` and `None`.
-| `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
+| `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the route. It can also contain destination CA certificate. The following keys are valid in the secret: `ca.crt`, `destCA.crt`, `tls.crt`, and `tls.key`.
 | `affinity.nodeAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#nodeaffinity-v1-core++[NodeAffinity].
 | `affinity.nodeAffinityLabels` | A YAML object that contains set of required labels and their values.
 | `affinity.podAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podaffinity-v1-core++[PodAffinity].
@@ -519,17 +519,13 @@ spec:
 
 By setting `.spec.expose` field, the operator creates an unsecured route based on your application service. Setting this field is the same as running `oc expose service <service-name>`.
 
-To create a secured HTTPS route, see the link:++#certificate-manager-integration++[Certificate Manager Integration] section for more information.
-
-_This feature is only available if you are running on OKD or OpenShift._
-
+To create a secured HTTPS route, see the link:++#certificates++[Certificates] section.
 
 ==== Non-Knative deployment (Ingress)
 
 Before you can use the Ingress resource to expose your cluster, you must install an ingress controller, such a Nginx or Traefik.
 
-_The Ingress resource is created only if the `Route` resource is not available._
-
+_The Ingress resource is created only if the `Route` resource is not available on the cluster._
 
 To use the Ingress resource, set the `defaultHostName` variable in the _runtime-component-operator_ ConfigMap object to a host name such as _mycompany.com_
 
@@ -551,9 +547,9 @@ spec:
 With default hostname of _mycompany.com_, the application is available at the http://my-app-backend.mycompany.com URL.
 
 
-===== Enable TLS and generate a certificate by using the cert-manager controller:
+===== Enable TLS
 
-_Note: You must install the cert-manager controller to automatically generate a custom certificate for the ingress controller._
+Generate your certificate and specify the secret containing the certificate using `.spec.route.certificateSecretRef` field: 
 
 [source,yaml]
 ----
@@ -566,7 +562,7 @@ spec:
   applicationImage: quay.io/my-repo/my-app:1.0
   expose: true
   route:
-    certificate: {}
+    certificateSecretRef: mycompany-tls
 ----
 
 ===== Advanced Ingress configuration:
