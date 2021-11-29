@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rco-controller-manager
+  namespace: rco-ns2
+spec:
+  template:
+    spec:
+      containers:
+        - name: manager
+          env:
+            - name: WATCH_NAMESPACE
+              value: rco-watched-ns2
