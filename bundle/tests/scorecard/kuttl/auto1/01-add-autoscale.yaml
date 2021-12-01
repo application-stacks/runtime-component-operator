@@ -3,7 +3,7 @@ kind: RuntimeComponent
 metadata:
   name: autoscaling1-rc
 spec:
-  resourceConstraints:
+  resources:
     requests:
       cpu: "0.2"
   autoscaling:

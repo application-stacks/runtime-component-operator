@@ -193,7 +193,7 @@ spec:
     and how they are connected.  
 
 
-    See our [**documentation**](https://github.com/application-stacks/runtime-component-operator/tree/master/doc/)
+    See our [**documentation**](https://github.com/application-stacks/runtime-component-operator/tree/main/doc/)
     for more information.
 
     '
@@ -355,7 +355,7 @@ spec:
   - Application Stacks
   links:
   - name: Documentation
-    url: https://github.com/application-stacks/runtime-component-operator/blob/master/doc
+    url: https://github.com/application-stacks/runtime-component-operator/blob/main/doc
   maintainers:
   - email: dzmitry@ca.ibm.com
     name: Artur Dzmitryieu

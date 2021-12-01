@@ -11,12 +11,20 @@
 
 set -Eeo pipefail
 
-readonly usage="Usage: build-manifest.sh -u <docker-username> -p <docker-password> --image repository/image"
+readonly usage="Usage: $0 -u <docker-username> -p <docker-password> --image [registry/]repository/image"
+readonly script_dir="$(dirname "$0")"
+readonly release_blocklist="${script_dir}/release-blocklist.txt"
 
 main() {
-  parse_args $@
+  parse_args "$@"
 
-  if [[ -z "${USER}" || -z "${PASS}" ]]; then
+  if [[ -z "${TARGET}" ]]; then
+    echo "****** Missing target release for operator manifest lists, see usage"
+    echo "${usage}"
+    exit 1
+  fi
+
+  if [[ -z "${DOCKER_USERNAME}" || -z "${DOCKER_PASSWORD}" ]]; then
     echo "****** Missing docker authentication information, see usage"
     echo "${usage}"
     exit 1
@@ -28,48 +36,59 @@ main() {
     exit 1
   fi
 
-  if [[ -z "${REGISTRY}" ]]; then 
-    echo "${PASS}" | docker login -u "${USER}" --password-stdin
+  if [[ -z "${REGISTRY}" ]]; then  
+    echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
   else
-    echo "${PASS}" | docker login "${REGISTRY}" -u "${USER}" --password-stdin
-  fi  
+    echo "${DOCKER_PASSWORD}" | docker login "${REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin
+  fi      
 
-  if [[ "${TRAVIS}" != "true" ]] || [[ "${TRAVIS_PULL_REQUEST}" != "false" ]] || [[ "${TRAVIS_BRANCH}" != "master" ]]; then
-    echo "****** Skipping manifest for: daily"
-    exit 0
+  # Build manifest for target release(s)
+  if [[ "${TARGET}" != "releases" ]]; then
+    # Remove 'v' prefix from any releases matching version regex `\d+\.\d+\.\d+.*`
+    if [[ "${TARGET}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+      readonly release_tag="${TARGET#*v}"
+    else
+      readonly release_tag="${TARGET}"
+    fi
+    build_manifest "${release_tag}"
+  else
+    build_manifests
   fi
-
-  echo "****** Building manifest for: daily"
-  build_manifest "daily"
 }
 
+build_manifest() {
+  local tag="$1"
+  echo "****** Building manifest for: ${tag}"
+
+  ## try to build manifest but allow failure
+  ## this allows new release builds
+  local target="${IMAGE}:${tag}"
+  # TODO: Add back in linux/s390x and linux/ppc64le once build platforms are back up
+  # --platforms "linux/amd64,linux/s390x,linux/ppc64le" \
+  manifest-tool push from-args \
+    --platforms "linux/amd64" \
+    --template "${target}-ARCH" \
+    --target "${target}" \
+    || echo "*** WARN: Target architectures not available"
+}
+
+# Build manifest for previous releases
 build_manifests() {
-  local tags=$(git tag -l)
+  tags="$(git tag -l)"
   while read -r tag; do
     if [[ -z "${tag}" ]]; then
       break
     fi
 
-    ## Remove potential leading 'v' from tags
-    local dockerTag="${tag#*v}"
-    echo "****** Building manifest list for: ${dockerTag}"
-    build_manifest "${dockerTag}"
-  done <<< "${tags}"
-}
+    # Skip any releases listed in the release blocklist
+    if grep -q "^${tag}$" "${release_blocklist}"; then
+      echo "Release ${tag} found in blocklist. Skipping..."
+      continue
+    fi
 
-build_manifest() {
-  local tag="$1"
-  ## try to build manifest but allow failure
-  ## this allows new release builds
-  local target="${IMAGE}:${tag}"
-  if [[ -n "${REGISTRY}" ]]; then 
-    target="${REGISTRY}/${IMAGE}:${tag}"
-  fi  
-  manifest-tool push from-args \
-    --platforms "linux/amd64,linux/s390x,linux/ppc64le" \
-    --template "${target}-ARCH" \
-    --target "${target}" \
-    || echo "*** WARN: Target archs not available"
+    local release_tag="${tag#*v}"
+    build_manifest "${release_tag}"
+  done <<< "${tags}"
 }
 
 parse_args() {
@@ -77,11 +96,11 @@ parse_args() {
     case "$1" in
     -u)
       shift
-      readonly USER="${1}"
+      readonly DOCKER_USERNAME="${1}"
       ;;
     -p)
       shift
-      readonly PASS="${1}"
+      readonly DOCKER_PASSWORD="${1}"
       ;;
     --registry)
       shift
@@ -90,6 +109,10 @@ parse_args() {
     --image)
       shift
       readonly IMAGE="${1}"
+      ;;
+    --target)
+      shift
+      readonly TARGET="${1}"
       ;;
     *)
       echo "Error: Invalid argument - $1"
@@ -101,4 +124,4 @@ parse_args() {
   done
 }
 
-main $@
+main "$@"

@@ -1,8 +1,9 @@
 #!/bin/bash
 
-readonly usage="Usage: e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace> --registry-user <user> --registry-password <password>"
+readonly usage="Usage: e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace> --registry-user <user> --registry-password <password> --release <daily|release-tag> --test-tag <test-id>"
 #readonly SERVICE_ACCOUNT="travis-tests"
-readonly OC_CLIENT_VERSION="4.7.0"
+readonly OC_CLIENT_VERSION="4.6.0"
+readonly CONTROLLER_MANAGER_NAME="rco-controller-manager"
 
 # setup_env: Download oc cli, log into our persistent cluster, and create a test project
 setup_env() {
@@ -13,13 +14,13 @@ setup_env() {
 
     # Start a cluster and login
     echo "****** Logging into remote cluster..."
-    oc login "${OC_URL}" -u kubeadmin -p "${OC_TOKEN}" --insecure-skip-tls-verify=true
+    oc login "${CLUSTER_URL}" -u kubeadmin -p "${CLUSTER_TOKEN}" --insecure-skip-tls-verify=true
 
     # Set variables for rest of script to use
     #readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
-    readonly TEST_NAMESPACE="runtime-operator-test-${TRAVIS_BUILD_NUMBER}"
-    readonly BUILD_IMAGE="${REGISTRY_NAME}/${REGISTRY_NAMESPACE}/rco-operator:daily"
-    readonly BUNDLE_IMAGE="${REGISTRY_NAME}/${REGISTRY_NAMESPACE}/rco-operator:bundle-daily"
+    readonly TEST_NAMESPACE="runtime-operator-test-${TEST_TAG}"
+    readonly BUILD_IMAGE="${REGISTRY_NAME}/${REGISTRY_NAMESPACE}/rco-operator:${RELEASE}"
+    readonly BUNDLE_IMAGE="${REGISTRY_NAME}/${REGISTRY_NAMESPACE}/rco-operator:bundle-${RELEASE}"
 
     echo "****** Creating test namespace: ${TEST_NAMESPACE}"
     oc new-project "${TEST_NAMESPACE}" || oc project "${TEST_NAMESPACE}"
@@ -140,11 +141,11 @@ parse_args() {
       ;;
     --cluster-url)
       shift
-      readonly OC_URL="${1}"
+      readonly CLUSTER_URL="${1}"
       ;;
     --cluster-token)
       shift
-      readonly OC_TOKEN="${1}"
+      readonly CLUSTER_TOKEN="${1}"
       ;;
     --registry-name)
       shift

@@ -7,10 +7,15 @@ kind: Deployment
 metadata:
   name: example-runtime-component
 status:
+  replicas: 1
   readyReplicas: 1
+  updatedReplicas: 1
 ---
 apiVersion: v1
 kind: Pod
 spec:   
   containers:
   - imagePullPolicy: "Never"
+metadata:
+  labels:
+    app.kubernetes.io/instance: example-runtime-component

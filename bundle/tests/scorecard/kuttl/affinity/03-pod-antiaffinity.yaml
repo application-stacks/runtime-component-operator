@@ -1,0 +1,23 @@
+# Check if there is a matching pod anti-affinity a correct deployment is created and status has a readied pod
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: anti-affinity-pod-rc
+  labels:
+    test: affinity
+spec:
+  # Add fields here
+  applicationImage: 'k8s.gcr.io/pause:2.0'
+  replicas: 1
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/instance
+              operator: In
+              values:
+                - node-affinity-label-rc
+          topologyKey: kubernetes.io/hostname
