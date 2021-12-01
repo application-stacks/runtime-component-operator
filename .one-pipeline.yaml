@@ -81,8 +81,6 @@ containerize:
     export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key)  
     PIPELINE_REGISTRY=$(get_env pipeline-registry)
     PIPELINE_OPERATOR_IMAGE=$(get_env pipeline-operator-image)  
-    make install-podman
-    make install-opm
     # Build amd64 image
     make build-pipeline-releases
     # Build ppc64le and s390x images
@@ -90,8 +88,7 @@ containerize:
     # Build manifest
     make build-pipeline-manifest    
     # Build bundle image
-    echo $(get_env ibmcloud-api-key) | docker login $PIPELINE_REGISTRY -u "$(get_env ibmcloud-api-user)" --password-stdin
-    make bundle-pipeline-releases
+    ./scripts/pipeline/launch-catalog-build.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
     # Save artifacts
     #declare -a tags=("daily-amd64" "daily-ppc64le" "daily-s390x") 
     declare -a tags=("daily-amd64") 
