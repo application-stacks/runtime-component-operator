@@ -3,6 +3,6 @@ kind: RuntimeComponent
 metadata:
   name: scale3-runtime-component
 spec:
-  resourceConstraints:
+  resources:
   autoscaling:
 

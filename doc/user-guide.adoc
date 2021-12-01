@@ -4,6 +4,8 @@ This generic Operator is capable of deploying any application image and can be i
 
 This documentation refers to the latest codebase.  For documentation and samples of older releases, please check out the link:++https://github.com/application-stacks/runtime-component-operator/releases++[main releases] page and navigate the corresponding tag.
 
+**Important**: This user guide only applies to operator versions 0.7.1 and below. For operator versions 0.8.0 and above, refer to this link:++user-guide-v1beta2.adoc++[user guide].
+
 == Operator installation
 
 Use the instructions for one of the link:++../deploy/releases++[releases] to install the operator into a Kubernetes cluster.
@@ -110,8 +112,8 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `storage.size` | A convenient field to set the size of the persisted storage. Can be overridden by the `storage.volumeClaimTemplate` property.
 | `storage.mountPath` | The directory inside the container where this persisted storage will be bound to.
 | `storage.volumeClaimTemplate` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components++[volumeClaimTemplate] component of a `StatefulSet`.
-| `monitoring.labels` | Labels to set on link:++https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitor++[ServiceMonitor].
-| `monitoring.endpoints` | A YAML snippet representing an array of link:++https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#endpoint++[Endpoint] component from ServiceMonitor.
+| `monitoring.labels` | Labels to set on link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#servicemonitor++[ServiceMonitor].
+| `monitoring.endpoints` | A YAML snippet representing an array of link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#endpoint++[Endpoint] component from ServiceMonitor.
 | `route.annotations` | Annotations to be added to the Route.
 | `route.host`   | Hostname to be used for the Route.
 | `route.path`   | Path to be used for Route.
@@ -586,7 +588,7 @@ spec:
 
 ==== Advanced monitoring specification
 
-For advanced scenarios, it is possible to set many `ServicerMonitor` settings such as authentication secret using link:++https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#endpoint++[Prometheus Endpoint]
+For advanced scenarios, it is possible to set many `ServicerMonitor` settings such as authentication secret using link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#endpoint++[Prometheus Endpoint]
 
 [source,yaml]
 ----
@@ -614,7 +616,7 @@ spec:
 
 === Knative support
 
-Runtime Component Operator can deploy serverless applications with link:++https://knative.dev/docs/++[Knative] on a Kubernetes cluster. To achieve this, the operator creates a link:++https://github.com/knative/serving/blob/master/docs/spec/spec.md#service++[Knative `Service`] resource which manages the whole life cycle of a workload.
+Runtime Component Operator can deploy serverless applications with link:++https://knative.dev/docs/++[Knative] on a Kubernetes cluster. To achieve this, the operator creates a link:++https://github.com/knative/serving/blob/main/docs/spec/spec.md#service++[Knative `Service`] resource which manages the whole life cycle of a workload.
 
 To create Knative service, set `createKnativeService` to `true`:
 
@@ -1036,7 +1038,7 @@ spec:
           topologyKey: kubernetes.io/hostname
 ----
 
-See link:++https://github.com/application-stacks/runtime-component-operator/blob/master/examples/affinity/README.adocd++[Affinity Example] for more details
+See link:++https://github.com/application-stacks/runtime-component-operator/blob/main/examples/affinity/README.adoc++[Affinity Example] for more details
 
 === Day-2 Operations
 

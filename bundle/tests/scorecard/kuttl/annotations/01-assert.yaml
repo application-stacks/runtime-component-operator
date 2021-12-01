@@ -14,7 +14,9 @@ spec:
         foo1: bar1
         conflict: statefulSet
 status:
+  replicas: 1
   readyReplicas: 1
+  updatedReplicas: 1
 ---
 apiVersion: v1
 kind: Service
@@ -30,3 +32,6 @@ metadata:
     bar2: foo2
     foo1: bar1
     conflict: statefulSet
+  labels:
+    app.kubernetes.io/instance: rc-deployment-annotations
+

@@ -13,4 +13,6 @@ spec:
       maxSurge: 1
       maxUnavailable: 2
 status:
+  replicas: 3
   readyReplicas: 3
+  updatedReplicas: 3

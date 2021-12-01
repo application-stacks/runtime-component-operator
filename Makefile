@@ -4,15 +4,21 @@ OPERATOR_SDK_RELEASE_VERSION ?= v1.6.4
 VERSION ?= 0.8.0
 
 OPERATOR_IMAGE ?= applicationstacks/operator
-OPERATOR_IMAGE_TAG ?= daily
 PIPELINE_REGISTRY ?= cp.stg.icr.io
 PIPELINE_REGISTRY_NAMESPACE ?= cp
 PIPELINE_OPERATOR_IMAGE ?= ${PIPELINE_REGISTRY_NAMESPACE}/rco-operator
 
+# Type of release. Can be "daily", "releases", or a release tag.
+RELEASE_TARGET := $(or ${RELEASE_TARGET}, ${TRAVIS_TAG}, daily)
+
+PUBLISH_REGISTRY=docker.io
 
 # Default bundle image tag
 BUNDLE_IMG ?= applicationstacks/operator:bundle-daily
+
 # Options for 'bundle-build'
+CHANNELS ?= beta2
+DEFAULT_CHANNEL ?= beta2
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
 endif
@@ -21,8 +27,12 @@ BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
 endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
+# Default catalog image tag
+CATALOG_IMG ?= applicationstacks/operator:catalog-daily
+
 # Image URL to use all building/pushing image targets
 IMG ?= applicationstacks/operator:daily
+
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:crdVersions=v1,trivialVersions=true,preserveUnknownFields=false,generateEmbeddedObjectMeta=true"
 
@@ -140,7 +150,7 @@ bundle-build:
 
 .PHONY: bundle-push
 bundle-push: docker-login
-	docker push ${BUNDLE_IMG}
+	docker push "${PUBLISH_REGISTRY}/${BUNDLE_IMG}"
 
 setup: ## Ensure Operator SDK is installed
 	./scripts/installers/install-operator-sdk.sh ${OPERATOR_SDK_RELEASE_VERSION}
@@ -148,40 +158,55 @@ setup: ## Ensure Operator SDK is installed
 unit-test: ## Run unit tests
 	go test -v -mod=vendor -tags=unit github.com/application-stacks/runtime-component-operator/...
 
-build-image: ## Build operator Docker image and tag with "${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG}"
-	docker build -t ${OPERATOR_IMAGE}:${OPERATOR_IMAGE_TAG} .
-
-build-multiarch-image: ## Build operator image
-	./scripts/build-releases.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
-
-push-multiarch-image: ## Push operator image
-	./scripts/build-releases.sh --push -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
-
-build-pipeline-multiarch-image: ## Build operator image
-	./scripts/build-releases.sh -u "${PIPELINE_USERNAME}" -p "${PIPELINE_PASSWORD}" --registry "${PIPELINE_REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}"
-
-push-pipeline-multiarch-image: ## Push operator image
-	./scripts/build-releases.sh --push -u "${PIPELINE_USERNAME}" -p "${PIPELINE_PASSWORD}" --registry "${PIPELINE_REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}"
-
 docker-login:
 	docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" 
 	
 build-manifest: setup-manifest
-	./scripts/build-manifest.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --image "${OPERATOR_IMAGE}"
+	./scripts/build-manifest.sh --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}" --target "${RELEASE_TARGET}"
 
 build-pipeline-manifest: setup-manifest
-	./scripts/build-manifest.sh -u "${PIPELINE_USERNAME}" -p "${PIPELINE_PASSWORD}" --registry "${PIPELINE_REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}"
+	./scripts/build-manifest.sh -u "${PIPELINE_USERNAME}" -p "${PIPELINE_PASSWORD}" --registry "${PIPELINE_REGISTRY}" --image "${PIPELINE_REGISTRY}/${PIPELINE_OPERATOR_IMAGE}"	--target "${RELEASE_TARGET}"
 
 setup-manifest:
 	./scripts/installers/install-manifest-tool.sh
 
 test-e2e:
-	./scripts/e2e.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" \
-                     --cluster-url "${CLUSTER_URL}" --cluster-token "${CLUSTER_TOKEN}" \
-                     --registry-name default-route --registry-namespace openshift-image-registry
+	./scripts/e2e-release.sh --registry-name default-route --registry-namespace openshift-image-registry \
+                     --test-tag "${TRAVIS_BUILD_NUMBER}" --target "${RELEASE_TARGET}"
 
 test-pipeline-e2e:
 	./scripts/pipeline/fyre-e2e.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" \
                      --cluster-url "${CLUSTER_URL}" --cluster-token "${CLUSTER_TOKEN}" \
                      --registry-name "${PIPELINE_REGISTRY}" --registry-namespace "${PIPELINE_REGISTRY_NAMESPACE}" \
-					 --registry-user "${PIPELINE_USERNAME}" --registry-password "${PIPELINE_PASSWORD}"					 
+					 --registry-user "${PIPELINE_USERNAME}" --registry-password "${PIPELINE_PASSWORD}" \
+                     --test-tag "${TRAVIS_BUILD_NUMBER}" --release "${RELEASE_TARGET}"					 
+
+build-releases:
+	./scripts/build-releases.sh --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}" --target "${RELEASE_TARGET}"
+
+build-pipeline-releases:
+	./scripts/build-releases.sh -u "${PIPELINE_USERNAME}" -p "${PIPELINE_PASSWORD}" --registry "${PIPELINE_REGISTRY}" --image "${PIPELINE_REGISTRY}/${PIPELINE_OPERATOR_IMAGE}"	--target "${RELEASE_TARGET}"
+
+bundle-releases:
+	./scripts/bundle-releases.sh --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}" --target "${RELEASE_TARGET}"
+
+bundle-pipeline-releases:	
+    ./scripts/bundle-releases.sh -u "${PIPELINE_USERNAME}" -p "${PIPELINE_PASSWORD}" --registry "${PIPELINE_REGISTRY}" --image "${PIPELINE_REGISTRY}/${PIPELINE_OPERATOR_IMAGE}"	--target "${RELEASE_TARGET}"
+
+install-podman:
+	./scripts/installers/install-podman.sh
+
+install-opm:
+	./scripts/installers/install-opm.sh
+
+bundle-build-podman:
+	podman build -f bundle.Dockerfile -t "${BUNDLE_IMG}"
+
+bundle-push-podman:
+	podman push --format=docker "${BUNDLE_IMG}"
+
+build-catalog:
+	opm index add --bundles "${BUNDLE_IMG}" --tag "${CATALOG_IMG}"
+
+push-catalog: docker-login
+	podman push --format=docker "${CATALOG_IMG}"

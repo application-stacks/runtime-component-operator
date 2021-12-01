@@ -3,4 +3,6 @@ kind: Deployment
 metadata:
   name: route
 status:
+  replicas: 1
   readyReplicas: 1
+  updatedReplicas: 1

@@ -1,0 +1,24 @@
+# Check that if there is a matching node affinity lab a pod is created
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: node-affinity-rc
+  labels:
+    test: affinity
+spec:
+  # Add fields here
+  applicationImage: 'k8s.gcr.io/pause:2.0'
+  replicas: 1
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kuttlTest
+                operator: In
+                values:
+                  - test1
+  statefulSet:
+    storage:
+      size: "10Mi"
+      mountPath: "/mnt/data"

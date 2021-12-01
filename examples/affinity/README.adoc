@@ -40,7 +40,7 @@ worker2.shames.os.fyre.ibm.com   Ready    worker   26d   v1.16.2   beta.kubernet
 
 In this cluster, the `coffeeshop-frontend` and `coffeeshop-backend` applications are co-located on the same nodes with the SSD storage types.
 
-The following YAML snippet consists of the `RuntimeComponent` custom resource (CR) for the `coffeeshop-backend` application with two replicas. The custom resource has the `.spec.affinity.podAntiAffinity` field configured to ensure that the scheduler does not co-locate pods for the application on a single node. As described in the link:++https://github.com/application-stacks/runtime-component-operator/blob/master/doc/user-guide.adoc#labels++[user guide], the application pods are labeled with `app.kubernetes.io/instance: metadata.name`.
+The following YAML snippet consists of the `RuntimeComponent` custom resource (CR) for the `coffeeshop-backend` application with two replicas. The custom resource has the `.spec.affinity.podAntiAffinity` field configured to ensure that the scheduler does not co-locate pods for the application on a single node. As described in the link:++https://github.com/application-stacks/runtime-component-operator/blob/main/doc/user-guide.adoc#labels++[user guide], the application pods are labeled with `app.kubernetes.io/instance: metadata.name`.
 
 The custom resource also has the `spec.affinity.nodeAffinityLabels` field configured to ensure that the pods run on nodes with the `disktype: ssd` label.
 
@@ -121,4 +121,4 @@ coffeeshop-frontend-789c585488-9m529   1/1     Running   0          5m52s   10.2
 
 The output shows that no more than one pod per application is running on a single node. Also, the pods for the two applications are co-located on the same node.
 
-This scenario illustrates how to use the link:++https://github.com/application-stacks/runtime-component-operator/blob/master/doc/user-guide.adoc#affinity++[Affinity] feature in the Runtime Component Operator to assign pods to certain nodes within a cluster.
+This scenario illustrates how to use the link:++https://github.com/application-stacks/runtime-component-operator/blob/main/doc/user-guide.adoc#affinity++[Affinity] feature in the Runtime Component Operator to assign pods to certain nodes within a cluster.

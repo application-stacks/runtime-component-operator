@@ -7,7 +7,9 @@ kind: Deployment
 metadata:
   name: scale3-runtime-component
 status:
+  replicas: 3
   readyReplicas: 3
+  updatedReplicas: 3
 ---
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler

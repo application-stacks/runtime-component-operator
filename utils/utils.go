@@ -893,10 +893,12 @@ func CustomizeIngress(ing *networkingv1.Ingress, ba common.BaseComponent) {
 	servicePort := strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
 	host := ""
 	path := ""
+	var pathType networkingv1.PathType
 	rt := ba.GetRoute()
 	if rt != nil {
 		host = rt.GetHost()
 		path = rt.GetPath()
+		pathType = rt.GetPathType()
 		ing.Annotations = MergeMaps(ing.Annotations, ba.GetAnnotations(), rt.GetAnnotations())
 	} else {
 		ing.Annotations = MergeMaps(ing.Annotations, ba.GetAnnotations())
@@ -921,7 +923,8 @@ func CustomizeIngress(ing *networkingv1.Ingress, ba common.BaseComponent) {
 				HTTP: &networkingv1.HTTPIngressRuleValue{
 					Paths: []networkingv1.HTTPIngressPath{
 						{
-							Path: path,
+							Path:     path,
+							PathType: &pathType,
 							Backend: networkingv1.IngressBackend{
 								Service: &networkingv1.IngressServiceBackend{
 									Name: obj.GetName(),
