@@ -25,8 +25,13 @@ ibmcloud_region_set() {
 }
 
 ibmcloud_image_inspect() {
-  echo -e "Details for image: $1"
-  ibmcloud cr image-inspect "$1"
+  input_image=$1
+  if [[ $input_image =~ ^cp. ]]; then
+    input_image=$(echo "$input_image" | cut -d . -f2-)
+  fi
+
+  echo -e "Details for image: $input_image"
+  ibmcloud cr image-inspect "$input_image"
 }
 
 find_registry_region() {
