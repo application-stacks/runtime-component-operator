@@ -50,6 +50,7 @@ static-scan:
     "${ONE_PIPELINE_PATH}"/internal/sonarqube/sonarqube_run    
 containerize:
   dind: true
+  abort_on_failure: true  
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     #!/usr/bin/env bash
