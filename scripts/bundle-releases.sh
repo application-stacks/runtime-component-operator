@@ -68,11 +68,13 @@ bundle_release() {
 
   # Build the bundle
   local bundle_ref="${IMAGE}:bundle-${release_tag}"
-  make kustomize bundle bundle-build-podman bundle-push-podman IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}"
+  echo "Operator ${operator_ref}, bundle ${bundle_ref}"
+  ##make kustomize bundle bundle-build-podman bundle-push-podman IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}"
 
   # Build the catalog
   local catalog_ref="${IMAGE}:catalog-${release_tag}"
-  make build-catalog push-catalog IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}" CATALOG_IMG="${catalog_ref}"
+  echo "Catalog ${catalog_ref}"
+  ##make build-catalog push-catalog IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}" CATALOG_IMG="${catalog_ref}"
 }
 
 bundle_releases() {

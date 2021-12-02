@@ -59,17 +59,18 @@ main() {
 build_manifest() {
   local tag="$1"
   echo "****** Building manifest for: ${tag}"
+  echo " Image is ${target}" 
 
   ## try to build manifest but allow failure
   ## this allows new release builds
   local target="${IMAGE}:${tag}"
   # TODO: Add back in linux/s390x and linux/ppc64le once build platforms are back up
   # --platforms "linux/amd64,linux/s390x,linux/ppc64le" \
-  manifest-tool push from-args \
-    --platforms "linux/amd64" \
-    --template "${target}-ARCH" \
-    --target "${target}" \
-    || echo "*** WARN: Target architectures not available"
+  ##manifest-tool push from-args \
+  ##  --platforms "linux/amd64" \
+  ##  --template "${target}-ARCH" \
+  ##  --target "${target}" \
+  ##  || echo "*** WARN: Target architectures not available"
 }
 
 # Build manifest for previous releases

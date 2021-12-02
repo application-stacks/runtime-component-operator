@@ -89,7 +89,7 @@ build_release() {
 
 push_release() {
   echo "****** Pushing image: ${full_image}"
-  docker push "${full_image}"
+  ##docker push "${full_image}"
 }
 
 parse_args() {
