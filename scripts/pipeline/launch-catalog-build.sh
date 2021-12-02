@@ -103,13 +103,13 @@ function launch_travis() {
                 ],    
                 \"stages\": [
                     {
-                        \"name\": \"build-bundle\"
+                        \"name\": \"build\"
                     }
                 ],    
                 \"jobs\": {
                     \"include\": [
                         {
-                            \"stage\": \"build-bundle\",
+                            \"stage\": \"build\",
                             \"name\": \"Build bundle on amd64\",
                             \"os\": \"linux\",
                             \"arch\": \"amd64\",
