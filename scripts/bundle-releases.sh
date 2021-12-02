@@ -71,7 +71,11 @@ bundle_release() {
 
   # Build the catalog
   local catalog_ref="${IMAGE}:catalog-${release_tag}"
-  make build-catalog push-catalog IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}" CATALOG_IMG="${catalog_ref}"
+  if [[ -z "${REGISTRY}" ]]; then 
+    make build-catalog push-catalog IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}" CATALOG_IMG="${catalog_ref}"
+  else
+    make build-catalog push-pipeline-catalog IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}" CATALOG_IMG="${catalog_ref}"    
+  fi  
 }
 
 bundle_releases() {

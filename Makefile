@@ -210,3 +210,6 @@ build-catalog:
 
 push-catalog: docker-login
 	podman push --format=docker "${CATALOG_IMG}"
+
+push-pipeline-catalog: 
+	podman push --format=docker "${CATALOG_IMG}"
