@@ -11,4 +11,3 @@ spec:
           env:
             - name: WATCH_NAMESPACE
               value: rco-watched-ns2
-              valueFrom:
