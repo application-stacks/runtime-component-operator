@@ -80,7 +80,7 @@ main() {
     fi
 
     if [[ -z "${REGISTRY_NAME}" ]] || [[ -z "${REGISTRY_NAMESPACE}" ]]; then
-        echo "****** Missing registry name or registry namespace, see usage"
+        echo "****** Missing OCP registry name or registry namespace, see usage"
         echo "${usage}"
         exit 1
     fi
@@ -103,19 +103,31 @@ main() {
     # login to docker to avoid rate limiting during build
     echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
-    echo "****** Building image..."
-    docker build -t "${BUILD_IMAGE}" .
+    #echo "****** Building image..."
+    #docker build -t "${BUILD_IMAGE}" .
 
-    echo "****** Building bundle..."
-    IMG="${BUILD_IMAGE}" BUNDLE_IMG="${BUNDLE_IMAGE}" make kustomize bundle bundle-build
+    #echo "****** Building bundle..."
+    #IMG="${BUILD_IMAGE}" BUNDLE_IMG="${BUNDLE_IMAGE}" make kustomize bundle bundle-build
 
     #echo "****** Pushing operator and operator bundle images into registry..."
     #push_images
 
+    trap "rm -f /tmp/pull-secret-*.yaml" EXIT
+
     echo "****** Logging into private registry..."
     echo "${REGISTRY_PASSWORD}" | docker login ${REGISTRY_NAME} -u "${REGISTRY_USER}" --password-stdin
+
     echo "****** Creating pull secret..."
-    oc create secret docker-registry regcred --docker-server=${REGISTRY_NAME} "--docker-username=${REGISTRY_USER}" "--docker-password=${REGISTRY_PASSWORD}" --docker-email=unused
+    oc create secret docker-registry regcred --docker-server=${REGISTRY_NAME} "--docker-username=${REGISTRY_USER}" "--docker-password=${REGISTRY_PASSWORD}" --docker-email=unused 
+
+    oc get secret/regcred -o jsonpath='{.data.\.dockerconfigjson}' | base64 --decode > /tmp/pull-secret-new.yaml
+    oc get secret/pull-secret -n openshift-config -o jsonpath='{.data.\.dockerconfigjson}' | base64 --decode > /tmp/pull-secret-global.yaml
+
+    jq -s '.[1] * .[0]' /tmp/pull-secret-new.yaml /tmp/pull-secret-global.yaml > /tmp/pull-secret-merged.yaml
+
+    echo "Updating global pull secret"
+    oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=/tmp/pull-secret-merged.yaml
+
     echo "****** Installing bundle..."
     operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}" || {
         echo "****** Installing bundle failed..."
