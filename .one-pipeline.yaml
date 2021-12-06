@@ -85,11 +85,11 @@ containerize:
     # Build amd64 image
     make build-pipeline-releases
     # Build ppc64le and s390x images
-    ./scripts/pipeline/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
+    ##./scripts/pipeline/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
     # Build manifest
-    make build-pipeline-manifest    
+    ##make build-pipeline-manifest    
     # Build bundle image
-    ./scripts/pipeline/launch-catalog-build.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
+    ##./scripts/pipeline/launch-catalog-build.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
     # Save artifacts
     declare -a tags=("daily-amd64" "daily-ppc64le" "daily-s390x") 
     #declare -a tags=("daily-amd64") 
@@ -189,6 +189,7 @@ release:
   script: |
     #!/usr/bin/env bash
     echo "release" 
+    set_env ibmcloud-api-key $(get_env ibmcloud-api-key-prod)
 
 #owasp-zap-api:
 #  dind: true
