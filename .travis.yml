@@ -12,9 +12,7 @@ before_install:
   - sudo apt-get update
 
 stages:
-  # If statement added to prevent travis runs while testing
   - name: unit-test    
-    if: branch = main AND fork = false
   # Builds are split into 'e2e-test' and 'build' to allow e2e tests to run first. If e2e fails, don't bother
   # building and pushing the images for the other architectures.
   - name: e2e-test
