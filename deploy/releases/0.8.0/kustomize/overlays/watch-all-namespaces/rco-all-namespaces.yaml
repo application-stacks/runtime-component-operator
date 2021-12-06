@@ -11,4 +11,3 @@ spec:
             - name: WATCH_NAMESPACE
               value: ""
               valueFrom:
-

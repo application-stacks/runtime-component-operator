@@ -4,5 +4,7 @@ kind: Kustomization
 namespace: rco-ns
 
 bases:
-- ../../base
+- ../../overlays/watch-all-namespaces
 
+patchesStrategicMerge:
+- rco-ns.yaml
