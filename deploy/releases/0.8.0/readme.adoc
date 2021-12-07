@@ -14,6 +14,8 @@ The operator will run on any cluster that has Kubernetes v1.19 or higher.
 
 == Installation
 
+=== Option 1: Install using Operator Lifecycle Manager (OLM)
+
 * Create the `CatalogSource` to add Runtime Component Operator.
 
 [source,yaml]
@@ -30,6 +32,10 @@ spec:
 ----
 
 * From the integrated OperatorHub, filter by selecting `Runtime Component Operator` checkbox under `Source`. Click on the tile with `Runtime Component` to install the operator.
+
+=== Option 2: Install using kustomize
+
+See the instructions link:++kustomize/++[here]
 
 == Current Limitations
 
