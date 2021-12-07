@@ -16,7 +16,6 @@ setup_env() {
     echo "****** Logging into remote cluster..."
     oc login "${CLUSTER_URL}" --token="${CLUSTER_TOKEN}"
 
-
     # Set variables for rest of script to use
     readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
     readonly TEST_NAMESPACE="runtime-operator-test-${TEST_TAG}"
