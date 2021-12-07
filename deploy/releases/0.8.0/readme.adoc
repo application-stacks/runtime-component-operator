@@ -1,0 +1,38 @@
+= Runtime Component Operator v0.8.0
+
+== Changelog
+
+All notable changes are documented in the link:++https://github.com/application-stacks/runtime-component-operator/blob/main/CHANGELOG.md#080++[Changelog].
+
+== Supported Environments
+
+The Runtime Component Operator is tested and built on the following CPU architectures:
+
+* amd64
+
+The operator will run on any cluster that has Kubernetes v1.19 or higher.
+
+== Installation
+
+* Create the `CatalogSource` to add Runtime Component Operator.
+
+[source,yaml]
+----
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+   name: runtime-component-operator-catalog
+   namespace: openshift-marketplace
+spec:
+   displayName: Runtime Component Operator
+   sourceType: grpc
+   image: applicationstacks/operator:catalog-0.8.0
+----
+
+* From the integrated OperatorHub, filter by selecting `Runtime Component Operator` checkbox under `Source`. Click on the tile with `Runtime Component` to install the operator.
+
+== Current Limitations
+
+* Knative support is limited. Values specified for `.spec.autoscaling`, `.spec.resources` and `.spec.replicas` fields would not apply for Knative when enabled using `.spec.createKnativeService` field.
+* Monitoring feature does not support integration with Knative Service. Prometheus Operator is required to use ServiceMonitor.
+* After the initial deployment of `RuntimeComponent`, any changes to its labels would be applied only when one of the fields from `.spec` is updated.

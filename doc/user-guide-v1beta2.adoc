@@ -1,14 +1,16 @@
-= Runtime Component Operator
+= Runtime Component Operator v0.8.0+
 
 This generic Operator is capable of deploying any application image and can be imported into any runtime-specific Operator as library of application capabilities.  This architecture ensures compatibility and consistency between all runtime Operators, allowing everyone to benefit from the functionality added in this project.
 
 This documentation refers to the latest codebase.  For documentation and samples of older releases, please check out the link:++https://github.com/application-stacks/runtime-component-operator/releases++[main releases] page and navigate the corresponding tag.
 
-**Important**: This user guide only applies to operator versions 0.8.0 and above. For operator versions 0.7.1 and below, refer to this link:++user-guide.adoc++[user guide].
+**Important**: This user guide only applies to operator versions **0.8.0 and above**. For operator versions **0.7.1 and below**, refer to this link:++user-guide.adoc++[user guide].
+
+**Important**: If you are upgrading from Runtime Component Operator versions 0.7.1 and below, note that API version of the custom resources (CRs) `RuntimeComponent` and `RuntimeOperation` changed. Custom resources with `apiVersion: app.stacks/v1beta1` are not handled by Runtime Component Operator versions 0.8.0 and above. You must delete existing custom resources with `apiVersion: app.stacks/v1beta1` and create new custom resources with `apiVersion: rc.app.stacks/v1beta2`.
 
 == Operator installation
 
-//Use the instructions for one of the link:++../deploy/releases++[releases] to install the operator into a Kubernetes cluster.
+Use the instructions for one of the link:++../deploy/releases++[releases] to install the operator into a Kubernetes cluster.
 
 The Runtime Component Operator can be installed to:
 
@@ -16,7 +18,7 @@ The Runtime Component Operator can be installed to:
 * watch another namespace
 * watch all namespaces in the cluster
 
-Appropriate cluster roles and bindings are required to watch another namespace, watch multiple namespaces or watch all namespaces.
+Appropriate cluster roles and bindings are required to watch another namespace, or to watch all namespaces.
 
 NOTE: The Runtime Component Operator can only interact with resources it is given permission to interact through link:++https://kubernetes.io/docs/reference/access-authn-authz/rbac/++[Role-based access control (RBAC)]. Some of the operator features described in this document require interacting with resources in other namespaces. In that case, the operator must be installed with correct `ClusterRole` definitions.
 
@@ -48,13 +50,13 @@ spec:
 
 === Custom Resource Definition (CRD)
 
-The following table lists configurable parameters of the `RuntimeComponent` CRD. For complete OpenAPI v3 representation of these values please see link:++../deploy/crds/app.stacks_runtimecomponents_crd.yaml++[`RuntimeComponent` CRD].
+The following table lists configurable fields of the `RuntimeComponent` CRD. For complete OpenAPI v3 representation of these values please see link:++../deploy/crds/app.stacks_runtimecomponents_crd.yaml++[`RuntimeComponent` CRD].
 
-Each `RuntimeComponent` CR must at least specify the `applicationImage` parameter. Specifying other parameters is optional.
+Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` field. Specifying other fields is optional.
 
 .Runtime Component Resource Definition
 |===
-| Parameter | Description
+| Field | Description
 
 | `applicationVersion` | The current version of the application. Label `app.kubernetes.io/version` will be added to all resources when the version is defined.
 | `serviceAccountName` | The name of the OpenShift service account to be used during deployment.
@@ -64,7 +66,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials.
 | `initContainers` | The list of link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#container-v1-core++[Init Container] definitions.
 | `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`.
-| `service.bindable` | A boolean to toggle whether the operator expose the application as a bindable service. The default value for this parameter is `false`.
+| `service.bindable` | A boolean to toggle whether the operator expose the application as a bindable service. The default value for this field is `false`.
 | `service.port` | The port exposed by the container.
 | `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`.
 | `service.portName` | The name for the port exposed by the container.
@@ -72,7 +74,7 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `service.type` | The Kubernetes link:++https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types++[Service Type].
 | `service.nodePort` | Node proxies this port into your service. Please note once this port is set to a non-zero value it cannot be reset to zero.
 | `service.annotations` | Annotations to be added to the service.
-| `service.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.
+| `service.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod. The following keys are valid in the secret: `ca.crt`, `tls.crt`, and `tls.key`.
 | `createKnativeService`   | A boolean to toggle the creation of Knative resources and usage of Knative serving.
 | `expose`   | A boolean that toggles the external exposure of this deployment via a Route or a Knative Route resource.
 | `deployment.updateStrategy`   | A field to specify the update strategy of the deployment. For more information, see link:++https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy++[updateStrategy]
@@ -104,9 +106,10 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `route.annotations` | Annotations to be added to the Route.
 | `route.host`   | Hostname to be used for the Route.
 | `route.path`   | Path to be used for Route.
+| `route.pathType`   | Path type to be used. Required field for Ingress. See link:++https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types++[Ingress path types].
 | `route.termination`   | TLS termination policy. Can be one of `edge`, `reencrypt` and `passthrough`.
 | `route.insecureEdgeTerminationPolicy`   | HTTP traffic policy with TLS enabled. Can be one of `Allow`, `Redirect` and `None`.
-| `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
+| `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the route. It can also contain destination CA certificate. The following keys are valid in the secret: `ca.crt`, `destCA.crt`, `tls.crt`, and `tls.key`.
 | `affinity.nodeAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#nodeaffinity-v1-core++[NodeAffinity].
 | `affinity.nodeAffinityLabels` | A YAML object that contains set of required labels and their values.
 | `affinity.podAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podaffinity-v1-core++[PodAffinity].
@@ -158,7 +161,7 @@ spec:
 
 The previous example looks up the `1.0` tag from the `my-image-stream` image stream in the `my-namespace` project and populates the CR `.status.imageReference` field with the exact referenced image similar to the following one: `image-registry.openshift-image-registry.svc:5000/my-namespace/my-image-stream@sha256:8a829d579b114a9115c0a7172d089413c5d5dd6120665406aae0600f338654d8`. The operator watches the specified image stream and deploys new images as new ones are available for the specified tag.
 
-To reference an image stream, the `applicationImage` parameter must follow the `<project name>/<image stream name>[:<tag>]` format. If `<project name>` or `<tag>` is not specified, the operator defaults the values to the namespace of the CR and the value of `latest`, respectively. For example, the `applicationImage: my-image-stream` configuration is the same as the `applicationImage: my-namespace/my-image-stream:latest` configuration.
+To reference an image stream, the `.spec.applicationImage` field must follow the `<project name>/<image stream name>[:<tag>]` format. If `<project name>` or `<tag>` is not specified, the operator defaults the values to the namespace of the CR and the value of `latest`, respectively. For example, the `applicationImage: my-image-stream` configuration is the same as the `applicationImage: my-namespace/my-image-stream:latest` configuration.
 
 The Operator tries to find an image stream name first with the `<project name>/<image stream name>[:<tag>]` format and falls back to the registry lookup if it is not able to find any image stream that matches the value.
 
@@ -168,7 +171,7 @@ NOTE: The operator requires `ClusterRole` permissions if the image stream resour
 
 === Service account
 
-The operator can create a `ServiceAccount` resource when deploying a `RuntimeComponent` custom resource (CR). If `serviceAccountName` is not specified in a CR, the operator creates a service account with the same name as the CR (e.g. `my-app`).
+The operator can create a `ServiceAccount` resource when deploying a `RuntimeComponent` custom resource (CR). If `.spec.serviceAccountName` is not specified in a CR, the operator creates a service account with the same name as the CR (e.g. `my-app`).
 
 Users can also specify `serviceAccountName` when they want to create a service account manually.
 
@@ -208,7 +211,7 @@ spec:
   applicationImage: quay.io/my-repo/my-app:1.0
 ----
 
-_After the initial deployment of `RuntimeComponent`, any changes to its labels would be applied only when one of the parameters from `spec` is updated._
+_After the initial deployment of `RuntimeComponent`, any changes to its labels would be applied only when one of the fields from `spec` is updated._
 
 ==== OpenShift Recommended Labels
 
@@ -218,7 +221,7 @@ where applicable and add any labels from the list that are not set by default us
 
 === Annotations
 
-To add new annotations into all resources created for a `RuntimeComponent`, specify them in your CR as key/value pairs. Annotations specified in CR would override any annotations specified on a resource, except for the annotations set on `Service` using `service.annotations`.
+To add new annotations into all resources created for a `RuntimeComponent`, specify them in your CR as key/value pairs. Annotations specified in CR would override any annotations specified on a resource, except for the annotations set on `Service` using `.spec.service.annotations`.
 
 [source,yaml]
 ----
@@ -232,7 +235,7 @@ spec:
   applicationImage: quay.io/my-repo/my-app:1.0
 ----
 
-_After the initial deployment of `RuntimeComponent`, any changes to its annotations would be applied only when one of the parameters from `spec` is updated._
+_After the initial deployment of `RuntimeComponent`, any changes to its annotations would be applied only when one of the fields from `spec` is updated._
 
 ==== OpenShift Recommended Annotations
 
@@ -288,21 +291,21 @@ Use `envFrom` to define all data in a `ConfigMap` or a `Secret` as environment v
 
 Run multiple instances of your application for high availability using one of the following mechanisms:
 
-  - specify a static number of instances to run at all times using `replicas` parameter.
+  - specify a static number of instances to run at all times using `.spec.replicas` field.
 
 __OR__
 
-  - configure auto-scaling to create (and delete) instances based on resource consumption using the `autoscaling` parameter.
-  - Parameters `.spec.autoscaling.maxReplicas` and `.spec.resources.requests.cpu` MUST be specified for auto-scaling.
+  - configure auto-scaling to create (and delete) instances based on resource consumption using the `.spec.autoscaling` field.
+  - Fields `.spec.autoscaling.maxReplicas` and `.spec.resources.requests.cpu` MUST be specified for auto-scaling.
 
 === Service ports
 
 Runtime Component Operator allows you to provide multiple service ports in addition to the primary service port. The primary port is exposed from the container running the application and it's values are used to configure the Route (or Ingress), Service binding and Knative service.
-The primary service port can be configured using `service.port`, `service.targetPort`, `service.portName`, and `service.nodePort` parameters.
+The primary service port can be configured using `.spec.service.port`, `.spec.service.targetPort`, `.spec.service.portName`, and `.spec.service.nodePort` fields.
 
-You can also specify an alternative port for Service Monitor using the `monitoring.endpoints` parameter and specifying either the `port` or `targetPort` field, otherwise it defaults to the primary port.
+You can also specify an alternative port for Service Monitor using the `.spec.monitoring.endpoints` field and specifying either the `port` or `targetPort` field, otherwise it defaults to the primary port.
 
-The primary port is under the `service` field and the additional ports can be specified using the `ports` field as shown below.
+The primary port is specified using `.spec.service.port` field and the additional ports can be specified using `.spec.service.ports` field as shown below.
 
 [source,yaml]
 ----
@@ -413,7 +416,7 @@ _This feature is only available if you have Service Binding Operator installed o
 A `RuntimeComponent` application can be configured to behave as a link:++https://github.com/k8s-service-bindings/spec#provisioned-service++[Provisioned Service] defined by the link:++https://github.com/k8s-service-bindings/spec++[Service Binding Specification].
 
 According to the specification, a Provisioned Service resource must define a `.status.binding.name` which is a reference to a Secret.
-To expose your application as a Provisioned Service, set the `.spec.service.bindable` parameter to a value of `true`. The Runtime Component Operator creates a *binding secret* named `<CR_NAME>-expose-binding` and adds the following entries to the secret: `host`, `port`, `protocol`, `basePath` and `uri`.
+To expose your application as a Provisioned Service, set the `.spec.service.bindable` field to a value of `true`. The Runtime Component Operator creates a *binding secret* named `<CR_NAME>-expose-binding` and adds the following entries to the secret: `host`, `port`, `protocol`, `basePath` and `uri`.
 
 To override the default values for the entries in the binding secret or to add new entries to the secret, create an *override secret* named `<CR_NAME>-expose-binding-override` and add any entries to the secret. The operator reads the content of the override secret and overrides the default values in the binding secret.
 
@@ -487,9 +490,9 @@ spec:
   createKnativeService: true
 ----
 
-By setting this parameter, the operator creates a Knative service in the cluster and populates the resource with applicable `RuntimeComponent` fields. Also, it ensures non-Knative resources including Kubernetes `Service`, `Route`, `Deployment` and etc. are deleted.
+By setting the `.spec.createKnativeService` field, the operator creates a Knative service in the cluster and populates the resource with applicable `RuntimeComponent` fields. Also, it ensures non-Knative resources including Kubernetes `Service`, `Route`, `Deployment` and etc. are deleted.
 
-The CRD fields which are used to populate the Knative service resource include `applicationImage`, `serviceAccountName`, `probes.liveness`, `probes.readiness`, `service.Port`, `volumes`, `volumeMounts`, `env`, `envFrom`, `pullSecret` and `pullPolicy`. Startup probe is not fully supported by Knative, hence `probes.startup` will not apply when Knative service is enabled.
+The CRD fields which are used to populate the Knative service resource include `.spec.applicationImage`, `.spec.serviceAccountName`, `.spec.probes.liveness`, `.spec.probes.readiness`, `.spec.service.Port`, `.spec.volumes`, `.spec.volumeMounts`, `.spec.env`, `.spec.envFrom`, `.spec.pullSecret` and `.spec.pullPolicy`. Startup probe is not fully supported by Knative, hence `.spec.probes.startup` will not apply when Knative service is enabled.
 
 For more details on how to configure Knative for tasks such as enabling HTTPS connections and setting up a custom domain, checkout link:++https://knative.dev/docs/serving/++[Knative Documentation].
 
@@ -514,19 +517,15 @@ spec:
   expose: true
 ----
 
-By setting this parameter, the operator creates an unsecured route based on your application service. Setting this parameter is the same as running `oc expose service <service-name>`.
+By setting `.spec.expose` field, the operator creates an unsecured route based on your application service. Setting this field is the same as running `oc expose service <service-name>`.
 
-To create a secured HTTPS route, see the link:++#certificate-manager-integration++[Certificate Manager Integration] section for more information.
-
-_This feature is only available if you are running on OKD or OpenShift._
-
+To create a secured HTTPS route, see the link:++#certificates++[Certificates] section.
 
 ==== Non-Knative deployment (Ingress)
 
 Before you can use the Ingress resource to expose your cluster, you must install an ingress controller, such a Nginx or Traefik.
 
-_The Ingress resource is created only if the `Route` resource is not available._
-
+_The Ingress resource is created only if the `Route` resource is not available on the cluster._
 
 To use the Ingress resource, set the `defaultHostName` variable in the _runtime-component-operator_ ConfigMap object to a host name such as _mycompany.com_
 
@@ -548,9 +547,9 @@ spec:
 With default hostname of _mycompany.com_, the application is available at the http://my-app-backend.mycompany.com URL.
 
 
-===== Enable TLS and generate a certificate by using the cert-manager controller:
+===== Enable TLS
 
-_Note: You must install the cert-manager controller to automatically generate a custom certificate for the ingress controller._
+Generate your certificate and specify the secret containing the certificate using `.spec.route.certificateSecretRef` field: 
 
 [source,yaml]
 ----
@@ -563,7 +562,7 @@ spec:
   applicationImage: quay.io/my-repo/my-app:1.0
   expose: true
   route:
-    certificate: {}
+    certificateSecretRef: mycompany-tls
 ----
 
 ===== Advanced Ingress configuration:
@@ -621,137 +620,11 @@ When `expose` is **not** set to `true`, the Knative service is labeled with `ser
 
 To configure secure HTTPS connections for your Knative deployment, see link:++https://knative.dev/docs/serving/using-a-tls-cert/++[Configuring HTTPS with TLS certificates] for more information.
 
-=== Kubernetes Application Navigator (kAppNav) support
+=== Certificates
 
-By default, Runtime Component Operator configures the Kubernetes resources it generates to allow automatic creation of an link:++https://github.com/kubernetes-sigs/application++[Application definition] with the `applicationName` parameter as the `Application` CR name. The automatic creation is done by the link:++https://kappnav.io/++[Kubernetes Application Navigator (kAppNav)]. You can easily view and manage the deployed resources that comprise your application by using kAppNav. You can disable auto-creation by setting the `createAppDefinition` parameter to a value of `false`.
+Specify your own certificates for the Service and Route using fields `.spec.service.certificateSecretRef` and `.spec.route.certificateSecretRef`.
 
-To join an existing application definition in the `RuntimeComponent` CR namespace, ensure that the `applicationName` parameter is set to the name of the `Application` CR that you want to join. To join an existing application definition in another namespace, ensure that the `createAppDefinition` parameter is set to `false` and that the `applicationName` parameter is set to the name of the existing `Application` CR that you want to join.
-
-First, the operator searches in the `RuntimeComponent` CR namespace to find an `Application` CR named as the `applicationName` parameter.
-If it fails to find any, it searches the whole cluster to find `Application` CRs that meet the following criteria:
-
-- The `Application` CRs have the same name as the value of the `applicationName` parameter.
-- The `RuntimeComponent` CR namespace is listed in the value of the `kappnav.component.namespaces` annotation.
-
-After the operator finds any `Application` CRs in the previous steps, it adds labels to the `RuntimeComponent` CR. These labels are listed in the `.spec.selector.matchLabels` parameter. However, if the operator fails to find any `Application` CRs, and if the `createAppDefinition` parameter is not set to `false`, the operator configures the Kubernetes resources it generates. These Kubernetes resources are configured to allow automatic creation of an `Application` definition.
-
-_This feature is only available if you have kAppNav installed on your cluster. Auto creation of an application definition is not supported when Knative service is created_
-
-NOTE: The operator requires `ClusterRole` permissions when joining an existing `Application` custom resource in another namespace.
-
-=== Certificate Manager Integration
-
-Runtime Component Operator is enabled to take advantage of link:++https://cert-manager.io/++[cert-manager] tool, if it is installed on the cluster.
-This allows to automatically provision TLS certificates for pods as well as routes.
-
-Cert-manager installation instruction can be found link:++https://cert-manager.io/docs/installation/++[here].
-
-When creating certificates via the RuntimeComponent CR the user can specify a particular issuer name and toggle the scopes between `ClusterIssuer` (cluster scoped) and `Issuer` (namespace scoped). If not specified, these values are retrieved from a ConfigMap called `runtime-component-operator`, with keys `defaultIssuer` (default value of `self-signed`) and `useClusterIssuer` (default value of `"true"`).
-
-_This feature does not support integration with Knative Service._
-
-
-==== Create an ClusterIssuer or Issuer
-
-Self signed:
-
-[source,yaml]
-----
-apiVersion: cert-manager.io/v1alpha2
-kind: ClusterIssuer
-metadata:
-  name: self-signed
-spec:
-  selfSigned: {}
-----
-
-Using custom CA key:
-
-[source,yaml]
-----
-apiVersion: cert-manager.io/v1alpha2
-kind: ClusterIssuer
-metadata:
-  name: mycompany-ca
-spec:
-  ca:
-    secretName: mycompany-ca-tls
-----
-
-
-==== Simple scenario (Pods certificate)
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1beta2
-kind: RuntimeComponent
-metadata:
-  name: my-app
-  namespace: test
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  ....
-  service:
-    port: 9080
-    certificate: {}
-----
-
-In this scenario the operator generates a `Certificate` resource with a common name of `my-app.test.svc` that can be used for service to service communication.
-
-After this certificate request is resolved by the certificate manager, the resulting `my-app-svc-tls` secret is mounted onto each pod inside the `/etc/x509/certs` folder. Mounted files are always up to date with a secret.
-
-It will contain private key, certificate and CA certificate. It is up to the application container to consume these artifacts, applying any needed transformation or modification.
-
-
-==== Simple scenario (Route certificate)
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1beta2
-kind: RuntimeComponent
-metadata:
-  name: my-app
-  namespace: test
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  expose: true
-  route:
-    host: myapp.mycompany.com
-    termination: reencrypt
-    certificate: {}
-----
-In this scenario the operator generates a `Certificate` resource with the common name of `myapp.mycompany.com` that will be injected into the `Route` resource.
-
-==== Advanced scenario
-
-In this example we are overriding Issuer to be used for application. Certificate will be generated for specific organization and duration. Extra properties can be added as well.
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1beta2
-kind: RuntimeComponent
-metadata:
-  name: my-app
-  namespace: test
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  expose: true
-  route:
-    host: myapp.mycompany.com
-    termination: reencrypt
-    certificate:
-      duration: 8760h0m0s
-      organization:
-        - My Company
-      issuerRef:
-        name: myComanyIssuer
-        kind: ClusterIssuer
-----
-
-==== Use existing certificates
-
-It is possible to bring your own certificates to be used in a pod and the route.
-In this case the cert-manager is not required.
+Example of cerificates specified for the Route:
 
 [source,yaml]
 ----
@@ -900,9 +773,9 @@ See link:++https://github.com/application-stacks/runtime-component-operator/blob
 
 You can easily perform day-2 operations using the `RuntimeOperation` custom resource (CR), which allows you to specify the commands to run on a container within a Pod.
 
-.Configurable Parameters
+.Configurable Fields
 |===
-| Parameter       | Description
+| Field       | Description
 | `podName`       | The name of the Pod, which must be in the same namespace as the `RuntimeOperation` CR.
 | `containerName` | The name of the container within the Pod. The default value is the name of the main container, which is `app`.
 | `command`       | Command to run. The command doesn't run in a shell.

@@ -8,6 +8,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.0]
+
+**Breaking changes:** API version of the custom resources (CRs) `RuntimeComponent` and `RuntimeOperation` have changed. Custom resources with `apiVersion: app.stacks/v1beta1` are not handled by Runtime Component Operator versions 0.8.0 and above. You must delete existing custom resources with `apiVersion: app.stacks/v1beta1` and create new custom resources with `apiVersion: rc.app.stacks/v1beta2`.
+
+See the [new user guide](https://github.com/application-stacks/runtime-component-operator/blob/main/doc/user-guide-v1beta2.adoc) for more information on the changes to the fields listed below.
+
+### Removed
+
+- Following fields have been removed:
+  - .spec.architecture
+  - .spec.bindings.*
+  - .spec.createAppDefinition
+  - .spec.route.certificate
+  - .spec.service.certificate
+  - .spec.service.consumes.*
+  - .spec.service.provides.*
+
+### Changed
+
+- Following fields have been renamed or moved:
+  - .spec.livenessProbe --> .spec.probes.liveness
+  - .spec.readinessProbe --> .spec.probes.readiness
+  - .spec.resourceConstraints.* --> .spec.resources.*
+  - .spec.storage --> .spec.statefulSet.storage
+  - .spec.version --> .spec.applicationVersion
+
+### Added
+
+- Following fields were added: 
+  - .spec.deployment.*
+  - .spec.probes.startup
+  - .spec.route.pathType
+  - .spec.service.bindable
+  - .spec.statefulSet.*
+
 ## [0.7.1]
 
 ### Fixed
@@ -78,7 +113,8 @@ All notable changes to this project will be documented in this file.
 The initial release of the Runtime Component Operator 🎉
 
 
-[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.8.0
 [0.7.1]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.7.1
 [0.7.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.7.0
 [0.6.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.6.0
