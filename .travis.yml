@@ -15,6 +15,8 @@ stages:
   - name: unit-test
   # Builds are split into 'e2e-test' and 'build' to allow e2e tests to run first. If e2e fails, don't bother
   # building and pushing the images for the other architectures.
+  - name: minikube-e2e-test
+    if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
   - name: e2e-test
     if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
   - name: build
@@ -34,6 +36,11 @@ jobs:
     - name: Unit testing
       stage: unit-test
       script: make unit-test
+    - name: Minikube test on amd64
+      stage: minikube-e2e-test
+      os: linux
+      arch: amd64
+      script: travis_wait 45 make setup minikube-test-e2e || travis_terminate 1
     - name: Build image on amd64 and test
       stage: e2e-test
       os: linux

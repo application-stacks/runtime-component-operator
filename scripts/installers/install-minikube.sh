@@ -21,7 +21,6 @@ function main () {
 function install_minikube() {
   sudo apt-get update -y
   sudo apt-get -qq -y install conntrack
-  sudo apt install make
 
   ## get kubectl
   echo "****** Installing kubectl v1.19.4..."
@@ -46,10 +45,6 @@ function install_minikube() {
     $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
   sudo apt-get update  -y 
   sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-
-  ## Download operator-sdk
-  echo "****** Installing operator-sdk..."
-  make setup
 
   mkdir -p $HOME/.kube $HOME/.minikube
   touch $KUBECONFIG
