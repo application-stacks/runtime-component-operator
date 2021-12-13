@@ -9,7 +9,7 @@ setup_env() {
     echo "****** Installing and starting Minikube"
     scripts/installers/install-minikube.sh
 
-    readonly TEST_NAMESPACE="runtime-operator-test-${TEST_TAG}"
+    readonly TEST_NAMESPACE="rco-test-${TEST_TAG}"
 
     echo "****** Creating test namespace: ${TEST_NAMESPACE}"
     kubectl create namespace "${TEST_NAMESPACE}"
