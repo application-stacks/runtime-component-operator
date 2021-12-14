@@ -342,11 +342,26 @@ spec:
       app-monitoring: 'true'
 ----
 
-=== Persistence
+=== StatefulSet
 
-Runtime Component Operator is capable of creating a `StatefulSet` and `PersistentVolumeClaim` for each pod if storage is specified in the `RuntimeComponent` CR.
+Runtime Component Operator is capable of creating a `StatefulSet` and `PersistentVolumeClaim` for each pod if storage is specified in the `RuntimeComponent` CR. If storage is not specified, StatefulSet resource will be created without persistent storage.
 
 Users also can provide mount points for their application. There are 2 ways to enable storage.
+
+==== Without storage
+
+You can choose to create StatefulSet resources without storage, if you only require ordering and uniqueness of a set of pods.
+
+[source,yaml]
+----
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: my-app
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  statefulSet: {}
+----
 
 ==== Basic storage
 
@@ -402,6 +417,10 @@ spec:
             requests:
               storage: 1Gi
 ----
+
+==== Limitation
+
+The persisent storage and PersistentVolumeClaim cannot be added or changed once StatefulSet is created.
 
 === Service binding
 
