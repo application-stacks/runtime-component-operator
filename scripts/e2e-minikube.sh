@@ -1,6 +1,6 @@
 #!/bin/bash
 
-readonly usage="Usage: e2e-minikube.sh -n <test-namespace>"
+readonly usage="Usage: e2e-minikube.sh --test-tag <test-id>"
 readonly SERVICE_ACCOUNT="travis-tests"
 
 # setup_env: Download kubectl cli and Minikube, start Minikube, and create a test project
@@ -8,6 +8,8 @@ setup_env() {
     # Install Minikube and Start a cluster
     echo "****** Installing and starting Minikube"
     scripts/installers/install-minikube.sh
+
+    readonly TEST_NAMESPACE="rco-test-${TEST_TAG}"
 
     echo "****** Creating test namespace: ${TEST_NAMESPACE}"
     kubectl create namespace "${TEST_NAMESPACE}"
@@ -80,8 +82,8 @@ function cleanup_test() {
 main() {
     parse_args "$@"
      
-    if [[ -z "${TEST_NAMESPACE}" ]]; then
-        echo "****** Missing test namespace, see usage"
+    if [[ -z "${TEST_TAG}" ]]; then
+        echo "****** Missing test id, see usage"
         echo "${usage}"
         exit 1
     fi
@@ -115,9 +117,9 @@ main() {
 parse_args() {
     while [ $# -gt 0 ]; do
         case "$1" in
-        -n)
+        --test-tag)
             shift
-            readonly TEST_NAMESPACE="${1}"
+            readonly TEST_TAG="${1}"
             ;;
         *)
             echo "Error: Invalid argument - $1"
