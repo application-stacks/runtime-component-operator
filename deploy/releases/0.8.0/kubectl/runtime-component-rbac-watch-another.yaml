@@ -103,7 +103,7 @@ metadata:
     app.kubernetes.io/instance: runtime-component-operator
     app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
-  name: rco-namespace-rolebinding
+  name: rco-watched-rolebinding
   namespace: RUNTIME_COMPONENT_WATCH_NAMESPACE
 roleRef:
   apiGroup: rbac.authorization.k8s.io

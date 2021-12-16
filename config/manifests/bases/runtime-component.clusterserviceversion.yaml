@@ -334,7 +334,7 @@ spec:
     We offer an advanced mode where the user specifies a built-in PersistentVolumeClaim, allowing them to configure many details of the persistent volume, such as its storage class and access mode.
 
     #### Service Binding
-    Easily bind to available services in your cluster.  Your runtime components can expose and consume other services by simply specifying the target endpoinds: we take care of the heavy lifting such as creating k8s Secrets, injecting them into your container and watching for any changes in configuration!  This way your applications can dynamically reconnect to its required services without any intervention or interruption.
+    Your runtime components can expose services by a simple toggle. We take care of the heavy lifting such as creating kubernetes Secrets with information other services can use to bind. We also keep the bindable information synchronized, so your applications can dynamically reconnect to its required services without any intervention or interruption.
 
     #### Exposing metrics to Prometheus
     The Runtime Component Operator exposes the runtime container's metrics via the [Prometheus Operator](https://operatorhub.io/operator/prometheus).
