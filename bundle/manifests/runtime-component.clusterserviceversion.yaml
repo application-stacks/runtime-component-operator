@@ -432,7 +432,7 @@ spec:
                     memory: 256Mi
                   requests:
                     cpu: 100m
-                    memory: 20Mi
+                    memory: 64Mi
               serviceAccountName: rco-controller-manager
               terminationGracePeriodSeconds: 10
       permissions:

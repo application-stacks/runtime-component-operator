@@ -35,7 +35,7 @@ spec:
 
 === Option 2: Install using kustomize
 
-See the instructions link:++kustomize/++[here]
+See the instructions link:++kustomize/++[here].
 
 === Option 3: Install using kubectl
 
