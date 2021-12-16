@@ -69,4 +69,4 @@ To uninstall the operator, run commands from Step 2c first and then Step 2b (if 
 
 To delete the CRD, run command from Step 1, but after replacing `kubectl apply` with `kubectl delete`.
 
-_Deleting the CRD will also delete all `RuntimeComponent` in the cluster_
+_Deleting the CRD will also delete all instances of `RuntimeComponent` and `RuntimeOperation` in the cluster_
