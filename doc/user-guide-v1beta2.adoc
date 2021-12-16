@@ -342,7 +342,7 @@ spec:
       app-monitoring: 'true'
 ----
 
-=== StatefulSet
+=== Persistence
 
 Runtime Component Operator is capable of creating a `StatefulSet` and `PersistentVolumeClaim` for each pod if storage is specified in the `RuntimeComponent` CR. If storage is not specified, StatefulSet resource will be created without persistent storage.
 

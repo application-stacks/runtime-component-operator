@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/instance: runtime-component-operator
     app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
-  name: rco-leader-election-cluster-role-RUNTIME_COMPONENT_OPERATOR_NAMESPACE
+  name: rco-leader-election-cluster-role
 rules:
 - apiGroups:
   - ""
@@ -159,7 +159,7 @@ metadata:
     app.kubernetes.io/instance: runtime-component-operator
     app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
-  name: rco-leader-election-cluster-rolebinding-RUNTIME_COMPONENT_OPERATOR_NAMESPACE
+  name: rco-leader-election-cluster-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -176,7 +176,7 @@ metadata:
     app.kubernetes.io/instance: runtime-component-operator
     app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
-  name: rco-manager-cluster-rolebinding-RUNTIME_COMPONENT_OPERATOR_NAMESPACE
+  name: rco-manager-cluster-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

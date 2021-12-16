@@ -7,7 +7,7 @@ The Runtime Component Operator can be installed to:
 * watch another namespace
 * watch all namespaces in the cluster
 
-Appropriate cluster role and binding are required to watch another namespace or watch all namespaces.
+Appropriate roles and bindings are required to watch another namespace or watch all namespaces.
 
 ---
 
@@ -22,7 +22,7 @@ Appropriate cluster role and binding are required to watch another namespace or 
 
 .. Set operator namespace and the namespace to watch:
 +
-NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY_WATCH_NAMESPACE_HERE>` with proper values:
+NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY_WATCH_NAMESPACE_HERE>` with proper values. The namespaces must already exist. The commands below will not create the namespaces.
 +
     * To watch all namespaces in the cluster, set `WATCH_NAMESPACE='""'`
 +
@@ -33,7 +33,7 @@ NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY
     WATCH_NAMESPACE=<SPECIFY_WATCH_NAMESPACE_HERE>
 ----
 
-.. _Optional_: Install rbac to watch another namespace or all namespaces.  This step can be skipped if the operator is only watching own namespace,
+.. _Optional_: Install roles and bindings to watch another namespace or all namespaces.  This step can be skipped if the operator is only watching own namespace.
 
 ... To watch all namespaces, install cluster-level role-based access:
 +
@@ -65,7 +65,7 @@ NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY
 
 == Uninstallation
 
-To uninstall the operator, run commands from Step 2.3 first and then Step 2.2 (if applicable), but after replacing `kubectl apply` with `kubectl delete`.
+To uninstall the operator, run commands from Step 2c first and then Step 2b (if applicable), but after replacing `kubectl apply` with `kubectl delete`.
 
 To delete the CRD, run command from Step 1, but after replacing `kubectl apply` with `kubectl delete`.
 
