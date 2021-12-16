@@ -37,6 +37,10 @@ spec:
 
 See the instructions link:++kustomize/++[here]
 
+=== Option 3: Install using kubectl
+
+See the instructions link:++kubectl/++[here]
+
 == Current Limitations
 
 * Knative support is limited. Values specified for `.spec.autoscaling`, `.spec.resources` and `.spec.replicas` fields would not apply for Knative when enabled using `.spec.createKnativeService` field.
