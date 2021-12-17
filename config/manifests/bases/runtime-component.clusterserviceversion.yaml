@@ -157,7 +157,7 @@ spec:
         path: statefulSet
       - displayName: Service
         path: service
-      - description: A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.
+      - description: 'A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod. The following keys are valid in the secret: ca.crt, tls.crt, and tls.key.'
         displayName: Certificate Secret Reference
         path: service.certificateSecretRef
         x-descriptors:
@@ -266,7 +266,7 @@ spec:
         path: route.path
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
+      - description: 'A name of a secret that already contains TLS key, certificate and CA to be used in the route. It can also contain destination CA certificate. The following keys are valid in the secret: ca.crt, destCA.crt, tls.crt, and tls.key.'
         displayName: Certificate Secret Reference
         path: route.certificateSecretRef
         x-descriptors:
@@ -334,7 +334,7 @@ spec:
     We offer an advanced mode where the user specifies a built-in PersistentVolumeClaim, allowing them to configure many details of the persistent volume, such as its storage class and access mode.
 
     #### Service Binding
-    Easily bind to available services in your cluster.  Your runtime components can expose and consume other services by simply specifying the target endpoinds: we take care of the heavy lifting such as creating k8s Secrets, injecting them into your container and watching for any changes in configuration!  This way your applications can dynamically reconnect to its required services without any intervention or interruption.
+    Your runtime components can expose services by a simple toggle. We take care of the heavy lifting such as creating kubernetes Secrets with information other services can use to bind. We also keep the bindable information synchronized, so your applications can dynamically reconnect to its required services without any intervention or interruption.
 
     #### Exposing metrics to Prometheus
     The Runtime Component Operator exposes the runtime container's metrics via the [Prometheus Operator](https://operatorhub.io/operator/prometheus).

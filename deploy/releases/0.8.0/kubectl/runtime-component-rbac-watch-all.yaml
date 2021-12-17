@@ -185,4 +185,3 @@ subjects:
 - kind: ServiceAccount
   name: rco-controller-manager
   namespace: RUNTIME_COMPONENT_OPERATOR_NAMESPACE
-  

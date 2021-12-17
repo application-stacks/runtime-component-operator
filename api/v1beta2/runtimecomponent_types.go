@@ -218,7 +218,7 @@ type RuntimeComponentService struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=14,type=spec,displayName="Target Port",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
 	TargetPort *int32 `json:"targetPort,omitempty"`
 
-	// A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.
+	// A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod. The following keys are valid in the secret: ca.crt, tls.crt, and tls.key.
 	// +k8s:openapi-gen=true
 	// +operator-sdk:csv:customresourcedefinitions:order=15,type=spec,displayName="Certificate Secret Reference",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
@@ -306,7 +306,7 @@ type RuntimeComponentRoute struct {
 	// Path type to be used for Ingress.
 	PathType networkingv1.PathType `json:"pathType,omitempty"`
 
-	// A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
+	// A name of a secret that already contains TLS key, certificate and CA to be used in the route. It can also contain destination CA certificate. The following keys are valid in the secret: ca.crt, destCA.crt, tls.crt, and tls.key.
 	// +operator-sdk:csv:customresourcedefinitions:order=41,type=spec,displayName="Certificate Secret Reference",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
 
