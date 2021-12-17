@@ -1,0 +1,10 @@
+- op: add
+  # the '-' means add a new entry at the end of the list
+  path: /spec/customresourcedefinitions/owned/0/statusDescriptors/-
+  value:
+    description: Service Binding Secret
+    displayName: Secret
+    path: binding.name
+    x-descriptors:
+    - urn:alm:descriptor:io.kubernetes:Secret
+

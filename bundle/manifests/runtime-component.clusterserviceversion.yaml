@@ -321,6 +321,11 @@ spec:
         path: conditions
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes.conditions
+      - description: Service Binding Secret
+        displayName: Secret
+        path: binding.name
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Secret
       version: v1beta2
     - description: Day-2 operation to execute on an instance of runtime component
       displayName: RuntimeOperation
