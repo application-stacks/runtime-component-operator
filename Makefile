@@ -24,6 +24,12 @@ BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
 endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
+CREATEDAT ?= AUTO
+
+ifeq ($(CREATEDAT), AUTO)
+CREATEDAT := $(shell date +%y-%m-%dT%TZ)
+endif
+
 # Default catalog image tag
 CATALOG_IMG ?= applicationstacks/operator:catalog-daily
 
@@ -79,7 +85,8 @@ undeploy: manifests kustomize
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-
+	sed -i '' "s,IMAGE,${IMG},g" config/manifests/patches/containerImage.yaml
+	sed -i '' "s,CREATEDAT,${CREATEDAT},g" config/manifests/patches/containerImage.yaml
 # Run go fmt against code
 fmt:
 	go fmt ./...

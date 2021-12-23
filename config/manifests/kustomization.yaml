@@ -5,7 +5,8 @@ resources:
 - ../default
 - ../samples
 - ../scorecard
-
+patchesStrategicMerge:
+- patches/containerImage.yaml
 patches:
 - path: serviceBindingPatch.yaml
   target:
