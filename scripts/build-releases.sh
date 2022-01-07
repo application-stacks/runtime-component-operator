@@ -36,11 +36,19 @@ main() {
     exit 1
   fi
 
-  echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+  if [[ -z "${REGISTRY}" ]]; then 
+    echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+  else
+    echo "${DOCKER_PASSWORD}" | docker login "${REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin
+  fi      
 
   # Build target release(s)
   if [[ "${TARGET}" != "releases" ]]; then
-    "${script_dir}/build-release.sh" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --release "${TARGET}" --image "${IMAGE}"
+    if [[ -z "${REGISTRY}" ]]; then 
+      "${script_dir}/build-release.sh" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --release "${TARGET}" --image "${IMAGE}"
+    else
+      "${script_dir}/build-release.sh" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" --release "${TARGET}" --image "${IMAGE}" --registry "${REGISTRY}"
+    fi  
   else
     build_releases
   fi
@@ -74,6 +82,10 @@ parse_args() {
       shift
       readonly DOCKER_PASSWORD="${1}"
       ;;
+    --registry)
+      shift
+      readonly REGISTRY="${1}"
+      ;;  
     --image)
       shift
       readonly IMAGE="${1}"

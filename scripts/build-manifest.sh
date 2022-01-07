@@ -36,7 +36,11 @@ main() {
     exit 1
   fi
 
-  echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+  if [[ -z "${REGISTRY}" ]]; then  
+    echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+  else
+    echo "${DOCKER_PASSWORD}" | docker login "${REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin
+  fi      
 
   # Build manifest for target release(s)
   if [[ "${TARGET}" != "releases" ]]; then
@@ -98,6 +102,10 @@ parse_args() {
       shift
       readonly DOCKER_PASSWORD="${1}"
       ;;
+    --registry)
+      shift
+      readonly REGISTRY="${1}"
+      ;;        
     --image)
       shift
       readonly IMAGE="${1}"
