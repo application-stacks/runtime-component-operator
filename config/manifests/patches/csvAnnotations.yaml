@@ -1,0 +1,8 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  name: runtime-component.v0.0.0
+  namespace: placeholder
+  annotations:
+    containerImage: IMAGE
+    createdAt: CREATEDAT
