@@ -5,7 +5,7 @@ metadata:
 spec:
   resources:
     requests:
-      cpu: "0.5"
+      cpu: "0.2"
   autoscaling:
     maxReplicas: 5
     minReplicas: 3
