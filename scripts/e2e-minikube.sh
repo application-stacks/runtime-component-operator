@@ -107,11 +107,13 @@ main() {
         echo "****** Scorecard tests failed..."
     }
     result=$?
-    
+
     cleanup_test
 
     echo "****** Cleaning up test environment..."
     cleanup_env
+
+    return $result
 }
 
 parse_args() {
