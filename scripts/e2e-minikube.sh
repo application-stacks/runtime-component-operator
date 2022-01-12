@@ -105,6 +105,7 @@ main() {
     echo "****** Starting minikube scorecard tests..."
     operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --service-account scorecard-kuttl --wait-time 30m ./bundle || {
         echo "****** Scorecard tests failed..."
+        exit 1
     }
     result=$?
 
