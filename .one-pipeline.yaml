@@ -111,6 +111,12 @@ containerize:
       save_artifact $i type=image name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"   
     done
 
+sign-artifact:
+  image: wcp-compliance-automation-team-docker-local.artifactory.swg-devops.com/csso-image-sign:1.0.0@sha256:cb22e6ad6b3469155719f6bf09bde641208a1e349e5ccc09407204bb069f7b4e
+  script: |
+    #!/usr/bin/env bash
+    echo "Skip image signing"
+
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
@@ -156,6 +162,7 @@ acceptance-test:
     export TRAVIS_BUILD_NUMBER=$BUILD_NUMBER   
     make setup
     make test-pipeline-e2e
+    make minikube-test-e2e
 
 scan-artifact:
   abort_on_failure: false
