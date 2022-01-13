@@ -33,18 +33,6 @@ function install_minikube() {
   curl -Lo minikube https://storage.googleapis.com/minikube/releases/v1.21.0/minikube-linux-amd64 \
   && chmod +x minikube \
   && sudo mv minikube /usr/local/bin/
-  
-  ## Download docker
-  echo "****** Installing Docker..."
-  if test -f "/usr/share/keyrings/docker-archive-keyring.gpg"; then
-    rm /usr/share/keyrings/docker-archive-keyring.gpg
-  fi
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-  echo \
-    "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  sudo apt-get update  -y 
-  sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
   mkdir -p $HOME/.kube $HOME/.minikube
   touch $KUBECONFIG
