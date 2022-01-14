@@ -9,6 +9,14 @@ status:
 spec:
   template:
     spec:
+      containers:
+      - env:
+        - name: TLS_DIR
+          value: /etc/x509/certs
+        volumeMounts:
+        - name: svc-certificate
+          mountPath: /etc/x509/certs
+          readOnly: true
       volumes:
       - name: svc-certificate
         secret:
