@@ -3,3 +3,6 @@ kind: Pod
 spec:
   containers:
   - name: app
+metadata:
+  labels:
+    app.kubernetes.io/instance: sidecar-runtime-component
