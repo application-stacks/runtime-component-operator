@@ -1,0 +1,12 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: sa-name-rc
+spec:
+  # Add fields here
+  serviceAccountName: new-sa-name-rc
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: new-sa-name-rc
