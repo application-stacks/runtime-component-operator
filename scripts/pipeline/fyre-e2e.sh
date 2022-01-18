@@ -19,7 +19,7 @@ setup_env() {
 
     # Set variables for rest of script to use
     #readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
-    readonly TEST_NAMESPACE="runtime-operator-test-${TEST_TAG}"
+    readonly TEST_NAMESPACE="rco-test-${TEST_TAG}"
     readonly BUILD_IMAGE="${REGISTRY_NAME}/${REGISTRY_NAMESPACE}/rco-operator:${RELEASE}"
     readonly BUNDLE_IMAGE="${REGISTRY_NAME}/${REGISTRY_NAMESPACE}/rco-operator:bundle-${RELEASE}"
 
