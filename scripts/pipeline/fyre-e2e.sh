@@ -2,8 +2,9 @@
 
 readonly usage="Usage: fyre-e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace> --registry-user <user> --registry-password <password> --release <daily|release-tag> --test-tag <test-id>"
 #readonly SERVICE_ACCOUNT="travis-tests"
-readonly OC_CLIENT_VERSION="4.6.0"
 readonly CONTROLLER_MANAGER_NAME="rco-controller-manager"
+
+export OC_CLIENT_VERSION="4.6.0"
 
 # setup_env: Download oc cli, log into our persistent cluster, and create a test project
 setup_env() {
