@@ -49,7 +49,7 @@ function install_minikube() {
 
   mkdir -p $HOME/.kube $HOME/.minikube
   touch $KUBECONFIG
-  minikube start --profile=minikube --kubernetes-version=v1.19.4 --driver=docker --force
+  minikube start --profile=minikube --kubernetes-version=v1.24.0 --driver=docker --force
   minikube update-context --profile=minikube
 
   eval "$(minikube docker-env --profile=minikube)" && export DOCKER_CLI='docker'
