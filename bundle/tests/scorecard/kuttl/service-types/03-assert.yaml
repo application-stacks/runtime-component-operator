@@ -1,0 +1,49 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 60
+---
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: service-types-rc
+status:
+  binding:
+    name: service-types-rc-expose-binding
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-types-rc
+  annotations:
+    name: NodePort
+spec:
+  ports:
+    - name: test-port
+      protocol: TCP
+      port: 8080
+      targetPort: 8081
+      nodePort: 30932
+    - name: test-port1
+      protocol: TCP
+      port: 8082
+      targetPort: 8082
+    - name: test-port2
+      port: 8083
+      protocol: TCP
+      targetPort: 8083
+  type: NodePort
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: service-types-rc-expose-binding
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-types-rc
+status:
+  replicas: 1
+  readyReplicas: 1
+  updatedReplicas: 1

@@ -1,0 +1,44 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 60
+---
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: service-types-rc
+status:
+  binding:
+    name: service-types-rc-expose-binding
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    name: ClusterIPService
+  name: service-types-rc
+spec:
+  ports:
+    - name: 8080-tcp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: test-port1
+      protocol: TCP
+      port: 8081
+      targetPort: 8082
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: service-types-rc-expose-binding
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-types-rc
+status:
+  replicas: 1
+  readyReplicas: 1
+  updatedReplicas: 1

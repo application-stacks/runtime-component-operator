@@ -1,0 +1,21 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: service-types-rc
+spec:
+  # Add fields here
+  applicationImage: k8s.gcr.io/pause:2.0
+  replicas: 1
+  service:
+    bindable: true
+    port: 8082
+    portName: test-port
+    targetPort: 8083
+    ports:
+      - name: test-port1
+        port: 8081
+        protocol: TCP
+        targetPort: 8083
+    type: LoadBalancer
+    annotations:
+      name: LoadBalancerService
