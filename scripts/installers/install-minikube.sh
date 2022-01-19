@@ -22,6 +22,7 @@ function main () {
 function install_minikube() {
   sudo apt-get update -y
   sudo apt-get install -y lsb-release
+  sudo apt-get install -y systemd
   sudo apt-get -qq -y install conntrack
 
   ## Download docker
