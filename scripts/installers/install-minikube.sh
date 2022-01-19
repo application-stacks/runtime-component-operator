@@ -6,7 +6,6 @@ set -e
 export MINIKUBE_WANTUPDATENOTIFICATION=false
 export MINIKUBE_HOME=$HOME
 export KUBECONFIG=$HOME/.kube/config
-export DOCKER_HOST=unix:///var/run/docker.sock
 
 function main () {
   install_minikube
