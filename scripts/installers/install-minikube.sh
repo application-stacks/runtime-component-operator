@@ -26,10 +26,10 @@ function install_minikube() {
   sudo apt-get -qq -y install conntrack
 
   ## Download docker
-  echo "****** Installing Docker..."
+  echo "****** Installing sudo service docker stopDocker..."
   sudo apt-get install -y docker.io
-  sudo systemctl start docker
-  sudo systemctl enable docker
+  sudo service docker stop
+  sudo service docker start
 
   ## Download kubectl
   echo "****** Installing kubectl v1.19.4..."
