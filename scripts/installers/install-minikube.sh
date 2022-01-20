@@ -6,7 +6,7 @@ set -e
 export MINIKUBE_WANTUPDATENOTIFICATION=false
 export MINIKUBE_HOME=$HOME
 export KUBECONFIG=$HOME/.kube/config
-export DOCKER_HOST=unix:///var/run/docker.sock
+export DOCKER_HOST="unix:///var/run/docker.sock"
 
 function main () {
   install_minikube
@@ -23,6 +23,7 @@ function install_minikube() {
   sudo apt-get update -y
   sudo apt-get install -y lsb-release
   sudo apt-get -qq -y install conntrack
+  sudo apt-get install --reinstall systemd
 
   ## Download kubectl
   echo "****** Installing kubectl v1.19.4..."
