@@ -29,7 +29,6 @@ containerize:
     #!/usr/bin/env bash
     echo "Skip containerize"
 
-
 sign-artifact:
   image: wcp-compliance-automation-team-docker-local.artifactory.swg-devops.com/csso-image-sign:1.0.0@sha256:cb22e6ad6b3469155719f6bf09bde641208a1e349e5ccc09407204bb069f7b4e
   script: |

@@ -22,14 +22,7 @@ function main () {
 function install_minikube() {
   sudo apt-get update -y
   sudo apt-get install -y lsb-release
-  sudo apt-get install -y systemd
   sudo apt-get -qq -y install conntrack
-
-  ## Download docker
-  echo "****** Installing sudo service docker stopDocker..."
-  sudo apt-get install -y docker.io
-  sudo service docker stop
-  sudo service docker start
 
   ## Download kubectl
   echo "****** Installing kubectl v1.19.4..."
@@ -43,6 +36,18 @@ function install_minikube() {
   && chmod +x minikube \
   && sudo mv minikube /usr/local/bin/
   
+  ## Download docker
+  echo "****** Installing Docker..."
+  if test -f "/usr/share/keyrings/docker-archive-keyring.gpg"; then
+    rm /usr/share/keyrings/docker-archive-keyring.gpg
+  fi
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  sudo apt-get update  -y 
+  sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+
   mkdir -p $HOME/.kube $HOME/.minikube
   touch $KUBECONFIG
   minikube start --profile=minikube --kubernetes-version=v1.19.4 --driver=docker --force
