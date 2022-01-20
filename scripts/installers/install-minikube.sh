@@ -23,7 +23,7 @@ function install_minikube() {
   sudo apt-get update -y
   sudo apt-get install -y lsb-release
   sudo apt-get -qq -y install conntrack
-  sudo apt-get install --reinstall systemd
+  sudo apt-get install --reinstall -y systemd
 
   ## Download kubectl
   echo "****** Installing kubectl v1.19.4..."
