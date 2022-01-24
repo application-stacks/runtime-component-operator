@@ -70,20 +70,6 @@ acceptance-test:
     rm -rf /usr/local/go && tar -C /usr/local -xf go1.16.linux-amd64.tar.gz
     export PATH=$PATH:/usr/local/go/bin
     apt-get update  
-
-    apt-get -qq -y install build-essential software-properties-common uidmap
-    # Download and install skopeo
-    if ! command -v skopeo &> /dev/null; then  
-      if [ ! -f "/apt/sources.list.d/devel:kubic:libcontainers:stable.list" ]; then
-        sudo sh -c "echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_18.04/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list"      
-        wget --no-check-certificate -nv https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_18.04/Release.key -O- | sudo apt-key add -
-        sudo apt-get update -qq
-      fi
-      sudo apt-get -y install skopeo
-    else
-      skopeo --version
-    fi  
-
     export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
     export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key)  
     export DOCKER_USERNAME=$(get_env docker-username)
@@ -93,27 +79,6 @@ acceptance-test:
     export TRAVIS_BUILD_NUMBER=$BUILD_NUMBER   
     make setup
     make minikube-test-e2e
-
-    # Save artifacts
-    declare -a tags=("daily-amd64" "daily-ppc64le" "daily-s390x") 
-    for i in "${tags[@]}"
-    do
-      IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE:$i
-      DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
-      ARCH=$(echo $i | cut -d'-' -f 2)
-      echo "Saving artifact $i name=$IMAGE digest=$DIGEST"
-      save_artifact $i type=image name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"   
-    done
-    declare -a catalogs=("catalog-daily")
-    for i in "${catalogs[@]}"
-    do
-      IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE:$i
-      DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
-      #ARCH=$(echo $i | cut -d'-' -f 2)
-      ARCH=amd64
-      echo "Saving artifact $i name=$IMAGE digest=$DIGEST"
-      save_artifact $i type=image name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"   
-    done
 
 scan-artifact:
   abort_on_failure: false

@@ -37,6 +37,9 @@ function install_minikube() {
   && chmod +x minikube \
   && sudo mv minikube /usr/local/bin/
 
+  docker ps
+  docker pull open-liberty
+
   mkdir -p $HOME/.kube $HOME/.minikube
   touch $KUBECONFIG
   minikube start --profile=minikube --kubernetes-version=v1.19.4 --driver=docker --force
