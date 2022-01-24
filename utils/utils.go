@@ -126,7 +126,9 @@ func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, c
 				route.Spec.TLS.CACertificate = ""
 				route.Spec.TLS.Key = ""
 				route.Spec.TLS.DestinationCACertificate = ""
-				route.Spec.TLS.InsecureEdgeTerminationPolicy = ""
+				if rt.GetInsecureEdgeTerminationPolicy() != nil {
+					route.Spec.TLS.InsecureEdgeTerminationPolicy = *rt.GetInsecureEdgeTerminationPolicy()
+				}
 			} else if route.Spec.TLS.Termination == routev1.TLSTerminationEdge {
 				route.Spec.TLS.Certificate = crt
 				route.Spec.TLS.CACertificate = ca
