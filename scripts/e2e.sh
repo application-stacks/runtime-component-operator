@@ -1,6 +1,6 @@
 #!/bin/bash
 
-readonly usage="Usage: e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace> --release <daily|release-tag> --test-tag <test-id>"
+readonly usage="Usage: e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace> --release <daily|release-tag> --test-tag <test-id> --install-mode <OwnNamespace|SingleNamespace|AllNamespaces>"
 readonly SERVICE_ACCOUNT="travis-tests"
 readonly OC_CLIENT_VERSION="4.6.0"
 readonly CONTROLLER_MANAGER_NAME="rco-controller-manager"
@@ -18,12 +18,35 @@ setup_env() {
 
     # Set variables for rest of script to use
     readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
-    readonly TEST_NAMESPACE="runtime-operator-test-${TEST_TAG}"
+    readonly TEST_NAMESPACE="rco-test-${TEST_TAG}"
     readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/runtime-operator
     readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle:latest"
 
-    echo "****** Creating test namespace ${TEST_NAMESPACE} for release ${RELEASE}"
-    oc new-project "${TEST_NAMESPACE}" || oc project "${TEST_NAMESPACE}"
+    echo "****** Creating test namespace ${TEST_NAMESPACE} for release ${RELEASE}"    
+
+    if [[ "${INSTALL_MODE}" == "OwnNamespace" ]]; then
+      readonly WATCHED_NAMESPACE="${TEST_NAMESPACE}"
+      oc new-project "${TEST_NAMESPACE}"
+    else
+      readonly WATCHED_NAMESPACE="rco-watched-${TEST_TAG}"
+      oc new-project "${WATCHED_NAMESPACE}"
+      oc new-project "${TEST_NAMESPACE}"
+
+      if [[ "${INSTALL_MODE}" == "SingleNamespace" ]]; then
+        cp deploy/kustomize/daily/overlays/watch-another-namespace/watched-roles.yaml ./
+        sed -i "s/rco-ns/${TEST_NAMESPACE}/" watched-roles.yaml
+        sed -i "s/rco-watched-ns/${WATCHED_NAMESPACE}/" watched-roles.yaml
+        oc apply -f watched-roles.yaml
+      elif [[ "${INSTALL_MODE}" == "AllNamespaces" ]]; then
+        cp deploy/kustomize/daily/overlays/watch-all-namespaces/cluster-roles.yaml ./
+        sed -i "s/rco-ns/${TEST_NAMESPACE}/" cluster-roles.yaml
+        oc apply -f cluster-roles.yaml
+      else
+        echo "****** Install mode should be one of the following: OwnNamespace, SingleNamespace, AllNamespaces"
+        echo "${usage}"
+        exit 1
+      fi
+    fi
 
     ## Switch to release branch
     if [[ "${RELEASE}" != "daily" ]]; then
@@ -31,12 +54,13 @@ setup_env() {
     fi
 
     ## Create service account for Kuttl tests
-    oc apply -f config/rbac/kuttl-rbac.yaml
+    oc apply -f config/rbac/kuttl-rbac.yaml -n ${WATCHED_NAMESPACE}
 }
 
 ## cleanup_env : Delete generated resources that are not bound to a test TEST_NAMESPACE.
 cleanup_env() {
   oc delete project "${TEST_NAMESPACE}"
+  oc delete project "${WATCHED_NAMESPACE}"
 }
 
 push_images() {
@@ -91,6 +115,11 @@ main() {
         exit 1
     fi
 
+    if [[ -z "${INSTALL_MODE}" ]]; then
+        echo "****** Missing install mode, setting it to OwnNamespace mode"
+        readonly INSTALL_MODE="OwnNamespace"
+    fi
+
     echo "****** Setting up test environment..."
     setup_env
 
@@ -107,10 +136,18 @@ main() {
     push_images
 
     echo "****** Installing bundle..."
-    operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}" || {
+    # Create roles and bindings for SingleNamespace/AllNamespaces
+    if [[ "${INSTALL_MODE}" == "OwnNamespace" ]] || [[ "${INSTALL_MODE}" == "AllNamespaces" ]]; then
+      operator-sdk run bundle --install-mode ${INSTALL_MODE} --pull-secret-name regcred "${BUNDLE_IMAGE}" || {
         echo "****** Installing bundle failed..."
         exit 1
-    }
+      }
+    elif [[ "${INSTALL_MODE}" == "SingleNamespace" ]]; then
+      operator-sdk run bundle --install-mode "${INSTALL_MODE}=${WATCHED_NAMESPACE}" --pull-secret-name regcred "${BUNDLE_IMAGE}" || {
+        echo "****** Installing bundle failed..."
+        exit 1
+      }
+    fi
 
     # Wait for operator deployment to be ready
     while [[ $(oc get deploy "${CONTROLLER_MANAGER_NAME}" -o jsonpath='{ .status.readyReplicas }') -ne "1" ]]; do
@@ -121,7 +158,7 @@ main() {
     echo "****** ${CONTROLLER_MANAGER_NAME} deployment is ready..."
 
     echo "****** Starting scorecard tests..."
-    operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --service-account scorecard-kuttl --wait-time 30m ./bundle || {
+    operator-sdk scorecard --verbose --selector=suite=kuttlsuite --namespace "${WATCHED_NAMESPACE}" --service-account scorecard-kuttl --wait-time 30m ./bundle || {
         echo "****** Scorecard tests failed..."
         exit 1
     }
@@ -167,6 +204,10 @@ parse_args() {
     --test-tag)
       shift
       readonly TEST_TAG="${1}"
+      ;;
+    --install-mode)
+      shift
+      readonly INSTALL_MODE="${1}"
       ;;
     *)
       echo "Error: Invalid argument - $1"
