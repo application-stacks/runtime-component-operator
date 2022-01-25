@@ -36,8 +36,7 @@ function install_minikube() {
   && chmod +x minikube \
   && sudo mv minikube /usr/local/bin/
 
-  docker ps
-  docker pull open-liberty
+  echo $DOCKER_HOST
 
   mkdir -p $HOME/.kube $HOME/.minikube
   touch $KUBECONFIG
