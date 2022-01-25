@@ -37,6 +37,9 @@ function install_minikube() {
   && chmod +x minikube \
   && sudo mv minikube /usr/local/bin/
 
+  sudo apt update
+  sudo apt install -y kubelet kubeadm
+
   echo $DOCKER_HOST
 
   mkdir -p $HOME/.kube $HOME/.minikube
