@@ -6,6 +6,7 @@ set -e
 export MINIKUBE_WANTUPDATENOTIFICATION=false
 export MINIKUBE_HOME=$HOME
 export KUBECONFIG=$HOME/.kube/config
+export DOCKER_HOST=tcp://127.0.0.1:2376
 
 function main () {
   install_minikube
