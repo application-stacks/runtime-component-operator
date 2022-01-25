@@ -21,9 +21,15 @@ function main () {
 
 function install_minikube() {
   sudo apt-get update -y
-  sudo apt-get install -y lsb-release
   sudo apt-get -qq -y install conntrack
   sudo apt-get install --reinstall -y systemd
+  sudo apt-get install -y lsb-release apt-transport-https curl
+
+  echo "****** Installing kubelet"
+  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
+  sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+  sudo apt update
+  sudo apt install -y kubelet
 
   ## Download kubectl
   echo "****** Installing kubectl v1.19.4..."
@@ -43,6 +49,7 @@ function install_minikube() {
   && sudo mv kind /usr/local/bin/
 
   kind create cluster
+  kind create cluster --name kind --image kindest/node:v1.19.4
 
   mkdir -p $HOME/.kube $HOME/.minikube
   touch $KUBECONFIG
