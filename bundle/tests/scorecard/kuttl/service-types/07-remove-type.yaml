@@ -1,0 +1,24 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: service-types-rc
+spec:
+  # Add fields here
+  applicationImage: k8s.gcr.io/pause:2.0
+  replicas: 1
+  service:
+    bindable: true
+    port: 8080
+    portName: test-port
+    targetPort: 8081
+    ports:
+      - name: test-port1
+        port: 8082
+        protocol: TCP
+      - name: test-port2
+        port: 8083
+        protocol: TCP
+    nodePort:
+    type:
+    annotations:
+      name: NodePort

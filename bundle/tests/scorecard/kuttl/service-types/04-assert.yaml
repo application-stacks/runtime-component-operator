@@ -18,10 +18,10 @@ metadata:
     name: LoadBalancerService
 spec:
   ports:
-    - name: test-port
+    - name: 8082-tcp
       protocol: TCP
       port: 8082
-      targetPort: 8083
+      targetPort: 8082
     - name: test-port1
       protocol: TCP
       port: 8081

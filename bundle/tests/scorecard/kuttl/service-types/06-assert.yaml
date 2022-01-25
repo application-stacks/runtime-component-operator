@@ -15,18 +15,23 @@ kind: Service
 metadata:
   name: service-types-rc
   annotations:
-    name: LoadBalancerService
+    name: NodePort
 spec:
   ports:
     - name: test-port
       protocol: TCP
-      port: 8082
-      targetPort: 8083
+      port: 8080
+      targetPort: 8081
+      nodePort: 30932
     - name: test-port1
       protocol: TCP
-      port: 8081
+      port: 8082
+      targetPort: 8082
+    - name: test-port2
+      port: 8083
+      protocol: TCP
       targetPort: 8083
-  type: LoadBalancer
+  type: NodePort
 ---
 apiVersion: v1
 kind: Secret

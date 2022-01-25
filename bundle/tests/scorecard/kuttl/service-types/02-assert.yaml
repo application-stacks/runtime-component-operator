@@ -13,20 +13,16 @@ status:
 apiVersion: v1
 kind: Service
 metadata:
-  name: service-types-rc
   annotations:
-    name: LoadBalancerService
+    name: ClusterIPService
+  name: service-types-rc
 spec:
   ports:
-    - name: test-port
+    - name: 8080-tcp
       protocol: TCP
-      port: 8082
-      targetPort: 8083
-    - name: test-port1
-      protocol: TCP
-      port: 8081
-      targetPort: 8083
-  type: LoadBalancer
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
 ---
 apiVersion: v1
 kind: Secret
