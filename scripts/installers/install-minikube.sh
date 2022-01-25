@@ -37,7 +37,12 @@ function install_minikube() {
   && chmod +x minikube \
   && sudo mv minikube /usr/local/bin/
 
-  echo $DOCKER_HOST
+  echo "****** Installing Kind v0.11.1..."
+  curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64 \
+  && chmod +x kind \
+  && sudo mv kind /usr/local/bin/
+
+  kind create cluster
 
   mkdir -p $HOME/.kube $HOME/.minikube
   touch $KUBECONFIG
