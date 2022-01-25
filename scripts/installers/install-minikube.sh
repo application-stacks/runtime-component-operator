@@ -20,9 +20,9 @@ function main () {
 
 function install_minikube() {
   sudo apt-get update -y
-  sudo apt-get -qq -y install conntrack
+  sudo apt-get -qq -y install conntrack 
   sudo apt-get install --reinstall -y systemd
-  sudo apt-get install -y lsb-release apt-transport-https curl
+  sudo apt-get install -y lsb-release apt-transport-https software-properties-common
 
   echo "****** Installing kubelet"
   curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
