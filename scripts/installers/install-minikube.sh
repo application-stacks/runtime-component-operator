@@ -32,8 +32,8 @@ function install_minikube() {
   && sudo mv kubectl /usr/local/bin/ 
 
   ## Download minikube
-  echo "****** Installing Minikube v1.24.0..."
-  curl -Lo minikube https://storage.googleapis.com/minikube/releases/v1.24.0/minikube-linux-amd64 \
+  echo "****** Installing Minikube v1.21.0..."
+  curl -Lo minikube https://storage.googleapis.com/minikube/releases/v1.21.0/minikube-linux-amd64 \
   && chmod +x minikube \
   && sudo mv minikube /usr/local/bin/
 
