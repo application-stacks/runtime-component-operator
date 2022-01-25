@@ -1,0 +1,21 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 60
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sa-name-rc
+spec:
+  template:
+    spec:
+      serviceAccountName: sa-name-rc
+status:
+  replicas: 1
+  readyReplicas: 1
+  updatedReplicas: 1
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: sa-name-rc
