@@ -21,7 +21,7 @@ function main () {
 
 function install_minikube() {
   sudo apt-get update -y
-  sudo apt-get install -y lsb-release
+  sudo apt-get install -y lsb-release kubelet kubeadm
   sudo apt-get -qq -y install conntrack
   sudo apt-get install --reinstall -y systemd
 
@@ -36,9 +36,6 @@ function install_minikube() {
   curl -Lo minikube https://storage.googleapis.com/minikube/releases/v1.21.0/minikube-linux-amd64 \
   && chmod +x minikube \
   && sudo mv minikube /usr/local/bin/
-
-  sudo apt update
-  sudo apt install -y kubelet kubeadm
 
   echo $DOCKER_HOST
 
