@@ -47,6 +47,10 @@ function install_minikube() {
   && chmod +x kind \
   && sudo mv kind /usr/local/bin/
 
+  update-alternatives --set iptables  /usr/sbin/iptables-legacy || true && \
+  update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy || true && \
+  update-alternatives --set arptables /usr/sbin/arptables-legacy || true
+
   kind create cluster
   kind create cluster --name kind --image kindest/node:v1.19.4
 
