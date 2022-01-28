@@ -20,7 +20,7 @@ stages:
   - name: e2e-test
     if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
   - name: build
-    if: (branch = main OR tag =~ ^v) AND fork = false AND type != pull_request AND type != cron
+    if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
   - name: build-manifest
     if: (branch = main OR tag =~ ^v) AND fork = false AND type != pull_request AND type != cron
   # Releases are rebuilt weekly via a Travis cron job
@@ -41,16 +41,16 @@ jobs:
       os: linux
       arch: amd64
       script: travis_wait 45 make setup test-e2e || travis_terminate 1
-    # - name: Build image on ppc64le
-    #   stage: build
-    #   os: linux
-    #   arch: ppc64le
-    #   script: make build-releases && make build-manifest
-    # - name: Build image on s390x
-    #   stage: build
-    #   os: linux
-    #   arch: s390x
-    #   script: make build-releases && make build-manifest
+    - name: Build image on ppc64le
+      stage: build
+      os: linux
+      arch: ppc64le
+      script: make build-releases && make build-manifest
+    - name: Build image on s390x
+      stage: build
+      os: linux
+      arch: s390x
+      script: make build-releases && make build-manifest
     - name: Build image and bundle on amd64
       stage: build
       os: linux
