@@ -42,6 +42,14 @@ rules:
   - get
   - list
 - apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - patch
+- apiGroups:
   - apps
   resources:
   - deployments
