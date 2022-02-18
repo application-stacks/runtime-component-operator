@@ -27,9 +27,11 @@ stages:
   - name: rebuild-e2e-test
     if: branch = main AND fork = false AND type = cron
   - name: rebuild-releases
-    if: branch = main AND fork = false AND type = cron
+    if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
+  - name: rebuild-manifest
+    if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
   - name: rebuild-bundles
-    if: branch = main AND fork = false AND type = cron
+    if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
 
 jobs:
   include:
@@ -76,21 +78,31 @@ jobs:
       os: linux
       arch: amd64
       script: travis_wait 45 make setup test-e2e RELEASE_TARGET="releases" || travis_terminate 1
-    # - name: Build releases on ppc64le
-    #   stage: rebuild-releases
-    #   os: linux
-    #   arch: ppc64le
-    #   script: make build-releases RELEASE_TARGET="releases"
-    # - name: Build releases on s390x
-    #   stage: rebuild-releases
-    #   os: linux
-    #   arch: s390x
-    #   script: make build-releases RELEASE_TARGET="releases"
+    - name: Build releases on ppc64le
+      stage: rebuild-releases
+      os: linux
+      arch: ppc64le
+      script: make build-releases RELEASE_TARGET="releases"
+    - name: Build releases on s390x
+      stage: rebuild-releases
+      os: linux
+      arch: s390x
+      script: make build-releases RELEASE_TARGET="releases"
     - name: Build releases on amd64
       stage: rebuild-releases
       os: linux
       arch: amd64
       script: make build-releases RELEASE_TARGET="releases"
+    - name: Build manifest on ppc64le
+      stage: rebuild-manifest
+      os: linux
+      arch: ppc64le
+      script: make build-manifest RELEASE_TARGET="releases"
+    - name: Build manifest on s390x
+      stage: rebuild-manifest
+      os: linux
+      arch: s390x
+      script: make build-manifest RELEASE_TARGET="releases"
     # Bundle all non-ignored releases
     - name: Bundle releases
       stage: rebuild-bundles
