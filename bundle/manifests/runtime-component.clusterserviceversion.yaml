@@ -38,13 +38,13 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: applicationstacks/operator:daily
-    createdAt: 22-01-24T14:41:26Z
+    createdAt: 22-02-22T16:28:15Z
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     operators.operatorframework.io/builder: operator-sdk-v1.6.1+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
-  name: runtime-component.v0.8.0
+  name: runtime-component.v0.8.1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -664,4 +664,4 @@ spec:
   maturity: beta
   provider:
     name: Community
-  version: 0.8.0
+  version: 0.8.1
