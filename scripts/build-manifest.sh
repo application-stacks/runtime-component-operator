@@ -60,25 +60,12 @@ build_manifest() {
   local tag="$1"
   echo "****** Building manifest for: ${tag}"
 
-  ## Define current arch variable
-  case "$(uname -p)" in
-  "ppc64le")
-    readonly arch="ppc64le"
-    ;;
-  "s390x")
-    readonly arch="s390x"
-    ;;
-  *)
-    readonly arch="amd64"
-    ;;
-  esac
-
   ## try to build manifest but allow failure
   ## this allows new release builds
   local target="${IMAGE}:${tag}"
-  # --platforms "linux/amd64,linux/s390x,linux/ppc64le" \
+  
   manifest-tool push from-args \
-    --platforms "linux/${arch}" \
+    --platforms "linux/amd64,linux/s390x,linux/ppc64le" \
     --template "${target}-ARCH" \
     --target "${target}" \
     || echo "*** WARN: Target architectures not available"
