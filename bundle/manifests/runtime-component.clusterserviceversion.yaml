@@ -37,7 +37,7 @@ metadata:
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
-  name: runtime-component.v0.8.0
+  name: runtime-component.v0.8.1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -592,4 +592,4 @@ spec:
   maturity: beta
   provider:
     name: Community
-  version: 0.8.0
+  version: 0.8.1
