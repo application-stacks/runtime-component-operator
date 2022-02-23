@@ -1,7 +1,7 @@
 OPERATOR_SDK_RELEASE_VERSION ?= v1.6.4
 
 # Current Operator version
-VERSION ?= 0.8.0
+VERSION ?= 0.8.1
 
 OPERATOR_IMAGE ?= applicationstacks/operator
 PIPELINE_REGISTRY ?= cp.stg.icr.io
