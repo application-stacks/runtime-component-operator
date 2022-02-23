@@ -27,9 +27,9 @@ stages:
   - name: rebuild-e2e-test
     if: branch = main AND fork = false AND type = cron
   - name: rebuild-releases
-    if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
+    if: branch = main AND fork = false AND type = cron
   - name: rebuild-bundles
-    if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
+    if: branch = main AND fork = false AND type = cron
 
 jobs:
   include:
