@@ -62,16 +62,16 @@ type RuntimeComponentReconciler struct {
 	watchNamespaces []string
 }
 
-// +kubebuilder:rbac:groups=rc.app.stacks,resources=runtimecomponents;runtimecomponents/status;runtimecomponents/finalizers,verbs=get;list;watch;create;update;patch;delete,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=apps,resources=deployments;statefulsets,verbs=get;list;watch;create;update;patch;delete,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=rc.app.stacks,resources=runtimecomponents;runtimecomponents/status;runtimecomponents/finalizers,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=apps,resources=deployments;statefulsets,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=apps,resources=deployments/finalizers;statefulsets,verbs=update,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=core,resources=services;secrets;serviceaccounts;configmaps,verbs=get;list;watch;create;update;patch;delete,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=get;list;watch;create;update;patch;delete,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=route.openshift.io,resources=routes;routes/custom-host,verbs=get;list;watch;create;update;patch;delete,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=core,resources=services;secrets;serviceaccounts;configmaps,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=route.openshift.io,resources=routes;routes/custom-host,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=image.openshift.io,resources=imagestreams;imagestreamtags,verbs=get;list;watch,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=get;list;watch;create;update;patch;delete,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;list;watch;create;update;patch;delete,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
