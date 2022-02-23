@@ -76,16 +76,16 @@ jobs:
       os: linux
       arch: amd64
       script: travis_wait 45 make setup test-e2e RELEASE_TARGET="releases" || travis_terminate 1
-    # - name: Build releases on ppc64le
-    #   stage: rebuild-releases
-    #   os: linux
-    #   arch: ppc64le
-    #   script: make build-releases RELEASE_TARGET="releases"
-    # - name: Build releases on s390x
-    #   stage: rebuild-releases
-    #   os: linux
-    #   arch: s390x
-    #   script: make build-releases RELEASE_TARGET="releases"
+    - name: Build releases on ppc64le
+      stage: rebuild-releases
+      os: linux
+      arch: ppc64le
+      script: make build-releases RELEASE_TARGET="releases"
+    - name: Build releases on s390x
+      stage: rebuild-releases
+      os: linux
+      arch: s390x
+      script: make build-releases RELEASE_TARGET="releases"
     - name: Build releases on amd64
       stage: rebuild-releases
       os: linux
