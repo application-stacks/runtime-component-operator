@@ -592,4 +592,5 @@ spec:
   maturity: beta
   provider:
     name: Community
+  replaces: runtime-component.v0.8.0
   version: 0.8.1
