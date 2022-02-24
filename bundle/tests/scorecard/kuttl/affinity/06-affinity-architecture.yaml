@@ -7,4 +7,4 @@ spec:
   # Add fields here
   affinity:
     architecture:
-      - amd64
+      - ppc64le

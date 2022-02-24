@@ -5,5 +5,5 @@ metadata:
   name: day2-operation-rc
 spec:
   # Add fields here
-  applicationImage: 'navidsh/demo-day'
+  applicationImage: 'icr.io/appcafe/open-liberty:kernel-slim-java8-openj9-ubi'
   replicas: 1

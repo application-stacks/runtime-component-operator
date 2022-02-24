@@ -11,7 +11,7 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - image: navidsh/demo-day@sha256:391a9cc130bb96e6b4c3ea0f1c0ac8ae231a5d10a34232e6efd46ab5a6162472
+  - image: icr.io/appcafe/open-liberty@sha256:fe6946b66b4d2f085e09fa0a44d9d756a1109bda9594b5394c6b5cc3611d397b
 metadata:
   labels:
     app.kubernetes.io/instance: imagestream-rc

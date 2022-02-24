@@ -6,7 +6,7 @@ spec:
   template:
     spec:
       containers:
-      - image: navidsh/demo-day@sha256:b441e81a681df8fdf6922f00318fb78d15dea7f24823eef58b2480aa84aba823
+      - image: icr.io/appcafe/open-liberty:kernel-slim-java8-openj9-ubi@sha256:9aaeada9dfc5cbf1f01c4a5c7d6a5d80baf4ebfce4d40b519f743b147746f145
 status:
   replicas: 1
   readyReplicas: 1
@@ -19,4 +19,4 @@ metadata:
     app.kubernetes.io/instance: imagestream-rc
 spec:
   containers:
-  - image: navidsh/demo-day@sha256:b441e81a681df8fdf6922f00318fb78d15dea7f24823eef58b2480aa84aba823
+  - image: icr.io/appcafe/open-liberty:kernel-slim-java8-openj9-ubi@sha256:9aaeada9dfc5cbf1f01c4a5c7d6a5d80baf4ebfce4d40b519f743b147746f145

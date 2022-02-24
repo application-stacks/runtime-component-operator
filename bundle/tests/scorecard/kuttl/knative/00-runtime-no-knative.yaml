@@ -6,7 +6,7 @@ metadata:
   name: knative1-rc
 spec:
   # Add fields here
-  applicationImage: navidsh/demo-day
+  applicationImage: icr.io/appcafe/open-liberty:kernel-slim-java8-openj9-ubi
   replicas: 1
   createKnativeService: false
 

@@ -14,7 +14,7 @@ spec:
                   - key: kubernetes.io/arch
                     operator: In
                     values:
-                      - amd64
+                      - ppc64le
 status:
   replicas: 1
   readyReplicas: 1
