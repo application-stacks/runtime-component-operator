@@ -15,9 +15,7 @@ rules:
   verbs:
   - create
   - delete
-  - get
   - list
-  - patch
   - update
   - watch
 - apiGroups:
@@ -34,24 +32,7 @@ rules:
   verbs:
   - create
   - delete
-  - get
   - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - secrets
-  - serviceaccounts
-  - services
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
   - update
   - watch
 - apiGroups:
@@ -62,9 +43,19 @@ rules:
   verbs:
   - create
   - delete
-  - get
   - list
-  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  - serviceaccounts
+  - services
+  verbs:
+  - create
+  - delete
+  - list
   - update
   - watch
 - apiGroups:
@@ -83,9 +74,7 @@ rules:
   verbs:
   - create
   - delete
-  - get
   - list
-  - patch
   - update
   - watch
 - apiGroups:
@@ -95,9 +84,7 @@ rules:
   verbs:
   - create
   - delete
-  - get
   - list
-  - patch
   - update
   - watch
 - apiGroups:
@@ -109,9 +96,7 @@ rules:
   verbs:
   - create
   - delete
-  - get
   - list
-  - patch
   - update
   - watch
 - apiGroups:
@@ -121,11 +106,8 @@ rules:
   - runtimeoperations/finalizers
   - runtimeoperations/status
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
   - update
   - watch
 - apiGroups:
@@ -136,9 +118,7 @@ rules:
   verbs:
   - create
   - delete
-  - get
   - list
-  - patch
   - update
   - watch
 - apiGroups:
@@ -148,8 +128,6 @@ rules:
   verbs:
   - create
   - delete
-  - get
   - list
-  - patch
   - update
   - watch

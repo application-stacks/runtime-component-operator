@@ -38,7 +38,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: applicationstacks/operator:daily
-    createdAt: 22-02-23T14:56:20Z
+    createdAt: 22-02-24T09:34:26Z
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     operators.operatorframework.io/builder: operator-sdk-v1.6.1+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
@@ -489,9 +489,7 @@ spec:
           verbs:
           - create
           - delete
-          - get
           - list
-          - patch
           - update
           - watch
         - apiGroups:
@@ -508,24 +506,7 @@ spec:
           verbs:
           - create
           - delete
-          - get
           - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - ""
-          resources:
-          - configmaps
-          - secrets
-          - serviceaccounts
-          - services
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
           - update
           - watch
         - apiGroups:
@@ -536,9 +517,19 @@ spec:
           verbs:
           - create
           - delete
-          - get
           - list
-          - patch
+          - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - secrets
+          - serviceaccounts
+          - services
+          verbs:
+          - create
+          - delete
+          - list
           - update
           - watch
         - apiGroups:
@@ -557,9 +548,7 @@ spec:
           verbs:
           - create
           - delete
-          - get
           - list
-          - patch
           - update
           - watch
         - apiGroups:
@@ -569,9 +558,7 @@ spec:
           verbs:
           - create
           - delete
-          - get
           - list
-          - patch
           - update
           - watch
         - apiGroups:
@@ -583,9 +570,7 @@ spec:
           verbs:
           - create
           - delete
-          - get
           - list
-          - patch
           - update
           - watch
         - apiGroups:
@@ -595,11 +580,8 @@ spec:
           - runtimeoperations/finalizers
           - runtimeoperations/status
           verbs:
-          - create
-          - delete
           - get
           - list
-          - patch
           - update
           - watch
         - apiGroups:
@@ -610,9 +592,7 @@ spec:
           verbs:
           - create
           - delete
-          - get
           - list
-          - patch
           - update
           - watch
         - apiGroups:
@@ -622,9 +602,7 @@ spec:
           verbs:
           - create
           - delete
-          - get
           - list
-          - patch
           - update
           - watch
         serviceAccountName: rco-controller-manager

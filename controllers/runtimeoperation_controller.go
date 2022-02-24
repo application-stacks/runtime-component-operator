@@ -49,7 +49,7 @@ type RuntimeOperationReconciler struct {
 	RestConfig *rest.Config
 }
 
-// +kubebuilder:rbac:groups=rc.app.stacks,resources=runtimeoperations;runtimeoperations/status;runtimeoperations/finalizers,verbs=get;list;watch,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=rc.app.stacks,resources=runtimeoperations;runtimeoperations/status;runtimeoperations/finalizers,verbs=get;list;update;watch,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=core,resources=pods;pods/exec,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
 
 func (r *RuntimeOperationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
