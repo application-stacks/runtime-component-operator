@@ -39,11 +39,11 @@ metadata:
     certified: "true"
     createdAt: "2022-02-25T09:00:00Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
+    olm.skipRange: <0.8.1
     operators.operatorframework.io/builder: operator-sdk-v1.6.1+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
-    olm.skipRange: "<0.8.1"
   name: runtime-component.v0.8.1
   namespace: placeholder
 spec:

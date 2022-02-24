@@ -5,8 +5,10 @@ metadata:
     alm-examples: '[]'
     capabilities: Auto Pilot
     categories: Application Runtime
-    createdAt: "2021-11-25T09:00:00Z"
+    certified: "true"
+    createdAt: "2022-02-25T09:00:00Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
+    olm.skipRange: <0.8.1
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
   name: runtime-component.v0.0.0
