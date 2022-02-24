@@ -3,7 +3,7 @@ kind: RuntimeComponent
 metadata:
   name: persistent-rc
 spec:
-  applicationImage: navidsh/demo-day
+  applicationImage: icr.io/appcafe/open-liberty:kernel-slim-java8-openj9-ubi
   replicas: 1
   volumeMounts:
   statefulSet: {}

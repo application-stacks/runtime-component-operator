@@ -3,27 +3,31 @@ kind: RuntimeComponent
 metadata:
   name: probes-rc
 spec:
-  # Add fields here
-  applicationImage: navidsh/demo-day
-  service:
-    type: "ClusterIP"
-    port: 3000
+  applicationImage: icr.io/appcafe/open-liberty:full-java8-openj9-ubi
   replicas: 1
+  expose: false
   probes:
     startup:
       failureThreshold: 10
       periodSeconds: 5
       httpGet:
-        path: "/"
-        port: 3000
-    liveness:
-      initialDelaySeconds: 4
-      httpGet:
-        path: "/"
-        port: 3000
+        path: /
+        port: 9080
     readiness:
-      initialDelaySeconds: 1
       httpGet:
-        path: "/"
-        port: 3000
-
+        path: /
+        port: 9080
+      initialDelaySeconds: 1
+      timeoutSeconds: 1
+      periodSeconds: 5
+      successThreshold: 1
+      failureThreshold: 24
+    liveness:
+      httpGet:
+        path: /
+        port: 9080
+      initialDelaySeconds: 4
+      timeoutSeconds: 1
+      periodSeconds: 5
+      successThreshold: 1
+      failureThreshold: 12

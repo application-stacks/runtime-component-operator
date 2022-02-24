@@ -4,7 +4,7 @@ metadata:
   name: sa-name-rc
   # Add fields here
 spec:
-  applicationImage: k8s.gcr.io/pause:2.0
+  applicationImage: k8s.gcr.io/pause:3.2
   replicas: 1
   service:
     port: 9080

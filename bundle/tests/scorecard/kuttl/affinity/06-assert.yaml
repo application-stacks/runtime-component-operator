@@ -14,7 +14,7 @@ spec:
                   - key: kubernetes.io/arch
                     operator: In
                     values:
-                      - amd64
+                      - s390x
 status:
   replicas: 1
   readyReplicas: 1
