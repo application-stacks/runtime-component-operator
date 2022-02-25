@@ -79,7 +79,7 @@ build_release() {
     git checkout -q "${RELEASE}"
   fi
 
-  docker build -t "${full_image}" .
+  docker build -t "${full_image}" --build-arg GO_ARCH=${arch} .
   return $?
 }
 
