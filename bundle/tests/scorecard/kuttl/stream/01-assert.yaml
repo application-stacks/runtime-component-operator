@@ -6,7 +6,7 @@ spec:
   template:
     spec:
       containers:
-      - image: icr.io/appcafe/open-liberty@sha256:9aaeada9dfc5cbf1f01c4a5c7d6a5d80baf4ebfce4d40b519f743b147746f145
+      - image: icr.io/appcafe/open-liberty@sha256:deb5826538126b8e8b092f24ea3fb8fe87313b39c13f6cfe8c7bc908a71a9d3e
 status:
   replicas: 1
   readyReplicas: 1
@@ -16,7 +16,7 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - image: icr.io/appcafe/open-liberty@sha256:9aaeada9dfc5cbf1f01c4a5c7d6a5d80baf4ebfce4d40b519f743b147746f145
+  - image: icr.io/appcafe/open-liberty@sha256:deb5826538126b8e8b092f24ea3fb8fe87313b39c13f6cfe8c7bc908a71a9d3e
 metadata:
   labels:
     app.kubernetes.io/instance: imagestream-rc
