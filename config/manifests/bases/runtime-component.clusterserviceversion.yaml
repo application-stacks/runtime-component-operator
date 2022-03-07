@@ -7,7 +7,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: applicationstacks/operator:daily
-    createdAt: "2021-11-25T14:00:00Z"
+    createdAt: "2022-02-25T09:00:00Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
