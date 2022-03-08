@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/application-stacks/runtime-component-operator/common"
 	"github.com/pkg/errors"
@@ -183,7 +184,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 				if image.DockerImageReference != "" {
 					instance.Status.ImageReference = image.DockerImageReference
 				}
-			} else if err != nil && !kerrors.IsNotFound(err) && !kerrors.IsForbidden(err) {
+			} else if err != nil && !kerrors.IsNotFound(err) && !kerrors.IsForbidden(err) && !strings.Contains(isTagName, "/") {
 				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 			}
 		}
