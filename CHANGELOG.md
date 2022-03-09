@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file.
 
 ## [0.8.1]
 
+### Fixed
+
+- Fix to allow multiple /'s in application image ([#333](https://github.com/application-stacks/runtime-component-operator/pull/333))
+
 ### Added
 
 - Added p and z-linux images to Docker Hub ([#332](https://github.com/application-stacks/runtime-component-operator/pull/332))
