@@ -16,7 +16,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Added p and z-linux images to Docker Hub ([#332](https://github.com/application-stacks/runtime-component-operator/pull/332))
+- Added p and z-linux images to Docker Hub to support install options with kubectl or kustomize. OLM install option only supports amd64. ([#332](https://github.com/application-stacks/runtime-component-operator/pull/332))
 
 ## [0.8.0]
 
