@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.1]
+
+### Fixed
+
+- Fix to allow multiple /'s in application image ([#333](https://github.com/application-stacks/runtime-component-operator/pull/333))
+
+### Added
+
+- Added p and z-linux images to Docker Hub ([#332](https://github.com/application-stacks/runtime-component-operator/pull/332))
+
 ## [0.8.0]
 
 **Breaking changes:** API version of the custom resources (CRs) `RuntimeComponent` and `RuntimeOperation` have changed. Custom resources with `apiVersion: app.stacks/v1beta1` are not handled by Runtime Component Operator versions 0.8.0 and above. You must delete existing custom resources with `apiVersion: app.stacks/v1beta1` and create new custom resources with `apiVersion: rc.app.stacks/v1beta2`.
@@ -113,7 +123,8 @@ See the [new user guide](https://github.com/application-stacks/runtime-component
 The initial release of the Runtime Component Operator 🎉
 
 
-[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.8.1
 [0.8.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.8.0
 [0.7.1]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.7.1
 [0.7.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.7.0

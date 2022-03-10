@@ -41,16 +41,16 @@ jobs:
       os: linux
       arch: amd64
       script: travis_wait 45 make setup test-e2e || travis_terminate 1
-    # - name: Build image on ppc64le
-    #   stage: build
-    #   os: linux
-    #   arch: ppc64le
-    #   script: make build-releases && make build-manifest
-    # - name: Build image on s390x
-    #   stage: build
-    #   os: linux
-    #   arch: s390x
-    #   script: make build-releases && make build-manifest
+    - name: Build image on ppc64le
+      stage: build
+      os: linux
+      arch: ppc64le
+      script: make build-releases
+    - name: Build image on s390x
+      stage: build
+      os: linux
+      arch: s390x
+      script: make build-releases
     - name: Build image and bundle on amd64
       stage: build
       os: linux
