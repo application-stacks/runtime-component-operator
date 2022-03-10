@@ -2,7 +2,7 @@
 
 == Changelog
 
-All notable changes are documented in the link:++https://github.com/application-stacks/runtime-component-operator/blob/main/CHANGELOG.md#080++[Changelog].
+All notable changes are documented in the link:++https://github.com/application-stacks/runtime-component-operator/blob/main/CHANGELOG.md#081++[Changelog].
 
 == Supported Environments
 
