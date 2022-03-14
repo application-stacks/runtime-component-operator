@@ -95,10 +95,20 @@ rules:
   - patch
   - delete
 - apiGroups:
-    - route.openshift.io
+  - route.openshift.io
   resources:
-    - routes
+  - routes
   verbs:
-    - get
-    - list
-    - delete
+  - get
+  - list
+  - delete
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - networkpolicies
+  verbs:
+  - get
+  - list
+  - create
+  - patch
+  - delete

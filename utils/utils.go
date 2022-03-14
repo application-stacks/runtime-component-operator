@@ -306,6 +306,79 @@ func customizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 	return probe
 }
 
+// CustomizeNetworkPolicy configures a network policy that blocks all traffic by default. If the runtime component is
+// exposed, an ingress rule will be configured to allow traffic into the pod on the service port (and any additional
+// ports that were defined). If networkPolicy.fromLabels are specified, a similar ingress rule will be configured but
+// will only allow traffic from pods with the specified labels.
+func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, ba common.BaseComponent) {
+	obj := ba.(metav1.Object)
+	networkPolicy.Labels = ba.GetLabels()
+	networkPolicy.Annotations = MergeMaps(networkPolicy.Annotations, ba.GetAnnotations())
+
+	networkPolicy.Spec.PolicyTypes = []networkingv1.PolicyType{networkingv1.PolicyTypeIngress}
+
+	networkPolicy.Spec.PodSelector = metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			common.GetComponentNameLabel(ba): obj.GetName(),
+		},
+	}
+
+	if exposed := ba.GetExpose(); (exposed == nil || !*exposed) && ba.GetNetworkPolicy().GetFromLabels() == nil {
+		networkPolicy.Spec.Ingress = nil
+		return
+	}
+
+	if len(networkPolicy.Spec.Ingress) == 0 {
+		networkPolicy.Spec.Ingress = append(networkPolicy.Spec.Ingress, networkingv1.NetworkPolicyIngressRule{})
+	}
+
+	customizeNetworkPolicyIngressRule(&networkPolicy.Spec.Ingress[0], ba)
+}
+
+func customizeNetworkPolicyIngressRule(ingress *networkingv1.NetworkPolicyIngressRule, ba common.BaseComponent) {
+	if len(ingress.From) == 0 {
+		ingress.From = append(ingress.From, networkingv1.NetworkPolicyPeer{})
+	}
+
+	ingress.From[0] = networkingv1.NetworkPolicyPeer{
+		NamespaceSelector: &metav1.LabelSelector{
+			MatchLabels: map[string]string{},
+		},
+	}
+
+	if fromLabels := ba.GetNetworkPolicy().GetFromLabels(); fromLabels != nil {
+		ingress.From[0].PodSelector = &metav1.LabelSelector{
+			MatchLabels: fromLabels,
+		}
+	}
+
+	var ports []int32
+	ports = append(ports, ba.GetService().GetPort())
+	for _, port := range ba.GetService().GetPorts() {
+		ports = append(ports, port.Port)
+	}
+
+	currentLen := len(ingress.Ports)
+	desiredLen := len(ba.GetService().GetPorts()) + 1 // Add one for normal port
+
+	// Shrink if needed
+	if currentLen > desiredLen {
+		ingress.Ports = ingress.Ports[:desiredLen]
+		currentLen = desiredLen
+	}
+
+	// Add additional ports needed
+	for currentLen < desiredLen {
+		ingress.Ports = append(ingress.Ports, networkingv1.NetworkPolicyPort{})
+		currentLen++
+	}
+
+	for i, port := range ports {
+		newPort := &intstr.IntOrString{Type: intstr.Int, IntVal: port}
+		ingress.Ports[i].Port = newPort
+	}
+}
+
 // CustomizeAffinity ...
 func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 

@@ -1,0 +1,12 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: network-policy-rc
+spec:
+  applicationImage: k8s.gcr.io/pause:2.0
+  expose: true
+  service:
+    port: 8080
+    ports:
+      - port: 9090
+        protocol: TCP

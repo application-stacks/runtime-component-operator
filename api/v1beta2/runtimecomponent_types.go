@@ -138,6 +138,9 @@ type RuntimeComponentSpec struct {
 	// Security context for the application container.
 	// +operator-sdk:csv:customresourcedefinitions:order=25,type=spec,displayName="Security Context"
 	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
+
+	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Network Policy"
+	NetworkPolicy *RuntimeComponentNetworkPolicy `json:"networkPolicy,omitempty"`
 }
 
 // Define health checks on application container to determine whether it is alive or ready to receive traffic
@@ -238,6 +241,13 @@ type RuntimeComponentService struct {
 	// Expose the application as a bindable service. Defaults to false.
 	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Bindable",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	Bindable *bool `json:"bindable,omitempty"`
+}
+
+// Defines the network policy
+type RuntimeComponentNetworkPolicy struct {
+	// Specify the labels of pod(s) that incoming traffic is allowed from.
+	// +operator-sdk:csv:customresourcedefinitions:order=46,type=spec,displayName="From Labels",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	FromLabels map[string]string `json:"fromLabels,omitempty"`
 }
 
 // Defines the desired state and cycle of applications.
@@ -367,7 +377,7 @@ const (
 // +kubebuilder:printcolumn:name="Reason",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].reason",priority=1,description="Reason for the failure of reconcile condition"
 // +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].message",priority=1,description="Failure message from reconcile condition"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",priority=0,description="Age of the resource"
-// +operator-sdk:csv:customresourcedefinitions:displayName="RuntimeComponent",resources={{Deployment,v1},{Service,v1},{StatefulSet,v1},{Route,v1},{HorizontalPodAutoscaler,v1},{ServiceAccount,v1},{Secret,v1}}
+// +operator-sdk:csv:customresourcedefinitions:displayName="RuntimeComponent",resources={{Deployment,v1},{Service,v1},{StatefulSet,v1},{Route,v1},{HorizontalPodAutoscaler,v1},{ServiceAccount,v1},{Secret,v1},{NetworkPolicy,v1}}
 
 // Represents the deployment of a runtime component
 type RuntimeComponent struct {
@@ -510,6 +520,10 @@ func (cr *RuntimeComponent) GetService() common.BaseComponentService {
 		return nil
 	}
 	return cr.Spec.Service
+}
+
+func (cr *RuntimeComponent) GetNetworkPolicy() common.BaseComponentNetworkPolicy {
+	return cr.Spec.NetworkPolicy
 }
 
 // GetApplicationVersion returns application version
@@ -705,6 +719,21 @@ func (s *RuntimeComponentService) GetBindable() *bool {
 	return s.Bindable
 }
 
+func (np *RuntimeComponentNetworkPolicy) GetFromLabels() map[string]string {
+	if np == nil {
+		return nil
+	}
+	return np.FromLabels
+}
+
+func (np *RuntimeComponentNetworkPolicy) IsNotDefined() bool {
+	return np == nil
+}
+
+func (np *RuntimeComponentNetworkPolicy) IsEmpty() bool {
+	return np != nil && (np.FromLabels == nil || len(np.FromLabels) == 0)
+}
+
 // GetLabels returns labels to be added on ServiceMonitor
 func (m *RuntimeComponentMonitoring) GetLabels() map[string]string {
 	return m.Labels
@@ -823,11 +852,12 @@ func (cr *RuntimeComponent) Initialize() {
 // GetLabels returns set of labels to be added to all resources
 func (cr *RuntimeComponent) GetLabels() map[string]string {
 	labels := map[string]string{
-		"app.kubernetes.io/instance":   cr.Name,
-		"app.kubernetes.io/name":       cr.Name,
-		"app.kubernetes.io/managed-by": "runtime-component-operator",
-		"app.kubernetes.io/component":  "backend",
-		"app.kubernetes.io/part-of":    cr.Spec.ApplicationName,
+		"app.kubernetes.io/instance":     cr.Name,
+		"app.kubernetes.io/name":         cr.Name,
+		"app.kubernetes.io/managed-by":   "runtime-component-operator",
+		"app.kubernetes.io/component":    "backend",
+		"app.kubernetes.io/part-of":      cr.Spec.ApplicationName,
+		common.GetComponentNameLabel(cr): cr.Spec.ApplicationName,
 	}
 
 	if cr.Spec.ApplicationVersion != "" {

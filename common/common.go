@@ -51,3 +51,8 @@ func GetDefaultMicroProfileLivenessProbe(ba BaseComponent) *corev1.Probe {
 		FailureThreshold:    3,
 	}
 }
+
+// GetComponentNameLabel returns the component's name label.
+func GetComponentNameLabel(ba BaseComponent) string {
+	return ba.GetGroupName() + "/name"
+}

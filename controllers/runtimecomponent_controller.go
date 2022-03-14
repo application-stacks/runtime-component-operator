@@ -67,7 +67,7 @@ type RuntimeComponentReconciler struct {
 // +kubebuilder:rbac:groups=apps,resources=deployments/finalizers;statefulsets,verbs=update,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=core,resources=services;secrets;serviceaccounts;configmaps,verbs=get;list;watch;create;update;delete,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=get;list;watch;create;update;delete,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;delete,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses;networkpolicies,verbs=get;list;watch;create;update;delete,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=route.openshift.io,resources=routes;routes/custom-host,verbs=get;list;watch;create;update;delete,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=image.openshift.io,resources=imagestreams;imagestreamtags,verbs=get;list;watch,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=get;list;watch;create;update;delete,namespace=runtime-component-operator
@@ -154,7 +154,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
-	//currentGen := instance.Generation
+	// currentGen := instance.Generation
 	// if currentGen == 1 {
 	// 	return reconcile.Result{RequeueAfter: common.ReconcileInterval * time.Second}, nil
 	// }
@@ -317,6 +317,24 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	if err != nil {
 		reqLogger.Error(err, "Failed to reconcile Service")
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+	}
+
+	// TODO: Need to disable if network policies not configured properly
+	networkPolicy := &networkingv1.NetworkPolicy{ObjectMeta: defaultMeta}
+	if np := instance.Spec.NetworkPolicy; np.IsNotDefined() || !np.IsEmpty() {
+		err = r.CreateOrUpdate(networkPolicy, instance, func() error {
+			appstacksutils.CustomizeNetworkPolicy(networkPolicy, instance)
+			return nil
+		})
+		if err != nil {
+			reqLogger.Error(err, "Failed to reconcile network policy")
+			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+		}
+	} else {
+		if err := r.DeleteResource(networkPolicy); err != nil {
+			reqLogger.Error(err, "Failed to delete network policy")
+			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+		}
 	}
 
 	if instance.Spec.StatefulSet != nil {
