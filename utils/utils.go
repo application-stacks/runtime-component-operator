@@ -2,7 +2,9 @@ package utils
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -14,6 +16,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/application-stacks/runtime-component-operator/common"
 	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -27,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 )
@@ -126,7 +130,9 @@ func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, c
 				route.Spec.TLS.CACertificate = ""
 				route.Spec.TLS.Key = ""
 				route.Spec.TLS.DestinationCACertificate = ""
-				route.Spec.TLS.InsecureEdgeTerminationPolicy = ""
+				if rt.GetInsecureEdgeTerminationPolicy() != nil {
+					route.Spec.TLS.InsecureEdgeTerminationPolicy = *rt.GetInsecureEdgeTerminationPolicy()
+				}
 			} else if route.Spec.TLS.Termination == routev1.TLSTerminationEdge {
 				route.Spec.TLS.Certificate = crt
 				route.Spec.TLS.CACertificate = ca
@@ -1041,4 +1047,39 @@ func (r *ReconcilerBase) toJSONFromRaw(content *runtime.RawExtension) (map[strin
 		return nil, err
 	}
 	return data, nil
+}
+
+// Looks for a pull secret in the service account retrieved from the component
+// Returns nil if there is at least one image pull secret, otherwise an error
+func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Client) error {
+	obj := ba.(metav1.Object)
+	ns := obj.GetNamespace()
+	saName := obj.GetName()
+	if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
+		saName = *ba.GetServiceAccountName()
+	}
+
+	sa := &corev1.ServiceAccount{}
+	getErr := client.Get(context.TODO(), types.NamespacedName{Name: saName, Namespace: ns}, sa)
+	if getErr != nil {
+		return getErr
+	}
+	secrets := sa.ImagePullSecrets
+	found := false
+	if len(secrets) > 0 {
+		// if this is our service account there will be one image pull secret
+		// For others there could be more. either way, just use the first?
+		sName := secrets[0].Name
+		err := client.Get(context.TODO(), types.NamespacedName{Name: sName, Namespace: ns}, &corev1.Secret{})
+		if err != nil {
+			return err
+		}
+		found = true
+
+	}
+	if !found {
+		saErr := errors.New("Service account " + saName + " isn't ready")
+		return saErr
+	}
+	return nil
 }
