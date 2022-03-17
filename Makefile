@@ -30,7 +30,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 CREATEDAT ?= AUTO
 
 ifeq ($(CREATEDAT), AUTO)
-CREATEDAT := $(shell date +%y-%m-%dT%TZ)
+CREATEDAT := $(shell date +%Y-%m-%dT%TZ)
 endif
 
 # Default catalog image tag
