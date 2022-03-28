@@ -65,11 +65,11 @@ jobs:
     - name: Verify manifest lists
       stage: build-manifest
       script: make build-manifest
-    - name: Minikube test on amd64
-      stage: minikube-e2e-test
-      os: linux
-      arch: amd64
-      script: travis_wait 45 make setup minikube-test-e2e || travis_terminate 1
+    #- name: Minikube test on amd64
+    #  stage: minikube-e2e-test
+    #  os: linux
+    #  arch: amd64
+    #  script: travis_wait 45 make setup minikube-test-e2e || travis_terminate 1
     # Build all non-ignored releases
     - name: Build image on amd64 and test
       stage: rebuild-e2e-test
