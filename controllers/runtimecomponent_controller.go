@@ -65,7 +65,7 @@ type RuntimeComponentReconciler struct {
 // +kubebuilder:rbac:groups=rc.app.stacks,resources=runtimecomponents;runtimecomponents/status;runtimecomponents/finalizers,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=apps,resources=deployments;statefulsets,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=apps,resources=deployments/finalizers;statefulsets,verbs=update,namespace=runtime-component-operator
-// +kubebuilder:rbac:groups=core,resources=services;secrets;serviceaccounts,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=core,resources=services;secrets;serviceaccounts;configmaps,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=list;watch;create;update;delete,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=route.openshift.io,resources=routes;routes/custom-host,verbs=list;watch;create;update;delete,namespace=runtime-component-operator

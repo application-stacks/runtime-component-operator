@@ -38,8 +38,10 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - pods
-  - pods/exec
+  - configmaps
+  - secrets
+  - serviceaccounts
+  - services
   verbs:
   - create
   - delete
@@ -49,9 +51,8 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - secrets
-  - serviceaccounts
-  - services
+  - pods
+  - pods/exec
   verbs:
   - create
   - delete
