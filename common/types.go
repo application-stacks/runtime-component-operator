@@ -150,4 +150,5 @@ type BaseComponent interface {
 	GetGroupName() string
 	GetRoute() BaseComponentRoute
 	GetAffinity() BaseComponentAffinity
+	GetSecurityContext() *corev1.SecurityContext
 }
