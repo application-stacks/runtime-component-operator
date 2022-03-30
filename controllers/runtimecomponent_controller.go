@@ -72,6 +72,7 @@ type RuntimeComponentReconciler struct {
 // +kubebuilder:rbac:groups=image.openshift.io,resources=imagestreams;imagestreamtags,verbs=get;list;watch,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=get;list;watch;create;update;delete,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;list;watch;create;update;delete,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=cert-manager.io,resources=certificates;issuers,verbs=get;list;watch;create;update;delete,namespace=runtime-component-operator
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -289,10 +290,22 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
+	useCertmanager, err := r.GenerateSvcCertSecret(ba, "rco", "Runtime Component Operator")
+	if err != nil {
+		reqLogger.Error(err, "Failed to reconcile CertManager Certificate")
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+	}
+	if ba.GetService().GetCertificateSecretRef() != nil {
+		ba.GetStatus().SetReference(common.StatusReferenceCertSecretName, *ba.GetService().GetCertificateSecretRef())
+	}
+
 	svc := &corev1.Service{ObjectMeta: defaultMeta}
 	err = r.CreateOrUpdate(svc, instance, func() error {
 		appstacksutils.CustomizeService(svc, ba)
 		svc.Annotations = appstacksutils.MergeMaps(svc.Annotations, instance.Spec.Service.Annotations)
+		if !useCertmanager {
+			appstacksutils.AddOCPCertAnnotation(ba, svc)
+		}
 		monitoringEnabledLabelName := getMonitoringEnabledLabelName(ba)
 		if instance.Spec.Monitoring != nil {
 			svc.Labels[monitoringEnabledLabelName] = "true"
@@ -360,6 +373,9 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		err = r.CreateOrUpdate(deploy, instance, func() error {
 			appstacksutils.CustomizeDeployment(deploy, instance)
 			appstacksutils.CustomizePodSpec(&deploy.Spec.Template, instance)
+			if err := appstacksutils.CustomizePodWithSVCCertificate(&deploy.Spec.Template, instance, r.GetClient()); err != nil {
+				return err
+			}
 			return nil
 		})
 		if err != nil {

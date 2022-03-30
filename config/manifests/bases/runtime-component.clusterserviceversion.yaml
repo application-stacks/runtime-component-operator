@@ -108,6 +108,11 @@ spec:
         path: expose
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Enable management of TLS certificates
+        displayName: Manage TLS
+        path: manageTLS
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Number of pods to create. Not applicable when .spec.autoscaling or .spec.createKnativeService is specified.
         displayName: Replicas
         path: replicas

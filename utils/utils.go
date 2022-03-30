@@ -147,6 +147,17 @@ func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, c
 	if ba.GetRoute() == nil || ba.GetRoute().GetTermination() == nil {
 		route.Spec.TLS = nil
 	}
+	if ba.GetManageTLS() == nil || *ba.GetManageTLS() {
+		if route.Spec.TLS == nil {
+			route.Spec.TLS = &routev1.TLSConfig{}
+			route.Spec.TLS.Termination = routev1.TLSTerminationReencrypt
+			route.Spec.TLS.Certificate = crt
+			route.Spec.TLS.CACertificate = ca
+			route.Spec.TLS.DestinationCACertificate = destCACert
+			route.Spec.TLS.Key = key
+		}
+	}
+
 	route.Spec.To.Kind = "Service"
 	route.Spec.To.Name = obj.GetName()
 	weight := int32(100)
@@ -473,11 +484,9 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 
 	appContainer.SecurityContext = getSecurityContext(ba)
 
-	if ba.GetService().GetCertificateSecretRef() != nil {
-		secretName := obj.GetName() + "-svc-tls"
-		if ba.GetService().GetCertificateSecretRef() != nil {
-			secretName = *ba.GetService().GetCertificateSecretRef()
-		}
+	if ba.GetManageTLS() == nil || *ba.GetManageTLS() || ba.GetService().GetCertificateSecretRef() != nil {
+
+		secretName := ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName]
 		appContainer.Env = append(appContainer.Env, corev1.EnvVar{Name: "TLS_DIR", Value: "/etc/x509/certs"})
 		pts.Spec.Volumes = append(pts.Spec.Volumes, corev1.Volume{
 			Name: "svc-certificate",
@@ -781,6 +790,19 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComp
 		sm.Spec.Endpoints[0].MetricRelabelConfigs = endpoints[0].MetricRelabelConfigs
 		sm.Spec.Endpoints[0].HonorTimestamps = endpoints[0].HonorTimestamps
 		sm.Spec.Endpoints[0].HonorLabels = endpoints[0].HonorLabels
+	}
+	if ba.GetManageTLS() == nil || *ba.GetManageTLS() {
+		if len(ba.GetMonitoring().GetEndpoints()) == 0 || ba.GetMonitoring().GetEndpoints()[0].TLSConfig == nil {
+			sm.Spec.Endpoints[0].Scheme = "HTTPS"
+			if sm.Spec.Endpoints[0].TLSConfig == nil {
+				sm.Spec.Endpoints[0].TLSConfig = &prometheusv1.TLSConfig{}
+			}
+			sm.Spec.Endpoints[0].TLSConfig.CA = prometheusv1.SecretOrConfigMap{}
+			sm.Spec.Endpoints[0].TLSConfig.CA.Secret = &corev1.SecretKeySelector{}
+			sm.Spec.Endpoints[0].TLSConfig.CA.Secret.Name = ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName]
+			sm.Spec.Endpoints[0].TLSConfig.CA.Secret.Key = "tls.crt"
+			sm.Spec.Endpoints[0].TLSConfig.ServerName = obj.GetName() + "." + obj.GetNamespace() + ".svc"
+		}
 
 	}
 
@@ -1182,4 +1204,56 @@ func getSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
 		return baSecurityContext
 	}
 	return secContext
+}
+
+func AddOCPCertAnnotation(ba common.BaseComponent, svc *corev1.Service) {
+	if ba.GetCreateKnativeService() != nil && *ba.GetCreateKnativeService() {
+		return
+	}
+
+	if ba.GetManageTLS() != nil && !*ba.GetManageTLS() || ba.GetService() != nil && ba.GetService().GetCertificateSecretRef() != nil {
+		return
+	}
+
+	bao := ba.(metav1.Object)
+	val, ok := svc.Annotations["service.beta.openshift.io/serving-cert-secret-name"]
+	if !ok {
+		val, ok = svc.Annotations["service.alpha.openshift.io/serving-cert-secret-name"]
+		if ok {
+			ba.GetStatus().SetReference(common.StatusReferenceCertSecretName, val)
+			return
+		}
+	} else {
+		ba.GetStatus().SetReference(common.StatusReferenceCertSecretName, val)
+		return
+	}
+
+	svc.Annotations["service.beta.openshift.io/serving-cert-secret-name"] = bao.GetName() + "-svc-tls-ocp"
+	ba.GetStatus().SetReference(common.StatusReferenceCertSecretName, bao.GetName()+"-svc-tls-ocp")
+
+}
+
+func CustomizePodWithSVCCertificate(pts *corev1.PodTemplateSpec, ba common.BaseComponent, client client.Client) error {
+
+	if ba.GetManageTLS() == nil || *ba.GetManageTLS() || ba.GetService().GetCertificateSecretRef() != nil {
+		obj := ba.(metav1.Object)
+		secretName := ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName]
+		if secretName != "" {
+			return addSecretResourceVersionAsEnvVar(pts, obj, client, secretName, "SERVICE_CERT")
+		} else {
+			return errors.New("Service certifcate secret name must not be empty")
+		}
+	}
+	return nil
+}
+func addSecretResourceVersionAsEnvVar(pts *corev1.PodTemplateSpec, object metav1.Object, client client.Client, secretName string, envNamePrefix string) error {
+	secret := &corev1.Secret{}
+	err := client.Get(context.Background(), types.NamespacedName{Name: secretName, Namespace: object.GetNamespace()}, secret)
+	if err != nil {
+		return fmt.Errorf("Secret %q was not found in namespace %q, %w", secretName, object.GetNamespace(), err)
+	}
+	pts.Spec.Containers[0].Env = append(pts.Spec.Containers[0].Env, corev1.EnvVar{
+		Name:  envNamePrefix + "_SECRET_RESOURCE_VERSION",
+		Value: secret.ResourceVersion})
+	return nil
 }
