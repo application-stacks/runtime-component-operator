@@ -204,10 +204,11 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:text
       - displayName: Affinity
         path: affinity
-      - displayName: SecurityContext
-        path: securityContext
       - displayName: Storage
         path: statefulSet.storage
+      - description: Security context for the application container.
+        displayName: Security Context
+        path: securityContext
       - description: A convenient field to set the size of the persisted storage.
         displayName: Storage Size
         path: statefulSet.storage.size
