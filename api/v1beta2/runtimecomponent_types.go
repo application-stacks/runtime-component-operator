@@ -130,6 +130,10 @@ type RuntimeComponentSpec struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:order=24,type=spec,displayName="Affinity"
 	Affinity *RuntimeComponentAffinity `json:"affinity,omitempty"`
+
+	// Security context for the application container.
+	// +operator-sdk:csv:customresourcedefinitions:order=25,type=spec,displayName="Security Context"
+	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
 }
 
 // Define health checks on application container to determine whether it is alive or ready to receive traffic
@@ -743,6 +747,11 @@ func (a *RuntimeComponentAffinity) GetArchitecture() []string {
 // GetNodeAffinityLabels returns list of architecture names
 func (a *RuntimeComponentAffinity) GetNodeAffinityLabels() map[string]string {
 	return a.NodeAffinityLabels
+}
+
+// GetSecurityContext returns container security context
+func (cr *RuntimeComponent) GetSecurityContext() *corev1.SecurityContext {
+	return cr.Spec.SecurityContext
 }
 
 // Initialize the RuntimeComponent instance

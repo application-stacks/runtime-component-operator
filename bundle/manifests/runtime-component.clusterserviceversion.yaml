@@ -38,7 +38,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: applicationstacks/operator:daily
-    createdAt: 22-02-23T14:56:20Z
+    createdAt: "2022-03-31T12:57:58Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     operators.operatorframework.io/builder: operator-sdk-v1.6.1+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
@@ -239,6 +239,9 @@ spec:
         path: affinity
       - displayName: Storage
         path: statefulSet.storage
+      - description: Security context for the application container.
+        displayName: Security Context
+        path: securityContext
       - description: A convenient field to set the size of the persisted storage.
         displayName: Storage Size
         path: statefulSet.storage.size

@@ -409,6 +409,8 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	appContainer.VolumeMounts = ba.GetVolumeMounts()
 	pts.Spec.Volumes = ba.GetVolumes()
 
+	appContainer.SecurityContext = getSecurityContext(ba)
+
 	if ba.GetService().GetCertificateSecretRef() != nil {
 		secretName := obj.GetName() + "-svc-tls"
 		if ba.GetService().GetCertificateSecretRef() != nil {
@@ -1082,4 +1084,43 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 		return saErr
 	}
 	return nil
+}
+
+// Get security context from CR and apply customization to default settings
+func getSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
+	baSecurityContext := ba.GetSecurityContext()
+
+	valFalse := false
+	valTrue := true
+
+	cap := make([]corev1.Capability, 1)
+	cap[0] = "ALL"
+
+	// Set default security context
+	secContext := &corev1.SecurityContext{
+		AllowPrivilegeEscalation: &valFalse,
+		Capabilities: &corev1.Capabilities{
+			Drop: cap,
+		},
+		Privileged:   &valFalse,
+		RunAsNonRoot: &valTrue,
+	}
+
+	// Customize security context
+	if baSecurityContext != nil {
+		if baSecurityContext.AllowPrivilegeEscalation == nil {
+			baSecurityContext.AllowPrivilegeEscalation = secContext.AllowPrivilegeEscalation
+		}
+		if baSecurityContext.Capabilities == nil {
+			baSecurityContext.Capabilities = secContext.Capabilities
+		}
+		if baSecurityContext.Privileged == nil {
+			baSecurityContext.Privileged = secContext.Privileged
+		}
+		if baSecurityContext.RunAsNonRoot == nil {
+			baSecurityContext.RunAsNonRoot = secContext.RunAsNonRoot
+		}
+		return baSecurityContext
+	}
+	return secContext
 }
