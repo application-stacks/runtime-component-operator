@@ -1088,7 +1088,7 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 
 // Get security context from CR and apply customization to default settings
 func getSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
-	rcSecurityContext := ba.GetSecurityContext()
+	baSecurityContext := ba.GetSecurityContext()
 
 	valFalse := false
 	valTrue := true
@@ -1107,20 +1107,20 @@ func getSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
 	}
 
 	// Customize security context
-	if rcSecurityContext != nil {
-		if rcSecurityContext.AllowPrivilegeEscalation == nil {
-			rcSecurityContext.AllowPrivilegeEscalation = secContext.AllowPrivilegeEscalation
+	if baSecurityContext != nil {
+		if baSecurityContext.AllowPrivilegeEscalation == nil {
+			baSecurityContext.AllowPrivilegeEscalation = secContext.AllowPrivilegeEscalation
 		}
-		if rcSecurityContext.Capabilities == nil {
-			rcSecurityContext.Capabilities = secContext.Capabilities
+		if baSecurityContext.Capabilities == nil {
+			baSecurityContext.Capabilities = secContext.Capabilities
 		}
-		if rcSecurityContext.Privileged == nil {
-			rcSecurityContext.Privileged = secContext.Privileged
+		if baSecurityContext.Privileged == nil {
+			baSecurityContext.Privileged = secContext.Privileged
 		}
-		if rcSecurityContext.RunAsNonRoot == nil {
-			rcSecurityContext.RunAsNonRoot = secContext.RunAsNonRoot
+		if baSecurityContext.RunAsNonRoot == nil {
+			baSecurityContext.RunAsNonRoot = secContext.RunAsNonRoot
 		}
-		return rcSecurityContext
+		return baSecurityContext
 	}
 	return secContext
 }
