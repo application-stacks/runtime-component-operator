@@ -440,7 +440,7 @@ func (p *RuntimeComponentProbes) GetDefaultLivenessProbe(ba common.BaseComponent
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/live",
 				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
-				Scheme: "HTTP",
+				Scheme: "HTTPS",
 			},
 		},
 		InitialDelaySeconds: 60,
@@ -457,7 +457,7 @@ func (p *RuntimeComponentProbes) GetDefaultReadinessProbe(ba common.BaseComponen
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/ready",
 				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
-				Scheme: "HTTP",
+				Scheme: "HTTPS",
 			},
 		},
 		InitialDelaySeconds: 30,
@@ -474,7 +474,7 @@ func (p *RuntimeComponentProbes) GetDefaultStartupProbe(ba common.BaseComponent)
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/started",
 				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
-				Scheme: "HTTP",
+				Scheme: "HTTPS",
 			},
 		},
 	}

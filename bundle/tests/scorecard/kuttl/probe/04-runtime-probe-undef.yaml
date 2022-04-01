@@ -6,7 +6,7 @@ spec:
   # Add fields here
   applicationImage: icr.io/appcafe/open-liberty/samples/getting-started
   service:
-    port: 9080
+    port: 9443
   replicas: 1
   probes:
     startup: {}
