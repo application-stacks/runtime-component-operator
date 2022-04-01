@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta2
 
 import (
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"time"
 
 	"github.com/application-stacks/runtime-component-operator/common"
@@ -361,7 +362,7 @@ const (
 // +kubebuilder:printcolumn:name="Reason",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].reason",priority=1,description="Reason for the failure of reconcile condition"
 // +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].message",priority=1,description="Failure message from reconcile condition"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",priority=0,description="Age of the resource"
-//+operator-sdk:csv:customresourcedefinitions:displayName="RuntimeComponent",resources={{Deployment,v1},{Service,v1},{StatefulSet,v1},{Route,v1},{HorizontalPodAutoscaler,v1},{ServiceAccount,v1},{Secret,v1}}
+// +operator-sdk:csv:customresourcedefinitions:displayName="RuntimeComponent",resources={{Deployment,v1},{Service,v1},{StatefulSet,v1},{Route,v1},{HorizontalPodAutoscaler,v1},{ServiceAccount,v1},{Secret,v1}}
 
 // Represents the deployment of a runtime component
 type RuntimeComponent struct {
@@ -430,6 +431,53 @@ func (p *RuntimeComponentProbes) GetReadinessProbe() *corev1.Probe {
 // GetStartupProbe returns startup probe
 func (p *RuntimeComponentProbes) GetStartupProbe() *corev1.Probe {
 	return p.Startup
+}
+
+// GetDefaultLivenessProbe returns default values for liveness probe
+func (p *RuntimeComponentProbes) GetDefaultLivenessProbe(ba common.BaseComponent) *corev1.Probe {
+	return &corev1.Probe{
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   "/health/live",
+				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
+				Scheme: "HTTP",
+			},
+		},
+		InitialDelaySeconds: 60,
+		PeriodSeconds:       10,
+		TimeoutSeconds:      3,
+		FailureThreshold:    1,
+	}
+}
+
+// GetDefaultReadinessProbe returns default values for readiness probe
+func (p *RuntimeComponentProbes) GetDefaultReadinessProbe(ba common.BaseComponent) *corev1.Probe {
+	return &corev1.Probe{
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   "/health/ready",
+				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
+				Scheme: "HTTP",
+			},
+		},
+		InitialDelaySeconds: 30,
+		PeriodSeconds:       10,
+		TimeoutSeconds:      3,
+		FailureThreshold:    1,
+	}
+}
+
+// GetDefaultStartupProbe returns default values for startup probe
+func (p *RuntimeComponentProbes) GetDefaultStartupProbe(ba common.BaseComponent) *corev1.Probe {
+	return &corev1.Probe{
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   "/health/started",
+				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
+				Scheme: "HTTP",
+			},
+		},
+	}
 }
 
 // GetVolumes returns volumes slice
