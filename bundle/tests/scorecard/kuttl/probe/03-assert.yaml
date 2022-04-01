@@ -24,7 +24,7 @@ spec:
           successThreshold: 1
           timeoutSeconds: 3
         readinessProbe:
-          failureThreshold: 1
+          failureThreshold: 3
           httpGet:
             path: /health/ready
             port: 9443

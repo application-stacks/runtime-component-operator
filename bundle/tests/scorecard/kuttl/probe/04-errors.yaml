@@ -12,7 +12,7 @@ spec:
         - livenessProbe:
             failureThreshold: 3
           readinessProbe:
-            failureThreshold: 1
+            failureThreshold: 3
 status:
   observedGeneration: 5
   replicas: 1
