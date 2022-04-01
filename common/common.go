@@ -31,7 +31,7 @@ func GetDefaultMicroProfileReadinessProbe(ba BaseComponent) *corev1.Probe {
 		InitialDelaySeconds: 30,
 		PeriodSeconds:       10,
 		TimeoutSeconds:      3,
-		FailureThreshold:    1,
+		FailureThreshold:    3,
 	}
 }
 
