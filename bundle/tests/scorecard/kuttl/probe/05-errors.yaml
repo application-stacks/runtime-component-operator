@@ -14,7 +14,7 @@ spec:
           readinessProbe:
             failureThreshold: 1
 status:
-  observedGeneration: 5
+  observedGeneration: 6
   replicas: 1
   readyReplicas: 1
   updatedReplicas: 1

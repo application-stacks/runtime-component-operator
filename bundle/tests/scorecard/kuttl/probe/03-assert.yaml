@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - livenessProbe:
-          failureThreshold: 1
+          failureThreshold: 3
           httpGet:
             path: /health/live
             port: 9443
@@ -43,6 +43,7 @@ spec:
           successThreshold: 1
           timeoutSeconds: 1
 status:
+  observedGeneration: 4
   readyReplicas: 1
   replicas: 1
   updatedReplicas: 1

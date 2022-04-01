@@ -17,7 +17,6 @@ limitations under the License.
 package v1beta2
 
 import (
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"time"
 
 	"github.com/application-stacks/runtime-component-operator/common"
@@ -435,49 +434,17 @@ func (p *RuntimeComponentProbes) GetStartupProbe() *corev1.Probe {
 
 // GetDefaultLivenessProbe returns default values for liveness probe
 func (p *RuntimeComponentProbes) GetDefaultLivenessProbe(ba common.BaseComponent) *corev1.Probe {
-	return &corev1.Probe{
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path:   "/health/live",
-				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
-				Scheme: "HTTPS",
-			},
-		},
-		InitialDelaySeconds: 60,
-		PeriodSeconds:       10,
-		TimeoutSeconds:      3,
-		FailureThreshold:    1,
-	}
+	return common.GetDefaultMicroProfileLivenessProbe(ba)
 }
 
 // GetDefaultReadinessProbe returns default values for readiness probe
 func (p *RuntimeComponentProbes) GetDefaultReadinessProbe(ba common.BaseComponent) *corev1.Probe {
-	return &corev1.Probe{
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path:   "/health/ready",
-				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
-				Scheme: "HTTPS",
-			},
-		},
-		InitialDelaySeconds: 30,
-		PeriodSeconds:       10,
-		TimeoutSeconds:      3,
-		FailureThreshold:    1,
-	}
+	return common.GetDefaultMicroProfileReadinessProbe(ba)
 }
 
 // GetDefaultStartupProbe returns default values for startup probe
 func (p *RuntimeComponentProbes) GetDefaultStartupProbe(ba common.BaseComponent) *corev1.Probe {
-	return &corev1.Probe{
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path:   "/health/started",
-				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
-				Scheme: "HTTPS",
-			},
-		},
-	}
+	return common.GetDefaultMicroProfileStartupProbe(ba)
 }
 
 // GetVolumes returns volumes slice
