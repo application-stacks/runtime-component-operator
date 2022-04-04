@@ -1102,8 +1102,9 @@ func getSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
 		Capabilities: &corev1.Capabilities{
 			Drop: cap,
 		},
-		Privileged:   &valFalse,
-		RunAsNonRoot: &valTrue,
+		Privileged:             &valFalse,
+		ReadOnlyRootFilesystem: &valFalse,
+		RunAsNonRoot:           &valTrue,
 	}
 
 	// Customize security context
@@ -1116,6 +1117,9 @@ func getSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
 		}
 		if baSecurityContext.Privileged == nil {
 			baSecurityContext.Privileged = secContext.Privileged
+		}
+		if baSecurityContext.ReadOnlyRootFilesystem == nil {
+			baSecurityContext.ReadOnlyRootFilesystem = secContext.ReadOnlyRootFilesystem
 		}
 		if baSecurityContext.RunAsNonRoot == nil {
 			baSecurityContext.RunAsNonRoot = secContext.RunAsNonRoot
