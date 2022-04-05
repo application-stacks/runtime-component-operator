@@ -901,7 +901,8 @@ func CustomizeIngress(ing *networkingv1.Ingress, ba common.BaseComponent) {
 	servicePort := strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
 	host := ""
 	path := ""
-	var pathType networkingv1.PathType
+	pathType := networkingv1.PathType("")
+
 	rt := ba.GetRoute()
 	if rt != nil {
 		host = rt.GetHost()
@@ -925,7 +926,7 @@ func CustomizeIngress(ing *networkingv1.Ingress, ba common.BaseComponent) {
 	}
 
 	if pathType == "" {
-		pathType = "ImplementationSpecific"
+		pathType = networkingv1.PathTypeImplementationSpecific
 	}
 
 	ing.Spec.Rules = []networkingv1.IngressRule{
