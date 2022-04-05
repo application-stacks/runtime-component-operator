@@ -924,6 +924,10 @@ func CustomizeIngress(ing *networkingv1.Ingress, ba common.BaseComponent) {
 		l.Info("No Ingress hostname is provided. Ingress might not function correctly without hostname. It is recommended to set Ingress host or to provide default value through operator's config map.")
 	}
 
+	if pathType == "" {
+		pathType = "ImplementationSpecific"
+	}
+
 	ing.Spec.Rules = []networkingv1.IngressRule{
 		{
 			Host: host,
