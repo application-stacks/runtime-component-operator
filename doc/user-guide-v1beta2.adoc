@@ -106,7 +106,7 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `route.annotations` | Annotations to be added to the Route.
 | `route.host`   | Hostname to be used for the Route.
 | `route.path`   | Path to be used for Route.
-| `route.pathType`   | Path type to specify how Ingress paths should be matched. Required field for Ingress. If not specified, the default value is `ImplementationSpecific`. See link:++https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types++[Ingress path types].
+| `route.pathType`   | Path type to be used. Required field for Ingress. See link:++https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types++[Ingress path types].
 | `route.termination`   | TLS termination policy. Can be one of `edge`, `reencrypt` and `passthrough`.
 | `route.insecureEdgeTerminationPolicy`   | HTTP traffic policy with TLS enabled. Can be one of `Allow`, `Redirect` and `None`.
 | `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the route. It can also contain destination CA certificate. The following keys are valid in the secret: `ca.crt`, `destCA.crt`, `tls.crt`, and `tls.key`.
@@ -548,7 +548,6 @@ _The Ingress resource is created only if the `Route` resource is not available o
 
 To use the Ingress resource, set the `defaultHostName` variable in the _runtime-component-operator_ ConfigMap object to a host name such as _mycompany.com_
 
-The Ingress resource requires `pathType` field to be specified. `pathType` can be specified using `.spec.route.pathType` field. If `.spec.route.pathType` is not specified in a CR, it is set to `ImplementationSpecific` by default.
 
 ===== Simple Ingress that uses `defaultHostName` and no `TLS`:
 
