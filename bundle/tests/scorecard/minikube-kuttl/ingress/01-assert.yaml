@@ -6,3 +6,16 @@ status:
   replicas: 1
   readyReplicas: 1
   updatedReplicas: 1
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress
+spec:
+  rules:
+    - host: myapp.mycompany.com
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+

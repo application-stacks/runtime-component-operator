@@ -901,7 +901,8 @@ func CustomizeIngress(ing *networkingv1.Ingress, ba common.BaseComponent) {
 	servicePort := strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
 	host := ""
 	path := ""
-	var pathType networkingv1.PathType
+	pathType := networkingv1.PathType("")
+
 	rt := ba.GetRoute()
 	if rt != nil {
 		host = rt.GetHost()
@@ -922,6 +923,10 @@ func CustomizeIngress(ing *networkingv1.Ingress, ba common.BaseComponent) {
 	if host == "" {
 		l := log.WithValues("Request.Namespace", obj.GetNamespace(), "Request.Name", obj.GetName())
 		l.Info("No Ingress hostname is provided. Ingress might not function correctly without hostname. It is recommended to set Ingress host or to provide default value through operator's config map.")
+	}
+
+	if pathType == "" {
+		pathType = networkingv1.PathTypeImplementationSpecific
 	}
 
 	ing.Spec.Rules = []networkingv1.IngressRule{
