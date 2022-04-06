@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-default-affinity-rc
+spec:
+  # Add fields here
+  template:
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 50
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/instance: pod-default-affinity-rc
+                topologyKey: kubernetes.io/hostname
+status:
+  replicas: 1
+  unavailableReplicas: 1

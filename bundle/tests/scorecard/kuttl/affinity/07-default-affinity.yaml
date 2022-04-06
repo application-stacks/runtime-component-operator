@@ -1,0 +1,12 @@
+# Test to see that if not affinity specified the default affinity is applied
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: pod-default-affinity-rc
+  labels:
+    test: affinity
+spec:
+  # Add fields here
+  applicationImage: 'k8s.gcr.io/pause:2.0'
+  replicas: 1
+
