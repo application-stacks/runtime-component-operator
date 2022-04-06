@@ -1,0 +1,29 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 120
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: probes-rc
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: probes-rc
+  template:
+    spec:
+      containers:
+      - startupProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health/started
+            port: 9443
+            scheme: HTTPS
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+status:
+  observedGeneration: 5
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

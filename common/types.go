@@ -118,6 +118,10 @@ type BaseComponentProbes interface {
 	GetLivenessProbe() *corev1.Probe
 	GetReadinessProbe() *corev1.Probe
 	GetStartupProbe() *corev1.Probe
+
+	GetDefaultLivenessProbe(ba BaseComponent) *corev1.Probe
+	GetDefaultReadinessProbe(ba BaseComponent) *corev1.Probe
+	GetDefaultStartupProbe(ba BaseComponent) *corev1.Probe
 }
 
 // BaseComponent represents basic kubernetes application

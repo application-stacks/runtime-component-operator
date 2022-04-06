@@ -243,6 +243,58 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	}
 }
 
+func CustomizeProbes(container *corev1.Container, ba common.BaseComponent) {
+	probesConfig := ba.GetProbes()
+
+	// Probes not defined -- reset all probesConfig to nil
+	if probesConfig == nil {
+		container.ReadinessProbe = nil
+		container.LivenessProbe = nil
+		container.StartupProbe = nil
+		return
+	}
+
+	container.ReadinessProbe = customizeProbe(probesConfig.GetReadinessProbe(), probesConfig.GetDefaultReadinessProbe, ba)
+	container.LivenessProbe = customizeProbe(probesConfig.GetLivenessProbe(), probesConfig.GetDefaultLivenessProbe, ba)
+	container.StartupProbe = customizeProbe(probesConfig.GetStartupProbe(), probesConfig.GetDefaultStartupProbe, ba)
+}
+
+func customizeProbe(config *corev1.Probe, defaultProbeCallback func(ba common.BaseComponent) *corev1.Probe, ba common.BaseComponent) *corev1.Probe {
+	// Probe not defined -- set probe to nil
+	if config == nil {
+		return nil
+	}
+
+	// Probe handler is defined in config so use probe as is
+	if config.Handler != (corev1.Handler{}) {
+		return config
+	}
+
+	// Probe handler is not defined so use default values for the probe if values not set in probe config
+	return customizeProbeDefaults(config, defaultProbeCallback(ba))
+}
+
+func customizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *corev1.Probe {
+	probe := defaultProbe
+	if config.InitialDelaySeconds != 0 {
+		probe.InitialDelaySeconds = config.InitialDelaySeconds
+	}
+	if config.TimeoutSeconds != 0 {
+		probe.TimeoutSeconds = config.TimeoutSeconds
+	}
+	if config.PeriodSeconds != 0 {
+		probe.PeriodSeconds = config.PeriodSeconds
+	}
+	if config.SuccessThreshold != 0 {
+		probe.SuccessThreshold = config.SuccessThreshold
+	}
+	if config.FailureThreshold != 0 {
+		probe.FailureThreshold = config.FailureThreshold
+	}
+
+	return probe
+}
+
 // CustomizeAffinity ...
 func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 
@@ -388,15 +440,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		appContainer.Resources = *ba.GetResourceConstraints()
 	}
 
-	if ba.GetProbes() != nil {
-		appContainer.ReadinessProbe = ba.GetProbes().GetReadinessProbe()
-		appContainer.LivenessProbe = ba.GetProbes().GetLivenessProbe()
-		appContainer.StartupProbe = ba.GetProbes().GetStartupProbe()
-	} else {
-		appContainer.ReadinessProbe = nil
-		appContainer.LivenessProbe = nil
-		appContainer.StartupProbe = nil
-	}
+	CustomizeProbes(&appContainer, ba)
 
 	if ba.GetPullPolicy() != nil {
 		appContainer.ImagePullPolicy = *ba.GetPullPolicy()
@@ -554,17 +598,9 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 
 	ksvc.Spec.Template.Spec.Containers[0].Image = ba.GetStatus().GetImageReference()
 	// Knative sets its own resource constraints
-	//ksvc.Spec.Template.Spec.Containers[0].Resources = *cr.Spec.ResourceConstraints
+	// ksvc.Spec.Template.Spec.Containers[0].Resources = *cr.Spec.ResourceConstraints
 
-	if ba.GetProbes() != nil {
-		ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe = ba.GetProbes().GetReadinessProbe()
-		ksvc.Spec.Template.Spec.Containers[0].LivenessProbe = ba.GetProbes().GetLivenessProbe()
-		ksvc.Spec.Template.Spec.Containers[0].StartupProbe = ba.GetProbes().GetStartupProbe()
-	} else {
-		ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe = nil
-		ksvc.Spec.Template.Spec.Containers[0].LivenessProbe = nil
-		ksvc.Spec.Template.Spec.Containers[0].StartupProbe = nil
-	}
+	CustomizeProbes(&ksvc.Spec.Template.Spec.Containers[0], ba)
 
 	ksvc.Spec.Template.Spec.Containers[0].ImagePullPolicy = *ba.GetPullPolicy()
 	ksvc.Spec.Template.Spec.Containers[0].Env = ba.GetEnv()
