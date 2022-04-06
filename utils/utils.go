@@ -465,13 +465,6 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 
 	pts.Spec.Affinity = &corev1.Affinity{}
 	CustomizeAffinity(pts.Spec.Affinity, ba)
-
-	/* 	if ba.GetAffinity() != nil {
-	   		pts.Spec.Affinity = &corev1.Affinity{}
-	   		CustomizeAffinity(pts.Spec.Affinity, ba)
-	   	} else {
-	   		pts.Spec.Affinity = nil
-	   	} */
 }
 
 // CustomizePersistence ...
