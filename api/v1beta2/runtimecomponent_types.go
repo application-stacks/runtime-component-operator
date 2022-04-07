@@ -65,6 +65,10 @@ type RuntimeComponentSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=8,type=spec,displayName="Expose",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	Expose *bool `json:"expose,omitempty"`
 
+	// Enable management of TLS certificates. Defaults to true.
+	// +operator-sdk:csv:customresourcedefinitions:order=8,type=spec,displayName="Manage TLS",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	ManageTLS *bool `json:"manageTLS,omitempty"`
+
 	// Number of pods to create. Not applicable when .spec.autoscaling or .spec.createKnativeService is specified.
 	// +operator-sdk:csv:customresourcedefinitions:order=9,type=spec,displayName="Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:podCount"
 	Replicas *int32 `json:"replicas,omitempty"`
@@ -134,10 +138,6 @@ type RuntimeComponentSpec struct {
 	// Security context for the application container.
 	// +operator-sdk:csv:customresourcedefinitions:order=25,type=spec,displayName="Security Context"
 	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
-
-	// Enable management of TLS certificates
-	// +operator-sdk:csv:customresourcedefinitions:order=8,type=spec,displayName="Manage TLS",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
-	ManageTLS *bool `json:"manageTLS,omitempty"`
 }
 
 // Define health checks on application container to determine whether it is alive or ready to receive traffic

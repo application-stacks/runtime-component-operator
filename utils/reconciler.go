@@ -9,7 +9,7 @@ import (
 	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
 	"github.com/application-stacks/runtime-component-operator/common"
 	certmanagerv1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	v1 "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
+	certmanagermetav1 "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -360,6 +360,7 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string,
 
 func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string) (bool, error) {
 
+	delete(ba.GetStatus().GetReferences(), common.StatusReferenceCertSecretName)
 	cleanup := func() {
 		if ok, err := r.IsGroupVersionSupported(certmanagerv1.SchemeGroupVersion.String(), "Certificate"); err != nil {
 			return
@@ -369,10 +370,6 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 			svcCert.Name = obj.GetName() + "-svc-tls"
 			svcCert.Namespace = obj.GetNamespace()
 			r.client.Delete(context.Background(), svcCert)
-			//			certSecret := &corev1.Secret{}
-			//			certSecret.Name = obj.GetName() + "-svc-tls"
-			//			certSecret.Namespace = obj.GetNamespace()/
-			//			r.client.Delete(context.Background(), certSecret)
 		}
 	}
 
@@ -404,11 +401,12 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 		bao := ba.(metav1.Object)
 
 		issuer := &certmanagerv1.Issuer{ObjectMeta: metav1.ObjectMeta{
-			Name:      "self-signed",
+			Name:      prefix + "-self-signed",
 			Namespace: bao.GetNamespace(),
 		}}
 		err = r.CreateOrUpdate(issuer, nil, func() error {
 			issuer.Spec.SelfSigned = &certmanagerv1.SelfSignedIssuer{}
+			issuer.Labels = MergeMaps(issuer.Labels, map[string]string{"app.kubernetes.io/managed-by": "runtime-component-operator"})
 			return nil
 		})
 		if err != nil {
@@ -419,11 +417,12 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 			Namespace: bao.GetNamespace(),
 		}}
 		err = r.CreateOrUpdate(caCert, nil, func() error {
+			caCert.Labels = MergeMaps(caCert.Labels, map[string]string{"app.kubernetes.io/managed-by": "runtime-component-operator"})
 			caCert.Spec.CommonName = CACommonName
 			caCert.Spec.IsCA = true
 			caCert.Spec.SecretName = prefix + "-ca-tls"
-			caCert.Spec.IssuerRef = v1.ObjectReference{
-				Name: "self-signed",
+			caCert.Spec.IssuerRef = certmanagermetav1.ObjectReference{
+				Name: prefix + "-self-signed",
 			}
 
 			duration, err := time.ParseDuration(common.Config[common.OpConfigCMCADuration])
@@ -441,6 +440,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 			Namespace: bao.GetNamespace(),
 		}}
 		err = r.CreateOrUpdate(issuer, nil, func() error {
+			issuer.Labels = MergeMaps(issuer.Labels, map[string]string{"app.kubernetes.io/managed-by": "runtime-component-operator"})
 			issuer.Spec.CA = &certmanagerv1.CAIssuer{}
 			issuer.Spec.CA.SecretName = prefix + "-ca-tls"
 			return nil
@@ -450,7 +450,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 		}
 
 		for i := range issuer.Status.Conditions {
-			if issuer.Status.Conditions[i].Type == certmanagerv1.IssuerConditionReady && issuer.Status.Conditions[i].Status == v1.ConditionFalse {
+			if issuer.Status.Conditions[i].Type == certmanagerv1.IssuerConditionReady && issuer.Status.Conditions[i].Status == certmanagermetav1.ConditionFalse {
 				return true, errors.New("Certificate is not ready")
 			}
 		}
@@ -463,13 +463,14 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 		}}
 
 		err = r.CreateOrUpdate(svcCert, bao, func() error {
+			svcCert.Labels = ba.GetLabels()
 
 			svcCert.Spec.CommonName = bao.GetName() + "." + bao.GetNamespace() + ".svc"
 			svcCert.Spec.DNSNames = make([]string, 2)
 			svcCert.Spec.DNSNames[0] = bao.GetName() + "." + bao.GetNamespace() + ".svc"
 			svcCert.Spec.DNSNames[1] = bao.GetName() + "." + bao.GetNamespace() + ".svc.cluster.local"
 			svcCert.Spec.IsCA = false
-			svcCert.Spec.IssuerRef = v1.ObjectReference{
+			svcCert.Spec.IssuerRef = certmanagermetav1.ObjectReference{
 				Name: prefix + "-ca-issuer",
 			}
 			svcCert.Spec.SecretName = svcCertSecretName

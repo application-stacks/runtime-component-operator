@@ -2003,7 +2003,7 @@ spec:
                 - name
                 x-kubernetes-list-type: map
               manageTLS:
-                description: Enable management of TLS certificates
+                description: Enable management of TLS certificates. Defaults to true.
                 type: boolean
               monitoring:
                 description: Specifies parameters for Service Monitor.

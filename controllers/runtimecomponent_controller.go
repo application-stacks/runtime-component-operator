@@ -344,6 +344,9 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		err = r.CreateOrUpdate(statefulSet, instance, func() error {
 			appstacksutils.CustomizeStatefulSet(statefulSet, instance)
 			appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, instance)
+			if err := appstacksutils.CustomizePodWithSVCCertificate(&deploy.Spec.Template, instance, r.GetClient()); err != nil {
+				return err
+			}
 			appstacksutils.CustomizePersistence(statefulSet, instance)
 			return nil
 		})

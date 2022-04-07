@@ -381,6 +381,11 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.ManageTLS != nil {
+		in, out := &in.ManageTLS, &out.ManageTLS
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Replicas != nil {
 		in, out := &in.Replicas, &out.Replicas
 		*out = new(int32)
@@ -477,11 +482,6 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		in, out := &in.SecurityContext, &out.SecurityContext
 		*out = new(v1.SecurityContext)
 		(*in).DeepCopyInto(*out)
-	}
-	if in.ManageTLS != nil {
-		in, out := &in.ManageTLS, &out.ManageTLS
-		*out = new(bool)
-		**out = **in
 	}
 }
 

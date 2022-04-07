@@ -729,6 +729,9 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComp
 	}
 	sm.Spec.Endpoints[0].Port = ""
 	sm.Spec.Endpoints[0].TargetPort = nil
+	sm.Spec.Endpoints[0].TLSConfig = nil
+	sm.Spec.Endpoints[0].Scheme = ""
+
 	if len(ba.GetMonitoring().GetEndpoints()) > 0 {
 		port := ba.GetMonitoring().GetEndpoints()[0].Port
 		targetPort := ba.GetMonitoring().GetEndpoints()[0].TargetPort

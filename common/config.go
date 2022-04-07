@@ -16,7 +16,7 @@ const (
 	OpConfigCMCADuration = "cmCADuration"
 
 	// OpConfigCMCADuration default duration for cert-manager issued service certificate
-	OpConfigCMCertDuration = "cmCADuration"
+	OpConfigCMCertDuration = "cmCertDuration"
 )
 
 // Config stores operator configuration

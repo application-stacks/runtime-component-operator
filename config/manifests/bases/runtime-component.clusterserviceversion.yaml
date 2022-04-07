@@ -108,7 +108,7 @@ spec:
         path: expose
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: Enable management of TLS certificates
+      - description: Enable management of TLS certificates. Defaults to true.
         displayName: Manage TLS
         path: manageTLS
         x-descriptors:
