@@ -59,6 +59,7 @@ rules:
   verbs:
   - create
   - delete
+  - get
   - list
   - update
   - watch
@@ -113,6 +114,8 @@ rules:
   - runtimeoperations/finalizers
   - runtimeoperations/status
   verbs:
+  - create
+  - delete
   - get
   - list
   - update

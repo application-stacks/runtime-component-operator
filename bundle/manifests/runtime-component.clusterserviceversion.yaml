@@ -38,7 +38,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: applicationstacks/operator:daily
-    createdAt: "2022-04-07T10:46:05Z"
+    createdAt: "2022-04-07T10:53:55Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     operators.operatorframework.io/builder: operator-sdk-v1.6.1+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
@@ -529,6 +529,7 @@ spec:
           verbs:
           - create
           - delete
+          - get
           - list
           - update
           - watch
@@ -583,6 +584,8 @@ spec:
           - runtimeoperations/finalizers
           - runtimeoperations/status
           verbs:
+          - create
+          - delete
           - get
           - list
           - update
