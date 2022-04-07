@@ -15,6 +15,7 @@ rules:
   verbs:
   - create
   - delete
+  - get
   - list
   - update
   - watch
@@ -32,6 +33,7 @@ rules:
   verbs:
   - create
   - delete
+  - get
   - list
   - update
   - watch
@@ -45,6 +47,7 @@ rules:
   verbs:
   - create
   - delete
+  - get
   - list
   - update
   - watch
@@ -75,6 +78,7 @@ rules:
   verbs:
   - create
   - delete
+  - get
   - list
   - update
   - watch
@@ -85,6 +89,7 @@ rules:
   verbs:
   - create
   - delete
+  - get
   - list
   - update
   - watch
@@ -97,6 +102,7 @@ rules:
   verbs:
   - create
   - delete
+  - get
   - list
   - update
   - watch
@@ -119,6 +125,7 @@ rules:
   verbs:
   - create
   - delete
+  - get
   - list
   - update
   - watch
@@ -129,6 +136,7 @@ rules:
   verbs:
   - create
   - delete
+  - get
   - list
   - update
   - watch
