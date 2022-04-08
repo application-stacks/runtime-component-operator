@@ -38,7 +38,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: applicationstacks/operator:daily
-    createdAt: "2022-04-07T10:53:55Z"
+    createdAt: "2022-04-08T08:53:16Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     operators.operatorframework.io/builder: operator-sdk-v1.6.1+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
@@ -447,12 +447,13 @@ spec:
           resources:
           - configmaps
           verbs:
-          - create
-          - delete
           - get
           - list
-          - update
           - watch
+          - create
+          - update
+          - patch
+          - delete
         - apiGroups:
           - ""
           resources:
@@ -460,6 +461,7 @@ spec:
           verbs:
           - get
           - update
+          - patch
         - apiGroups:
           - ""
           resources:
@@ -472,11 +474,13 @@ spec:
           resources:
           - leases
           verbs:
-          - create
-          - delete
           - get
           - list
+          - watch
+          - create
           - update
+          - patch
+          - delete
         - apiGroups:
           - apps
           resources:

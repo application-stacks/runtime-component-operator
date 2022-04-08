@@ -9,12 +9,13 @@ rules:
   resources:
   - configmaps
   verbs:
-  - create
-  - delete
   - get
   - list
-  - update
   - watch
+  - create
+  - update
+  - patch
+  - delete
 - apiGroups:
   - ""
   resources:
@@ -22,6 +23,7 @@ rules:
   verbs:
   - get
   - update
+  - patch
 - apiGroups:
   - ""
   resources:
@@ -34,8 +36,10 @@ rules:
   resources:
   - leases
   verbs:
-  - create
-  - delete
   - get
   - list
+  - watch
+  - create
   - update
+  - patch
+  - delete
