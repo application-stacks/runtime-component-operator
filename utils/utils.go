@@ -346,6 +346,25 @@ func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 
 			}
 		}
+	} else {
+		obj := ba.(metav1.Object)
+		if affinity.PodAntiAffinity == nil {
+			affinity.PodAntiAffinity = &corev1.PodAntiAffinity{}
+		}
+		term := []corev1.WeightedPodAffinityTerm{
+			{
+				Weight: 50,
+				PodAffinityTerm: corev1.PodAffinityTerm{
+					TopologyKey: "kubernetes.io/hostname",
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app.kubernetes.io/instance": obj.GetName(),
+						},
+					},
+				},
+			},
+		}
+		affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = term
 	}
 
 	if len(archs) > 0 {
@@ -388,7 +407,6 @@ func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 			affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution, term)
 		}
 	}
-
 }
 
 // CustomizePodSpec ...
@@ -486,12 +504,8 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	pts.Spec.RestartPolicy = corev1.RestartPolicyAlways
 	pts.Spec.DNSPolicy = corev1.DNSClusterFirst
 
-	if ba.GetAffinity() != nil {
-		pts.Spec.Affinity = &corev1.Affinity{}
-		CustomizeAffinity(pts.Spec.Affinity, ba)
-	} else {
-		pts.Spec.Affinity = nil
-	}
+	pts.Spec.Affinity = &corev1.Affinity{}
+	CustomizeAffinity(pts.Spec.Affinity, ba)
 }
 
 // CustomizePersistence ...
