@@ -2364,6 +2364,16 @@ spec:
                     description: Labels to set on ServiceMonitor.
                     type: object
                 type: object
+              networkPolicy:
+                description: Defines the network policy
+                properties:
+                  fromLabels:
+                    additionalProperties:
+                      type: string
+                    description: Specify the labels of pod(s) that incoming traffic
+                      is allowed from.
+                    type: object
+                type: object
               probes:
                 description: Define health checks on application container to determine
                   whether it is alive or ready to receive traffic

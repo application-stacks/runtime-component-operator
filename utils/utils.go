@@ -306,6 +306,94 @@ func customizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 	return probe
 }
 
+// CustomizeNetworkPolicy configures the network policy.
+func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, ba common.BaseComponent) {
+	obj := ba.(metav1.Object)
+	networkPolicy.Labels = ba.GetLabels()
+	networkPolicy.Annotations = MergeMaps(networkPolicy.Annotations, ba.GetAnnotations())
+
+	networkPolicy.Spec.PolicyTypes = []networkingv1.PolicyType{networkingv1.PolicyTypeIngress}
+
+	networkPolicy.Spec.PodSelector = metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			common.GetComponentNameLabel(ba): obj.GetName(),
+		},
+	}
+
+	if len(networkPolicy.Spec.Ingress) == 0 {
+		networkPolicy.Spec.Ingress = append(networkPolicy.Spec.Ingress, networkingv1.NetworkPolicyIngressRule{})
+		networkPolicy.Spec.Ingress[0].From = append(networkPolicy.Spec.Ingress[0].From, networkingv1.NetworkPolicyPeer{})
+	}
+
+	networkPolicy.Spec.Ingress[0].From[0].NamespaceSelector = &metav1.LabelSelector{}
+
+	// Customize the network policy peer
+	if exposed := ba.GetExpose(); exposed != nil && *exposed {
+		customizeExposedNetworkPolicyPeer(&networkPolicy.Spec.Ingress[0])
+	} else {
+		customizeNetworkPolicyPeer(networkPolicy.Namespace, &networkPolicy.Spec.Ingress[0], ba)
+	}
+
+	customizeNetworkPolicyPorts(&networkPolicy.Spec.Ingress[0], ba)
+}
+
+func customizeExposedNetworkPolicyPeer(ingress *networkingv1.NetworkPolicyIngressRule) {
+	peer := &ingress.From[0]
+	if peer.NamespaceSelector == nil {
+		peer.NamespaceSelector = &metav1.LabelSelector{}
+	}
+	peer.PodSelector = nil
+}
+
+func customizeNetworkPolicyPeer(namespace string, ingress *networkingv1.NetworkPolicyIngressRule, ba common.BaseComponent) {
+	peer := &ingress.From[0]
+	if peer.NamespaceSelector == nil {
+		peer.NamespaceSelector = &metav1.LabelSelector{}
+	}
+	peer.NamespaceSelector.MatchLabels = map[string]string{
+		"kubernetes.io/metadata.name": namespace,
+	}
+
+	if peer.PodSelector == nil {
+		peer.PodSelector = &metav1.LabelSelector{}
+	}
+	if fromLabels := ba.GetNetworkPolicy().GetFromLabels(); fromLabels != nil {
+		peer.PodSelector.MatchLabels = fromLabels
+	} else {
+		peer.PodSelector.MatchLabels = map[string]string{
+			"app.kubernetes.io/part-of": ba.GetApplicationName(),
+		}
+	}
+}
+
+func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule, ba common.BaseComponent) {
+	var ports []int32
+	ports = append(ports, ba.GetService().GetPort())
+	for _, port := range ba.GetService().GetPorts() {
+		ports = append(ports, port.Port)
+	}
+
+	currentLen := len(ingress.Ports)
+	desiredLen := len(ba.GetService().GetPorts()) + 1 // Add one for normal port
+
+	// Shrink if needed
+	if currentLen > desiredLen {
+		ingress.Ports = ingress.Ports[:desiredLen]
+		currentLen = desiredLen
+	}
+
+	// Add additional ports needed
+	for currentLen < desiredLen {
+		ingress.Ports = append(ingress.Ports, networkingv1.NetworkPolicyPort{})
+		currentLen++
+	}
+
+	for i, port := range ports {
+		newPort := &intstr.IntOrString{Type: intstr.Int, IntVal: port}
+		ingress.Ports[i].Port = newPort
+	}
+}
+
 // CustomizeAffinity ...
 func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 

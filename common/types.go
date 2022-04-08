@@ -83,6 +83,11 @@ type BaseComponentService interface {
 	GetBindable() *bool
 }
 
+// BaseComponentNetworkPolicy represents a basic network policy configuration
+type BaseComponentNetworkPolicy interface {
+	GetFromLabels() map[string]string
+}
+
 // BaseComponentMonitoring represents basic service monitoring configuration
 type BaseComponentMonitoring interface {
 	GetLabels() map[string]string
@@ -150,6 +155,7 @@ type BaseComponent interface {
 	GetCreateKnativeService() *bool
 	GetAutoscaling() BaseComponentAutoscaling
 	GetService() BaseComponentService
+	GetNetworkPolicy() BaseComponentNetworkPolicy
 	GetDeployment() BaseComponentDeployment
 	GetStatefulSet() BaseComponentStatefulSet
 	GetApplicationVersion() string
