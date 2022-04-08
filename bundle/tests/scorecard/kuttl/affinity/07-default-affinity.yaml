@@ -1,4 +1,4 @@
-# Test to see that if not affinity specified the default affinity is applied
+# Test to see that if no affinity specified the default affinity is applied
 apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:

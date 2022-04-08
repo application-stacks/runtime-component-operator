@@ -15,7 +15,3 @@ spec:
                   matchLabels:
                     app.kubernetes.io/instance: pod-default-affinity-rc
                 topologyKey: kubernetes.io/hostname
-status:
-  replicas: 1
-  readyReplicas: 1
-  updatedReplicas: 1
