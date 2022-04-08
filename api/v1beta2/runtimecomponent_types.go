@@ -857,7 +857,7 @@ func (cr *RuntimeComponent) GetLabels() map[string]string {
 		"app.kubernetes.io/managed-by":   "runtime-component-operator",
 		"app.kubernetes.io/component":    "backend",
 		"app.kubernetes.io/part-of":      cr.Spec.ApplicationName,
-		common.GetComponentNameLabel(cr): cr.Spec.ApplicationName,
+		common.GetComponentNameLabel(cr): cr.Name,
 	}
 
 	if cr.Spec.ApplicationVersion != "" {

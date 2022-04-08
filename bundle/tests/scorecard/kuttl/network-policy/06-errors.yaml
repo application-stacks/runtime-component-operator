@@ -5,9 +5,6 @@ metadata:
 spec:
   ingress:
     - from:
-        - namespaceSelector: {}
-          podSelector:
+        - podSelector:
             matchLabels:
               foo: bar
-      ports:
-        - port: 8080

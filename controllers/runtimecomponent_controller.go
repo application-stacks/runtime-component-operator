@@ -319,7 +319,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
-	// TODO: Need to disable if network policies not configured properly
 	networkPolicy := &networkingv1.NetworkPolicy{ObjectMeta: defaultMeta}
 	if np := instance.Spec.NetworkPolicy; np.IsNotDefined() || !np.IsEmpty() {
 		err = r.CreateOrUpdate(networkPolicy, instance, func() error {

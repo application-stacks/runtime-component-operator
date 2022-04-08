@@ -7,6 +7,14 @@ kind: NetworkPolicy
 metadata:
   name: network-policy-rc
 spec:
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: network-policy-rc
+      ports:
+        - port: 8081
+          protocol: TCP
   podSelector:
     matchLabels:
       rc.app.stacks/name: network-policy-rc

@@ -306,10 +306,7 @@ func customizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 	return probe
 }
 
-// CustomizeNetworkPolicy configures a network policy that blocks all traffic by default. If the runtime component is
-// exposed, an ingress rule will be configured to allow traffic into the pod on the service port (and any additional
-// ports that were defined). If networkPolicy.fromLabels are specified, a similar ingress rule will be configured but
-// will only allow traffic from pods with the specified labels.
+// CustomizeNetworkPolicy configures the network policy.
 func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	networkPolicy.Labels = ba.GetLabels()
@@ -323,35 +320,53 @@ func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, ba common
 		},
 	}
 
-	if exposed := ba.GetExpose(); (exposed == nil || !*exposed) && ba.GetNetworkPolicy().GetFromLabels() == nil {
-		networkPolicy.Spec.Ingress = nil
-		return
-	}
-
 	if len(networkPolicy.Spec.Ingress) == 0 {
 		networkPolicy.Spec.Ingress = append(networkPolicy.Spec.Ingress, networkingv1.NetworkPolicyIngressRule{})
+		networkPolicy.Spec.Ingress[0].From = append(networkPolicy.Spec.Ingress[0].From, networkingv1.NetworkPolicyPeer{})
 	}
 
-	customizeNetworkPolicyIngressRule(&networkPolicy.Spec.Ingress[0], ba)
+	networkPolicy.Spec.Ingress[0].From[0].NamespaceSelector = &metav1.LabelSelector{}
+
+	// Customize the network policy peer
+	if exposed := ba.GetExpose(); exposed != nil && *exposed {
+		customizeExposedNetworkPolicyPeer(&networkPolicy.Spec.Ingress[0])
+	} else {
+		customizeNetworkPolicyPeer(networkPolicy.Namespace, &networkPolicy.Spec.Ingress[0], ba)
+	}
+
+	customizeNetworkPolicyPorts(&networkPolicy.Spec.Ingress[0], ba)
 }
 
-func customizeNetworkPolicyIngressRule(ingress *networkingv1.NetworkPolicyIngressRule, ba common.BaseComponent) {
-	if len(ingress.From) == 0 {
-		ingress.From = append(ingress.From, networkingv1.NetworkPolicyPeer{})
+func customizeExposedNetworkPolicyPeer(ingress *networkingv1.NetworkPolicyIngressRule) {
+	peer := &ingress.From[0]
+	if peer.NamespaceSelector == nil {
+		peer.NamespaceSelector = &metav1.LabelSelector{}
+	}
+	peer.PodSelector = nil
+}
+
+func customizeNetworkPolicyPeer(namespace string, ingress *networkingv1.NetworkPolicyIngressRule, ba common.BaseComponent) {
+	peer := &ingress.From[0]
+	if peer.NamespaceSelector == nil {
+		peer.NamespaceSelector = &metav1.LabelSelector{}
+	}
+	peer.NamespaceSelector.MatchLabels = map[string]string{
+		"kubernetes.io/metadata.name": namespace,
 	}
 
-	ingress.From[0] = networkingv1.NetworkPolicyPeer{
-		NamespaceSelector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{},
-		},
+	if peer.PodSelector == nil {
+		peer.PodSelector = &metav1.LabelSelector{}
 	}
-
 	if fromLabels := ba.GetNetworkPolicy().GetFromLabels(); fromLabels != nil {
-		ingress.From[0].PodSelector = &metav1.LabelSelector{
-			MatchLabels: fromLabels,
+		peer.PodSelector.MatchLabels = fromLabels
+	} else {
+		peer.PodSelector.MatchLabels = map[string]string{
+			"app.kubernetes.io/part-of": ba.GetApplicationName(),
 		}
 	}
+}
 
+func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule, ba common.BaseComponent) {
 	var ports []int32
 	ports = append(ports, ba.GetService().GetPort())
 	for _, port := range ba.GetService().GetPorts() {
