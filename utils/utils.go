@@ -243,6 +243,58 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	}
 }
 
+func CustomizeProbes(container *corev1.Container, ba common.BaseComponent) {
+	probesConfig := ba.GetProbes()
+
+	// Probes not defined -- reset all probesConfig to nil
+	if probesConfig == nil {
+		container.ReadinessProbe = nil
+		container.LivenessProbe = nil
+		container.StartupProbe = nil
+		return
+	}
+
+	container.ReadinessProbe = customizeProbe(probesConfig.GetReadinessProbe(), probesConfig.GetDefaultReadinessProbe, ba)
+	container.LivenessProbe = customizeProbe(probesConfig.GetLivenessProbe(), probesConfig.GetDefaultLivenessProbe, ba)
+	container.StartupProbe = customizeProbe(probesConfig.GetStartupProbe(), probesConfig.GetDefaultStartupProbe, ba)
+}
+
+func customizeProbe(config *corev1.Probe, defaultProbeCallback func(ba common.BaseComponent) *corev1.Probe, ba common.BaseComponent) *corev1.Probe {
+	// Probe not defined -- set probe to nil
+	if config == nil {
+		return nil
+	}
+
+	// Probe handler is defined in config so use probe as is
+	if config.Handler != (corev1.Handler{}) {
+		return config
+	}
+
+	// Probe handler is not defined so use default values for the probe if values not set in probe config
+	return customizeProbeDefaults(config, defaultProbeCallback(ba))
+}
+
+func customizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *corev1.Probe {
+	probe := defaultProbe
+	if config.InitialDelaySeconds != 0 {
+		probe.InitialDelaySeconds = config.InitialDelaySeconds
+	}
+	if config.TimeoutSeconds != 0 {
+		probe.TimeoutSeconds = config.TimeoutSeconds
+	}
+	if config.PeriodSeconds != 0 {
+		probe.PeriodSeconds = config.PeriodSeconds
+	}
+	if config.SuccessThreshold != 0 {
+		probe.SuccessThreshold = config.SuccessThreshold
+	}
+	if config.FailureThreshold != 0 {
+		probe.FailureThreshold = config.FailureThreshold
+	}
+
+	return probe
+}
+
 // CustomizeAffinity ...
 func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 
@@ -294,6 +346,25 @@ func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 
 			}
 		}
+	} else {
+		obj := ba.(metav1.Object)
+		if affinity.PodAntiAffinity == nil {
+			affinity.PodAntiAffinity = &corev1.PodAntiAffinity{}
+		}
+		term := []corev1.WeightedPodAffinityTerm{
+			{
+				Weight: 50,
+				PodAffinityTerm: corev1.PodAffinityTerm{
+					TopologyKey: "kubernetes.io/hostname",
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app.kubernetes.io/instance": obj.GetName(),
+						},
+					},
+				},
+			},
+		}
+		affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = term
 	}
 
 	if len(archs) > 0 {
@@ -336,7 +407,6 @@ func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 			affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution, term)
 		}
 	}
-
 }
 
 // CustomizePodSpec ...
@@ -388,15 +458,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		appContainer.Resources = *ba.GetResourceConstraints()
 	}
 
-	if ba.GetProbes() != nil {
-		appContainer.ReadinessProbe = ba.GetProbes().GetReadinessProbe()
-		appContainer.LivenessProbe = ba.GetProbes().GetLivenessProbe()
-		appContainer.StartupProbe = ba.GetProbes().GetStartupProbe()
-	} else {
-		appContainer.ReadinessProbe = nil
-		appContainer.LivenessProbe = nil
-		appContainer.StartupProbe = nil
-	}
+	CustomizeProbes(&appContainer, ba)
 
 	if ba.GetPullPolicy() != nil {
 		appContainer.ImagePullPolicy = *ba.GetPullPolicy()
@@ -408,6 +470,8 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 
 	appContainer.VolumeMounts = ba.GetVolumeMounts()
 	pts.Spec.Volumes = ba.GetVolumes()
+
+	appContainer.SecurityContext = getSecurityContext(ba)
 
 	if ba.GetService().GetCertificateSecretRef() != nil {
 		secretName := obj.GetName() + "-svc-tls"
@@ -440,12 +504,8 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	pts.Spec.RestartPolicy = corev1.RestartPolicyAlways
 	pts.Spec.DNSPolicy = corev1.DNSClusterFirst
 
-	if ba.GetAffinity() != nil {
-		pts.Spec.Affinity = &corev1.Affinity{}
-		CustomizeAffinity(pts.Spec.Affinity, ba)
-	} else {
-		pts.Spec.Affinity = nil
-	}
+	pts.Spec.Affinity = &corev1.Affinity{}
+	CustomizeAffinity(pts.Spec.Affinity, ba)
 }
 
 // CustomizePersistence ...
@@ -552,17 +612,9 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 
 	ksvc.Spec.Template.Spec.Containers[0].Image = ba.GetStatus().GetImageReference()
 	// Knative sets its own resource constraints
-	//ksvc.Spec.Template.Spec.Containers[0].Resources = *cr.Spec.ResourceConstraints
+	// ksvc.Spec.Template.Spec.Containers[0].Resources = *cr.Spec.ResourceConstraints
 
-	if ba.GetProbes() != nil {
-		ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe = ba.GetProbes().GetReadinessProbe()
-		ksvc.Spec.Template.Spec.Containers[0].LivenessProbe = ba.GetProbes().GetLivenessProbe()
-		ksvc.Spec.Template.Spec.Containers[0].StartupProbe = ba.GetProbes().GetStartupProbe()
-	} else {
-		ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe = nil
-		ksvc.Spec.Template.Spec.Containers[0].LivenessProbe = nil
-		ksvc.Spec.Template.Spec.Containers[0].StartupProbe = nil
-	}
+	CustomizeProbes(&ksvc.Spec.Template.Spec.Containers[0], ba)
 
 	ksvc.Spec.Template.Spec.Containers[0].ImagePullPolicy = *ba.GetPullPolicy()
 	ksvc.Spec.Template.Spec.Containers[0].Env = ba.GetEnv()
@@ -899,7 +951,8 @@ func CustomizeIngress(ing *networkingv1.Ingress, ba common.BaseComponent) {
 	servicePort := strconv.Itoa(int(ba.GetService().GetPort())) + "-tcp"
 	host := ""
 	path := ""
-	var pathType networkingv1.PathType
+	pathType := networkingv1.PathType("")
+
 	rt := ba.GetRoute()
 	if rt != nil {
 		host = rt.GetHost()
@@ -920,6 +973,10 @@ func CustomizeIngress(ing *networkingv1.Ingress, ba common.BaseComponent) {
 	if host == "" {
 		l := log.WithValues("Request.Namespace", obj.GetNamespace(), "Request.Name", obj.GetName())
 		l.Info("No Ingress hostname is provided. Ingress might not function correctly without hostname. It is recommended to set Ingress host or to provide default value through operator's config map.")
+	}
+
+	if pathType == "" {
+		pathType = networkingv1.PathTypeImplementationSpecific
 	}
 
 	ing.Spec.Rules = []networkingv1.IngressRule{
@@ -1082,4 +1139,47 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 		return saErr
 	}
 	return nil
+}
+
+// Get security context from CR and apply customization to default settings
+func getSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
+	baSecurityContext := ba.GetSecurityContext()
+
+	valFalse := false
+	valTrue := true
+
+	cap := make([]corev1.Capability, 1)
+	cap[0] = "ALL"
+
+	// Set default security context
+	secContext := &corev1.SecurityContext{
+		AllowPrivilegeEscalation: &valFalse,
+		Capabilities: &corev1.Capabilities{
+			Drop: cap,
+		},
+		Privileged:             &valFalse,
+		ReadOnlyRootFilesystem: &valFalse,
+		RunAsNonRoot:           &valTrue,
+	}
+
+	// Customize security context
+	if baSecurityContext != nil {
+		if baSecurityContext.AllowPrivilegeEscalation == nil {
+			baSecurityContext.AllowPrivilegeEscalation = secContext.AllowPrivilegeEscalation
+		}
+		if baSecurityContext.Capabilities == nil {
+			baSecurityContext.Capabilities = secContext.Capabilities
+		}
+		if baSecurityContext.Privileged == nil {
+			baSecurityContext.Privileged = secContext.Privileged
+		}
+		if baSecurityContext.ReadOnlyRootFilesystem == nil {
+			baSecurityContext.ReadOnlyRootFilesystem = secContext.ReadOnlyRootFilesystem
+		}
+		if baSecurityContext.RunAsNonRoot == nil {
+			baSecurityContext.RunAsNonRoot = secContext.RunAsNonRoot
+		}
+		return baSecurityContext
+	}
+	return secContext
 }

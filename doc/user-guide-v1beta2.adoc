@@ -586,7 +586,7 @@ spec:
 
 ===== Advanced Ingress configuration:
 
-Most of the Ingress configuraiton is achieved through annotations. Annotations such as Nginx, HAProxy, Traefik, and others are specific to the ingress controller implementation.
+Most of the Ingress configuration is achieved through annotations. Annotations such as Nginx, HAProxy, Traefik, and others are specific to the ingress controller implementation.
 
 You can provide an existing TLS secret and set a custom hostname.
 

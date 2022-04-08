@@ -1,0 +1,13 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: probes-rc
+spec:
+  # Add fields here
+  applicationImage: icr.io/appcafe/open-liberty/samples/getting-started
+  service:
+    port: 9443
+  probes:
+    startup: {}
+    liveness:
+    readiness:
