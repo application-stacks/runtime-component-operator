@@ -299,23 +299,20 @@ func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 		if affinity.PodAntiAffinity == nil {
 			affinity.PodAntiAffinity = &corev1.PodAntiAffinity{}
 		}
-		labels := ba.GetLabels()
-		if labels != nil {
-			term := []corev1.WeightedPodAffinityTerm{
-				{
-					Weight: 50,
-					PodAffinityTerm: corev1.PodAffinityTerm{
-						TopologyKey: "kubernetes.io/hostname",
-						LabelSelector: &metav1.LabelSelector{
-							MatchLabels: map[string]string{
-								"app.kubernetes.io/instance": obj.GetName(),
-							},
+		term := []corev1.WeightedPodAffinityTerm{
+			{
+				Weight: 50,
+				PodAffinityTerm: corev1.PodAffinityTerm{
+					TopologyKey: "kubernetes.io/hostname",
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app.kubernetes.io/instance": obj.GetName(),
 						},
 					},
 				},
-			}
-			affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = term
+			},
 		}
+		affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = term
 	}
 
 	if len(archs) > 0 {
