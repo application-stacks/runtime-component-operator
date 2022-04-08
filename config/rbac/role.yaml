@@ -38,6 +38,18 @@ rules:
   - update
   - watch
 - apiGroups:
+  - cert-manager.io
+  resources:
+  - certificates
+  - issuers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
   - ""
   resources:
   - configmaps

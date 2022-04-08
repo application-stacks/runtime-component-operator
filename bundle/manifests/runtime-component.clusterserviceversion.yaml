@@ -38,7 +38,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: applicationstacks/operator:daily
-    createdAt: "2022-04-08T08:53:16Z"
+    createdAt: "2022-04-08T08:57:30Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     operators.operatorframework.io/builder: operator-sdk-v1.6.1+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
@@ -139,6 +139,11 @@ spec:
       - description: Expose the application externally via a Route, a Knative Route or an Ingress resource.
         displayName: Expose
         path: expose
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Enable management of TLS certificates. Defaults to true.
+        displayName: Manage TLS
+        path: manageTLS
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Number of pods to create. Not applicable when .spec.autoscaling or .spec.createKnativeService is specified.
@@ -507,6 +512,18 @@ spec:
           - autoscaling
           resources:
           - horizontalpodautoscalers
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - cert-manager.io
+          resources:
+          - certificates
+          - issuers
           verbs:
           - create
           - delete

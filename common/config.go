@@ -8,18 +8,15 @@ import (
 type OpConfig map[string]string
 
 const (
-	// OpConfigPropDefaultIssuer issuer to use for cert-manager certificate
-	OpConfigPropDefaultIssuer = "defaultIssuer"
-
-	// OpConfigPropUseClusterIssuer whether to use ClusterIssuer for cert-manager certificate
-	OpConfigPropUseClusterIssuer = "useClusterIssuer"
-
-	// OpConfigSvcBindingGVKs a comma-seperated list of GroupVersionKind values in "<Kind>.<version>.<group>" format.
-	// e.g. "CronTab.v1.stable.example.com"
-	//OpConfigSvcBindingGVKs = "serviceBinding.groupVersionKinds"
 
 	// OpConfigDefaultHostname a DNS name to be used for hostname generation.
 	OpConfigDefaultHostname = "defaultHostname"
+
+	// OpConfigCMCADuration default duration for cert-manager issued CA
+	OpConfigCMCADuration = "certManagerCACertDuration"
+
+	// OpConfigCMCADuration default duration for cert-manager issued service certificate
+	OpConfigCMCertDuration = "certManagerCertDuration"
 )
 
 // Config stores operator configuration
@@ -39,10 +36,8 @@ func (oc OpConfig) LoadFromConfigMap(cm *corev1.ConfigMap) {
 // DefaultOpConfig returns default configuration
 func DefaultOpConfig() OpConfig {
 	cfg := OpConfig{}
-	cfg[OpConfigPropDefaultIssuer] = "self-signed"
-	cfg[OpConfigPropUseClusterIssuer] = "true"
-	//cfg[OpConfigSvcBindingGVKs] = "ServiceBindingRequest.v1alpha1.apps.openshift.io"
 	cfg[OpConfigDefaultHostname] = ""
-
+	cfg[OpConfigCMCADuration] = "8766h"
+	cfg[OpConfigCMCertDuration] = "2160h"
 	return cfg
 }

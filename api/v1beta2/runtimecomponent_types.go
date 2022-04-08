@@ -65,6 +65,10 @@ type RuntimeComponentSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=8,type=spec,displayName="Expose",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	Expose *bool `json:"expose,omitempty"`
 
+	// Enable management of TLS certificates. Defaults to true.
+	// +operator-sdk:csv:customresourcedefinitions:order=8,type=spec,displayName="Manage TLS",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	ManageTLS *bool `json:"manageTLS,omitempty"`
+
 	// Number of pods to create. Not applicable when .spec.autoscaling or .spec.createKnativeService is specified.
 	// +operator-sdk:csv:customresourcedefinitions:order=9,type=spec,displayName="Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:podCount"
 	Replicas *int32 `json:"replicas,omitempty"`
@@ -333,6 +337,8 @@ type RuntimeComponentStatus struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Service Binding"
 	Binding *corev1.LocalObjectReference `json:"binding,omitempty"`
+
+	References common.StatusReferences `json:"references,omitempty"`
 }
 
 // Defines possible status conditions.
@@ -558,6 +564,11 @@ func (cr *RuntimeComponent) GetAffinity() common.BaseComponentAffinity {
 		return nil
 	}
 	return cr.Spec.Affinity
+}
+
+// GetAffinity returns deployment's node and pod affinity settings
+func (cr *RuntimeComponent) GetManageTLS() *bool {
+	return cr.Spec.ManageTLS
 }
 
 // GetDeployment returns deployment settings
@@ -938,6 +949,24 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 	if !found {
 		s.Conditions = append(s.Conditions, *condition)
 	}
+}
+
+func (s *RuntimeComponentStatus) GetReferences() common.StatusReferences {
+	if s.References == nil {
+		s.References = make(common.StatusReferences)
+	}
+	return s.References
+}
+
+func (s *RuntimeComponentStatus) SetReferences(refs common.StatusReferences) {
+	s.References = refs
+}
+
+func (s *RuntimeComponentStatus) SetReference(name string, value string) {
+	if s.References == nil {
+		s.References = make(common.StatusReferences)
+	}
+	s.References[name] = value
 }
 
 func convertToCommonStatusConditionType(c StatusConditionType) common.StatusConditionType {

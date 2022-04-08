@@ -15,6 +15,7 @@ require (
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	knative.dev/serving v0.18.1
 	sigs.k8s.io/controller-runtime v0.7.2
+	github.com/jetstack/cert-manager v1.3.0
 )
 
 replace (

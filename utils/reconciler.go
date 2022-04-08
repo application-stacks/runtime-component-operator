@@ -2,11 +2,14 @@ package utils
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
 	"github.com/application-stacks/runtime-component-operator/common"
+	certmanagerv1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
+	certmanagermetav1 "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -311,12 +314,9 @@ func (r *ReconcilerBase) IsOpenShift() bool {
 func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string, cert string, ca string, destCa string, err error) {
 	key, cert, ca, destCa = "", "", "", ""
 	mObj := ba.(metav1.Object)
-	if ba.GetService() != nil && ba.GetService().GetCertificateSecretRef() != nil {
+	if ba.GetManageTLS() == nil || *ba.GetManageTLS() || ba.GetService() != nil && ba.GetService().GetCertificateSecretRef() != nil {
 		tlsSecret := &corev1.Secret{}
-		secretName := mObj.GetName() + "-svc-tls"
-		if ba.GetService().GetCertificateSecretRef() != nil {
-			secretName = *ba.GetService().GetCertificateSecretRef()
-		}
+		secretName := ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName]
 		err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: mObj.GetNamespace()}, tlsSecret)
 		if err != nil {
 			r.ManageError(err, common.StatusConditionTypeReconciled, ba)
@@ -356,4 +356,138 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string,
 		}
 	}
 	return key, cert, ca, destCa, nil
+}
+
+func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string) (bool, error) {
+
+	delete(ba.GetStatus().GetReferences(), common.StatusReferenceCertSecretName)
+	cleanup := func() {
+		if ok, err := r.IsGroupVersionSupported(certmanagerv1.SchemeGroupVersion.String(), "Certificate"); err != nil {
+			return
+		} else if ok {
+			obj := ba.(metav1.Object)
+			svcCert := &certmanagerv1.Certificate{}
+			svcCert.Name = obj.GetName() + "-svc-tls"
+			svcCert.Namespace = obj.GetNamespace()
+			r.client.Delete(context.Background(), svcCert)
+		}
+	}
+
+	if ba.GetCreateKnativeService() != nil && *ba.GetCreateKnativeService() {
+		cleanup()
+		return false, nil
+	}
+	if ba.GetService() != nil && ba.GetService().GetCertificateSecretRef() != nil {
+		cleanup()
+		return false, nil
+	}
+	if ba.GetManageTLS() != nil && !*ba.GetManageTLS() {
+		cleanup()
+		return false, nil
+	}
+	if ba.GetService() != nil && ba.GetService().GetAnnotations() != nil {
+		if _, ok := ba.GetService().GetAnnotations()["service.beta.openshift.io/serving-cert-secret-name"]; ok {
+			cleanup()
+			return false, nil
+		}
+		if _, ok := ba.GetService().GetAnnotations()["service.alpha.openshift.io/serving-cert-secret-name"]; ok {
+			cleanup()
+			return false, nil
+		}
+	}
+	if ok, err := r.IsGroupVersionSupported(certmanagerv1.SchemeGroupVersion.String(), "Certificate"); err != nil {
+		return false, err
+	} else if ok {
+		bao := ba.(metav1.Object)
+
+		issuer := &certmanagerv1.Issuer{ObjectMeta: metav1.ObjectMeta{
+			Name:      prefix + "-self-signed",
+			Namespace: bao.GetNamespace(),
+		}}
+		err = r.CreateOrUpdate(issuer, nil, func() error {
+			issuer.Spec.SelfSigned = &certmanagerv1.SelfSignedIssuer{}
+			issuer.Labels = MergeMaps(issuer.Labels, map[string]string{"app.kubernetes.io/managed-by": operatorName})
+			return nil
+		})
+		if err != nil {
+			return true, err
+		}
+		caCert := &certmanagerv1.Certificate{ObjectMeta: metav1.ObjectMeta{
+			Name:      prefix + "-ca-cert",
+			Namespace: bao.GetNamespace(),
+		}}
+		err = r.CreateOrUpdate(caCert, nil, func() error {
+			caCert.Labels = MergeMaps(caCert.Labels, map[string]string{"app.kubernetes.io/managed-by": operatorName})
+			caCert.Spec.CommonName = CACommonName
+			caCert.Spec.IsCA = true
+			caCert.Spec.SecretName = prefix + "-ca-tls"
+			caCert.Spec.IssuerRef = certmanagermetav1.ObjectReference{
+				Name: prefix + "-self-signed",
+			}
+
+			duration, err := time.ParseDuration(common.Config[common.OpConfigCMCADuration])
+			if err != nil {
+				return err
+			}
+			caCert.Spec.Duration = &metav1.Duration{Duration: duration}
+			return nil
+		})
+		if err != nil {
+			return true, err
+		}
+		issuer = &certmanagerv1.Issuer{ObjectMeta: metav1.ObjectMeta{
+			Name:      prefix + "-ca-issuer",
+			Namespace: bao.GetNamespace(),
+		}}
+		err = r.CreateOrUpdate(issuer, nil, func() error {
+			issuer.Labels = MergeMaps(issuer.Labels, map[string]string{"app.kubernetes.io/managed-by": operatorName})
+			issuer.Spec.CA = &certmanagerv1.CAIssuer{}
+			issuer.Spec.CA.SecretName = prefix + "-ca-tls"
+			return nil
+		})
+		if err != nil {
+			return true, err
+		}
+
+		for i := range issuer.Status.Conditions {
+			if issuer.Status.Conditions[i].Type == certmanagerv1.IssuerConditionReady && issuer.Status.Conditions[i].Status == certmanagermetav1.ConditionFalse {
+				return true, errors.New("Certificate is not ready")
+			}
+		}
+
+		svcCertSecretName := bao.GetName() + "-svc-tls-cm"
+
+		svcCert := &certmanagerv1.Certificate{ObjectMeta: metav1.ObjectMeta{
+			Name:      svcCertSecretName,
+			Namespace: bao.GetNamespace(),
+		}}
+
+		err = r.CreateOrUpdate(svcCert, bao, func() error {
+			svcCert.Labels = ba.GetLabels()
+
+			svcCert.Spec.CommonName = bao.GetName() + "." + bao.GetNamespace() + ".svc"
+			svcCert.Spec.DNSNames = make([]string, 2)
+			svcCert.Spec.DNSNames[0] = bao.GetName() + "." + bao.GetNamespace() + ".svc"
+			svcCert.Spec.DNSNames[1] = bao.GetName() + "." + bao.GetNamespace() + ".svc.cluster.local"
+			svcCert.Spec.IsCA = false
+			svcCert.Spec.IssuerRef = certmanagermetav1.ObjectReference{
+				Name: prefix + "-ca-issuer",
+			}
+			svcCert.Spec.SecretName = svcCertSecretName
+			duration, err := time.ParseDuration(common.Config[common.OpConfigCMCertDuration])
+			if err != nil {
+				return err
+			}
+			svcCert.Spec.Duration = &metav1.Duration{Duration: duration}
+
+			return nil
+		})
+		if err != nil {
+			return true, err
+		}
+		ba.GetStatus().SetReference(common.StatusReferenceCertSecretName, svcCertSecretName)
+	} else {
+		return false, nil
+	}
+	return true, nil
 }

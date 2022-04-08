@@ -22,6 +22,7 @@ limitations under the License.
 package v1beta2
 
 import (
+	"github.com/application-stacks/runtime-component-operator/common"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -380,6 +381,11 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.ManageTLS != nil {
+		in, out := &in.ManageTLS, &out.ManageTLS
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Replicas != nil {
 		in, out := &in.Replicas, &out.Replicas
 		*out = new(int32)
@@ -535,6 +541,13 @@ func (in *RuntimeComponentStatus) DeepCopyInto(out *RuntimeComponentStatus) {
 		in, out := &in.Binding, &out.Binding
 		*out = new(v1.LocalObjectReference)
 		**out = **in
+	}
+	if in.References != nil {
+		in, out := &in.References, &out.References
+		*out = make(common.StatusReferences, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 }
 

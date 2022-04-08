@@ -13,6 +13,7 @@ spec:
       - env:
         - name: TLS_DIR
           value: /etc/x509/certs
+        - name: SERVICE_CERT_SECRET_RESOURCE_VERSION
         volumeMounts:
         - name: svc-certificate
           mountPath: /etc/x509/certs

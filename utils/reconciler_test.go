@@ -263,6 +263,8 @@ func testGetSvcTLSValues(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	runtimecomponent.Status.SetReference(common.StatusReferenceCertSecretName, secret.Name)
+
 	// Use the reconciler to retrieve the secret
 	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 	key, cert, ca, destCa, err := r.GetRouteTLSValues(runtimecomponent)
@@ -287,6 +289,8 @@ func testGetRouteTLSValues(t *testing.T) {
 	terminationPolicy := routev1.TLSTerminationReencrypt
 	secretRefName := "my-app-route-tls"
 	runtimecomponent.Spec.Expose = &expose
+	manageTLS := false
+	runtimecomponent.Spec.ManageTLS = &manageTLS
 	runtimecomponent.Spec.Route = &appstacksv1beta2.RuntimeComponentRoute{
 		Host:                 "myapp.mycompany.com",
 		Termination:          &terminationPolicy,
