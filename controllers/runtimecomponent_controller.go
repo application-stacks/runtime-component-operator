@@ -290,7 +290,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	useCertmanager, err := r.GenerateSvcCertSecret(ba, "rco", "Runtime Component Operator")
+	useCertmanager, err := r.GenerateSvcCertSecret(ba, "rco", "Runtime Component Operator", "runtime-component-operator")
 	if err != nil {
 		reqLogger.Error(err, "Failed to reconcile CertManager Certificate")
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
@@ -303,7 +303,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	err = r.CreateOrUpdate(svc, instance, func() error {
 		appstacksutils.CustomizeService(svc, ba)
 		svc.Annotations = appstacksutils.MergeMaps(svc.Annotations, instance.Spec.Service.Annotations)
-		if !useCertmanager {
+		if !useCertmanager && r.IsOpenShift() {
 			appstacksutils.AddOCPCertAnnotation(ba, svc)
 		}
 		monitoringEnabledLabelName := getMonitoringEnabledLabelName(ba)

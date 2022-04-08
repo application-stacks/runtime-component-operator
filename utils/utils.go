@@ -1210,15 +1210,27 @@ func getSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
 }
 
 func AddOCPCertAnnotation(ba common.BaseComponent, svc *corev1.Service) {
+	bao := ba.(metav1.Object)
+
 	if ba.GetCreateKnativeService() != nil && *ba.GetCreateKnativeService() {
+		if val := svc.Annotations["service.beta.openshift.io/serving-cert-secret-name"]; val == bao.GetName()+"-svc-tls-ocp" {
+			delete(svc.Annotations, "service.beta.openshift.io/serving-cert-secret-name")
+			delete(svc.Annotations, "service.beta.openshift.io/serving-cert-signed-by")
+			delete(svc.Annotations, "service.alpha.openshift.io/serving-cert-signed-by")
+
+		}
 		return
 	}
 
 	if ba.GetManageTLS() != nil && !*ba.GetManageTLS() || ba.GetService() != nil && ba.GetService().GetCertificateSecretRef() != nil {
+		if val := svc.Annotations["service.beta.openshift.io/serving-cert-secret-name"]; val == bao.GetName()+"-svc-tls-ocp" {
+			delete(svc.Annotations, "service.beta.openshift.io/serving-cert-secret-name")
+			delete(svc.Annotations, "service.beta.openshift.io/serving-cert-signed-by")
+			delete(svc.Annotations, "service.alpha.openshift.io/serving-cert-signed-by")
+		}
 		return
 	}
 
-	bao := ba.(metav1.Object)
 	val, ok := svc.Annotations["service.beta.openshift.io/serving-cert-secret-name"]
 	if !ok {
 		val, ok = svc.Annotations["service.alpha.openshift.io/serving-cert-secret-name"]

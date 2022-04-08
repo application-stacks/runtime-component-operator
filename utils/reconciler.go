@@ -358,7 +358,7 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string,
 	return key, cert, ca, destCa, nil
 }
 
-func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string) (bool, error) {
+func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string) (bool, error) {
 
 	delete(ba.GetStatus().GetReferences(), common.StatusReferenceCertSecretName)
 	cleanup := func() {
@@ -406,7 +406,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 		}}
 		err = r.CreateOrUpdate(issuer, nil, func() error {
 			issuer.Spec.SelfSigned = &certmanagerv1.SelfSignedIssuer{}
-			issuer.Labels = MergeMaps(issuer.Labels, map[string]string{"app.kubernetes.io/managed-by": "runtime-component-operator"})
+			issuer.Labels = MergeMaps(issuer.Labels, map[string]string{"app.kubernetes.io/managed-by": operatorName})
 			return nil
 		})
 		if err != nil {
@@ -417,7 +417,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 			Namespace: bao.GetNamespace(),
 		}}
 		err = r.CreateOrUpdate(caCert, nil, func() error {
-			caCert.Labels = MergeMaps(caCert.Labels, map[string]string{"app.kubernetes.io/managed-by": "runtime-component-operator"})
+			caCert.Labels = MergeMaps(caCert.Labels, map[string]string{"app.kubernetes.io/managed-by": operatorName})
 			caCert.Spec.CommonName = CACommonName
 			caCert.Spec.IsCA = true
 			caCert.Spec.SecretName = prefix + "-ca-tls"
@@ -440,7 +440,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 			Namespace: bao.GetNamespace(),
 		}}
 		err = r.CreateOrUpdate(issuer, nil, func() error {
-			issuer.Labels = MergeMaps(issuer.Labels, map[string]string{"app.kubernetes.io/managed-by": "runtime-component-operator"})
+			issuer.Labels = MergeMaps(issuer.Labels, map[string]string{"app.kubernetes.io/managed-by": operatorName})
 			issuer.Spec.CA = &certmanagerv1.CAIssuer{}
 			issuer.Spec.CA.SecretName = prefix + "-ca-tls"
 			return nil

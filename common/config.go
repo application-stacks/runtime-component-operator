@@ -13,10 +13,10 @@ const (
 	OpConfigDefaultHostname = "defaultHostname"
 
 	// OpConfigCMCADuration default duration for cert-manager issued CA
-	OpConfigCMCADuration = "cmCADuration"
+	OpConfigCMCADuration = "certManagerCACertDuration"
 
 	// OpConfigCMCADuration default duration for cert-manager issued service certificate
-	OpConfigCMCertDuration = "cmCertDuration"
+	OpConfigCMCertDuration = "certManagerCertDuration"
 )
 
 // Config stores operator configuration
