@@ -14,14 +14,14 @@ spec:
     spec:
       containers:
       - startupProbe:
-          failureThreshold: 3
           httpGet:
             path: /health/started
             port: 9443
             scheme: HTTPS
           periodSeconds: 10
+          timeoutSeconds: 2
           successThreshold: 1
-          timeoutSeconds: 1
+          failureThreshold: 20
 status:
   observedGeneration: 5
   readyReplicas: 1

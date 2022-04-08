@@ -14,34 +14,34 @@ spec:
     spec:
       containers:
       - livenessProbe:
-          failureThreshold: 3
           httpGet:
             path: /health/live
             port: 9443
             scheme: HTTPS
           initialDelaySeconds: 60
           periodSeconds: 10
+          timeoutSeconds: 2
           successThreshold: 1
-          timeoutSeconds: 3
-        readinessProbe:
           failureThreshold: 3
+        readinessProbe:
           httpGet:
             path: /health/ready
             port: 9443
             scheme: HTTPS
-          initialDelaySeconds: 30
+          initialDelaySeconds: 10
           periodSeconds: 10
+          timeoutSeconds: 2
           successThreshold: 1
-          timeoutSeconds: 3
+          failureThreshold: 10
         startupProbe:
-          failureThreshold: 3
           httpGet:
             path: /health/started
             port: 9443
             scheme: HTTPS
           periodSeconds: 10
+          timeoutSeconds: 2
           successThreshold: 1
-          timeoutSeconds: 1
+          failureThreshold: 20
 status:
   observedGeneration: 4
   readyReplicas: 1
