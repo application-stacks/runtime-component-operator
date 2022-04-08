@@ -15,6 +15,9 @@ func GetDefaultMicroProfileStartupProbe(ba BaseComponent) *corev1.Probe {
 				Scheme: "HTTPS",
 			},
 		},
+		PeriodSeconds:    10,
+		TimeoutSeconds:   2,
+		FailureThreshold: 20,
 	}
 }
 
@@ -28,10 +31,10 @@ func GetDefaultMicroProfileReadinessProbe(ba BaseComponent) *corev1.Probe {
 				Scheme: "HTTPS",
 			},
 		},
-		InitialDelaySeconds: 30,
+		InitialDelaySeconds: 10,
 		PeriodSeconds:       10,
-		TimeoutSeconds:      3,
-		FailureThreshold:    3,
+		TimeoutSeconds:      2,
+		FailureThreshold:    10,
 	}
 }
 
@@ -47,7 +50,7 @@ func GetDefaultMicroProfileLivenessProbe(ba BaseComponent) *corev1.Probe {
 		},
 		InitialDelaySeconds: 60,
 		PeriodSeconds:       10,
-		TimeoutSeconds:      3,
+		TimeoutSeconds:      2,
 		FailureThreshold:    3,
 	}
 }
