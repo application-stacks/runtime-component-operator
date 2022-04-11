@@ -40,10 +40,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
-	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/openshift/library-go/pkg/image/imageutil"
+	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"

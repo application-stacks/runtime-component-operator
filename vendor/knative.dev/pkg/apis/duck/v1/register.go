@@ -38,8 +38,10 @@ func Resource(resource string) schema.GroupResource {
 }
 
 var (
+	// SchemeBuilder builds a scheme with the types known to the package.
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
-	AddToScheme   = SchemeBuilder.AddToScheme
+	// AddToScheme adds the types known to this package to an existing schema.
+	AddToScheme = SchemeBuilder.AddToScheme
 )
 
 // Adds the list of known types to Scheme.
@@ -54,6 +56,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		(&Source{}).GetListType(),
 		&WithPod{},
 		(&WithPod{}).GetListType(),
+		&Binding{},
+		(&Binding{}).GetListType(),
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

@@ -26,12 +26,13 @@ import (
 // Logger is the interface that UntypedStore expects its logger to conform to.
 // UntypedStore will log when updates succeed or fail.
 type Logger interface {
+	Debugf(string, ...interface{})
 	Infof(string, ...interface{})
 	Fatalf(string, ...interface{})
 	Errorf(string, ...interface{})
 }
 
-// Constructors is a map for specifying config names to
+// Constructors is a map for specifying configmap names to
 // their function constructors
 //
 // The values of this map must be functions with the definition
@@ -151,7 +152,7 @@ func (s *UntypedStore) OnConfigChanged(c *corev1.ConfigMap) {
 		return
 	}
 
-	s.logger.Infof("%s config %q config was added or updated: %#v", s.name, name, result)
+	s.logger.Debugf("%s config %q config was added or updated: %#v", s.name, name, result)
 	storage.Store(result)
 
 	for _, f := range s.onAfterStore {

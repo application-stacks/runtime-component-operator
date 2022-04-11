@@ -17,12 +17,9 @@ limitations under the License.
 package v1
 
 import (
-	"fmt"
-	"strconv"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/clock"
 	net "knative.dev/networking/pkg/apis/networking"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/serving/pkg/apis/serving"
@@ -39,7 +36,7 @@ const (
 
 	// QueueAdminPortName specifies the port name for
 	// health check and lifecycle hooks for queue-proxy.
-	QueueAdminPortName string = "http-queueadm"
+	QueueAdminPortName = "http-queueadm"
 
 	// AutoscalingQueueMetricsPortName specifies the port name to use for metrics
 	// emitted by queue-proxy for autoscaler.
@@ -48,12 +45,10 @@ const (
 	// UserQueueMetricsPortName specifies the port name to use for metrics
 	// emitted by queue-proxy for end user.
 	UserQueueMetricsPortName = "http-usermetric"
-
-	AnnotationParseErrorTypeMissing = "Missing"
-	AnnotationParseErrorTypeInvalid = "Invalid"
-	LabelParserErrorTypeMissing     = "Missing"
-	LabelParserErrorTypeInvalid     = "Invalid"
 )
+
+// RoutingState represents states of a revision with regards to serving a route.
+type RoutingState string
 
 const (
 	// RoutingStateUnset is the empty value for routing state, this state is unexpected.
@@ -64,32 +59,13 @@ const (
 	// of revision garbage collection.
 	RoutingStatePending RoutingState = "pending"
 
-	// RoutingStateActive is a state for a revision which are actively referenced by a Route.
+	// RoutingStateActive is a state for a revision which is actively referenced by a Route.
 	RoutingStateActive RoutingState = "active"
 
 	// RoutingStateReserve is a state for a revision which is no longer referenced by a Route,
 	// and is scaled down, but may be rapidly pinned to a route to be made active again.
 	RoutingStateReserve RoutingState = "reserve"
 )
-
-type (
-	// RoutingState represents states of a revision with regards to serving a route.
-	RoutingState string
-
-	// +k8s:deepcopy-gen=false
-	AnnotationParseError struct {
-		Type  string
-		Value string
-		Err   error
-	}
-
-	// +k8s:deepcopy-gen=false
-	LastPinnedParseError AnnotationParseError
-)
-
-func (e LastPinnedParseError) Error() string {
-	return fmt.Sprintf("%v lastPinned value: %q", e.Type, e.Value)
-}
 
 // GetContainer returns a pointer to the relevant corev1.Container field.
 // It is never nil and should be exactly the specified container if len(containers) == 1 or
@@ -112,7 +88,7 @@ func (rs *RevisionSpec) GetContainer() *corev1.Container {
 
 // SetRoutingState sets the routingState label on this Revision and updates the
 // routingStateModified annotation.
-func (r *Revision) SetRoutingState(state RoutingState, clock clock.Clock) {
+func (r *Revision) SetRoutingState(state RoutingState, tm time.Time) {
 	stateStr := string(state)
 	if t := r.Annotations[serving.RoutingStateModifiedAnnotationKey]; t != "" &&
 		r.Labels[serving.RoutingStateLabelKey] == stateStr {
@@ -124,13 +100,14 @@ func (r *Revision) SetRoutingState(state RoutingState, clock clock.Clock) {
 
 	r.Annotations = kmeta.UnionMaps(r.Annotations,
 		map[string]string{
-			serving.RoutingStateModifiedAnnotationKey: RoutingStateModifiedString(clock),
-		})
+			serving.RoutingStateModifiedAnnotationKey: RoutingStateModifiedString(tm),
+		},
+	)
 }
 
 // RoutingStateModifiedString gives a formatted now timestamp.
-func RoutingStateModifiedString(clock clock.Clock) string {
-	return clock.Now().UTC().Format(time.RFC3339)
+func RoutingStateModifiedString(t time.Time) string {
+	return t.UTC().Format(time.RFC3339)
 }
 
 // GetRoutingState retrieves the RoutingState label.
@@ -153,73 +130,21 @@ func (r *Revision) GetRoutingStateModified() time.Time {
 
 // IsReachable returns whether or not the revision can be reached by a route.
 func (r *Revision) IsReachable() bool {
-	return r.Labels[serving.RouteLabelKey] != "" ||
-		RoutingState(r.Labels[serving.RoutingStateLabelKey]) == RoutingStateActive
+	return RoutingState(r.Labels[serving.RoutingStateLabelKey]) == RoutingStateActive
 }
 
 // GetProtocol returns the app level network protocol.
-func (r *Revision) GetProtocol() (p net.ProtocolType) {
-	p = net.ProtocolHTTP1
-
+func (r *Revision) GetProtocol() net.ProtocolType {
 	ports := r.Spec.GetContainer().Ports
-	if len(ports) == 0 {
-		return
+	if len(ports) > 0 && ports[0].Name == string(net.ProtocolH2C) {
+		return net.ProtocolH2C
 	}
 
-	if ports[0].Name == string(net.ProtocolH2C) {
-		p = net.ProtocolH2C
-	}
-
-	return
-}
-
-// SetLastPinned sets the revision's last pinned annotations
-// to be the specified time.
-func (r *Revision) SetLastPinned(t time.Time) {
-	if r.Annotations == nil {
-		r.Annotations = make(map[string]string, 1)
-	}
-
-	r.Annotations[serving.RevisionLastPinnedAnnotationKey] = RevisionLastPinnedString(t)
-}
-
-// GetLastPinned returns the time the revision was last pinned.
-func (r *Revision) GetLastPinned() (time.Time, error) {
-	if r.Annotations == nil {
-		return time.Time{}, LastPinnedParseError{
-			Type: AnnotationParseErrorTypeMissing,
-		}
-	}
-
-	str, ok := r.Annotations[serving.RevisionLastPinnedAnnotationKey]
-	if !ok {
-		// If a revision is past the create delay without an annotation it is stale.
-		return time.Time{}, LastPinnedParseError{
-			Type: AnnotationParseErrorTypeMissing,
-		}
-	}
-
-	secs, err := strconv.ParseInt(str, 10, 64)
-	if err != nil {
-		return time.Time{}, LastPinnedParseError{
-			Type:  AnnotationParseErrorTypeInvalid,
-			Value: str,
-			Err:   err,
-		}
-	}
-
-	return time.Unix(secs, 0), nil
+	return net.ProtocolHTTP1
 }
 
 // IsActivationRequired returns true if activation is required.
 func (rs *RevisionStatus) IsActivationRequired() bool {
-	if c := revisionCondSet.Manage(rs).GetCondition(RevisionConditionActive); c != nil {
-		return c.Status != corev1.ConditionTrue
-	}
-	return false
-}
-
-// RevisionLastPinnedString returns a string representation of the specified time.
-func RevisionLastPinnedString(t time.Time) string {
-	return fmt.Sprintf("%d", t.Unix())
+	c := revisionCondSet.Manage(rs).GetCondition(RevisionConditionActive)
+	return c != nil && c.Status != corev1.ConditionTrue
 }

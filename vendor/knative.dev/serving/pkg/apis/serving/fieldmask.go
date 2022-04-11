@@ -14,6 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Note: Please update `hack/schemapatch-config.yaml` and run `hack/update-schemas.sh` whenever
+// fields are added or removed here.
+
 package serving
 
 import (
@@ -26,10 +29,11 @@ import (
 // VolumeMask performs a _shallow_ copy of the Kubernetes Volume object to a new
 // Kubernetes Volume object bringing over only the fields allowed in the Knative API. This
 // does not validate the contents or the bounds of the provided fields.
-func VolumeMask(in *corev1.Volume) *corev1.Volume {
+func VolumeMask(ctx context.Context, in *corev1.Volume) *corev1.Volume {
 	if in == nil {
 		return nil
 	}
+	cfg := config.FromContextOrDefaults(ctx)
 
 	out := new(corev1.Volume)
 
@@ -37,23 +41,31 @@ func VolumeMask(in *corev1.Volume) *corev1.Volume {
 	out.Name = in.Name
 	out.VolumeSource = in.VolumeSource
 
+	if cfg.Features.PodSpecVolumesEmptyDir != config.Disabled {
+		out.EmptyDir = in.EmptyDir
+	}
+
 	return out
 }
 
 // VolumeSourceMask performs a _shallow_ copy of the Kubernetes VolumeSource object to a new
 // Kubernetes VolumeSource object bringing over only the fields allowed in the Knative API. This
 // does not validate the contents or the bounds of the provided fields.
-func VolumeSourceMask(in *corev1.VolumeSource) *corev1.VolumeSource {
+func VolumeSourceMask(ctx context.Context, in *corev1.VolumeSource) *corev1.VolumeSource {
 	if in == nil {
 		return nil
 	}
-
+	cfg := config.FromContextOrDefaults(ctx)
 	out := new(corev1.VolumeSource)
 
 	// Allowed fields
 	out.Secret = in.Secret
 	out.ConfigMap = in.ConfigMap
 	out.Projected = in.Projected
+
+	if cfg.Features.PodSpecVolumesEmptyDir != config.Disabled {
+		out.EmptyDir = in.EmptyDir
+	}
 
 	// Too many disallowed fields to list
 
@@ -171,10 +183,17 @@ func PodSpecMask(ctx context.Context, in *corev1.PodSpec) *corev1.PodSpec {
 	out.Volumes = in.Volumes
 	out.ImagePullSecrets = in.ImagePullSecrets
 	out.EnableServiceLinks = in.EnableServiceLinks
+	// Only allow setting AutomountServiceAccountToken to false
+	if in.AutomountServiceAccountToken != nil && !*in.AutomountServiceAccountToken {
+		out.AutomountServiceAccountToken = in.AutomountServiceAccountToken
+	}
 
 	// Feature fields
 	if cfg.Features.PodSpecAffinity != config.Disabled {
 		out.Affinity = in.Affinity
+	}
+	if cfg.Features.PodSpecHostAliases != config.Disabled {
+		out.HostAliases = in.HostAliases
 	}
 	if cfg.Features.PodSpecNodeSelector != config.Disabled {
 		out.NodeSelector = in.NodeSelector
@@ -188,6 +207,9 @@ func PodSpecMask(ctx context.Context, in *corev1.PodSpec) *corev1.PodSpec {
 	if cfg.Features.PodSpecSecurityContext != config.Disabled {
 		out.SecurityContext = in.SecurityContext
 	}
+	if cfg.Features.PodSpecPriorityClassName != config.Disabled {
+		out.PriorityClassName = in.PriorityClassName
+	}
 
 	// Disallowed fields
 	// This list is unnecessary, but added here for clarity
@@ -196,7 +218,6 @@ func PodSpecMask(ctx context.Context, in *corev1.PodSpec) *corev1.PodSpec {
 	out.TerminationGracePeriodSeconds = nil
 	out.ActiveDeadlineSeconds = nil
 	out.DNSPolicy = ""
-	out.AutomountServiceAccountToken = nil
 	out.NodeName = ""
 	out.HostNetwork = false
 	out.HostPID = false
@@ -205,8 +226,6 @@ func PodSpecMask(ctx context.Context, in *corev1.PodSpec) *corev1.PodSpec {
 	out.Hostname = ""
 	out.Subdomain = ""
 	out.SchedulerName = ""
-	out.HostAliases = nil
-	out.PriorityClassName = ""
 	out.Priority = nil
 	out.DNSConfig = nil
 	out.ReadinessGates = nil
@@ -590,20 +609,40 @@ func SecurityContextMask(ctx context.Context, in *corev1.SecurityContext) *corev
 	out := new(corev1.SecurityContext)
 
 	// Allowed fields
+	out.Capabilities = in.Capabilities
+	out.ReadOnlyRootFilesystem = in.ReadOnlyRootFilesystem
 	out.RunAsUser = in.RunAsUser
+	out.RunAsGroup = in.RunAsGroup
+	// RunAsNonRoot when unset behaves the same way as false
+	// We do want the ability for folks to set this value to true
+	out.RunAsNonRoot = in.RunAsNonRoot
 
-	if config.FromContextOrDefaults(ctx).Features.PodSpecSecurityContext != config.Disabled {
-		out.RunAsGroup = in.RunAsGroup
-		out.RunAsNonRoot = in.RunAsNonRoot
-	}
 	// Disallowed
 	// This list is unnecessary, but added here for clarity
-	out.Capabilities = nil
 	out.Privileged = nil
 	out.SELinuxOptions = nil
-	out.ReadOnlyRootFilesystem = nil
 	out.AllowPrivilegeEscalation = nil
 	out.ProcMount = nil
+
+	return out
+}
+
+// CapabilitiesMask performs a _shallow_ copy of the Kubernetes Capabilities object to a new
+// Kubernetes Capabilities object bringing over only the fields allowed in the Knative API. This
+// does not validate the contents or the bounds of the provided fields.
+func CapabilitiesMask(ctx context.Context, in *corev1.Capabilities) *corev1.Capabilities {
+	if in == nil {
+		return nil
+	}
+
+	out := new(corev1.Capabilities)
+
+	// Allowed fields
+	out.Drop = in.Drop
+
+	if config.FromContextOrDefaults(ctx).Features.ContainerSpecAddCapabilities != config.Disabled {
+		out.Add = in.Add
+	}
 
 	return out
 }

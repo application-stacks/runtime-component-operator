@@ -28,10 +28,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation"
-	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/profiling"
 	"knative.dev/serving/pkg/apis/config"
+	"knative.dev/serving/pkg/networking"
 )
 
 const (
@@ -73,7 +73,7 @@ var (
 	// The port is named "user-port" on the deployment, but a user cannot set an arbitrary name on the port
 	// in Configuration. The name field is reserved for content-negotiation. Currently 'h2c' and 'http1' are
 	// allowed.
-	// https://github.com/knative/serving/blob/master/docs/runtime-contract.md#inbound-network-connectivity
+	// https://github.com/knative/serving/blob/main/docs/runtime-contract.md#inbound-network-connectivity
 	validPortNames = sets.NewString(
 		"h2c",
 		"http1",
@@ -81,11 +81,17 @@ var (
 	)
 )
 
-func ValidateVolumes(vs []corev1.Volume, mountedVolumes sets.String) (sets.String, *apis.FieldError) {
-	volumes := make(sets.String, len(vs))
+// ValidateVolumes validates the Volumes of a PodSpec.
+func ValidateVolumes(ctx context.Context, vs []corev1.Volume, mountedVolumes sets.String) (map[string]corev1.Volume, *apis.FieldError) {
+	volumes := make(map[string]corev1.Volume, len(vs))
 	var errs *apis.FieldError
+	features := config.FromContextOrDefaults(ctx).Features
 	for i, volume := range vs {
-		if volumes.Has(volume.Name) {
+		if volume.EmptyDir != nil && features.PodSpecVolumesEmptyDir != config.Enabled {
+			errs = errs.Also((&apis.FieldError{Message: fmt.Sprintf("EmptyDir volume support is off, "+
+				"but found EmptyDir volume %s", volume.Name)}).ViaIndex(i))
+		}
+		if _, ok := volumes[volume.Name]; ok {
 			errs = errs.Also((&apis.FieldError{
 				Message: fmt.Sprintf("duplicate volume name %q", volume.Name),
 				Paths:   []string{"name"},
@@ -97,14 +103,14 @@ func ValidateVolumes(vs []corev1.Volume, mountedVolumes sets.String) (sets.Strin
 				Paths:   []string{"name"},
 			}).ViaIndex(i))
 		}
-		errs = errs.Also(validateVolume(volume).ViaIndex(i))
-		volumes.Insert(volume.Name)
+		errs = errs.Also(validateVolume(ctx, volume).ViaIndex(i))
+		volumes[volume.Name] = volume
 	}
 	return volumes, errs
 }
 
-func validateVolume(volume corev1.Volume) *apis.FieldError {
-	errs := apis.CheckDisallowedFields(volume, *VolumeMask(&volume))
+func validateVolume(ctx context.Context, volume corev1.Volume) *apis.FieldError {
+	errs := apis.CheckDisallowedFields(volume, *VolumeMask(ctx, &volume))
 	if volume.Name == "" {
 		errs = apis.ErrMissingField("name")
 	} else if len(validation.IsDNS1123Label(volume.Name)) != 0 {
@@ -112,8 +118,8 @@ func validateVolume(volume corev1.Volume) *apis.FieldError {
 	}
 
 	vs := volume.VolumeSource
-	errs = errs.Also(apis.CheckDisallowedFields(vs, *VolumeSourceMask(&vs)))
-	specified := []string{}
+	errs = errs.Also(apis.CheckDisallowedFields(vs, *VolumeSourceMask(ctx, &vs)))
+	var specified []string
 	if vs.Secret != nil {
 		specified = append(specified, "secret")
 		for i, item := range vs.Secret.Items {
@@ -132,8 +138,17 @@ func validateVolume(volume corev1.Volume) *apis.FieldError {
 			errs = errs.Also(validateProjectedVolumeSource(proj).ViaFieldIndex("projected", i))
 		}
 	}
+	if vs.EmptyDir != nil {
+		specified = append(specified, "emptyDir")
+		errs = errs.Also(validateEmptyDirFields(vs.EmptyDir).ViaField("emptyDir"))
+	}
 	if len(specified) == 0 {
-		errs = errs.Also(apis.ErrMissingOneOf("secret", "configMap", "projected"))
+		fieldPaths := []string{"secret", "configMap", "projected"}
+		cfg := config.FromContextOrDefaults(ctx)
+		if cfg.Features.PodSpecVolumesEmptyDir == config.Enabled {
+			fieldPaths = append(fieldPaths, "emptyDir")
+		}
+		errs = errs.Also(apis.ErrMissingOneOf(fieldPaths...))
 	} else if len(specified) > 1 {
 		errs = errs.Also(apis.ErrMultipleOneOf(specified...))
 	}
@@ -206,6 +221,19 @@ func validateKeyToPath(k2p corev1.KeyToPath) *apis.FieldError {
 	}
 	if k2p.Path == "" {
 		errs = errs.Also(apis.ErrMissingField("path"))
+	}
+	return errs
+}
+
+func validateEmptyDirFields(dir *corev1.EmptyDirVolumeSource) *apis.FieldError {
+	var errs *apis.FieldError
+	if dir.Medium != "" && dir.Medium != "Memory" {
+		errs = errs.Also(apis.ErrInvalidValue(dir.Medium, "medium"))
+	}
+	if dir.SizeLimit != nil {
+		if dir.SizeLimit.Value() < 0 {
+			errs = errs.Also(apis.ErrInvalidValue(dir.SizeLimit, "sizeLimit"))
+		}
 	}
 	return errs
 }
@@ -288,7 +316,7 @@ func ValidatePodSpec(ctx context.Context, ps corev1.PodSpec) *apis.FieldError {
 
 	errs = errs.Also(ValidatePodSecurityContext(ctx, ps.SecurityContext).ViaField("securityContext"))
 
-	volumes, err := ValidateVolumes(ps.Volumes, AllMountedVolumes(ps.Containers))
+	volumes, err := ValidateVolumes(ctx, ps.Volumes, AllMountedVolumes(ps.Containers))
 	if err != nil {
 		errs = errs.Also(err.ViaField("volumes"))
 	}
@@ -303,14 +331,14 @@ func ValidatePodSpec(ctx context.Context, ps corev1.PodSpec) *apis.FieldError {
 		errs = errs.Also(validateContainers(ctx, ps.Containers, volumes))
 	}
 	if ps.ServiceAccountName != "" {
-		for range validation.IsDNS1123Subdomain(ps.ServiceAccountName) {
-			errs = errs.Also(apis.ErrInvalidValue("serviceAccountName", ps.ServiceAccountName))
+		for _, err := range validation.IsDNS1123Subdomain(ps.ServiceAccountName) {
+			errs = errs.Also(apis.ErrInvalidValue(ps.ServiceAccountName, "serviceAccountName", err))
 		}
 	}
 	return errs
 }
 
-func validateContainers(ctx context.Context, containers []corev1.Container, volumes sets.String) (errs *apis.FieldError) {
+func validateContainers(ctx context.Context, containers []corev1.Container, volumes map[string]corev1.Volume) (errs *apis.FieldError) {
 	features := config.FromContextOrDefaults(ctx).Features
 	if features.MultiContainer != config.Enabled {
 		return errs.Also(&apis.FieldError{Message: fmt.Sprintf("multi-container is off, "+
@@ -358,7 +386,7 @@ func validateContainersPorts(containers []corev1.Container) *apis.FieldError {
 }
 
 // validateSidecarContainer validate fields for non serving containers
-func validateSidecarContainer(ctx context.Context, container corev1.Container, volumes sets.String) (errs *apis.FieldError) {
+func validateSidecarContainer(ctx context.Context, container corev1.Container, volumes map[string]corev1.Volume) (errs *apis.FieldError) {
 	if container.LivenessProbe != nil {
 		errs = errs.Also(apis.CheckDisallowedFields(*container.LivenessProbe,
 			*ProbeMask(&corev1.Probe{})).ViaField("livenessProbe"))
@@ -371,7 +399,7 @@ func validateSidecarContainer(ctx context.Context, container corev1.Container, v
 }
 
 // ValidateContainer validate fields for serving containers
-func ValidateContainer(ctx context.Context, container corev1.Container, volumes sets.String) (errs *apis.FieldError) {
+func ValidateContainer(ctx context.Context, container corev1.Container, volumes map[string]corev1.Volume) (errs *apis.FieldError) {
 	// Single container cannot have multiple ports
 	errs = errs.Also(portValidation(container.Ports).ViaField("ports"))
 	// Liveness Probes
@@ -392,7 +420,7 @@ func portValidation(containerPorts []corev1.ContainerPort) *apis.FieldError {
 	return nil
 }
 
-func validate(ctx context.Context, container corev1.Container, volumes sets.String) *apis.FieldError {
+func validate(ctx context.Context, container corev1.Container, volumes map[string]corev1.Volume) *apis.FieldError {
 	if equality.Semantic.DeepEqual(container, corev1.Container{}) {
 		return apis.ErrMissingField(apis.CurrentField)
 	}
@@ -446,11 +474,20 @@ func validateResources(resources *corev1.ResourceRequirements) *apis.FieldError 
 	return apis.CheckDisallowedFields(*resources, *ResourceRequirementsMask(resources))
 }
 
+func validateCapabilities(ctx context.Context, cap *corev1.Capabilities) *apis.FieldError {
+	if cap == nil {
+		return nil
+	}
+	return apis.CheckDisallowedFields(*cap, *CapabilitiesMask(ctx, cap))
+}
+
 func validateSecurityContext(ctx context.Context, sc *corev1.SecurityContext) *apis.FieldError {
 	if sc == nil {
 		return nil
 	}
 	errs := apis.CheckDisallowedFields(*sc, *SecurityContextMask(ctx, sc))
+
+	errs = errs.Also(validateCapabilities(ctx, sc.Capabilities).ViaField("capabilities"))
 
 	if sc.RunAsUser != nil {
 		uid := *sc.RunAsUser
@@ -468,7 +505,7 @@ func validateSecurityContext(ctx context.Context, sc *corev1.SecurityContext) *a
 	return errs
 }
 
-func validateVolumeMounts(mounts []corev1.VolumeMount, volumes sets.String) *apis.FieldError {
+func validateVolumeMounts(mounts []corev1.VolumeMount, volumes map[string]corev1.Volume) *apis.FieldError {
 	var errs *apis.FieldError
 	// Check that volume mounts match names in "volumes", that "volumes" has 100%
 	// coverage, and the field restrictions.
@@ -478,7 +515,7 @@ func validateVolumeMounts(mounts []corev1.VolumeMount, volumes sets.String) *api
 		vm := mounts[i]
 		errs = errs.Also(apis.CheckDisallowedFields(vm, *VolumeMountMask(&vm)).ViaIndex(i))
 		// This effectively checks that Name is non-empty because Volume name must be non-empty.
-		if !volumes.Has(vm.Name) {
+		if _, ok := volumes[vm.Name]; !ok {
 			errs = errs.Also((&apis.FieldError{
 				Message: "volumeMount has no matching volume",
 				Paths:   []string{"name"},
@@ -501,10 +538,9 @@ func validateVolumeMounts(mounts []corev1.VolumeMount, volumes sets.String) *api
 		}
 		seenMountPath.Insert(filepath.Clean(vm.MountPath))
 
-		if !vm.ReadOnly {
+		if volumes[vm.Name].EmptyDir == nil && !vm.ReadOnly {
 			errs = errs.Also(apis.ErrMissingField("readOnly").ViaIndex(i))
 		}
-
 	}
 	return errs
 }
@@ -628,6 +664,7 @@ func validateProbe(p *corev1.Probe) *apis.FieldError {
 	return errs
 }
 
+// ValidateNamespacedObjectReference validates an ObjectReference which may not contain a namespace.
 func ValidateNamespacedObjectReference(p *corev1.ObjectReference) *apis.FieldError {
 	if p == nil {
 		return nil
@@ -699,7 +736,7 @@ func ValidatePodSecurityContext(ctx context.Context, sc *corev1.PodSecurityConte
 // being validated.
 type userContainer struct{}
 
-// WithUserContainer notes on the context that further validation or defaulting
+// WithinUserContainer notes on the context that further validation or defaulting
 // is within the context of a user container in the revision.
 func WithinUserContainer(ctx context.Context) context.Context {
 	return context.WithValue(ctx, userContainer{}, struct{}{})
@@ -709,13 +746,13 @@ func WithinUserContainer(ctx context.Context) context.Context {
 // being validated.
 type sidecarContainer struct{}
 
-// WithinSidecatrContainer notes on the context that further validation or defaulting
+// WithinSidecarContainer notes on the context that further validation or defaulting
 // is within the context of a sidecar container in the revision.
 func WithinSidecarContainer(ctx context.Context) context.Context {
 	return context.WithValue(ctx, sidecarContainer{}, struct{}{})
 }
 
-// Check if we are in the context of a sidecar container in the revision.
+// IsInSidecarContainer checks if we are in the context of a sidecar container in the revision.
 func IsInSidecarContainer(ctx context.Context) bool {
 	return ctx.Value(sidecarContainer{}) != nil
 }

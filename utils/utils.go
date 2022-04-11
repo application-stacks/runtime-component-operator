@@ -19,7 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/application-stacks/runtime-component-operator/common"
-	prometheusv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
 	routev1 "github.com/openshift/api/route/v1"

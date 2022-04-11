@@ -27,7 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Conditions is the interface for a Resource that implements the getter and
+// ConditionsAccessor is the interface for a Resource that implements the getter and
 // setter for accessing a Condition collection.
 // +k8s:deepcopy-gen=true
 type ConditionsAccessor interface {
@@ -234,7 +234,7 @@ func (r conditionsImpl) ClearCondition(t ConditionType) error {
 	}
 	// Terminal conditions are not handled as they can't be nil
 	if r.isTerminal(t) {
-		return fmt.Errorf("Clearing terminal conditions not implemented")
+		return fmt.Errorf("clearing terminal conditions not implemented")
 	}
 	cond := r.GetCondition(t)
 	if cond == nil {
