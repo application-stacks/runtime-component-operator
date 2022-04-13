@@ -662,7 +662,13 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent)
 	sa.Labels = ba.GetLabels()
 	sa.Annotations = MergeMaps(sa.Annotations, ba.GetAnnotations())
 
+	psr := ba.GetStatus().GetReferences()[common.StatusReferencePullSecretname]
+	if psr != "" && (ba.GetPullSecret() == nil || *ba.GetPullSecret() != psr) {
+		removePullSecret(sa, psr)
+	}
+
 	if ba.GetPullSecret() != nil {
+		ba.GetStatus().SetReference(common.StatusReferencePullSecretname, *ba.GetPullSecret())
 		if len(sa.ImagePullSecrets) == 0 {
 			sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
 				Name: *ba.GetPullSecret(),
@@ -670,6 +676,19 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent)
 		} else {
 			sa.ImagePullSecrets[0].Name = *ba.GetPullSecret()
 		}
+	}
+}
+
+func removePullSecret(sa *corev1.ServiceAccount, pullSecretName string) {
+	index := -1
+	for i, obj := range sa.ImagePullSecrets {
+		if obj.Name == pullSecretName {
+			index = i
+			break
+		}
+	}
+	if index != -1 {
+		sa.ImagePullSecrets = append(sa.ImagePullSecrets[:index], sa.ImagePullSecrets[index+1:]...)
 	}
 }
 
