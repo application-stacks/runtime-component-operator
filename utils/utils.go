@@ -656,6 +656,13 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		})
 	}
 
+	// This ensures that the pods are updated if the service account is updated
+	// but only where we are using our service account, not a user provided one
+	saRV := ba.GetStatus().GetReferences()[common.StatusReferenceSAResourceVersion]
+	if saRV != "" {
+		appContainer.Env = append(appContainer.Env, corev1.EnvVar{Name: "SA_RESOURCE_VERSION", Value: saRV})
+	}
+
 	pts.Spec.Containers = append([]corev1.Container{appContainer}, ba.GetSidecarContainers()...)
 
 	if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
@@ -727,13 +734,13 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent)
 	sa.Labels = ba.GetLabels()
 	sa.Annotations = MergeMaps(sa.Annotations, ba.GetAnnotations())
 
-	psr := ba.GetStatus().GetReferences()[common.StatusReferencePullSecretname]
+	psr := ba.GetStatus().GetReferences()[common.StatusReferencePullSecretName]
 	if psr != "" && (ba.GetPullSecret() == nil || *ba.GetPullSecret() != psr) {
 		removePullSecret(sa, psr)
 	}
 
 	if ba.GetPullSecret() != nil {
-		ba.GetStatus().SetReference(common.StatusReferencePullSecretname, *ba.GetPullSecret())
+		ba.GetStatus().SetReference(common.StatusReferencePullSecretName, *ba.GetPullSecret())
 		if len(sa.ImagePullSecrets) == 0 {
 			sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
 				Name: *ba.GetPullSecret(),
@@ -756,6 +763,7 @@ func removePullSecret(sa *corev1.ServiceAccount, pullSecretName string) {
 		sa.ImagePullSecrets = append(sa.ImagePullSecrets[:index], sa.ImagePullSecrets[index+1:]...)
 	}
 }
+
 
 // CustomizeKnativeService ...
 func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {

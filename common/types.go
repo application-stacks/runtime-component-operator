@@ -18,8 +18,9 @@ type StatusEndpointScope string
 type StatusReferences map[string]string
 
 const (
-	StatusReferenceCertSecretName = "svcCertSecretName"
-	StatusReferencePullSecretname = "saPullSecretName"
+	StatusReferenceCertSecretName    = "svcCertSecretName"
+	StatusReferencePullSecretName    = "saPullSecretName"
+	StatusReferenceSAResourceVersion = "saResourceVersion"
 )
 
 // StatusCondition ...

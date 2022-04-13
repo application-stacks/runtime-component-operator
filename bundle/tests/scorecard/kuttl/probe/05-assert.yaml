@@ -25,7 +25,7 @@ spec:
           failureThreshold: 20
 
 status:
-  observedGeneration: 6
+  observedGeneration: 7
   readyReplicas: 1
   replicas: 1
   updatedReplicas: 1
