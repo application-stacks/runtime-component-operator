@@ -19,6 +19,7 @@ type StatusReferences map[string]string
 
 const (
 	StatusReferenceCertSecretName = "svcCertSecretName"
+	StatusReferencePullSecretname = "saPullSecretName"
 )
 
 // StatusCondition ...
