@@ -2954,8 +2954,8 @@ spec:
                   nodePort:
                     description: Node proxies this port into your service.
                     format: int32
-                    maximum: 65535
-                    minimum: 0
+                    maximum: 32767
+                    minimum: 30000
                     type: integer
                   port:
                     description: The port exposed by the container.
