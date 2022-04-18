@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	"github.com/application-stacks/runtime-component-operator/common"
+	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -93,7 +95,12 @@ func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *corev1.Secret, ba co
 		secretData["host"] = host
 	}
 	if protocol, found = secretData["protocol"]; !found {
-		protocol = []byte("http")
+		if ba.GetManageTLS() == nil || *ba.GetManageTLS() {
+			protocol = []byte("https")
+
+		} else {
+			protocol = []byte("http")
+		}
 		secretData["protocol"] = protocol
 	}
 	if basePath, found = secretData["basePath"]; !found {
@@ -101,7 +108,7 @@ func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *corev1.Secret, ba co
 		secretData["basePath"] = basePath
 	}
 	if port, found = secretData["port"]; !found {
-		if ba.GetCreateKnativeService() == nil || *(ba.GetCreateKnativeService()) == false {
+		if ba.GetCreateKnativeService() == nil || !*ba.GetCreateKnativeService() {
 			port = []byte(strconv.Itoa(int(ba.GetService().GetPort())))
 		}
 		secretData["port"] = port
@@ -120,6 +127,53 @@ func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *corev1.Secret, ba co
 		secretData["uri"] = uri
 	}
 
+	if _, found = secretData["certificates"]; !found && ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName] != "" {
+
+		certSecret := &corev1.Secret{}
+		err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName], Namespace: mObj.GetNamespace()}, certSecret)
+		if err == nil {
+			caCert := certSecret.Data["ca.crt"]
+			tlsCrt := certSecret.Data["tls.crt"]
+			chain := string(tlsCrt) + string(caCert)
+			if chain != "" {
+				secretData["certificates"] = []byte(chain)
+			}
+		}
+	}
+
+	if _, found = secretData["ingress-uri"]; !found && ba.GetExpose() != nil && *ba.GetExpose() {
+		if ok, err := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route"); err != nil {
+			r.ManageError(err, common.StatusConditionTypeReconciled, ba)
+		} else if ok {
+			route := &routev1.Route{}
+			r.GetClient().Get(context.Background(), types.NamespacedName{Name: mObj.GetName(), Namespace: mObj.GetNamespace()}, route)
+			routeHost := route.Spec.Host
+			routePath := route.Spec.Path
+			if route.Spec.TLS != nil {
+				secretData["ingress-uri"] = []byte(fmt.Sprintf("%s://%s%s%s", "https", routeHost, routePath, string(basePath)))
+
+			} else {
+				secretData["ingress-uri"] = []byte(fmt.Sprintf("%s://%s%s%s", "http", routeHost, routePath, string(basePath)))
+			}
+		} else {
+			if ok, err := r.IsGroupVersionSupported(networkingv1.SchemeGroupVersion.String(), "Ingress"); err != nil {
+				r.ManageError(err, common.StatusConditionTypeReconciled, ba)
+			} else if ok {
+				ingress := &networkingv1.Ingress{}
+				r.GetClient().Get(context.Background(), types.NamespacedName{Name: mObj.GetName(), Namespace: mObj.GetNamespace()}, ingress)
+				if len(ingress.Spec.Rules) > 0 && ingress.Spec.Rules[0].Host != "" {
+					host := ingress.Spec.Rules[0].Host
+					if len(ingress.Spec.TLS) > 0 && len(ingress.Spec.TLS[0].Hosts) > 0 && ingress.Spec.TLS[0].Hosts[0] != "" {
+						secretData["ingress-uri"] = []byte(fmt.Sprintf("%s://%s%s", "https", host, string(basePath)))
+
+					} else {
+						secretData["ingress-uri"] = []byte(fmt.Sprintf("%s://%s%s", "http", host, string(basePath)))
+
+					}
+				}
+			}
+		}
+	}
 	secret.Data = secretData
 }
 
