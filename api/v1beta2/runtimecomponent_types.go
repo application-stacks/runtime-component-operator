@@ -161,7 +161,6 @@ type RuntimeComponentProbes struct {
 
 // Configure pods to run on particular Nodes.
 type RuntimeComponentAffinity struct {
-
 	// Controls which nodes the pod are scheduled to run on, based on labels on the node.
 	// +operator-sdk:csv:customresourcedefinitions:order=33,type=spec,displayName="Node Affinity",xDescriptors="urn:alm:descriptor:com.tectonic.ui:nodeAffinity"
 	NodeAffinity *corev1.NodeAffinity `json:"nodeAffinity,omitempty"`
@@ -246,8 +245,12 @@ type RuntimeComponentService struct {
 
 // Defines the network policy
 type RuntimeComponentNetworkPolicy struct {
+	// Specify the labels of namespaces that incoming traffic is allowed from.
+	// +operator-sdk:csv:customresourcedefinitions:order=46,type=spec,displayName="Namespace Labels",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	NamespaceLabels map[string]string `json:"namespaceLabels,omitempty"`
+
 	// Specify the labels of pod(s) that incoming traffic is allowed from.
-	// +operator-sdk:csv:customresourcedefinitions:order=46,type=spec,displayName="From Labels",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=47,type=spec,displayName="From Labels",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	FromLabels map[string]string `json:"fromLabels,omitempty"`
 }
 
@@ -744,6 +747,13 @@ func (s *RuntimeComponentService) GetBindable() *bool {
 	return s.Bindable
 }
 
+func (np *RuntimeComponentNetworkPolicy) GetNamespaceLabels() map[string]string {
+	if np == nil {
+		return nil
+	}
+	return np.NamespaceLabels
+}
+
 func (np *RuntimeComponentNetworkPolicy) GetFromLabels() map[string]string {
 	if np == nil {
 		return nil
@@ -756,7 +766,9 @@ func (np *RuntimeComponentNetworkPolicy) IsNotDefined() bool {
 }
 
 func (np *RuntimeComponentNetworkPolicy) IsEmpty() bool {
-	return np != nil && (np.FromLabels == nil || len(np.FromLabels) == 0)
+	return np != nil &&
+		(np.NamespaceLabels == nil || len(np.NamespaceLabels) == 0) &&
+		(np.FromLabels == nil || len(np.FromLabels) == 0)
 }
 
 // GetLabels returns labels to be added on ServiceMonitor

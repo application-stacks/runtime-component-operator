@@ -2827,6 +2827,12 @@ spec:
                     description: Specify the labels of pod(s) that incoming traffic
                       is allowed from.
                     type: object
+                  namespaceLabels:
+                    additionalProperties:
+                      type: string
+                    description: Specify the labels of namespaces that incoming traffic
+                      is allowed from.
+                    type: object
                 type: object
               probes:
                 description: Define health checks on application container to determine

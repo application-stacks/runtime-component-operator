@@ -307,7 +307,7 @@ func customizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 }
 
 // CustomizeNetworkPolicy configures the network policy.
-func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, ba common.BaseComponent) {
+func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	networkPolicy.Labels = ba.GetLabels()
 	networkPolicy.Annotations = MergeMaps(networkPolicy.Annotations, ba.GetAnnotations())
@@ -325,28 +325,55 @@ func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, ba common
 		networkPolicy.Spec.Ingress[0].From = append(networkPolicy.Spec.Ingress[0].From, networkingv1.NetworkPolicyPeer{})
 	}
 
-	networkPolicy.Spec.Ingress[0].From[0].NamespaceSelector = &metav1.LabelSelector{}
-
-	// Customize the network policy peer
-	if exposed := ba.GetExpose(); exposed != nil && *exposed {
-		customizeExposedNetworkPolicyPeer(&networkPolicy.Spec.Ingress[0])
+	networkPolicyConfig := ba.GetNetworkPolicy()
+	if isNetworkPolicyConfigSet(networkPolicyConfig) {
+		customizeNetworkPolicyPeer(&networkPolicy.Spec.Ingress[0].From[0], networkPolicyConfig)
+	} else if isExposed := ba.GetExpose(); isExposed != nil && *isExposed {
+		customizeExposedNetworkPolicyPeer(&networkPolicy.Spec.Ingress[0].From[0], isOpenShift)
 	} else {
-		customizeNetworkPolicyPeer(networkPolicy.Namespace, &networkPolicy.Spec.Ingress[0], ba)
+		customizeInternalNetworkPolicyPeer(&networkPolicy.Spec.Ingress[0].From[0], networkPolicy.Namespace, ba)
+	}
+
+	if isOpenShift {
+		if len(networkPolicy.Spec.Ingress[0].From) < 2 {
+			networkPolicy.Spec.Ingress[0].From = append(networkPolicy.Spec.Ingress[0].From, networkingv1.NetworkPolicyPeer{})
+		}
+		customizeNetworkPolicyMonitoringPeer(&networkPolicy.Spec.Ingress[0].From[1])
 	}
 
 	customizeNetworkPolicyPorts(&networkPolicy.Spec.Ingress[0], ba)
 }
 
-func customizeExposedNetworkPolicyPeer(ingress *networkingv1.NetworkPolicyIngressRule) {
-	peer := &ingress.From[0]
+func isNetworkPolicyConfigSet(config common.BaseComponentNetworkPolicy) bool {
+	return config.GetNamespaceLabels() != nil || config.GetFromLabels() != nil ||
+		len(config.GetNamespaceLabels()) > 0 || len(config.GetFromLabels()) > 0
+}
+
+func customizeNetworkPolicyPeer(peer *networkingv1.NetworkPolicyPeer, networkPolicy common.BaseComponentNetworkPolicy) {
 	if peer.NamespaceSelector == nil {
 		peer.NamespaceSelector = &metav1.LabelSelector{}
 	}
-	peer.PodSelector = nil
+	peer.NamespaceSelector.MatchLabels = networkPolicy.GetNamespaceLabels()
+
+	if podLabels := networkPolicy.GetFromLabels(); podLabels != nil {
+		peer.PodSelector = &metav1.LabelSelector{
+			MatchLabels: podLabels,
+		}
+	} else {
+		peer.PodSelector = nil
+	}
 }
 
-func customizeNetworkPolicyPeer(namespace string, ingress *networkingv1.NetworkPolicyIngressRule, ba common.BaseComponent) {
-	peer := &ingress.From[0]
+func customizeNetworkPolicyMonitoringPeer(peer *networkingv1.NetworkPolicyPeer) {
+	if peer.NamespaceSelector == nil {
+		peer.NamespaceSelector = &metav1.LabelSelector{}
+	}
+	peer.NamespaceSelector.MatchLabels = map[string]string{
+		"network.openshift.io/policy-group": "monitoring",
+	}
+}
+
+func customizeInternalNetworkPolicyPeer(peer *networkingv1.NetworkPolicyPeer, namespace string, ba common.BaseComponent) {
 	if peer.NamespaceSelector == nil {
 		peer.NamespaceSelector = &metav1.LabelSelector{}
 	}
@@ -364,6 +391,22 @@ func customizeNetworkPolicyPeer(namespace string, ingress *networkingv1.NetworkP
 			"app.kubernetes.io/part-of": ba.GetApplicationName(),
 		}
 	}
+}
+
+func customizeExposedNetworkPolicyPeer(peer *networkingv1.NetworkPolicyPeer, isOpenShift bool) {
+	if peer.NamespaceSelector == nil {
+		peer.NamespaceSelector = &metav1.LabelSelector{}
+	}
+
+	var labels map[string]string
+	if isOpenShift {
+		labels = map[string]string{
+			"network.openshift.io/policy-group": "ingress",
+		}
+	}
+
+	peer.NamespaceSelector.MatchLabels = labels
+	peer.PodSelector = nil
 }
 
 func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule, ba common.BaseComponent) {

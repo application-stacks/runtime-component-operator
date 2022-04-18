@@ -9,7 +9,12 @@ metadata:
 spec:
   ingress:
     - from:
-        - namespaceSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: ingress
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: monitoring
       ports:
         - port: 9080
           protocol: TCP
@@ -31,6 +36,9 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/part-of: network-policy-test
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: monitoring
       ports:
         - port: 9080
           protocol: TCP

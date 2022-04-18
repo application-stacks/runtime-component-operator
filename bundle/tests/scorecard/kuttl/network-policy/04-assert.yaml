@@ -12,6 +12,9 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/part-of: network-policy-rc
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: monitoring
       ports:
         - port: 8081
           protocol: TCP

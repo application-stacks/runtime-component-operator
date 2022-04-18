@@ -9,7 +9,12 @@ metadata:
 spec:
   ingress:
     - from:
-        - namespaceSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: ingress
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: monitoring
       ports:
         - port: 8080
           protocol: TCP
