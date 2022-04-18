@@ -9,10 +9,9 @@ metadata:
 spec:
   ingress:
     - from:
-        - namespaceSelector: {}
-          podSelector:
+        - namespaceSelector:
             matchLabels:
-              foo: bar
+              namespace: test
         - namespaceSelector:
             matchLabels:
               network.openshift.io/policy-group: monitoring
