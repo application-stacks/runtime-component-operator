@@ -19,7 +19,7 @@ package duck
 import (
 	"encoding/json"
 
-	jsonmergepatch "github.com/evanphx/json-patch"
+	jsonmergepatch "github.com/evanphx/json-patch/v5"
 	jsonpatch "gomodules.xyz/jsonpatch/v2"
 )
 

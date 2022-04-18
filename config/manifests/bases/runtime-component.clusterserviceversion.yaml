@@ -28,6 +28,9 @@ spec:
       - kind: HorizontalPodAutoscaler
         name: ""
         version: v1
+      - kind: NetworkPolicy
+        name: ""
+        version: v1
       - kind: Route
         name: ""
         version: v1
@@ -219,6 +222,8 @@ spec:
         path: statefulSet.storage.size
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - displayName: Network Policy
+        path: networkPolicy
       - description: The directory inside the container where this persisted storage will be bound to.
         displayName: Storage Mount Path
         path: statefulSet.storage.mountPath
@@ -287,6 +292,11 @@ spec:
       - description: HTTP traffic policy with TLS enabled. Can be one of Allow, Redirect and None.
         displayName: Insecure Edge Termination Policy
         path: route.insecureEdgeTerminationPolicy
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Specify the labels of pod(s) that incoming traffic is allowed from.
+        displayName: From Labels
+        path: networkPolicy.fromLabels
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       statusDescriptors:

@@ -81,6 +81,20 @@ func AsInt64(key string, target *int64) ParseFunc {
 	}
 }
 
+// AsInt parses the value at key as an int into the target, if it exists.
+func AsInt(key string, target *int) ParseFunc {
+	return func(data map[string]string) error {
+		if raw, ok := data[key]; ok {
+			val, err := strconv.Atoi(raw)
+			if err != nil {
+				return fmt.Errorf("failed to parse %q: %w", key, err)
+			}
+			*target = val
+		}
+		return nil
+	}
+}
+
 // AsUint32 parses the value at key as an uint32 into the target, if it exists.
 func AsUint32(key string, target *uint32) ParseFunc {
 	return func(data map[string]string) error {
@@ -127,7 +141,11 @@ func AsDuration(key string, target *time.Duration) ParseFunc {
 func AsStringSet(key string, target *sets.String) ParseFunc {
 	return func(data map[string]string) error {
 		if raw, ok := data[key]; ok {
-			*target = sets.NewString(strings.Split(raw, ",")...)
+			splitted := strings.Split(raw, ",")
+			for i, v := range splitted {
+				splitted[i] = strings.TrimSpace(v)
+			}
+			*target = sets.NewString(splitted...)
 		}
 		return nil
 	}

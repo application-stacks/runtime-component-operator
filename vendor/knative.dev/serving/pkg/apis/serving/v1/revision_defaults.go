@@ -87,11 +87,11 @@ func (rs *RevisionSpec) SetDefaults(ctx context.Context) {
 			rs.PodSpec.Containers[idx].Name = name
 		}
 
-		rs.applyDefault(&rs.PodSpec.Containers[idx], cfg)
+		rs.applyDefault(ctx, &rs.PodSpec.Containers[idx], cfg)
 	}
 }
 
-func (rs *RevisionSpec) applyDefault(container *corev1.Container, cfg *config.Config) {
+func (rs *RevisionSpec) applyDefault(ctx context.Context, container *corev1.Container, cfg *config.Config) {
 	if container.Resources.Requests == nil {
 		container.Resources.Requests = corev1.ResourceList{}
 	}
@@ -131,13 +131,21 @@ func (rs *RevisionSpec) applyDefault(container *corev1.Container, cfg *config.Co
 		rs.applyProbes(container)
 	}
 
-	if rs.PodSpec.EnableServiceLinks == nil {
+	if rs.PodSpec.EnableServiceLinks == nil && apis.IsInCreate(ctx) {
 		rs.PodSpec.EnableServiceLinks = cfg.Defaults.EnableServiceLinks
 	}
 
+	vNames := make(sets.String)
+	for _, v := range rs.PodSpec.Volumes {
+		if v.EmptyDir != nil {
+			vNames.Insert(v.Name)
+		}
+	}
 	vms := container.VolumeMounts
 	for i := range vms {
-		vms[i].ReadOnly = true
+		if !vNames.Has(vms[i].Name) {
+			vms[i].ReadOnly = true
+		}
 	}
 }
 
@@ -155,4 +163,13 @@ func (*RevisionSpec) applyProbes(container *corev1.Container) {
 		container.ReadinessProbe.SuccessThreshold = 1
 	}
 
+	// Apply k8s defaults when ReadinessProbe.PeriodSeconds property is set
+	if container.ReadinessProbe.PeriodSeconds != 0 {
+		if container.ReadinessProbe.FailureThreshold == 0 {
+			container.ReadinessProbe.FailureThreshold = 3
+		}
+		if container.ReadinessProbe.TimeoutSeconds == 0 {
+			container.ReadinessProbe.TimeoutSeconds = 1
+		}
+	}
 }

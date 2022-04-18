@@ -103,7 +103,7 @@ type ServerlessServiceSpec struct {
 
 	// The application-layer protocol. Matches `RevisionProtocolType` set on the owning pa/revision.
 	// serving imports networking, so just use string.
-	ProtocolType networking.ProtocolType
+	ProtocolType networking.ProtocolType `json:"protocolType"`
 
 	// NumActivators contains number of Activators that this revision should be
 	// assigned.
@@ -144,6 +144,6 @@ const (
 )
 
 // GetStatus retrieves the status of the ServerlessService. Implements the KRShaped interface.
-func (t *ServerlessService) GetStatus() *duckv1.Status {
-	return &t.Status.Status
+func (ss *ServerlessService) GetStatus() *duckv1.Status {
+	return &ss.Status.Status
 }

@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"knative.dev/pkg/apis"
-	av1alpha1 "knative.dev/serving/pkg/apis/autoscaling/v1alpha1"
+	autoscalingv1alpha1 "knative.dev/serving/pkg/apis/autoscaling/v1alpha1"
 	"knative.dev/serving/pkg/apis/config"
 	"knative.dev/serving/pkg/apis/serving"
 )
@@ -123,12 +123,16 @@ func (rs *RevisionStatus) MarkContainerHealthyTrue() {
 
 // MarkContainerHealthyFalse marks ContainerHealthy status on revision as False
 func (rs *RevisionStatus) MarkContainerHealthyFalse(reason, message string) {
-	revisionCondSet.Manage(rs).MarkFalse(RevisionConditionContainerHealthy, reason, message)
+	// We escape here, because errors sometimes contain `%` and that makes the error message
+	// quite poor.
+	revisionCondSet.Manage(rs).MarkFalse(RevisionConditionContainerHealthy, reason, "%s", message)
 }
 
 // MarkContainerHealthyUnknown marks ContainerHealthy status on revision as Unknown
 func (rs *RevisionStatus) MarkContainerHealthyUnknown(reason, message string) {
-	revisionCondSet.Manage(rs).MarkUnknown(RevisionConditionContainerHealthy, reason, message)
+	// We escape here, because errors sometimes contain `%` and that makes the error message
+	// quite poor.
+	revisionCondSet.Manage(rs).MarkUnknown(RevisionConditionContainerHealthy, reason, "%s", message)
 }
 
 // MarkResourcesAvailableTrue marks ResourcesAvailable status on revision as True
@@ -164,12 +168,20 @@ func (rs *RevisionStatus) PropagateDeploymentStatus(original *appsv1.DeploymentS
 }
 
 // PropagateAutoscalerStatus propagates autoscaler's status to the revision's status.
-func (rs *RevisionStatus) PropagateAutoscalerStatus(ps *av1alpha1.PodAutoscalerStatus) {
-	// Propagate the service name from the PA.
-	rs.ServiceName = ps.ServiceName
-
+func (rs *RevisionStatus) PropagateAutoscalerStatus(ps *autoscalingv1alpha1.PodAutoscalerStatus) {
 	// Reflect the PA status in our own.
-	cond := ps.GetCondition(av1alpha1.PodAutoscalerConditionReady)
+	cond := ps.GetCondition(autoscalingv1alpha1.PodAutoscalerConditionReady)
+
+	rs.ActualReplicas = nil
+	if ps.ActualScale != nil && *ps.ActualScale >= 0 {
+		rs.ActualReplicas = ps.ActualScale
+	}
+
+	rs.DesiredReplicas = nil
+	if ps.DesiredScale != nil && *ps.DesiredScale >= 0 {
+		rs.DesiredReplicas = ps.DesiredScale
+	}
+
 	if cond == nil {
 		rs.MarkActiveUnknown("Deploying", "")
 		return
@@ -177,8 +189,8 @@ func (rs *RevisionStatus) PropagateAutoscalerStatus(ps *av1alpha1.PodAutoscalerS
 
 	// Don't mark the resources available, if deployment status already determined
 	// it isn't so.
-	resUnavailable := !rs.GetCondition(RevisionConditionResourcesAvailable).IsFalse()
-	if ps.IsScaleTargetInitialized() && resUnavailable {
+	resUnavailable := rs.GetCondition(RevisionConditionResourcesAvailable).IsFalse()
+	if ps.IsScaleTargetInitialized() && !resUnavailable {
 		// Precondition for PA being initialized is SKS being active and
 		// that implies that |service.endpoints| > 0.
 		rs.MarkResourcesAvailableTrue()
@@ -203,7 +215,7 @@ func (rs *RevisionStatus) PropagateAutoscalerStatus(ps *av1alpha1.PodAutoscalerS
 		// ScaleTargetInitialized down the road, we would have marked resources
 		// unavailable here, and have no way of recovering later.
 		// If the ResourcesAvailable is already false, don't override the message.
-		if !ps.IsScaleTargetInitialized() && resUnavailable && ps.ServiceName != "" {
+		if !ps.IsScaleTargetInitialized() && !resUnavailable && ps.ServiceName != "" {
 			rs.MarkResourcesAvailableFalse(ReasonProgressDeadlineExceeded,
 				"Initial scale was never achieved")
 		}
