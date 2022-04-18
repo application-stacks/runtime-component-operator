@@ -199,11 +199,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	err = r.ReconcileBindings(instance)
-	if err != nil {
-		return r.ManageError(err, common.StatusConditionTypeReconciled, ba)
-	}
-
 	if instance.Spec.ServiceAccountName == nil || *instance.Spec.ServiceAccountName == "" {
 		serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(serviceAccount, instance, func() error {
@@ -334,6 +329,11 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			reqLogger.Error(err, "Failed to delete network policy")
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		}
+	}
+
+	err = r.ReconcileBindings(instance)
+	if err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, ba)
 	}
 
 	if instance.Spec.StatefulSet != nil {
