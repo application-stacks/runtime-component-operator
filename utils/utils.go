@@ -687,15 +687,11 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent)
 }
 
 func removePullSecret(sa *corev1.ServiceAccount, pullSecretName string) {
-	index := -1
 	for i, obj := range sa.ImagePullSecrets {
 		if obj.Name == pullSecretName {
-			index = i
+			sa.ImagePullSecrets = append(sa.ImagePullSecrets[:i], sa.ImagePullSecrets[i+1:]...)
 			break
 		}
-	}
-	if index != -1 {
-		sa.ImagePullSecrets = append(sa.ImagePullSecrets[:index], sa.ImagePullSecrets[index+1:]...)
 	}
 }
 
