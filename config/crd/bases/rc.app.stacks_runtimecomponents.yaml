@@ -35,12 +35,40 @@ spec:
       type: string
     - description: Reason for the failure of reconcile condition
       jsonPath: .status.conditions[?(@.type=='Reconciled')].reason
-      name: Reason
+      name: ReconciledReason
       priority: 1
       type: string
     - description: Failure message from reconcile condition
       jsonPath: .status.conditions[?(@.type=='Reconciled')].message
-      name: Message
+      name: ReconciledMessage
+      priority: 1
+      type: string
+    - description: Status of the resource ready condition
+      jsonPath: .status.conditions[?(@.type=='ResourcesReady')].status
+      name: ResourcesReady
+      type: string
+    - description: Reason for the failure of resource ready condition
+      jsonPath: .status.conditions[?(@.type=='ResourcesReady')].reason
+      name: ResourcesReadyReason
+      priority: 1
+      type: string
+    - description: Failure message from resource ready condition
+      jsonPath: .status.conditions[?(@.type=='ResourcesReady')].message
+      name: ResourcesReadyMessage
+      priority: 1
+      type: string
+    - description: Status of the component ready condition
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: Reason for the failure of component ready condition
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: ReadyReason
+      priority: 1
+      type: string
+    - description: Failure message from component ready condition
+      jsonPath: .status.conditions[?(@.type=='Ready')].message
+      name: ReadyMessage
       priority: 1
       type: string
     - description: Age of the resource
@@ -6580,6 +6608,21 @@ spec:
                   type: object
                 type: array
                 x-kubernetes-list-type: atomic
+              endpoint:
+                items:
+                  description: Reports endpoint information.
+                  properties:
+                    name:
+                      type: string
+                    scope:
+                      description: Defines the scope of endpoint information in status.
+                      type: string
+                    type:
+                      type: string
+                    uri:
+                      type: string
+                  type: object
+                type: array
               imageReference:
                 type: string
               references:
