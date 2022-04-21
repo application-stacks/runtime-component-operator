@@ -515,6 +515,89 @@ _Autoscaling related fields in `RuntimeComponent` are not used to configure Knat
 
 _This feature is only available if you have Knative installed on your cluster._
 
+=== Probes
+
+Probes are not enabled in applications by default. They can be enabled using either using the default values defined by
+the operator or defining the probes yourself.
+
+==== Enabling the Default Probes
+
+A set of default probes can be enabled by setting the probe configuration to `{}`. For example, to use the defaults for
+the startup, liveness, and readiness probes, the following configuration can be used:
+
+[source,yaml]
+----
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: my-app
+spec:
+  probes:
+    startup: {}
+    liveness: {}
+    readiness: {}
+----
+
+The default values for each probe depends on what the operator defines. For applications that support MicroProfile
+Health, the defaults are as follows:
+
+* Startup
+** URL: `/health/started`
+** Timeout (seconds): `2`
+** Period (seconds): `10`
+** Success threshold: `1`
+** Failure threshold: `20`
+* Liveness
+** URL: `/health/live`
+** Initial delay (seconds): `60`
+** Timeout (seconds): `2`
+** Period (seconds): `10`
+** Success threshold: `1`
+** Failure threshold: `3`
+* Readiness
+* URL: `/health/ready`
+** Initial delay (seconds): `10`
+** Timeout (seconds): `2`
+** Period (seconds): `10`
+** Success threshold: `1`
+** Failure threshold: `10`
+
+==== Overriding a Probe's Values
+
+Specific values of a probe can be overridden simply by specifying the value. For example, to override the initial delay
+of the liveness probe, you can use this config:
+
+[source,yaml]
+----
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: my-app
+spec:
+  probes:
+    liveness:
+      initialDelaySeconds: 90
+----
+
+Note that there is a limitation when overriding the probe's initial delay: attempting to set the initial delay to `0`
+results in the default value for the probe to be used. To set a probe's initial delay to `0`, please define the probe
+instead of using the default probe, e.g.,
+
+[source,yaml]
+----
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: my-app
+spec:
+  probes:
+    liveness:
+      httpGet:
+        path: "/health/live"
+        port: 9443
+      initialDelaySeconds: 0
+----
+
 === Exposing service externally
 
 ==== Non-Knative deployment (Route)
