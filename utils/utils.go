@@ -401,7 +401,7 @@ func customizeExposedNetworkPolicyPeer(peer *networkingv1.NetworkPolicyPeer, isO
 	var labels map[string]string
 	if isOpenShift {
 		labels = map[string]string{
-			"network.openshift.io/policy-group": "ingress",
+			"policy-group.network.openshift.io/ingress": "",
 		}
 	}
 
