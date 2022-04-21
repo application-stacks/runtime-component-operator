@@ -51,7 +51,6 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -133,7 +132,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// initialize the RuntimeComponent instance
 	instance.Initialize()
-
 	_, err = appstacksutils.Validate(instance)
 	// If there's any validation error, don't bother with requeuing
 	if err != nil {
@@ -147,13 +145,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		// it is not possible to override converted annotations.
 		instance.Annotations = appstacksutils.MergeMaps(instance.Annotations, appstacksutils.GetOpenShiftAnnotations(instance))
 	}
-	// If TargetPorts on Serviceports are not set, default them to the Port value in the CR instance
-	numOfAdditionalPorts := len(instance.GetService().GetPorts())
-	for i := 0; i < numOfAdditionalPorts; i++ {
-		if instance.Spec.Service.Ports[i].TargetPort.String() == "0" {
-			instance.Spec.Service.Ports[i].TargetPort = intstr.FromInt(int(instance.Spec.Service.Ports[i].Port))
-		}
-	}
+
 	err = r.GetClient().Update(context.TODO(), instance)
 	if err != nil {
 		reqLogger.Error(err, "Error updating RuntimeComponent")

@@ -26,6 +26,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -807,6 +808,13 @@ func (cr *RuntimeComponent) Initialize() {
 		cr.Spec.Service.Port = 8080
 	}
 
+	// If TargetPorts on Serviceports are not set, default them to the Port value in the CR
+	numOfAdditionalPorts := len(cr.GetService().GetPorts())
+	for i := 0; i < numOfAdditionalPorts; i++ {
+		if cr.Spec.Service.Ports[i].TargetPort.String() == "0" {
+			cr.Spec.Service.Ports[i].TargetPort = intstr.FromInt(int(cr.Spec.Service.Ports[i].Port))
+		}
+	}
 }
 
 // GetLabels returns set of labels to be added to all resources
