@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: node-affinity-label-rc
+  name: affinity-rc
 spec:
   # Add fields here
   template:
@@ -18,3 +18,4 @@ spec:
 status:
   replicas: 1
   unavailableReplicas: 1
+  observedGeneration: 1

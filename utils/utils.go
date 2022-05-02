@@ -396,115 +396,138 @@ func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule,
 
 // CustomizeAffinity ...
 func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
-
-	var archs []string
-
-	if ba.GetAffinity() != nil {
-		affinity.NodeAffinity = ba.GetAffinity().GetNodeAffinity()
-		affinity.PodAffinity = ba.GetAffinity().GetPodAffinity()
-		affinity.PodAntiAffinity = ba.GetAffinity().GetPodAntiAffinity()
-
-		archs = ba.GetAffinity().GetArchitecture()
-
-		if len(ba.GetAffinity().GetNodeAffinityLabels()) > 0 {
-			if affinity.NodeAffinity == nil {
-				affinity.NodeAffinity = &corev1.NodeAffinity{}
-			}
-			if affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
-				affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = &corev1.NodeSelector{}
-			}
-			nodeSelector := affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution
-
-			if len(nodeSelector.NodeSelectorTerms) == 0 {
-				nodeSelector.NodeSelectorTerms = append(nodeSelector.NodeSelectorTerms, corev1.NodeSelectorTerm{})
-			}
-			labels := ba.GetAffinity().GetNodeAffinityLabels()
-
-			keys := make([]string, 0, len(labels))
-			for k := range labels {
-				keys = append(keys, k)
-			}
-			sort.Strings(keys)
-
-			for i := range nodeSelector.NodeSelectorTerms {
-
-				for _, key := range keys {
-					values := strings.Split(labels[key], ",")
-					for i := range values {
-						values[i] = strings.TrimSpace(values[i])
-					}
-
-					requirement := corev1.NodeSelectorRequirement{
-						Key:      key,
-						Operator: corev1.NodeSelectorOpIn,
-						Values:   values,
-					}
-
-					nodeSelector.NodeSelectorTerms[i].MatchExpressions = append(nodeSelector.NodeSelectorTerms[i].MatchExpressions, requirement)
-				}
-
-			}
-		}
+	affinityConfig := ba.GetAffinity()
+	if isCustomAffinityDefined(affinityConfig) {
+		customizeAffinity(affinity, ba.GetAffinity())
 	} else {
 		obj := ba.(metav1.Object)
-		if affinity.PodAntiAffinity == nil {
-			affinity.PodAntiAffinity = &corev1.PodAntiAffinity{}
-		}
-		term := []corev1.WeightedPodAffinityTerm{
-			{
-				Weight: 50,
-				PodAffinityTerm: corev1.PodAffinityTerm{
-					TopologyKey: "kubernetes.io/hostname",
-					LabelSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"app.kubernetes.io/instance": obj.GetName(),
-						},
-					},
-				},
-			},
-		}
-		affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = term
+		customizeDefaultAffinity(affinity, obj.GetName())
 	}
+	customizeAffinityArchitectures(affinity, affinityConfig)
+}
 
-	if len(archs) > 0 {
+// isCustomAffinityDefined returns true if everything but .spec.affinity.architecture is not defined.
+func isCustomAffinityDefined(ba common.BaseComponentAffinity) bool {
+	return ba != nil &&
+		(ba.GetNodeAffinity() != nil ||
+			ba.GetPodAffinity() != nil ||
+			ba.GetPodAntiAffinity() != nil ||
+			ba.GetNodeAffinityLabels() != nil ||
+			len(ba.GetNodeAffinityLabels()) > 0)
+}
+
+func customizeAffinity(affinity *corev1.Affinity, ba common.BaseComponentAffinity) {
+	affinity.NodeAffinity = ba.GetNodeAffinity()
+	affinity.PodAffinity = ba.GetPodAffinity()
+	affinity.PodAntiAffinity = ba.GetPodAntiAffinity()
+
+	if len(ba.GetNodeAffinityLabels()) > 0 {
 		if affinity.NodeAffinity == nil {
 			affinity.NodeAffinity = &corev1.NodeAffinity{}
 		}
 		if affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
 			affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = &corev1.NodeSelector{}
 		}
-
 		nodeSelector := affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution
 
 		if len(nodeSelector.NodeSelectorTerms) == 0 {
 			nodeSelector.NodeSelectorTerms = append(nodeSelector.NodeSelectorTerms, corev1.NodeSelectorTerm{})
 		}
+		labels := ba.GetNodeAffinityLabels()
+
+		keys := make([]string, 0, len(labels))
+		for k := range labels {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
 
 		for i := range nodeSelector.NodeSelectorTerms {
-			nodeSelector.NodeSelectorTerms[i].MatchExpressions = append(nodeSelector.NodeSelectorTerms[i].MatchExpressions,
-				corev1.NodeSelectorRequirement{
-					Key:      "kubernetes.io/arch",
-					Operator: corev1.NodeSelectorOpIn,
-					Values:   archs,
-				},
-			)
-		}
+			for _, key := range keys {
+				values := strings.Split(labels[key], ",")
+				for i := range values {
+					values[i] = strings.TrimSpace(values[i])
+				}
 
-		for i := range archs {
-			term := corev1.PreferredSchedulingTerm{
-				Weight: int32(len(archs)) - int32(i),
-				Preference: corev1.NodeSelectorTerm{
-					MatchExpressions: []corev1.NodeSelectorRequirement{
-						{
-							Key:      "kubernetes.io/arch",
-							Operator: corev1.NodeSelectorOpIn,
-							Values:   []string{archs[i]},
-						},
+				requirement := corev1.NodeSelectorRequirement{
+					Key:      key,
+					Operator: corev1.NodeSelectorOpIn,
+					Values:   values,
+				}
+
+				nodeSelector.NodeSelectorTerms[i].MatchExpressions = append(nodeSelector.NodeSelectorTerms[i].MatchExpressions, requirement)
+			}
+		}
+	}
+}
+
+func customizeDefaultAffinity(affinity *corev1.Affinity, name string) {
+	if affinity.PodAntiAffinity == nil {
+		affinity.PodAntiAffinity = &corev1.PodAntiAffinity{}
+	}
+	term := []corev1.WeightedPodAffinityTerm{
+		{
+			Weight: 50,
+			PodAffinityTerm: corev1.PodAffinityTerm{
+				TopologyKey: "kubernetes.io/hostname",
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app.kubernetes.io/instance": name,
 					},
 				},
-			}
-			affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution, term)
+			},
+		},
+	}
+	affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = term
+}
+
+func customizeAffinityArchitectures(affinity *corev1.Affinity, ba common.BaseComponentAffinity) {
+	if ba == nil {
+		return
+	}
+
+	archs := ba.GetArchitecture()
+
+	if len(archs) <= 0 {
+		return
+	}
+
+	if affinity.NodeAffinity == nil {
+		affinity.NodeAffinity = &corev1.NodeAffinity{}
+	}
+	if affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
+		affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = &corev1.NodeSelector{}
+	}
+
+	nodeSelector := affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution
+
+	if len(nodeSelector.NodeSelectorTerms) == 0 {
+		nodeSelector.NodeSelectorTerms = append(nodeSelector.NodeSelectorTerms, corev1.NodeSelectorTerm{})
+	}
+
+	for i := range nodeSelector.NodeSelectorTerms {
+		nodeSelector.NodeSelectorTerms[i].MatchExpressions = append(nodeSelector.NodeSelectorTerms[i].MatchExpressions,
+			corev1.NodeSelectorRequirement{
+				Key:      "kubernetes.io/arch",
+				Operator: corev1.NodeSelectorOpIn,
+				Values:   archs,
+			},
+		)
+	}
+
+	for i := range archs {
+		term := corev1.PreferredSchedulingTerm{
+			Weight: int32(len(archs)) - int32(i),
+			Preference: corev1.NodeSelectorTerm{
+				MatchExpressions: []corev1.NodeSelectorRequirement{
+					{
+						Key:      "kubernetes.io/arch",
+						Operator: corev1.NodeSelectorOpIn,
+						Values:   []string{archs[i]},
+					},
+				},
+			},
 		}
+		affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution, term)
 	}
 }
 

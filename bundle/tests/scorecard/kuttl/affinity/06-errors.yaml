@@ -1,9 +1,8 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: node-affinity-rc
+  name: affinity-rc
 spec:
-  # Add fields here
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:

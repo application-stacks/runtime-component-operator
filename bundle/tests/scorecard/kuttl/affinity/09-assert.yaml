@@ -10,7 +10,12 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
               - matchExpressions:
-                  - key: kubernetes.io/arch
+                  - key: kuttlTest
                     operator: In
                     values:
-                      - amd64
+                      - test1
+status:
+  replicas: 1
+  readyReplicas: 1
+  updatedReplicas: 1
+  observedGeneration: 5

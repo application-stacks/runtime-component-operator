@@ -1,9 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: anti-affinity-pod-rc
+  name: affinity-rc
 spec:
-  # Add fields here
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kuttlTest
+                    operator: In
+                    values:
+                      - test1
+status:
+  replicas: 1
+  readyReplicas: 1
+  updatedReplicas: 1
+  observedGeneration: 2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anti-affinity-rc
+spec:
   template:
     spec:
       affinity:
@@ -16,7 +37,7 @@ spec:
                     - key: app.kubernetes.io/instance
                       operator: In
                       values:
-                        - node-affinity-label-rc
+                        - affinity-rc
                 topologyKey: kubernetes.io/hostname
 status:
   replicas: 1

@@ -3,5 +3,4 @@ kind: TestStep
 delete:
 - apiVersion: rc.app.stacks/v1beta2
   kind: RuntimeComponent
-  labels:
-    test: affinity
+  name: affinity-other-rc

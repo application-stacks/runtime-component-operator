@@ -14,8 +14,3 @@ spec:
                   matchLabels:
                     app.kubernetes.io/instance: affinity-rc
                 topologyKey: kubernetes.io/hostname
-status:
-  replicas: 1
-  readyReplicas: 1
-  updatedReplicas: 1
-  observedGeneration: 4

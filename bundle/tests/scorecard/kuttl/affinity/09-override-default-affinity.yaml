@@ -1,12 +1,11 @@
-# Test to see that if affinity is setup but there is no matching label, no pod is readied
+# Test to see that the default affinity is overwritten if supplied with a user defined affinity
 apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
   name: affinity-rc
 spec:
-  # Add fields here
   applicationImage: 'k8s.gcr.io/pause:2.0'
   replicas: 1
   affinity:
     nodeAffinityLabels:
-      kuttlTest: error
+      kuttlTest: test1

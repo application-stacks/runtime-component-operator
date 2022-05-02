@@ -1,0 +1,6 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: affinity-rc
+spec:
+  affinity:
