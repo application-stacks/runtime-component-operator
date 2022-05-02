@@ -185,8 +185,10 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 	newCondition.SetReason(string(apierrors.ReasonForError(issue)))
 	newCondition.SetMessage(issue.Error())
 	newCondition.SetStatus(corev1.ConditionFalse)
-
 	s.SetCondition(newCondition)
+
+	//Check Application status (reconciliation & resource status & endpoint status)
+	r.CheckApplicationStatus(ba)
 
 	err := r.UpdateStatus(obj)
 	if err != nil {
@@ -201,17 +203,8 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 		}, nil
 	}
 
-	//Check Application status (reconciliation & resource status)
-	err, _ = r.CheckApplicationStatus(ba)
-	if err != nil {
-		logger.Error(err, "Unable to update status")
-		return reconcile.Result{
-			RequeueAfter: time.Second,
-			Requeue:      true,
-		}, nil
-	}
-
 	var retryInterval time.Duration
+	// If the application was reconciled and now it is not
 	if oldCondition == nil || oldCondition.GetStatus() == corev1.ConditionTrue {
 		retryInterval = time.Second
 	} else {
@@ -233,8 +226,11 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 	statusCondition.SetReason("")
 	statusCondition.SetMessage("")
 	statusCondition.SetStatus(corev1.ConditionTrue)
-
 	s.SetCondition(statusCondition)
+
+	//Check application status (reconciliation & resource status & endpoint status)
+	readyStatus := r.CheckApplicationStatus(ba)
+
 	err := r.UpdateStatus(ba.(client.Object))
 	if err != nil {
 		log.Error(err, "Unable to update status")
@@ -244,27 +240,11 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 		}, nil
 	}
 
-	oldApplicationCondition := s.GetCondition(common.StatusConditionTypeReady)
-
-	//Check Application status (reconciliation & resource status)
-	err, status := r.CheckApplicationStatus(ba)
-	if err != nil {
-		log.Error(err, "Unable to update status")
-		return reconcile.Result{
-			RequeueAfter: time.Second,
-			Requeue:      true,
-		}, nil
-	}
-
-	err = r.ReportExternalEndpointStatus(ba)
-
 	var retryInterval time.Duration
-	if status != corev1.ConditionTrue {
-		if oldApplicationCondition == nil || oldApplicationCondition.GetStatus() == corev1.ConditionTrue {
-			retryInterval = time.Second
-		} else {
-			retryInterval = 5 * time.Second
-		}
+
+	// If resources are not ready
+	if readyStatus != corev1.ConditionTrue {
+		retryInterval = time.Second
 	} else {
 		retryInterval = ReconcileInterval * time.Second
 	}

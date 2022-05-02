@@ -31,27 +31,31 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (r *ReconcilerBase) CheckApplicationStatus(ba common.BaseComponent) (error, corev1.ConditionStatus) {
+func (r *ReconcilerBase) CheckApplicationStatus(ba common.BaseComponent) corev1.ConditionStatus {
 	s := ba.GetStatus()
-
-	// Check resources status condition and if condition is updated
-	rStatusUpdated := r.CheckResourcesStatus(ba)
 
 	status, msg, reason := corev1.ConditionFalse, "", ""
 
 	// Check application and resources status
 	scReconciled := s.GetCondition(common.StatusConditionTypeReconciled)
-	scReady := s.GetCondition(common.StatusConditionTypeResourcesReady)
 
+	// If not reconciled, resources and endpoints will not be ready and reconciled status will show the errors
 	if scReconciled == nil || scReconciled.GetStatus() != corev1.ConditionTrue {
 		msg = "Application is not reconciled."
 		reason = "ApplicationNotReconciled"
-	} else if scReady == nil || scReady.GetStatus() != corev1.ConditionTrue {
-		msg = "Resources are not ready."
-		reason = "ResourcesNotReady"
 	} else {
-		status = corev1.ConditionTrue
-		msg = "Application is reconciled and resources are ready."
+		// If reconciled, check resources status and endpoint information
+		r.CheckResourcesStatus(ba)
+		r.ReportExternalEndpointStatus(ba)
+
+		scReady := s.GetCondition(common.StatusConditionTypeResourcesReady)
+		if scReady == nil || scReady.GetStatus() != corev1.ConditionTrue {
+			msg = "Resources are not ready."
+			reason = "ResourcesNotReady"
+		} else {
+			status = corev1.ConditionTrue
+			msg = "Application is reconciled and resources are ready."
+		}
 	}
 
 	// Check Application Ready status condition is created/updated
@@ -59,19 +63,12 @@ func (r *ReconcilerBase) CheckApplicationStatus(ba common.BaseComponent) (error,
 	oldCondition := s.GetCondition(conditionType)
 	newCondition := s.NewCondition(conditionType)
 	newCondition.SetConditionFields(msg, reason, status)
-	appStatusUpdated := r.setCondition(ba, oldCondition, newCondition)
+	r.setCondition(ba, oldCondition, newCondition)
 
-	if rStatusUpdated || appStatusUpdated {
-		// Detect errors while updating status
-		if err := r.UpdateStatus(ba.(client.Object)); err != nil {
-			log.Error(err, "Unable to update status")
-			return err, status
-		}
-	}
-	return nil, status
+	return status
 }
 
-func (r *ReconcilerBase) CheckResourcesStatus(ba common.BaseComponent) bool {
+func (r *ReconcilerBase) CheckResourcesStatus(ba common.BaseComponent) {
 	// Create Resource Ready status condition if it does not exit
 	s := ba.GetStatus()
 	conditionType := common.StatusConditionTypeResourcesReady
@@ -85,19 +82,17 @@ func (r *ReconcilerBase) CheckResourcesStatus(ba common.BaseComponent) bool {
 		newCondition = r.isKnativeReady(ba, newCondition)
 	}
 
-	return r.setCondition(ba, oldCondition, newCondition)
+	r.setCondition(ba, oldCondition, newCondition)
 }
 
-func (r *ReconcilerBase) setCondition(ba common.BaseComponent, oldCondition common.StatusCondition, newCondition common.StatusCondition) bool {
+func (r *ReconcilerBase) setCondition(ba common.BaseComponent, oldCondition common.StatusCondition, newCondition common.StatusCondition) {
 	s := ba.GetStatus()
 
 	// Check if status or message changed
 	if oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
 		// Set condition and update status
 		s.SetCondition(newCondition)
-		return true
 	}
-	return false
 }
 
 func (r *ReconcilerBase) areReplicasReady(ba common.BaseComponent, c common.StatusCondition) common.StatusCondition {
@@ -105,67 +100,77 @@ func (r *ReconcilerBase) areReplicasReady(ba common.BaseComponent, c common.Stat
 	namespacedName := types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}
 
 	resourceType, msg, reason := "", "", ""
-
-	var replicas, readyReplicas, updatedReplicas int32
+	var replicas, readyReplicas, updatedReplicas, readyUpdatedReplicas int32
 
 	expectedReplicas := ba.GetReplicas()
 	autoScale := ba.GetAutoscaling()
 
 	if ba.GetStatefulSet() == nil {
-		deployment := &appsv1.Deployment{}
-
 		// Check if deployment exists
+		deployment := &appsv1.Deployment{}
 		err := r.GetClient().Get(context.TODO(), namespacedName, deployment)
 		if err != nil || (expectedReplicas == nil && (autoScale == nil)) {
 			msg, reason = "Deployment is not ready.", "NotCreated"
 			return c.SetConditionFields(msg, reason, corev1.ConditionFalse)
 		}
-
+		// Get replicas
 		resourceType = "Deployment"
 		ds := deployment.Status
 		replicas, readyReplicas, updatedReplicas = ds.Replicas, ds.ReadyReplicas, ds.UpdatedReplicas
 	} else {
-		statefulSet := &appsv1.StatefulSet{}
-
 		// Check if statefulSet exists
+		statefulSet := &appsv1.StatefulSet{}
 		err := r.GetClient().Get(context.TODO(), namespacedName, statefulSet)
 		if err != nil || (expectedReplicas == nil && autoScale == nil) {
 			msg, reason = "StatefulSet is not ready.", "NotCreated"
 			return c.SetConditionFields(msg, reason, corev1.ConditionFalse)
 		}
-
+		// Get replicas
 		resourceType = "StatefulSet"
 		ss := statefulSet.Status
 		replicas, readyReplicas, updatedReplicas = ss.Replicas, ss.ReadyReplicas, ss.UpdatedReplicas
 	}
 
-	msg = resourceType + " replicas ready: " + strconv.Itoa(int(readyReplicas))
+	// Get replicas that are ready and updated
+	if readyReplicas <= updatedReplicas {
+		readyUpdatedReplicas = readyReplicas
+	} else {
+		readyUpdatedReplicas = updatedReplicas
+	}
+
+	msg = resourceType + " replicas ready: " + strconv.Itoa(int(readyUpdatedReplicas))
 	reason = "MinimumReplicasUnavailable"
 
 	// Check autoscaling parameters
 	if autoScale != nil {
 		var minReplicas int32 = 1
 		autoMinReplicas := autoScale.GetMinReplicas()
+		autoMaxReplicas := autoScale.GetMaxReplicas()
 		if autoMinReplicas == nil {
 			autoMinReplicas = &minReplicas
 		}
-		if readyReplicas < *autoMinReplicas {
+		// Check if the replicas are more than min and less than max
+		if readyUpdatedReplicas < *autoMinReplicas {
 			msg = msg + " < minReplicas: " + strconv.Itoa(int(*autoMinReplicas))
+			return c.SetConditionFields(msg, reason, corev1.ConditionFalse)
+		} else if replicas > autoMaxReplicas {
+			msg = "Replica set is progressing"
+			reason = "ReplicaSetUpdating"
 			return c.SetConditionFields(msg, reason, corev1.ConditionFalse)
 		}
 		reason = "MinimumReplicasAvailable"
 		return c.SetConditionFields(msg, reason, corev1.ConditionTrue)
 	}
-	// Replicas check
-	msg = msg + "/" + strconv.Itoa(int(*expectedReplicas))
 
+	// Check if all replicas are equal to the expected replicas
+	msg = msg + "/" + strconv.Itoa(int(*expectedReplicas))
 	if replicas == *expectedReplicas && readyReplicas == *expectedReplicas && updatedReplicas == *expectedReplicas {
 		reason = "MinimumReplicasAvailable"
 		return c.SetConditionFields(msg, reason, corev1.ConditionTrue)
 	} else if replicas > *expectedReplicas {
 		reason = "ReplicaSetUpdating"
 		msg = "Replica set is progressing"
-		return c.SetConditionFields(msg, reason, corev1.ConditionTrue)
+		return c.SetConditionFields(msg, reason, corev1.ConditionFalse)
 	}
 	return c.SetConditionFields(msg, reason, corev1.ConditionFalse)
 }
@@ -179,7 +184,7 @@ func (r *ReconcilerBase) isKnativeReady(ba common.BaseComponent, c common.Status
 
 	// Check if knative service exists
 	if err := r.GetClient().Get(context.TODO(), namespacedName, knative); err != nil {
-		msg, reason = "Knative is not ready.", "NotCreated"
+		msg, reason = "Knative service is not ready.", "NotCreated"
 		return c.SetConditionFields(msg, reason, corev1.ConditionFalse)
 	}
 
@@ -187,15 +192,18 @@ func (r *ReconcilerBase) isKnativeReady(ba common.BaseComponent, c common.Status
 	return c.SetConditionFields(msg, reason, corev1.ConditionTrue)
 }
 
-func (r *ReconcilerBase) ReportExternalEndpointStatus(ba common.BaseComponent) error {
+func (r *ReconcilerBase) ReportExternalEndpointStatus(ba common.BaseComponent) {
+	name := "Ingress"
+	s := ba.GetStatus()
+
 	// If application not exposed or uses Knative service, remove route/ingress endpoint information
 	if ba.GetExpose() == nil || !*ba.GetExpose() || (ba.GetCreateKnativeService() != nil && *ba.GetCreateKnativeService()) {
-		return r.RemoveExternalEndpointStatus(ba)
+		s.RemoveStatusEndpoint(name)
+		return
 	}
 
 	obj := ba.(client.Object)
 	namespacedName := types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}
-
 	host, path := "", ""
 
 	if ok, _ := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route"); ok {
@@ -203,7 +211,7 @@ func (r *ReconcilerBase) ReportExternalEndpointStatus(ba common.BaseComponent) e
 		route := &routev1.Route{}
 		if err := r.GetClient().Get(context.TODO(), namespacedName, route); err != nil {
 			log.Error(err, "Route resource not found")
-			return err
+			return
 		}
 		host = route.Spec.Host
 		path = route.Spec.Path
@@ -213,7 +221,7 @@ func (r *ReconcilerBase) ReportExternalEndpointStatus(ba common.BaseComponent) e
 			ingress := &networkingv1.Ingress{}
 			if err := r.GetClient().Get(context.TODO(), namespacedName, ingress); err != nil {
 				log.Error(err, "Ingress resource not found")
-				return err
+				return
 			}
 
 			if ingress.Spec.Rules != nil && len(ingress.Spec.Rules) != 0 {
@@ -229,13 +237,12 @@ func (r *ReconcilerBase) ReportExternalEndpointStatus(ba common.BaseComponent) e
 	if host == "" {
 		host = "*"
 	}
-
-	s := ba.GetStatus()
-	oldEndpoint := s.GetStatusEndpoint(obj.GetName())
-	newEndpoint := s.NewStatusEndpoint(obj.GetName())
-
-	// If endpoint has been changed
 	endpoint := host + path
+
+	oldEndpoint := s.GetStatusEndpoint(name)
+	newEndpoint := s.NewStatusEndpoint(name)
+
+	// Check if endpoint information has been changed
 	if oldEndpoint == nil || oldEndpoint.GetEndpointUri() != endpoint {
 		// Set endpoint information fields and update status
 		endpointType := "Application"
@@ -243,26 +250,5 @@ func (r *ReconcilerBase) ReportExternalEndpointStatus(ba common.BaseComponent) e
 
 		newEndpoint.SetStatusEndpointFields(endpointScope, endpointType, endpoint)
 		s.SetStatusEndpoint(newEndpoint)
-
-		// Detect errors while updating status
-		if err := r.UpdateStatus(obj); err != nil {
-			log.Error(err, "Unable to update status")
-			return err
-		}
 	}
-	return nil
-}
-
-func (r *ReconcilerBase) RemoveExternalEndpointStatus(ba common.BaseComponent) error {
-	// Remove endpoint in status if not resource is no longer exposed
-	obj := ba.(client.Object)
-	s := ba.GetStatus()
-	s.RemoveStatusEndpoint(obj.GetName())
-
-	// Detect errors while updating status
-	if err := r.UpdateStatus(obj); err != nil {
-		log.Error(err, "Unable to update status")
-		return err
-	}
-	return nil
 }
