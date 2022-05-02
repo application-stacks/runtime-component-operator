@@ -343,7 +343,7 @@ type RuntimeComponentStatus struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Status Conditions",xDescriptors="urn:alm:descriptor:io.kubernetes.conditions"
 	Conditions     []StatusCondition `json:"conditions,omitempty"`
-	Endpoints      []StatusEndpoint  `json:"endpoint,omitempty"`
+	Endpoints      []StatusEndpoint  `json:"endpoints,omitempty"`
 	ImageReference string            `json:"imageReference,omitempty"`
 
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Service Binding"

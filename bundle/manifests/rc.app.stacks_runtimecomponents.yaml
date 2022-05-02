@@ -4311,7 +4311,7 @@ spec:
                   type: object
                 type: array
                 x-kubernetes-list-type: atomic
-              endpoint:
+              endpoints:
                 items:
                   description: Reports endpoint information.
                   properties:
