@@ -1190,11 +1190,11 @@ func GetWatchNamespace() (string, error) {
 
 // GetOperatorNamespace returns the Namespace the operator installed in
 func GetOperatorNamespace() (string, error) {
-	var podNamespaceEnvVar = "POD_NAMESPACE"
+	var operatorNamespaceEnvVar = "OPERATOR_NAMESPACE"
 
-	ns, found := os.LookupEnv(podNamespaceEnvVar)
+	ns, found := os.LookupEnv(operatorNamespaceEnvVar)
 	if !found {
-		return "", fmt.Errorf("%s must be set", podNamespaceEnvVar)
+		return "", fmt.Errorf("%s must be set", operatorNamespaceEnvVar)
 	}
 	return ns, nil
 }
