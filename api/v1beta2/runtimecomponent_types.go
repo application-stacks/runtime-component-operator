@@ -343,6 +343,7 @@ type RuntimeComponentStatus struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Status Conditions",xDescriptors="urn:alm:descriptor:io.kubernetes.conditions"
 	Conditions     []StatusCondition `json:"conditions,omitempty"`
+	Endpoints      []StatusEndpoint  `json:"endpoints,omitempty"`
 	ImageReference string            `json:"imageReference,omitempty"`
 
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Service Binding"
@@ -363,9 +364,26 @@ type StatusCondition struct {
 // Defines the type of status condition.
 type StatusConditionType string
 
+// Reports endpoint information.
+type StatusEndpoint struct {
+	Name  string              `json:"name,omitempty"`
+	Scope StatusEndpointScope `json:"scope,omitempty"`
+	Type  string              `json:"type,omitempty"`
+	URI   string              `json:"uri,omitempty"`
+}
+
+// Defines the scope of endpoint information in status.
+type StatusEndpointScope string
+
 const (
-	// StatusConditionTypeReconciled ...
-	StatusConditionTypeReconciled StatusConditionType = "Reconciled"
+	// Status Condition Types
+	StatusConditionTypeReconciled     StatusConditionType = "Reconciled"
+	StatusConditionTypeResourcesReady StatusConditionType = "ResourcesReady"
+	StatusConditionTypeReady          StatusConditionType = "Ready"
+
+	// Status Endpoint Scopes
+	StatusEndpointScopeExternal StatusEndpointScope = "External"
+	StatusEndpointScopeInternal StatusEndpointScope = "Internal"
 )
 
 // +kubebuilder:resource:path=runtimecomponents,scope=Namespaced,shortName=comp;comps
@@ -374,8 +392,14 @@ const (
 // +kubebuilder:printcolumn:name="Image",type="string",JSONPath=".spec.applicationImage",priority=0,description="Absolute name of the deployed image containing registry and tag"
 // +kubebuilder:printcolumn:name="Exposed",type="boolean",JSONPath=".spec.expose",priority=0,description="Specifies whether deployment is exposed externally via default Route"
 // +kubebuilder:printcolumn:name="Reconciled",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].status",priority=0,description="Status of the reconcile condition"
-// +kubebuilder:printcolumn:name="Reason",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].reason",priority=1,description="Reason for the failure of reconcile condition"
-// +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].message",priority=1,description="Failure message from reconcile condition"
+// +kubebuilder:printcolumn:name="ReconciledReason",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].reason",priority=1,description="Reason for the failure of reconcile condition"
+// +kubebuilder:printcolumn:name="ReconciledMessage",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].message",priority=1,description="Failure message from reconcile condition"
+// +kubebuilder:printcolumn:name="ResourcesReady",type="string",JSONPath=".status.conditions[?(@.type=='ResourcesReady')].status",priority=0,description="Status of the resource ready condition"
+// +kubebuilder:printcolumn:name="ResourcesReadyReason",type="string",JSONPath=".status.conditions[?(@.type=='ResourcesReady')].reason",priority=1,description="Reason for the failure of resource ready condition"
+// +kubebuilder:printcolumn:name="ResourcesReadyMessage",type="string",JSONPath=".status.conditions[?(@.type=='ResourcesReady')].message",priority=1,description="Failure message from resource ready condition"
+// +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status",priority=0,description="Status of the component ready condition"
+// +kubebuilder:printcolumn:name="ReadyReason",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].reason",priority=1,description="Reason for the failure of component ready condition"
+// +kubebuilder:printcolumn:name="ReadyMessage",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].message",priority=1,description="Failure message from component ready condition"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",priority=0,description="Age of the resource"
 // +operator-sdk:csv:customresourcedefinitions:displayName="RuntimeComponent",resources={{Deployment,v1},{Service,v1},{StatefulSet,v1},{Route,v1},{HorizontalPodAutoscaler,v1},{ServiceAccount,v1},{Secret,v1},{NetworkPolicy,v1}}
 
@@ -893,7 +917,7 @@ func (c *StatusCondition) SetType(ct common.StatusConditionType) {
 	c.Type = convertFromCommonStatusConditionType(ct)
 }
 
-// GetLastTransitionTime return time of last status change
+// GetLastTransitionTime returns time of last status change
 func (c *StatusCondition) GetLastTransitionTime() *metav1.Time {
 	return c.LastTransitionTime
 }
@@ -903,7 +927,7 @@ func (c *StatusCondition) SetLastTransitionTime(t *metav1.Time) {
 	c.LastTransitionTime = t
 }
 
-// GetMessage return condition's message
+// GetMessage returns condition's message
 func (c *StatusCondition) GetMessage() string {
 	return c.Message
 }
@@ -913,7 +937,7 @@ func (c *StatusCondition) SetMessage(m string) {
 	c.Message = m
 }
 
-// GetReason return condition's message
+// GetReason returns condition's message
 func (c *StatusCondition) GetReason() string {
 	return c.Reason
 }
@@ -923,7 +947,7 @@ func (c *StatusCondition) SetReason(r string) {
 	c.Reason = r
 }
 
-// GetStatus return condition's status
+// GetStatus returns condition's status
 func (c *StatusCondition) GetStatus() corev1.ConditionStatus {
 	return c.Status
 }
@@ -933,9 +957,19 @@ func (c *StatusCondition) SetStatus(s corev1.ConditionStatus) {
 	c.Status = s
 }
 
+// SetConditionFields sets status condition fields
+func (c *StatusCondition) SetConditionFields(message string, reason string, status corev1.ConditionStatus) common.StatusCondition {
+	c.Message = message
+	c.Reason = reason
+	c.Status = status
+	return c
+}
+
 // NewCondition returns new condition
-func (s *RuntimeComponentStatus) NewCondition() common.StatusCondition {
-	return &StatusCondition{}
+func (s *RuntimeComponentStatus) NewCondition(ct common.StatusConditionType) common.StatusCondition {
+	c := &StatusCondition{}
+	c.Type = convertFromCommonStatusConditionType(ct)
+	return c
 }
 
 // GetConditions returns slice of conditions
@@ -947,7 +981,7 @@ func (s *RuntimeComponentStatus) GetConditions() []common.StatusCondition {
 	return conditions
 }
 
-// GetCondition ...
+// GetCondition returns status condition with status condition type
 func (s *RuntimeComponentStatus) GetCondition(t common.StatusConditionType) common.StatusCondition {
 	for i := range s.Conditions {
 		if s.Conditions[i].GetType() == t {
@@ -957,7 +991,7 @@ func (s *RuntimeComponentStatus) GetCondition(t common.StatusConditionType) comm
 	return nil
 }
 
-// SetCondition ...
+// SetCondition sets status condition
 func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 	condition := &StatusCondition{}
 	found := false
@@ -965,10 +999,11 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 		if s.Conditions[i].GetType() == c.GetType() {
 			condition = &s.Conditions[i]
 			found = true
+			break
 		}
 	}
 
-	if condition.GetStatus() != c.GetStatus() {
+	if condition.GetStatus() != c.GetStatus() || condition.GetMessage() != c.GetMessage() {
 		condition.SetLastTransitionTime(&metav1.Time{Time: time.Now()})
 	}
 
@@ -1003,6 +1038,10 @@ func convertToCommonStatusConditionType(c StatusConditionType) common.StatusCond
 	switch c {
 	case StatusConditionTypeReconciled:
 		return common.StatusConditionTypeReconciled
+	case StatusConditionTypeResourcesReady:
+		return common.StatusConditionTypeResourcesReady
+	case StatusConditionTypeReady:
+		return common.StatusConditionTypeReady
 	default:
 		panic(c)
 	}
@@ -1012,6 +1051,129 @@ func convertFromCommonStatusConditionType(c common.StatusConditionType) StatusCo
 	switch c {
 	case common.StatusConditionTypeReconciled:
 		return StatusConditionTypeReconciled
+	case common.StatusConditionTypeResourcesReady:
+		return StatusConditionTypeResourcesReady
+	case common.StatusConditionTypeReady:
+		return StatusConditionTypeReady
+	default:
+		panic(c)
+	}
+}
+
+// GetEndpointName returns endpoint name in status
+func (e *StatusEndpoint) GetEndpointName() string {
+	return e.Name
+}
+
+// SetEndpointName sets endpoint name in status
+func (e *StatusEndpoint) SetEndpointName(n string) {
+	e.Name = n
+}
+
+// GetEndpointScope returns endpoint scope in status
+func (e *StatusEndpoint) GetEndpointScope() common.StatusEndpointScope {
+	return convertToCommonStatusEndpointScope(e.Scope)
+}
+
+// SetEndpointScope sets endpoint scope in status
+func (e *StatusEndpoint) SetEndpointScope(s common.StatusEndpointScope) {
+	e.Scope = convertFromCommonStatusEndpointScope(s)
+}
+
+// GetEndpointType returns endpoint type in status
+func (e *StatusEndpoint) GetEndpointType() string {
+	return e.Type
+}
+
+// SetEndpointType sets endpoint type in status
+func (e *StatusEndpoint) SetEndpointType(t string) {
+	e.Type = t
+}
+
+// GetEndpointUri returns endpoint uri in status
+func (e *StatusEndpoint) GetEndpointUri() string {
+	return e.URI
+}
+
+// SetEndpointUri sets endpoint uri in status
+func (e *StatusEndpoint) SetEndpointUri(u string) {
+	e.URI = u
+}
+
+// SetStatusEndpointFields sets endpoint information fields
+func (e *StatusEndpoint) SetStatusEndpointFields(eScope common.StatusEndpointScope, eType string, eUri string) common.StatusEndpoint {
+	e.Scope = convertFromCommonStatusEndpointScope(eScope)
+	e.Type = eType
+	e.URI = eUri
+	return e
+}
+
+// RemoveEndpoint removes endpoint in status
+func (s *RuntimeComponentStatus) RemoveStatusEndpoint(endpointName string) {
+	endpoints := s.Endpoints
+	for i, ep := range endpoints {
+		if ep.GetEndpointName() == endpointName {
+			s.Endpoints = append(endpoints[:i], endpoints[i+1:]...)
+			break
+		}
+	}
+}
+
+// NewStatusEndpoint returns new endpoint information
+func (s *RuntimeComponentStatus) NewStatusEndpoint(endpointName string) common.StatusEndpoint {
+	e := &StatusEndpoint{}
+	e.Name = endpointName
+	return e
+}
+
+// GetStatusEndpoint returns endpoint information with endpoint name
+func (s *RuntimeComponentStatus) GetStatusEndpoint(endpointName string) common.StatusEndpoint {
+	for _, ep := range s.Endpoints {
+		if ep.GetEndpointName() == endpointName {
+			return &ep
+		}
+	}
+	return nil
+}
+
+// SetStatusEndpoint sets endpoint in status
+func (s *RuntimeComponentStatus) SetStatusEndpoint(c common.StatusEndpoint) {
+	endpoint := &StatusEndpoint{}
+	found := false
+	for _, ep := range s.Endpoints {
+		if ep.GetEndpointName() == c.GetEndpointName() {
+			endpoint = &ep
+			found = true
+			break
+		}
+	}
+
+	endpoint.SetEndpointName(c.GetEndpointName())
+	endpoint.SetEndpointScope(c.GetEndpointScope())
+	endpoint.SetEndpointType(c.GetEndpointType())
+	endpoint.SetEndpointUri(c.GetEndpointUri())
+	if !found {
+		s.Endpoints = append(s.Endpoints, *endpoint)
+	}
+}
+
+func convertToCommonStatusEndpointScope(c StatusEndpointScope) common.StatusEndpointScope {
+	switch c {
+	case StatusEndpointScopeExternal:
+		return common.StatusEndpointScopeExternal
+	case StatusEndpointScopeInternal:
+		return common.StatusEndpointScopeInternal
+	default:
+		panic(c)
+	}
+}
+
+func convertFromCommonStatusEndpointScope(c common.StatusEndpointScope) StatusEndpointScope {
+	switch c {
+	case common.StatusEndpointScopeExternal:
+		return StatusEndpointScopeExternal
+	case common.StatusEndpointScopeInternal:
+		return StatusEndpointScopeInternal
 	default:
 		panic(c)
 	}

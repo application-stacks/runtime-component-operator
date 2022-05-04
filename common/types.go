@@ -12,6 +12,9 @@ import (
 // StatusConditionType ...
 type StatusConditionType string
 
+// StatusEndpointScope ...
+type StatusEndpointScope string
+
 type StatusReferences map[string]string
 
 const (
@@ -34,6 +37,25 @@ type StatusCondition interface {
 
 	GetType() StatusConditionType
 	SetType(StatusConditionType)
+
+	SetConditionFields(string, string, corev1.ConditionStatus) StatusCondition
+}
+
+// StatusEndpoint ...
+type StatusEndpoint interface {
+	GetEndpointName() string
+	SetEndpointName(string)
+
+	GetEndpointScope() StatusEndpointScope
+	SetEndpointScope(StatusEndpointScope)
+
+	GetEndpointType() string
+	SetEndpointType(string)
+
+	GetEndpointUri() string
+	SetEndpointUri(string)
+
+	SetStatusEndpointFields(StatusEndpointScope, string, string) StatusEndpoint
 }
 
 // BaseComponentStatus returns base appplication status
@@ -41,19 +63,33 @@ type BaseComponentStatus interface {
 	GetConditions() []StatusCondition
 	GetCondition(StatusConditionType) StatusCondition
 	SetCondition(StatusCondition)
-	NewCondition() StatusCondition
+	NewCondition(StatusConditionType) StatusCondition
+
+	GetStatusEndpoint(string) StatusEndpoint
+	SetStatusEndpoint(StatusEndpoint)
+	NewStatusEndpoint(string) StatusEndpoint
+	RemoveStatusEndpoint(string)
+
 	GetImageReference() string
 	SetImageReference(string)
+
 	GetBinding() *corev1.LocalObjectReference
 	SetBinding(*corev1.LocalObjectReference)
+
 	GetReferences() StatusReferences
 	SetReferences(StatusReferences)
 	SetReference(string, string)
 }
 
 const (
-	// StatusConditionTypeReconciled ...
-	StatusConditionTypeReconciled StatusConditionType = "Reconciled"
+	// Status Condition Types
+	StatusConditionTypeReconciled     StatusConditionType = "Reconciled"
+	StatusConditionTypeResourcesReady StatusConditionType = "ResourcesReady"
+	StatusConditionTypeReady          StatusConditionType = "Ready"
+
+	// Status Endpoint Scopes
+	StatusEndpointScopeExternal StatusEndpointScope = "External"
+	StatusEndpointScopeInternal StatusEndpointScope = "Internal"
 )
 
 // BaseComponentAutoscaling represents basic HPA configuration

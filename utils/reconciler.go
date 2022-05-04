@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
 	"github.com/application-stacks/runtime-component-operator/common"
 	certmanagerv1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	certmanagermetav1 "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
@@ -181,27 +180,15 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 	r.GetRecorder().Event(obj, "Warning", "ProcessingError", issue.Error())
 
 	oldCondition := s.GetCondition(conditionType)
-	if oldCondition == nil {
-		oldCondition = &appstacksv1beta2.StatusCondition{}
-	}
 
-	lastStatus := oldCondition.GetStatus()
-
-	// Keep the old `LastTransitionTime` when status has not changed
-	nowTime := metav1.Now()
-	transitionTime := oldCondition.GetLastTransitionTime()
-	if lastStatus == corev1.ConditionTrue {
-		transitionTime = &nowTime
-	}
-
-	newCondition := s.NewCondition()
-	newCondition.SetLastTransitionTime(transitionTime)
+	newCondition := s.NewCondition(conditionType)
 	newCondition.SetReason(string(apierrors.ReasonForError(issue)))
-	newCondition.SetType(conditionType)
 	newCondition.SetMessage(issue.Error())
 	newCondition.SetStatus(corev1.ConditionFalse)
-
 	s.SetCondition(newCondition)
+
+	//Check Application status (reconciliation & resource status & endpoint status)
+	r.CheckApplicationStatus(ba)
 
 	err := r.UpdateStatus(obj)
 	if err != nil {
@@ -216,14 +203,9 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 		}, nil
 	}
 
-	// StatusReasonInvalid means the requested create or update operation cannot be
-	// completed due to invalid data provided as part of the request. Don't retry.
-	// if apierrors.IsInvalid(issue) {
-	// 	return reconcile.Result{}, nil
-	// }
-
 	var retryInterval time.Duration
-	if lastStatus == corev1.ConditionTrue {
+	// If the application was reconciled and now it is not
+	if oldCondition == nil || oldCondition.GetStatus() == corev1.ConditionTrue {
 		retryInterval = time.Second
 	} else {
 		retryInterval = 5 * time.Second
@@ -239,26 +221,16 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 // ManageSuccess ...
 func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
 	s := ba.GetStatus()
-	oldCondition := s.GetCondition(conditionType)
-	if oldCondition == nil {
-		oldCondition = &appstacksv1beta2.StatusCondition{}
-	}
 
-	// Keep the old `LastTransitionTime` when status has not changed
-	nowTime := metav1.Now()
-	transitionTime := oldCondition.GetLastTransitionTime()
-	if oldCondition.GetStatus() == corev1.ConditionFalse {
-		transitionTime = &nowTime
-	}
-
-	statusCondition := s.NewCondition()
-	statusCondition.SetLastTransitionTime(transitionTime)
+	statusCondition := s.NewCondition(conditionType)
 	statusCondition.SetReason("")
 	statusCondition.SetMessage("")
 	statusCondition.SetStatus(corev1.ConditionTrue)
-	statusCondition.SetType(conditionType)
-
 	s.SetCondition(statusCondition)
+
+	//Check application status (reconciliation & resource status & endpoint status)
+	readyStatus := r.CheckApplicationStatus(ba)
+
 	err := r.UpdateStatus(ba.(client.Object))
 	if err != nil {
 		log.Error(err, "Unable to update status")
@@ -267,7 +239,17 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 			Requeue:      true,
 		}, nil
 	}
-	return reconcile.Result{RequeueAfter: ReconcileInterval * time.Second}, nil
+
+	var retryInterval time.Duration
+
+	// If resources are not ready
+	if readyStatus != corev1.ConditionTrue {
+		retryInterval = time.Second
+	} else {
+		retryInterval = ReconcileInterval * time.Second
+	}
+
+	return reconcile.Result{RequeueAfter: retryInterval}, nil
 }
 
 // IsGroupVersionSupported ...
