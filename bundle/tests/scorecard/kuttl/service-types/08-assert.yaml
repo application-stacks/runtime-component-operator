@@ -22,7 +22,6 @@ spec:
       protocol: TCP
       port: 8080
       targetPort: 8081
-      nodePort: 30932
     - name: test-port1
       protocol: TCP
       port: 8082
@@ -31,7 +30,7 @@ spec:
       port: 8083
       protocol: TCP
       targetPort: 8083
-  type: NodePort
+  type: ClusterIP
 ---
 apiVersion: v1
 kind: Secret

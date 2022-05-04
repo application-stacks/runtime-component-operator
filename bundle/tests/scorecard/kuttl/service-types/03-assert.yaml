@@ -13,20 +13,24 @@ status:
 apiVersion: v1
 kind: Service
 metadata:
-  name: service-types-rc
   annotations:
-    name: LoadBalancerService
+    name: ClusterIPService
+  name: service-types-rc
 spec:
   ports:
-    - name: test-port
+    - name: 8080-tcp
       protocol: TCP
-      port: 8082
-      targetPort: 8083
+      port: 8080
+      targetPort: 8080
     - name: test-port1
       protocol: TCP
       port: 8081
+      targetPort: 8081
+    - name: test-port2
+      protocol: TCP
+      port: 8082
       targetPort: 8083
-  type: LoadBalancer
+  type: ClusterIP
 ---
 apiVersion: v1
 kind: Secret
@@ -42,3 +46,23 @@ status:
   replicas: 1
   readyReplicas: 1
   updatedReplicas: 1
+---
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: service-types-rc
+spec:
+  service:
+    bindable: true
+    port: 8080
+    ports:
+      - name: test-port1
+        port: 8081
+        protocol: TCP
+        targetPort: 8081
+      - name: test-port2
+        port: 8082
+        protocol: TCP
+        targetPort: 8083
+    annotations:
+      name: ClusterIPService
