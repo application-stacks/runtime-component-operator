@@ -133,7 +133,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// initialize the RuntimeComponent instance
 	instance.Initialize()
-
 	_, err = appstacksutils.Validate(instance)
 	// If there's any validation error, don't bother with requeuing
 	if err != nil {
