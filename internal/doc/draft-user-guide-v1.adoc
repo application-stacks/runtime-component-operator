@@ -723,7 +723,7 @@ To configure secure HTTPS connections for your Knative deployment, see link:++ht
 === Network Policies
 
 Network policies for an application are created by default to isolate ingress traffic. To disable creating network
-policies for an application, set `networkPolicy` to `{}`:
+policies for an application, set `.spec.networkPolicy.disable` to `true`:
 
 [source,yaml]
 ----
@@ -732,7 +732,8 @@ kind: RuntimeComponent
 metadata:
   name: my-app
 spec:
-  networkPolicy: {}
+  networkPolicy:
+    disable: true
 ----
 
 ==== Network Policy Prerequisites
