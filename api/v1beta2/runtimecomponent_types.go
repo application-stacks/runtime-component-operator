@@ -245,12 +245,16 @@ type RuntimeComponentService struct {
 
 // Defines the network policy
 type RuntimeComponentNetworkPolicy struct {
+	// Disable the creation of the network policy. Defaults to false.
+	// +operator-sdk:csv:customresourcedefinitions:order=46,type=spec,displayName="Disable",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	Disable *bool `json:"disable,omitempty"`
+
 	// Specify the labels of namespaces that incoming traffic is allowed from.
-	// +operator-sdk:csv:customresourcedefinitions:order=46,type=spec,displayName="Namespace Labels",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=47,type=spec,displayName="Namespace Labels",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	NamespaceLabels map[string]string `json:"namespaceLabels,omitempty"`
 
 	// Specify the labels of pod(s) that incoming traffic is allowed from.
-	// +operator-sdk:csv:customresourcedefinitions:order=47,type=spec,displayName="From Labels",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=48,type=spec,displayName="From Labels",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	FromLabels map[string]string `json:"fromLabels,omitempty"`
 }
 
@@ -761,8 +765,8 @@ func (np *RuntimeComponentNetworkPolicy) GetFromLabels() map[string]string {
 	return np.FromLabels
 }
 
-func (np *RuntimeComponentNetworkPolicy) IsNotDefined() bool {
-	return np == nil
+func (np *RuntimeComponentNetworkPolicy) IsDisabled() bool {
+	return np != nil && np.Disable != nil && *np.Disable
 }
 
 func (np *RuntimeComponentNetworkPolicy) IsEmpty() bool {
