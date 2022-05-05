@@ -4,5 +4,6 @@ metadata:
   name: nodeport-rc
 spec:
   service:
-    nodePort: 30001
-
+    nodePort: 
+    type:
+    port:
