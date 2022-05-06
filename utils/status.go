@@ -101,15 +101,21 @@ func (r *ReconcilerBase) areReplicasReady(ba common.BaseComponent, c common.Stat
 
 	resourceType, msg, reason := "", "", ""
 	var replicas, readyReplicas, updatedReplicas, readyUpdatedReplicas int32
+	var minReplicas int32 = 1
 
 	expectedReplicas := ba.GetReplicas()
 	autoScale := ba.GetAutoscaling()
+
+	// If both are not specified, expected replica is set to 1
+	if expectedReplicas == nil && autoScale == nil {
+		expectedReplicas = &minReplicas
+	}
 
 	if ba.GetStatefulSet() == nil {
 		// Check if deployment exists
 		deployment := &appsv1.Deployment{}
 		err := r.GetClient().Get(context.TODO(), namespacedName, deployment)
-		if err != nil || (expectedReplicas == nil && (autoScale == nil)) {
+		if err != nil {
 			msg, reason = "Deployment is not ready.", "NotCreated"
 			return c.SetConditionFields(msg, reason, corev1.ConditionFalse)
 		}
@@ -121,7 +127,7 @@ func (r *ReconcilerBase) areReplicasReady(ba common.BaseComponent, c common.Stat
 		// Check if statefulSet exists
 		statefulSet := &appsv1.StatefulSet{}
 		err := r.GetClient().Get(context.TODO(), namespacedName, statefulSet)
-		if err != nil || (expectedReplicas == nil && autoScale == nil) {
+		if err != nil {
 			msg, reason = "StatefulSet is not ready.", "NotCreated"
 			return c.SetConditionFields(msg, reason, corev1.ConditionFalse)
 		}
@@ -143,7 +149,6 @@ func (r *ReconcilerBase) areReplicasReady(ba common.BaseComponent, c common.Stat
 
 	// Check autoscaling parameters
 	if autoScale != nil {
-		var minReplicas int32 = 1
 		autoMinReplicas := autoScale.GetMinReplicas()
 		autoMaxReplicas := autoScale.GetMaxReplicas()
 		if autoMinReplicas == nil {
