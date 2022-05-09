@@ -198,8 +198,8 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
 	if instance.Spec.ServiceAccountName == nil || *instance.Spec.ServiceAccountName == "" {
+		serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(serviceAccount, instance, func() error {
 			appstacksutils.CustomizeServiceAccount(serviceAccount, instance)
 			return nil
@@ -209,13 +209,13 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		}
 	} else {
+		serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
 		err = r.DeleteResource(serviceAccount)
 		if err != nil {
 			reqLogger.Error(err, "Failed to delete ServiceAccount")
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		}
 	}
-	ba.GetStatus().SetReference(common.StatusReferenceSAResourceVersion, serviceAccount.ResourceVersion)
 
 	// Check if the ServiceAccount has a valid pull secret before creating the deployment/statefulset
 	// or setting up knative. Otherwise the pods can go into an ImagePullBackOff loop
