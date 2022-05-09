@@ -747,7 +747,19 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent)
 				Name: *ba.GetPullSecret(),
 			})
 		} else {
-			sa.ImagePullSecrets[0].Name = *ba.GetPullSecret()
+			pullSecretName := *ba.GetPullSecret()
+			found := false
+			for _, obj := range sa.ImagePullSecrets {
+				if obj.Name == pullSecretName {
+					found = true
+					break
+				}
+			}
+			if !found {
+				sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
+					Name: pullSecretName,
+				})
+			}
 		}
 	}
 }
