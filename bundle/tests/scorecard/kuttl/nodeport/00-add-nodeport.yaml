@@ -1,0 +1,12 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: nodeport-rc
+spec:
+  applicationImage: navidsh/demo-day
+  service:
+    nodePort: 30000
+    port: 3000
+    type: NodePort
+  replicas: 1
+
