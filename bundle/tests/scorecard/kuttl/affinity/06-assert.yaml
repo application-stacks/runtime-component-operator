@@ -1,21 +1,9 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
-  name: node-affinity-rc
-spec:
-  # Add fields here
-  template:
-    spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: kubernetes.io/arch
-                    operator: In
-                    values:
-                      - amd64
+  name: affinity-rc
 status:
   replicas: 1
   readyReplicas: 1
   updatedReplicas: 1
+  observedGeneration: 2

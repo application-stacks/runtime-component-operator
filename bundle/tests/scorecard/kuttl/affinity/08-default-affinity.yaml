@@ -1,14 +1,9 @@
-# Test to see that the default affinity is is overwritten if supplied with a user defined affinity
+# Test to see that if no affinity specified the default affinity is applied
 apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
-  name: pod-default-affinity-rc
-  labels:
-    test: affinity
+  name: affinity-rc
 spec:
-  # Add fields here
   applicationImage: 'k8s.gcr.io/pause:2.0'
   replicas: 1
   affinity:
-    nodeAffinityLabels:
-      kuttlTest: test1

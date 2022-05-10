@@ -2,11 +2,8 @@
 apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
-  name: node-affinity-rc
-  labels:
-    test: affinity
+  name: affinity-rc
 spec:
-  # Add fields here
   applicationImage: 'k8s.gcr.io/pause:2.0'
   replicas: 1
   affinity:
@@ -18,7 +15,3 @@ spec:
                 operator: In
                 values:
                   - test1
-  statefulSet:
-    storage:
-      size: "10Mi"
-      mountPath: "/mnt/data"

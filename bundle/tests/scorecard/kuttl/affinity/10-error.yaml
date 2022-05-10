@@ -1,9 +1,8 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
-  name: node-affinity-rc
+  name: affinity-rc
 spec:
-  # Add fields here
   template:
     spec:
       affinity:
@@ -15,7 +14,3 @@ spec:
                     operator: In
                     values:
                       - test1
-status:
-  replicas: 1
-  readyReplicas: 1
-  updatedReplicas: 1

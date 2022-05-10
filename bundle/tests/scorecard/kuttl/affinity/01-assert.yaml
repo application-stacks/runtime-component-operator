@@ -1,9 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: node-affinity-label-rc
+  name: affinity-rc
 spec:
-  # Add fields here
   template:
     spec:
       affinity:
@@ -15,6 +14,29 @@ spec:
                     operator: In
                     values:
                       - test1
+status:
+  replicas: 1
+  readyReplicas: 1
+  updatedReplicas: 1
+  observedGeneration: 2
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: affinity-other-rc
+spec:
+  template:
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/instance
+                    operator: In
+                    values:
+                      - affinity-rc
+              topologyKey: kubernetes.io/hostname
 status:
   replicas: 1
   readyReplicas: 1

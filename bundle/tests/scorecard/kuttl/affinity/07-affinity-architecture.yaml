@@ -2,7 +2,8 @@
 apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
-  name: node-affinity-rc
+  name: affinity-rc
 spec:
-  # Add fields here
   affinity:
+    architecture:
+      - amd64
