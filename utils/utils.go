@@ -421,41 +421,43 @@ func customizeAffinity(affinity *corev1.Affinity, affinityConfig common.BaseComp
 	affinity.PodAffinity = affinityConfig.GetPodAffinity()
 	affinity.PodAntiAffinity = affinityConfig.GetPodAntiAffinity()
 
-	if len(affinityConfig.GetNodeAffinityLabels()) > 0 {
-		if affinity.NodeAffinity == nil {
-			affinity.NodeAffinity = &corev1.NodeAffinity{}
-		}
-		if affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
-			affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = &corev1.NodeSelector{}
-		}
-		nodeSelector := affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution
+	if len(affinityConfig.GetNodeAffinityLabels()) == 0 {
+		return
+	}
 
-		if len(nodeSelector.NodeSelectorTerms) == 0 {
-			nodeSelector.NodeSelectorTerms = append(nodeSelector.NodeSelectorTerms, corev1.NodeSelectorTerm{})
-		}
-		labels := affinityConfig.GetNodeAffinityLabels()
+	if affinity.NodeAffinity == nil {
+		affinity.NodeAffinity = &corev1.NodeAffinity{}
+	}
+	if affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
+		affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = &corev1.NodeSelector{}
+	}
+	nodeSelector := affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution
 
-		keys := make([]string, 0, len(labels))
-		for k := range labels {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
+	if len(nodeSelector.NodeSelectorTerms) == 0 {
+		nodeSelector.NodeSelectorTerms = append(nodeSelector.NodeSelectorTerms, corev1.NodeSelectorTerm{})
+	}
+	labels := affinityConfig.GetNodeAffinityLabels()
 
-		for i := range nodeSelector.NodeSelectorTerms {
-			for _, key := range keys {
-				values := strings.Split(labels[key], ",")
-				for i := range values {
-					values[i] = strings.TrimSpace(values[i])
-				}
+	keys := make([]string, 0, len(labels))
+	for k := range labels {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 
-				requirement := corev1.NodeSelectorRequirement{
-					Key:      key,
-					Operator: corev1.NodeSelectorOpIn,
-					Values:   values,
-				}
-
-				nodeSelector.NodeSelectorTerms[i].MatchExpressions = append(nodeSelector.NodeSelectorTerms[i].MatchExpressions, requirement)
+	for i := range nodeSelector.NodeSelectorTerms {
+		for _, key := range keys {
+			values := strings.Split(labels[key], ",")
+			for i := range values {
+				values[i] = strings.TrimSpace(values[i])
 			}
+
+			requirement := corev1.NodeSelectorRequirement{
+				Key:      key,
+				Operator: corev1.NodeSelectorOpIn,
+				Values:   values,
+			}
+
+			nodeSelector.NodeSelectorTerms[i].MatchExpressions = append(nodeSelector.NodeSelectorTerms[i].MatchExpressions, requirement)
 		}
 	}
 }
