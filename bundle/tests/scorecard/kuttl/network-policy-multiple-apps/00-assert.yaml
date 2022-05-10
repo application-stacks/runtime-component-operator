@@ -9,6 +9,9 @@ metadata:
 spec:
   ingress:
     - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: network-policy-test
         - namespaceSelector:
             matchLabels:
               policy-group.network.openshift.io/ingress: ""

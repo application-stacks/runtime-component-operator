@@ -320,93 +320,71 @@ func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShi
 		},
 	}
 
-	if len(networkPolicy.Spec.Ingress) == 0 {
-		networkPolicy.Spec.Ingress = append(networkPolicy.Spec.Ingress, networkingv1.NetworkPolicyIngressRule{})
-		networkPolicy.Spec.Ingress[0].From = append(networkPolicy.Spec.Ingress[0].From, networkingv1.NetworkPolicyPeer{})
-	}
+	rule := networkingv1.NetworkPolicyIngressRule{}
 
 	networkPolicyConfig := ba.GetNetworkPolicy()
-	if isNetworkPolicyConfigSet(networkPolicyConfig) {
-		customizeNetworkPolicyPeer(&networkPolicy.Spec.Ingress[0].From[0], networkPolicyConfig)
-	} else if isExposed := ba.GetExpose(); isExposed != nil && *isExposed {
-		customizeExposedNetworkPolicyPeer(&networkPolicy.Spec.Ingress[0].From[0], isOpenShift)
-	} else {
-		customizeInternalNetworkPolicyPeer(&networkPolicy.Spec.Ingress[0].From[0], networkPolicy.Namespace, ba)
+	rule.From = append(rule.From,
+		createNetworkPolicyPeer(networkPolicy.Namespace, ba.GetApplicationName(), networkPolicyConfig))
+
+	if isExposed := ba.GetExpose(); isExposed != nil && *isExposed {
+		rule.From = append(rule.From, createExposedNetworkPolicyPeer(isOpenShift))
 	}
 
 	if isOpenShift {
-		if len(networkPolicy.Spec.Ingress[0].From) < 2 {
-			networkPolicy.Spec.Ingress[0].From = append(networkPolicy.Spec.Ingress[0].From, networkingv1.NetworkPolicyPeer{})
-		}
-		customizeNetworkPolicyMonitoringPeer(&networkPolicy.Spec.Ingress[0].From[1])
+		rule.From = append(rule.From, createNetworkPolicyMonitoringPeer())
 	}
 
+	networkPolicy.Spec.Ingress = []networkingv1.NetworkPolicyIngressRule{rule}
 	customizeNetworkPolicyPorts(&networkPolicy.Spec.Ingress[0], ba)
 }
 
-func isNetworkPolicyConfigSet(config common.BaseComponentNetworkPolicy) bool {
-	return config.GetNamespaceLabels() != nil || config.GetFromLabels() != nil ||
-		len(config.GetNamespaceLabels()) > 0 || len(config.GetFromLabels()) > 0
-}
-
-func customizeNetworkPolicyPeer(peer *networkingv1.NetworkPolicyPeer, networkPolicy common.BaseComponentNetworkPolicy) {
-	if peer.NamespaceSelector == nil {
-		peer.NamespaceSelector = &metav1.LabelSelector{}
+func createNetworkPolicyPeer(namespace string, appName string, networkPolicy common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyPeer {
+	peer := networkingv1.NetworkPolicyPeer{
+		NamespaceSelector: &metav1.LabelSelector{},
+		PodSelector:       &metav1.LabelSelector{},
 	}
-	peer.NamespaceSelector.MatchLabels = networkPolicy.GetNamespaceLabels()
 
-	if podLabels := networkPolicy.GetFromLabels(); podLabels != nil {
-		peer.PodSelector = &metav1.LabelSelector{
-			MatchLabels: podLabels,
+	if nsLabels := networkPolicy.GetNamespaceLabels(); nsLabels == nil {
+		peer.NamespaceSelector.MatchLabels = map[string]string{
+			"kubernetes.io/metadata.name": namespace,
 		}
 	} else {
-		peer.PodSelector = nil
-	}
-}
-
-func customizeNetworkPolicyMonitoringPeer(peer *networkingv1.NetworkPolicyPeer) {
-	if peer.NamespaceSelector == nil {
-		peer.NamespaceSelector = &metav1.LabelSelector{}
-	}
-	peer.NamespaceSelector.MatchLabels = map[string]string{
-		"network.openshift.io/policy-group": "monitoring",
-	}
-}
-
-func customizeInternalNetworkPolicyPeer(peer *networkingv1.NetworkPolicyPeer, namespace string, ba common.BaseComponent) {
-	if peer.NamespaceSelector == nil {
-		peer.NamespaceSelector = &metav1.LabelSelector{}
-	}
-	peer.NamespaceSelector.MatchLabels = map[string]string{
-		"kubernetes.io/metadata.name": namespace,
+		peer.NamespaceSelector.MatchLabels = nsLabels
 	}
 
-	if peer.PodSelector == nil {
-		peer.PodSelector = &metav1.LabelSelector{}
-	}
-	if fromLabels := ba.GetNetworkPolicy().GetFromLabels(); fromLabels != nil {
-		peer.PodSelector.MatchLabels = fromLabels
-	} else {
+	if podLabels := networkPolicy.GetFromLabels(); podLabels == nil {
 		peer.PodSelector.MatchLabels = map[string]string{
-			"app.kubernetes.io/part-of": ba.GetApplicationName(),
+			"app.kubernetes.io/part-of": appName,
 		}
+	} else {
+		peer.PodSelector.MatchLabels = podLabels
 	}
+
+	return peer
 }
 
-func customizeExposedNetworkPolicyPeer(peer *networkingv1.NetworkPolicyPeer, isOpenShift bool) {
-	if peer.NamespaceSelector == nil {
-		peer.NamespaceSelector = &metav1.LabelSelector{}
+func createExposedNetworkPolicyPeer(isOpenShift bool) networkingv1.NetworkPolicyPeer {
+	peer := networkingv1.NetworkPolicyPeer{
+		NamespaceSelector: &metav1.LabelSelector{},
 	}
 
-	var labels map[string]string
 	if isOpenShift {
-		labels = map[string]string{
+		peer.NamespaceSelector.MatchLabels = map[string]string{
 			"policy-group.network.openshift.io/ingress": "",
 		}
 	}
 
-	peer.NamespaceSelector.MatchLabels = labels
-	peer.PodSelector = nil
+	return peer
+}
+
+func createNetworkPolicyMonitoringPeer() networkingv1.NetworkPolicyPeer {
+	return networkingv1.NetworkPolicyPeer{
+		NamespaceSelector: &metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"network.openshift.io/policy-group": "monitoring",
+			},
+		},
+	}
 }
 
 func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule, ba common.BaseComponent) {

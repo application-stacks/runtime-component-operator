@@ -769,12 +769,6 @@ func (np *RuntimeComponentNetworkPolicy) IsDisabled() bool {
 	return np != nil && np.Disable != nil && *np.Disable
 }
 
-func (np *RuntimeComponentNetworkPolicy) IsEmpty() bool {
-	return np != nil &&
-		(np.NamespaceLabels == nil || len(np.NamespaceLabels) == 0) &&
-		(np.FromLabels == nil || len(np.FromLabels) == 0)
-}
-
 // GetLabels returns labels to be added on ServiceMonitor
 func (m *RuntimeComponentMonitoring) GetLabels() map[string]string {
 	return m.Labels
