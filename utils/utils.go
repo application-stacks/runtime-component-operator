@@ -407,21 +407,21 @@ func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 }
 
 // isCustomAffinityDefined returns true if everything but .spec.affinity.architecture is not defined.
-func isCustomAffinityDefined(ba common.BaseComponentAffinity) bool {
-	return ba != nil &&
-		(ba.GetNodeAffinity() != nil ||
-			ba.GetPodAffinity() != nil ||
-			ba.GetPodAntiAffinity() != nil ||
-			ba.GetNodeAffinityLabels() != nil ||
-			len(ba.GetNodeAffinityLabels()) > 0)
+func isCustomAffinityDefined(affinityConfig common.BaseComponentAffinity) bool {
+	return affinityConfig != nil &&
+		(affinityConfig.GetNodeAffinity() != nil ||
+			affinityConfig.GetPodAffinity() != nil ||
+			affinityConfig.GetPodAntiAffinity() != nil ||
+			affinityConfig.GetNodeAffinityLabels() != nil ||
+			len(affinityConfig.GetNodeAffinityLabels()) > 0)
 }
 
-func customizeAffinity(affinity *corev1.Affinity, ba common.BaseComponentAffinity) {
-	affinity.NodeAffinity = ba.GetNodeAffinity()
-	affinity.PodAffinity = ba.GetPodAffinity()
-	affinity.PodAntiAffinity = ba.GetPodAntiAffinity()
+func customizeAffinity(affinity *corev1.Affinity, affinityConfig common.BaseComponentAffinity) {
+	affinity.NodeAffinity = affinityConfig.GetNodeAffinity()
+	affinity.PodAffinity = affinityConfig.GetPodAffinity()
+	affinity.PodAntiAffinity = affinityConfig.GetPodAntiAffinity()
 
-	if len(ba.GetNodeAffinityLabels()) > 0 {
+	if len(affinityConfig.GetNodeAffinityLabels()) > 0 {
 		if affinity.NodeAffinity == nil {
 			affinity.NodeAffinity = &corev1.NodeAffinity{}
 		}
@@ -433,7 +433,7 @@ func customizeAffinity(affinity *corev1.Affinity, ba common.BaseComponentAffinit
 		if len(nodeSelector.NodeSelectorTerms) == 0 {
 			nodeSelector.NodeSelectorTerms = append(nodeSelector.NodeSelectorTerms, corev1.NodeSelectorTerm{})
 		}
-		labels := ba.GetNodeAffinityLabels()
+		labels := affinityConfig.GetNodeAffinityLabels()
 
 		keys := make([]string, 0, len(labels))
 		for k := range labels {
@@ -480,12 +480,12 @@ func customizeDefaultAffinity(affinity *corev1.Affinity, name string) {
 	affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = term
 }
 
-func customizeAffinityArchitectures(affinity *corev1.Affinity, ba common.BaseComponentAffinity) {
-	if ba == nil {
+func customizeAffinityArchitectures(affinity *corev1.Affinity, affinityConfig common.BaseComponentAffinity) {
+	if affinityConfig == nil {
 		return
 	}
 
-	archs := ba.GetArchitecture()
+	archs := affinityConfig.GetArchitecture()
 
 	if len(archs) <= 0 {
 		return
