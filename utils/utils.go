@@ -334,8 +334,8 @@ func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShi
 		rule.From = append(rule.From, createNetworkPolicyMonitoringPeer())
 	}
 
+	customizeNetworkPolicyPorts(&rule, ba)
 	networkPolicy.Spec.Ingress = []networkingv1.NetworkPolicyIngressRule{rule}
-	customizeNetworkPolicyPorts(&networkPolicy.Spec.Ingress[0], ba)
 }
 
 func createNetworkPolicyPeer(namespace string, appName string, networkPolicy common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyPeer {
