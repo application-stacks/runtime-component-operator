@@ -294,6 +294,16 @@ spec:
         path: route.insecureEdgeTerminationPolicy
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Disable the creation of the network policy. Defaults to false.
+        displayName: Disable
+        path: networkPolicy.disable
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Specify the labels of namespaces that incoming traffic is allowed from.
+        displayName: Namespace Labels
+        path: networkPolicy.namespaceLabels
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: Specify the labels of pod(s) that incoming traffic is allowed from.
         displayName: From Labels
         path: networkPolicy.fromLabels

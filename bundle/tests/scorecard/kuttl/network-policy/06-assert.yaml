@@ -11,9 +11,14 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app.kubernetes.io/part-of: network-policy-rc
+              foo: bar
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: monitoring
       ports:
         - port: 8080
+          protocol: TCP
+        - port: 9090
           protocol: TCP
   podSelector:
     matchLabels:

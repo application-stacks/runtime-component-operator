@@ -9,9 +9,15 @@ metadata:
 spec:
   ingress:
     - from:
-        - podSelector:
+        - namespaceSelector:
+            matchLabels:
+              namespace: test
+          podSelector:
             matchLabels:
               foo: bar
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: monitoring
       ports:
         - port: 8080
           protocol: TCP

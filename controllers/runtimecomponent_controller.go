@@ -314,9 +314,9 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	networkPolicy := &networkingv1.NetworkPolicy{ObjectMeta: defaultMeta}
-	if np := instance.Spec.NetworkPolicy; np.IsNotDefined() || !np.IsEmpty() {
+	if np := instance.Spec.NetworkPolicy; !np.IsDisabled() {
 		err = r.CreateOrUpdate(networkPolicy, instance, func() error {
-			appstacksutils.CustomizeNetworkPolicy(networkPolicy, instance)
+			appstacksutils.CustomizeNetworkPolicy(networkPolicy, r.IsOpenShift(), instance)
 			return nil
 		})
 		if err != nil {

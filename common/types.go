@@ -121,6 +121,7 @@ type BaseComponentService interface {
 
 // BaseComponentNetworkPolicy represents a basic network policy configuration
 type BaseComponentNetworkPolicy interface {
+	GetNamespaceLabels() map[string]string
 	GetFromLabels() map[string]string
 }
 

@@ -16,7 +16,9 @@ spec:
             matchLabels:
               network.openshift.io/policy-group: monitoring
       ports:
-        - port: 8081
+        - port: 8080
+          protocol: TCP
+        - port: 9090
           protocol: TCP
   podSelector:
     matchLabels:

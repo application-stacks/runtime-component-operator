@@ -5,6 +5,6 @@ metadata:
 spec:
   ingress:
     - from:
-        - podSelector:
+        - namespaceSelector:
             matchLabels:
-              foo: bar
+              policy-group.network.openshift.io/ingress: ""
