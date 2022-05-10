@@ -9,12 +9,12 @@ metadata:
 spec:
   ingress:
     - from:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/part-of: network-policy-rc
         - namespaceSelector:
             matchLabels:
               policy-group.network.openshift.io/ingress: ""
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: network-policy-rc
         - namespaceSelector:
             matchLabels:
               network.openshift.io/policy-group: monitoring

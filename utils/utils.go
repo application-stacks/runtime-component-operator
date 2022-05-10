@@ -320,25 +320,68 @@ func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShi
 		},
 	}
 
-	rule := networkingv1.NetworkPolicyIngressRule{}
-
 	networkPolicyConfig := ba.GetNetworkPolicy()
-	rule.From = append(rule.From,
-		createNetworkPolicyPeer(networkPolicy.Namespace, ba.GetApplicationName(), networkPolicyConfig))
-
-	if isExposed := ba.GetExpose(); isExposed != nil && *isExposed {
-		rule.From = append(rule.From, createExposedNetworkPolicyPeer(isOpenShift))
-	}
+	isExposed := ba.GetExpose() != nil && *ba.GetExpose()
+	var rule networkingv1.NetworkPolicyIngressRule
 
 	if isOpenShift {
-		rule.From = append(rule.From, createNetworkPolicyMonitoringPeer())
+		rule = createOpenShiftNetworkPolicyIngressRule(ba.GetApplicationName(), networkPolicy.Namespace, isExposed, networkPolicyConfig)
+	} else {
+		rule = createKubernetesNetworkPolicyIngressRule(ba.GetApplicationName(), networkPolicy.Namespace, isExposed, networkPolicyConfig)
 	}
 
 	customizeNetworkPolicyPorts(&rule, ba)
 	networkPolicy.Spec.Ingress = []networkingv1.NetworkPolicyIngressRule{rule}
 }
 
-func createNetworkPolicyPeer(namespace string, appName string, networkPolicy common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyPeer {
+func createOpenShiftNetworkPolicyIngressRule(appName string, namespace string, isExposed bool, config common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyIngressRule {
+	rule := networkingv1.NetworkPolicyIngressRule{}
+
+	// Add peer to allow traffic from the OpenShift router
+	if isExposed {
+		rule.From = append(rule.From, networkingv1.NetworkPolicyPeer{
+			NamespaceSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"policy-group.network.openshift.io/ingress": "",
+				},
+			},
+		})
+	}
+
+	rule.From = append(rule.From,
+		// Add peer to allow traffic from other pods belonging to the app
+		createNetworkPolicyPeer(appName, namespace, config),
+
+		// Add peer to allow traffic from OpenShift monitoring
+		networkingv1.NetworkPolicyPeer{
+			NamespaceSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"network.openshift.io/policy-group": "monitoring",
+				},
+			},
+		},
+	)
+
+	return rule
+}
+
+func createKubernetesNetworkPolicyIngressRule(appName string, namespace string, isExposed bool, config common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyIngressRule {
+	rule := networkingv1.NetworkPolicyIngressRule{}
+
+	if isExposed {
+		rule.From = []networkingv1.NetworkPolicyPeer{{
+			NamespaceSelector: &metav1.LabelSelector{},
+		}}
+		return rule
+	}
+
+	rule.From = []networkingv1.NetworkPolicyPeer{
+		createNetworkPolicyPeer(appName, namespace, config),
+	}
+	return rule
+}
+
+func createNetworkPolicyPeer(appName string, namespace string, networkPolicy common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyPeer {
 	peer := networkingv1.NetworkPolicyPeer{
 		NamespaceSelector: &metav1.LabelSelector{},
 		PodSelector:       &metav1.LabelSelector{},
@@ -361,30 +404,6 @@ func createNetworkPolicyPeer(namespace string, appName string, networkPolicy com
 	}
 
 	return peer
-}
-
-func createExposedNetworkPolicyPeer(isOpenShift bool) networkingv1.NetworkPolicyPeer {
-	peer := networkingv1.NetworkPolicyPeer{
-		NamespaceSelector: &metav1.LabelSelector{},
-	}
-
-	if isOpenShift {
-		peer.NamespaceSelector.MatchLabels = map[string]string{
-			"policy-group.network.openshift.io/ingress": "",
-		}
-	}
-
-	return peer
-}
-
-func createNetworkPolicyMonitoringPeer() networkingv1.NetworkPolicyPeer {
-	return networkingv1.NetworkPolicyPeer{
-		NamespaceSelector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"network.openshift.io/policy-group": "monitoring",
-			},
-		},
-	}
 }
 
 func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule, ba common.BaseComponent) {
