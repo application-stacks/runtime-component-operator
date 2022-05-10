@@ -9,8 +9,7 @@ metadata:
 spec:
   ingress:
     - from:
-        - namespaceSelector: {}
-          podSelector:
+        - podSelector:
             matchLabels:
               foo: bar
         - namespaceSelector:
