@@ -464,7 +464,7 @@ func TestCustomizeServiceAccount(t *testing.T) {
 
 	testCSA := []Test{
 		{"ServiceAccount image pull secrets is empty", pullSecret, emptySAIPS},
-		{"ServiceAccount image pull secrets", newSecret, sa.ImagePullSecrets[0].Name},
+		{"ServiceAccount image pull secrets", newSecret, sa.ImagePullSecrets[1].Name},
 	}
 	verifyTests(testCSA, t)
 }
