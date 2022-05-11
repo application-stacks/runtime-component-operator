@@ -251,11 +251,11 @@ type RuntimeComponentNetworkPolicy struct {
 
 	// Specify the labels of namespaces that incoming traffic is allowed from.
 	// +operator-sdk:csv:customresourcedefinitions:order=47,type=spec,displayName="Namespace Labels",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
-	NamespaceLabels map[string]string `json:"namespaceLabels,omitempty"`
+	NamespaceLabels *map[string]string `json:"namespaceLabels,omitempty"`
 
 	// Specify the labels of pod(s) that incoming traffic is allowed from.
 	// +operator-sdk:csv:customresourcedefinitions:order=48,type=spec,displayName="From Labels",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
-	FromLabels map[string]string `json:"fromLabels,omitempty"`
+	FromLabels *map[string]string `json:"fromLabels,omitempty"`
 }
 
 // Defines the desired state and cycle of applications.
@@ -752,17 +752,17 @@ func (s *RuntimeComponentService) GetBindable() *bool {
 }
 
 func (np *RuntimeComponentNetworkPolicy) GetNamespaceLabels() map[string]string {
-	if np == nil {
+	if np == nil || np.NamespaceLabels == nil {
 		return nil
 	}
-	return np.NamespaceLabels
+	return *np.NamespaceLabels
 }
 
 func (np *RuntimeComponentNetworkPolicy) GetFromLabels() map[string]string {
-	if np == nil {
+	if np == nil || np.FromLabels == nil {
 		return nil
 	}
-	return np.FromLabels
+	return *np.FromLabels
 }
 
 func (np *RuntimeComponentNetworkPolicy) IsDisabled() bool {
