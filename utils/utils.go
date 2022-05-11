@@ -342,13 +342,23 @@ func createOpenShiftNetworkPolicyIngressRule(appName string, namespace string, i
 
 	// Add peer to allow traffic from the OpenShift router
 	if isExposed {
-		rule.From = append(rule.From, networkingv1.NetworkPolicyPeer{
-			NamespaceSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"policy-group.network.openshift.io/ingress": "",
+		rule.From = append(rule.From,
+			networkingv1.NetworkPolicyPeer{
+				NamespaceSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"policy-group.network.openshift.io/ingress": "",
+					},
 				},
 			},
-		})
+			// Legacy label still required on OCP 4.6
+			networkingv1.NetworkPolicyPeer{
+				NamespaceSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"network.openshift.io/policy-group": "ingress",
+					},
+				},
+			},
+		)
 	}
 
 	rule.From = append(rule.From,

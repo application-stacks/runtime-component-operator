@@ -12,6 +12,9 @@ spec:
         - namespaceSelector:
             matchLabels:
               policy-group.network.openshift.io/ingress: ""
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: ingress
         - podSelector:
             matchLabels:
               app.kubernetes.io/part-of: network-policy-rc
