@@ -320,14 +320,17 @@ func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShi
 		},
 	}
 
-	networkPolicyConfig := ba.GetNetworkPolicy()
+	config := ba.GetNetworkPolicy()
 	isExposed := ba.GetExpose() != nil && *ba.GetExpose()
 	var rule networkingv1.NetworkPolicyIngressRule
 
-	if isOpenShift {
-		rule = createOpenShiftNetworkPolicyIngressRule(ba.GetApplicationName(), networkPolicy.Namespace, isExposed, networkPolicyConfig)
+	if config.GetNamespaceLabels() != nil && len(config.GetNamespaceLabels()) == 0 &&
+		config.GetFromLabels() != nil && len(config.GetFromLabels()) == 0 {
+		rule = createAllowAllNetworkPolicyIngressRule()
+	} else if isOpenShift {
+		rule = createOpenShiftNetworkPolicyIngressRule(ba.GetApplicationName(), networkPolicy.Namespace, isExposed, config)
 	} else {
-		rule = createKubernetesNetworkPolicyIngressRule(ba.GetApplicationName(), networkPolicy.Namespace, isExposed, networkPolicyConfig)
+		rule = createKubernetesNetworkPolicyIngressRule(ba.GetApplicationName(), networkPolicy.Namespace, isExposed, config)
 	}
 
 	customizeNetworkPolicyPorts(&rule, ba)
@@ -366,19 +369,23 @@ func createOpenShiftNetworkPolicyIngressRule(appName string, namespace string, i
 }
 
 func createKubernetesNetworkPolicyIngressRule(appName string, namespace string, isExposed bool, config common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyIngressRule {
-	rule := networkingv1.NetworkPolicyIngressRule{}
-
 	if isExposed {
-		rule.From = []networkingv1.NetworkPolicyPeer{{
-			NamespaceSelector: &metav1.LabelSelector{},
-		}}
-		return rule
+		return createAllowAllNetworkPolicyIngressRule()
 	}
 
+	rule := networkingv1.NetworkPolicyIngressRule{}
 	rule.From = []networkingv1.NetworkPolicyPeer{
 		createNetworkPolicyPeer(appName, namespace, config),
 	}
 	return rule
+}
+
+func createAllowAllNetworkPolicyIngressRule() networkingv1.NetworkPolicyIngressRule {
+	return networkingv1.NetworkPolicyIngressRule{
+		From: []networkingv1.NetworkPolicyPeer{{
+			NamespaceSelector: &metav1.LabelSelector{},
+		}},
+	}
 }
 
 func createNetworkPolicyPeer(appName string, namespace string, networkPolicy common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyPeer {
