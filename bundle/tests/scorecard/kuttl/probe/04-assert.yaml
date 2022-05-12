@@ -13,17 +13,37 @@ spec:
   template:
     spec:
       containers:
-      - startupProbe:
-          httpGet:
-            path: /health/started
-            port: 9443
-            scheme: HTTPS
-          periodSeconds: 10
-          timeoutSeconds: 2
-          successThreshold: 1
-          failureThreshold: 20
+        - livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 9443
+              scheme: HTTPS
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 9443
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 5
+          startupProbe:
+            httpGet:
+              path: /health/started
+              port: 9443
+              scheme: HTTPS
+            periodSeconds: 10
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 5
+
 status:
-  observedGeneration: 6
   readyReplicas: 1
   replicas: 1
   updatedReplicas: 1

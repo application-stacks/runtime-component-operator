@@ -18,14 +18,11 @@ spec:
             path: /health/started
             port: 9443
             scheme: HTTPS
-          initialDelaySeconds: 3
           periodSeconds: 10
           timeoutSeconds: 2
           successThreshold: 1
           failureThreshold: 20
-
 status:
-  observedGeneration: 7
   readyReplicas: 1
   replicas: 1
   updatedReplicas: 1

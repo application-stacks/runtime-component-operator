@@ -7,9 +7,8 @@ spec:
   applicationImage: icr.io/appcafe/open-liberty/samples/getting-started
   service:
     port: 9443
-  replicas: 1
   probes:
     startup:
-      initialDelaySeconds: 3
-    readiness:
+      failureThreshold: 20
     liveness:
+    readiness:
