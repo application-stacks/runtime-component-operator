@@ -673,6 +673,12 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		})
 	}
 
+	// This ensures that the pods are updated if the service account is updated
+	saRV := ba.GetStatus().GetReferences()[common.StatusReferenceSAResourceVersion]
+	if saRV != "" {
+		appContainer.Env = append(appContainer.Env, corev1.EnvVar{Name: "SA_RESOURCE_VERSION", Value: saRV})
+	}
+
 	pts.Spec.Containers = append([]corev1.Container{appContainer}, ba.GetSidecarContainers()...)
 
 	if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
@@ -744,14 +750,47 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent)
 	sa.Labels = ba.GetLabels()
 	sa.Annotations = MergeMaps(sa.Annotations, ba.GetAnnotations())
 
-	if ba.GetPullSecret() != nil {
+	psr := ba.GetStatus().GetReferences()[common.StatusReferencePullSecretName]
+	if psr != "" && (ba.GetPullSecret() == nil || *ba.GetPullSecret() != psr) {
+		removePullSecret(sa, psr)
+	}
+
+	if ba.GetPullSecret() == nil {
+		delete(ba.GetStatus().GetReferences(), common.StatusReferencePullSecretName)
+	} else {
+		ba.GetStatus().SetReference(common.StatusReferencePullSecretName, *ba.GetPullSecret())
 		if len(sa.ImagePullSecrets) == 0 {
 			sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
 				Name: *ba.GetPullSecret(),
 			})
 		} else {
-			sa.ImagePullSecrets[0].Name = *ba.GetPullSecret()
+			pullSecretName := *ba.GetPullSecret()
+			found := false
+			for _, obj := range sa.ImagePullSecrets {
+				if obj.Name == pullSecretName {
+					found = true
+					break
+				}
+			}
+			if !found {
+				sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
+					Name: pullSecretName,
+				})
+			}
 		}
+	}
+}
+
+func removePullSecret(sa *corev1.ServiceAccount, pullSecretName string) {
+	index := -1
+	for i, obj := range sa.ImagePullSecrets {
+		if obj.Name == pullSecretName {
+			index = i
+			break
+		}
+	}
+	if index != -1 {
+		sa.ImagePullSecrets = append(sa.ImagePullSecrets[:index], sa.ImagePullSecrets[index+1:]...)
 	}
 }
 
@@ -1327,6 +1366,11 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 			return saErr
 		}
 	}
+
+	// Set a reference in the CR to the service account version. This is done here as
+	// the service account has been retrieved whether it is ours or a user provided one
+	ba.GetStatus().SetReference(common.StatusReferenceSAResourceVersion, sa.ResourceVersion)
+
 	return nil
 }
 

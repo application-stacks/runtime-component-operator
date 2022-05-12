@@ -10,11 +10,10 @@ spec:
     spec:
       containers:
         - livenessProbe:
-            failureThreshold: 3
+            failureThreshold: 5
           readinessProbe:
-            failureThreshold: 10
+            failureThreshold: 5
 status:
-  observedGeneration: 6
   replicas: 1
   readyReplicas: 1
   updatedReplicas: 1

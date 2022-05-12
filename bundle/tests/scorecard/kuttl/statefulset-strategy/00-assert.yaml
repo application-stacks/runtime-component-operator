@@ -10,7 +10,7 @@ spec:
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
-      partition: 2
+      partition: 0
 status:
   replicas: 3
   readyReplicas: 3
