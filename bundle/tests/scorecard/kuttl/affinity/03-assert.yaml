@@ -1,28 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: affinity-rc
-spec:
-  template:
-    spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: kuttlTest
-                    operator: In
-                    values:
-                      - test1
-status:
-  replicas: 1
-  readyReplicas: 1
-  updatedReplicas: 1
-  observedGeneration: 2
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
   name: anti-affinity-rc
 spec:
   template:

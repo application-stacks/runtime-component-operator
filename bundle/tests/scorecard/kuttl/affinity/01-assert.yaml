@@ -18,7 +18,6 @@ status:
   replicas: 1
   readyReplicas: 1
   updatedReplicas: 1
-  observedGeneration: 2
 ---
 apiVersion: apps/v1
 kind: StatefulSet

@@ -3,7 +3,6 @@ kind: Deployment
 metadata:
   name: affinity-rc
 spec:
-  # Add fields here
   template:
     spec:
       affinity:
@@ -18,4 +17,3 @@ spec:
 status:
   replicas: 1
   unavailableReplicas: 1
-  observedGeneration: 1
