@@ -71,6 +71,9 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `service.nodePort` | Node proxies this port into your service. Please note once this port is set to a non-zero value it cannot be reset to zero.
 | `service.annotations` | Annotations to be added to the service.
 | `service.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod. The following keys are valid in the secret: `ca.crt`, `tls.crt`, and `tls.key`.
+| `networkPolicy.disable` | A boolean to toggle the creation of the network policies resources. Defaults to false.
+| `networkPolicy.namespaceLabels` | A set of labels that selects the namespace to allow incoming traffic from. Defaults to the same namespace that the application is deployed to.
+| `networkPolicy.fromLabels` | A set of labels that selects the pod(s) to allow incoming traffic from. Defaults to pod(s) belonging to the same application.
 | `createKnativeService`   | A boolean to toggle the creation of Knative resources and usage of Knative serving.
 | `expose`   | A boolean that toggles the external exposure of this deployment via a Route or a Knative Route resource.
 | `deployment.updateStrategy`   | A field to specify the update strategy of the deployment. For more information, see link:++https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy++[updateStrategy]
@@ -416,7 +419,7 @@ spec:
 
 ==== Limitation
 
-The persisent storage and PersistentVolumeClaim cannot be added or changed once StatefulSet is created.
+The persistent storage and PersistentVolumeClaim cannot be added or changed once StatefulSet is created.
 
 === Service binding
 
@@ -718,11 +721,96 @@ When `expose` is **not** set to `true`, the Knative service is labeled with `ser
 
 To configure secure HTTPS connections for your Knative deployment, see link:++https://knative.dev/docs/serving/using-a-tls-cert/++[Configuring HTTPS with TLS certificates] for more information.
 
+=== Network Policies
+
+Network policies for an application are created by default to isolate incoming traffic. To disable creating network
+policies for an application, set `.spec.networkPolicy.disable` to `true`:
+
+[source,yaml]
+----
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: my-app
+spec:
+  networkPolicy:
+    disable: true
+----
+
+==== Network Policy Prerequisites
+
+OpenShift provides support for network policies by default. Users deploying to other Kubernetes platforms will need to
+ensure that their network plugin supports network policies as described
+link:https://kubernetes.io/docs/concepts/services-networking/network-policies/#prerequisites[here].
+
+==== Default Network Polices
+
+* The default network policy created for applications that are not exposed limits incoming traffic to pods in the same
+namespace that are part of the same application. Traffic is limited to only the ports configured by the service.
+* For exposed applications on OpenShift, the network policy allows incoming traffic from the OpenShift ingress
+controller on the ports configured in the service.
+* For exposed applications on other Kubernetes platforms, incoming traffic is allowed from any pods in any namespace on the
+ports configured in the service.
+* On OpenShift, incoming traffic is also allowed from the OpenShift monitoring stack.
+
+==== Configuring the Network Policy
+
+The network policy can be configured to allow either certain namespaces and/or pods using
+`.spec.networkPolicy.namespaceLabels` and `.spec.networkPolicy.fromLabels`, respectively.
+
+By default, `.spec.networkPolicy.namespaceLabels` is set to the same namespace that the application is deployed to, and
+`.spec.networkPolicy.fromLabels` is set to select pods that belong to the same application specified by
+`.spec.applicationName`.
+
+Example of allowing incoming traffic from pods labeled with `role: frontend` and are in the same namespace:
+
+[source,yaml]
+----
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: my-app
+spec:
+  networkPolicy:
+    fromLabels:
+      role: frontend
+----
+
+Example of allowing incoming traffic from pods belonging to the same application in the `example` namespace:
+
+[source,yaml]
+----
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: my-app
+spec:
+  networkPolicy:
+    namespaceLabels:
+      kubernetes.io/metadata.name: example
+----
+
+Example of allowing incoming traffic from pods labeled with `role: frontend` in the `example` namespace:
+
+[source,yaml]
+----
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: my-app
+spec:
+  networkPolicy:
+    namespaceLabels:
+      kubernetes.io/metadata.name: example
+    fromLabels:
+      role: frontend
+----
+
 === Certificates
 
 Specify your own certificates for the Service and Route using fields `.spec.service.certificateSecretRef` and `.spec.route.certificateSecretRef`.
 
-Example of cerificates specified for the Route:
+Example of certificates specified for the Route:
 
 [source,yaml]
 ----
