@@ -4740,6 +4740,12 @@ spec:
                   storage:
                     description: Defines settings of persisted storage for StatefulSets.
                     properties:
+                      className:
+                        description: A convenient field to request the StorageClassName
+                          of the persisted storage. The name can not be specified
+                          or updated after the storage is created.
+                        pattern: .+
+                        type: string
                       mountPath:
                         description: The directory inside the container where this
                           persisted storage will be bound to.
@@ -4748,11 +4754,6 @@ spec:
                         description: A convenient field to set the size of the persisted
                           storage.
                         pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
-                        type: string
-                      storageClassName:
-                        description: A convenient field to request the StorageClassName
-                          of the persisted storage.
-                        pattern: .+
                         type: string
                       volumeClaimTemplate:
                         description: A YAML object that represents a volumeClaimTemplate

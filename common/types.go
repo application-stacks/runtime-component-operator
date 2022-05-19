@@ -104,7 +104,7 @@ type BaseComponentAutoscaling interface {
 // BaseComponentStorage represents basic PVC configuration
 type BaseComponentStorage interface {
 	GetSize() string
-	GetStorageClassName() string
+	GetClassName() string
 	GetMountPath() string
 	GetVolumeClaimTemplate() *corev1.PersistentVolumeClaim
 }

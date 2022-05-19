@@ -15,7 +15,7 @@ spec:
     storage:
       size: "10Mi"
       mountPath: "/mnt/data"
-      storageClassName: rook-ceph-block
+      className: rook-ceph-block
       volumeClaimTemplate:
         metadata:
           name: pvc

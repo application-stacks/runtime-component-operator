@@ -720,8 +720,8 @@ func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseCompone
 					},
 				}
 				pvc.Annotations = MergeMaps(pvc.Annotations, ba.GetAnnotations())
-				if ss.GetStorage().GetStorageClassName() != "" {
-					storageClassName := ss.GetStorage().GetStorageClassName()
+				if ss.GetStorage().GetClassName() != "" {
+					storageClassName := ss.GetStorage().GetClassName()
 					pvc.Spec.StorageClassName = &storageClassName
 				}
 			}

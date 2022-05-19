@@ -38,7 +38,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: applicationstacks/operator:daily
-    createdAt: "2022-05-19T13:36:26Z"
+    createdAt: "2022-05-19T16:51:40Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     operators.operatorframework.io/builder: operator-sdk-v1.6.1+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
@@ -257,9 +257,9 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:text
       - displayName: Network Policy
         path: networkPolicy
-      - description: A convenient field to request the StorageClassName of the persisted storage.
+      - description: A convenient field to request the StorageClassName of the persisted storage. The name can not be specified or updated after the storage is created.
         displayName: Storage Class Name
-        path: statefulSet.storage.storageClassName
+        path: statefulSet.storage.className
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: The directory inside the container where this persisted storage will be bound to.
