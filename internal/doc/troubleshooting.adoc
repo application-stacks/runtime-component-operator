@@ -1,0 +1,110 @@
+= Troubleshooting
+
+Follow these troubleshooting methods to check the Runtime Component Operator's status.
+
+== Controller Manager Status
+
+* Check if the operator's controller manager pod is running successfully:
+
+[source,sh]
+----
+  $ oc get pods -l app.kubernetes.io/name=runtime-component-operator
+
+  NAME                                      READY   STATUS    RESTARTS   AGE
+  rco-controller-manager-854b5d79f8-svdqr   1/1     Running   0          32m
+----
+
+* Check the state of the controller manager's container:
+
+[source,sh]
+----
+  $ oc describe pod rco-controller-manager-854b5d79f8-svdqr
+----
+
+* Check the controller manager logs:
+
+[source,sh]
+----
+  $ oc logs rco-controller-manager-854b5d79f8-svdqr
+----
+
+If the controller manager is behaving correctly, check the status of the `RuntimeComponent` Custom Resource (CR) instance.
+
+== RuntimeComponent Status Conditions
+
+For versions *0.8.2 and above*, status of deployed resources (Deployment/StatefulSet & Knative Service) and overall application status are reflected in the CR.
+
+The status condition types are `Reconciled`, `ResourcesReady` and `Ready`:
+
+* `Reconciled` condition reflects the status of reconciliation process. It shows if the cluster state matches the declared state in the CR and related errors in the process.
+* `ResourcesReady` condition reflects the status of deployed resources. It shows if the resources are successfully created and if running replicas match the desired replicas. When auto-scaling is in use, it will show if running replicas fall within the desired range: _[minReplicas, maxReplicas]_.
+* `Ready` condition reflects the overall application status showing if the application is reconciled and the resources are ready.
+
+=== Check Custom Resource (CR) Instance Status
+
+* Check the CR status conditions through CLI:
+
+[source,sh]
+----
+  $ oc get runtimecomponent my-app
+
+  NAME     IMAGE                        EXPOSED   RECONCILED   RESOURCESREADY   READY   AGE
+  my-app   quay.io/my-repo/my-app:1.0             True         True             True    14m
+----
+
+* If you want more details for the conditions, run with `-o wide` option:
+
+[source,sh]
+----
+  $ oc get runtimecomponent my-app -o wide
+
+  NAME    IMAGE                         EXPOSED   RECONCILED    RECONCILEDREASON    RECONCILEDMESSAGE   RESOURCESREADY    RESOURCESREADYREASON        RESOURCESREADYMESSAGE             READY   READYREASON   READYMESSAGE                                          AGE
+  my-app  quay.io/my-repo/my-app:1.0              True                                                  True              MinimumReplicasAvailable    Deployment replicas ready: 4/4    True                  Application is reconciled and resources are ready.    14m
+----
+
+* Check the CR and ensure that the effective CR values are what you want:
+
+[source,sh]
+----
+  $ oc get runtimecomponent my-app -o yaml
+----
+
+* Check the `status` section of the CR. If the application is successfully reconciled and all resources are ready, the output should look like the following:
+
+[source,sh]
+----
+  $ oc get runtimecomponent my-app -o yaml
+
+  apiVersion: app.stacks/v1beta1
+  kind: RuntimeComponent
+  ...
+  status:
+    conditions:
+      - lastTransitionTime: '2022-05-19T19:53:51Z'
+        status: 'True'
+        type: Reconciled
+      - lastTransitionTime: '2022-05-19T19:54:26Z'
+        message: 'Deployment replicas ready: 4/4'
+        reason: MinimumReplicasAvailable
+        status: 'True'
+        type: ResourcesReady
+      - lastTransitionTime: '2022-05-19T19:54:26Z'
+        message: Application is reconciled and resources are ready.
+        status: 'True'
+        type: Ready
+----
+
+* Check the CR events:
+
+[source,sh]
+----
+  $ oc describe runtimecomponent my-app
+----
+
+== Known Issues
+
+Operator versions < 0.5.0 might crash on startup when optional CRDs API group (eg. serving.knative.dev/v1alpha1) is
+available, but actual CRD (Knative Service) is not present.
+
+Version 0.5.0 of operator can crash when creating Ingress with `spec.expose` is set to `true` and `spec.route` is not provided or set (nil). 
+Possible fixes are to set `spec.route` to `{}` or disable Ingress if not used by setting `spec.expose` to `false`

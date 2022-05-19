@@ -114,6 +114,7 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `affinity.podAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podaffinity-v1-core++[PodAffinity].
 | `affinity.podAntiAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podantiaffinity-v1-core++[PodAntiAffinity].
 | `affinity.architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference.
+| `securityContext` | Security context to control privilege and permission settings for a container. See link:++https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container++[Security Context for a Container].
 
 |===
 
@@ -340,6 +341,46 @@ spec:
     labels:
       app-monitoring: 'true'
 ----
+
+=== Security Context
+
+A security context is used to control privilege and permission settings for a Pod or a Container. By default, the Runtime Component operator sets several security context parameters for containers as shown below.
+
+[source,yaml]
+----
+spec:
+  containers:
+    - name: app
+      securityContext:
+        capabilities:
+          drop:
+            - ALL
+        privileged: false
+        runAsNonRoot: true
+        readOnlyRootFilesystem: false
+        allowPrivilegeEscalation: false
+----
+
+The security context parameters are customizable under `.spec.securityContext` field in the `RuntimeComponent` CR. For example, you can override the default values or set additional parameters:
+
+[source,yaml]
+----
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: my-app
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  securityContext:
+    readOnlyRootFilesystem: true
+    runAsUser: 1001
+    seLinuxOptions:
+      level: "s0:c123,c456"
+----
+
+For more information on security context parameters, see link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#securitycontext-v1-core++[SecurityContext].
+
+NOTE: If your Kubernetes cluster does not generate a user ID and `securityContext.runAsUser` is not specified, the user ID defaults to the value in the image metadata. If the image does not have a user ID specified either, you will have to assign a user ID through  `securityContext.runAsUser` to meet `securityContext.runAsNonRoot` requirement.
 
 === Persistence
 
