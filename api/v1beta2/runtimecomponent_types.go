@@ -291,12 +291,17 @@ type RuntimeComponentStorage struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=25,type=spec,displayName="Storage Size",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Size string `json:"size,omitempty"`
 
+	// A convenient field to request the StorageClassName of the persisted storage.
+	// +kubebuilder:validation:Pattern=.+
+	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Storage Class Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	StorageClassName string `json:"storageClassName,omitempty"`
+
 	// The directory inside the container where this persisted storage will be bound to.
-	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Storage Mount Path",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="Storage Mount Path",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	MountPath string `json:"mountPath,omitempty"`
 
 	// A YAML object that represents a volumeClaimTemplate component of a StatefulSet.
-	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="Storage Volume Claim Template",xDescriptors="urn:alm:descriptor:com.tectonic.ui:PersistentVolumeClaim"
+	// +operator-sdk:csv:customresourcedefinitions:order=28,type=spec,displayName="Storage Volume Claim Template",xDescriptors="urn:alm:descriptor:com.tectonic.ui:PersistentVolumeClaim"
 	VolumeClaimTemplate *corev1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }
 
@@ -691,6 +696,11 @@ func (a *RuntimeComponentAutoScaling) GetTargetCPUUtilizationPercentage() *int32
 // GetSize returns persistent volume size
 func (s *RuntimeComponentStorage) GetSize() string {
 	return s.Size
+}
+
+// GetStorageClassName returns persistent volume StorageClassName
+func (s *RuntimeComponentStorage) GetStorageClassName() string {
+	return s.StorageClassName
 }
 
 // GetMountPath returns mount path for persistent volume

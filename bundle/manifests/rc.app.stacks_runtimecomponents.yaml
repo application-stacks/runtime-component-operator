@@ -3123,6 +3123,10 @@ spec:
                         description: A convenient field to set the size of the persisted storage.
                         pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
                         type: string
+                      storageClassName:
+                        description: A convenient field to request the StorageClassName of the persisted storage.
+                        pattern: .+
+                        type: string
                       volumeClaimTemplate:
                         description: A YAML object that represents a volumeClaimTemplate component of a StatefulSet.
                         properties:

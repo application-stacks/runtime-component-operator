@@ -224,6 +224,11 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:text
       - displayName: Network Policy
         path: networkPolicy
+      - description: A convenient field to request the StorageClassName of the persisted storage.
+        displayName: Storage Class Name
+        path: statefulSet.storage.storageClassName
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: The directory inside the container where this persisted storage will be bound to.
         displayName: Storage Mount Path
         path: statefulSet.storage.mountPath

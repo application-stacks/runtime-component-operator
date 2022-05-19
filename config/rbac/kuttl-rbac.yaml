@@ -25,6 +25,7 @@ rules:
   resources:
   - secrets
   - serviceaccounts
+  - persistentvolumeclaims
   verbs:
   - get
   - list
