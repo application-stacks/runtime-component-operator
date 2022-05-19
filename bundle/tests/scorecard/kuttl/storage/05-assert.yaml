@@ -20,8 +20,8 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Mi
-  storageClassName: rook-ceph-block
+      storage: 15Mi
+  storageClassName: rook-cephfs
   volumeMode: Filesystem
 status:
   phase: Bound
