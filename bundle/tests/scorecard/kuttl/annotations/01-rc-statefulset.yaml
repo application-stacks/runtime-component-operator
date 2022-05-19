@@ -6,8 +6,6 @@ metadata:
     foo1: bar1
 spec:
   # Add fields here
-  applicationImage: 'k8s.gcr.io/pause:2.0'
-  replicas: 1
   statefulSet:
     annotations:
       bar2: foo2
