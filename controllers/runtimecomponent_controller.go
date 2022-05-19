@@ -201,8 +201,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	if instance.Spec.ServiceAccountName == nil || *instance.Spec.ServiceAccountName == "" {
 		serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(serviceAccount, instance, func() error {
-			appstacksutils.CustomizeServiceAccount(serviceAccount, instance)
-			return nil
+			return appstacksutils.CustomizeServiceAccount(serviceAccount, instance, r.GetClient())
 		})
 		if err != nil {
 			reqLogger.Error(err, "Failed to reconcile ServiceAccount")

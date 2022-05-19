@@ -14,8 +14,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	cruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
+	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
@@ -80,6 +82,24 @@ var (
 		corev1.ResourceCPU: {},
 	}
 	resourceContraints = &corev1.ResourceRequirements{Limits: resLimits}
+	secret             = &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "mysecret",
+			Namespace: namespace,
+		},
+		Type: "Opaque",
+		Data: map[string][]byte{"key": []byte("value")},
+	}
+	secret2 = &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-new-secret",
+			Namespace: namespace,
+		},
+		Type: "Opaque",
+		Data: map[string][]byte{"key": []byte("value")},
+	}
+	objs = []cruntime.Object{secret, secret2}
+	fcl  = fakeclient.NewFakeClient(objs...)
 )
 
 type Test struct {
@@ -454,13 +474,13 @@ func TestCustomizeServiceAccount(t *testing.T) {
 
 	spec := appstacksv1beta2.RuntimeComponentSpec{PullSecret: &pullSecret}
 	sa, runtime := &corev1.ServiceAccount{}, createRuntimeComponent(name, namespace, spec)
-	CustomizeServiceAccount(sa, runtime)
+	CustomizeServiceAccount(sa, runtime, fcl)
 	emptySAIPS := sa.ImagePullSecrets[0].Name
 
 	newSecret := "my-new-secret"
 	spec = appstacksv1beta2.RuntimeComponentSpec{PullSecret: &newSecret}
 	runtime = createRuntimeComponent(name, namespace, spec)
-	CustomizeServiceAccount(sa, runtime)
+	CustomizeServiceAccount(sa, runtime, fcl)
 
 	testCSA := []Test{
 		{"ServiceAccount image pull secrets is empty", pullSecret, emptySAIPS},
