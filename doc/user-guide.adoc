@@ -110,7 +110,6 @@ Each `RuntimeComponent` CR must at least specify the `applicationImage` paramete
 | `volumes` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/storage/volumes++[pod volume].
 | `volumeMounts` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/storage/volumes/++[pod volumeMount].
 | `storage.size` | A convenient field to set the size of the persisted storage. Can be overridden by the `storage.volumeClaimTemplate` property.
-| `storage.className`| A convenient field to set the storage class of the persisted storage. Can be overridden by the `storage.volumeClaimTemplate` property.
 | `storage.mountPath` | The directory inside the container where this persisted storage will be bound to.
 | `storage.volumeClaimTemplate` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components++[volumeClaimTemplate] component of a `StatefulSet`.
 | `monitoring.labels` | Labels to set on link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#servicemonitor++[ServiceMonitor].
@@ -361,7 +360,7 @@ Users also can provide mount points for their application. There are 2 ways to e
 
 ==== Basic storage
 
-With the `RuntimeComponent` CR definition below the operator will create `PersistentVolumeClaim` called `pvc` with the size of `1Gi`, `ReadWriteOnce` access mode and use the cluster's default storage class.
+With the `RuntimeComponent` CR definition below the operator will create `PersistentVolumeClaim` called `pvc` with the size of `1Gi` and `ReadWriteOnce` access mode.
 
 The operator will also create a volume mount for the `StatefulSet` mounting to `/data` folder. You can use `volumeMounts` field instead of `storage.mountPath` if you require to persist more then one folder.
 

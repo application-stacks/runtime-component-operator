@@ -4741,7 +4741,7 @@ spec:
                     description: Defines settings of persisted storage for StatefulSets.
                     properties:
                       className:
-                        description: A convenient field to request the StorageClassName
+                        description: A convenient field to request the storage class
                           of the persisted storage. The name can not be specified
                           or updated after the storage is created.
                         pattern: .+
