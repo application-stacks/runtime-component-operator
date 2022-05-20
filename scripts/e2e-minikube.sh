@@ -1,11 +1,15 @@
 #!/bin/bash
 
 readonly usage="Usage: e2e-minikube.sh --test-tag <test-id>"
-readonly SERVICE_ACCOUNT="travis-tests"
+
+readonly LOCAL_REGISTRY="localhost:5000"
+readonly BUILD_IMAGE="runtime-operator:latest"
+readonly DAILY_IMAGE="applicationstacks\/operator:daily"
 
 readonly RUNASUSER="\n  securityContext:\n    runAsUser: 1001"
 readonly APPIMAGE='applicationImage:\s'
-readonly IMAGES=('k8s.gcr.io\/pause:2.0' 'navidsh\/demo-day' 'icr.io\/appcafe\/open-liberty\/samples\/getting-started')
+readonly IMAGES=('k8s.gcr.io\/pause:2.0' 'navidsh\/demo-day')
+
 
 # setup_env: Download kubectl cli and Minikube, start Minikube, and create a test project
 setup_env() {
@@ -26,11 +30,20 @@ setup_env() {
     kubectl label node "minikube" kuttlTest=test1
 }
 
+build_push() {
+    eval "$(minikube docker-env --profile=minikube)" && export DOCKER_CLI='docker'
+    ## Build Docker image and push to local registry
+    docker build -t "${LOCAL_REGISTRY}/${BUILD_IMAGE}" .
+    docker push "${LOCAL_REGISTRY}/${BUILD_IMAGE}"
+}
+
 # install_rco: Kustomize and install Runtime-Component-Operator
 install_rco() {
     echo "****** Installing RCO in namespace: ${TEST_NAMESPACE}"
     kubectl apply -f bundle/manifests/rc.app.stacks_runtimecomponents.yaml
     kubectl apply -f bundle/manifests/rc.app.stacks_runtimeoperations.yaml
+
+    sed -i "s/image: ${DAILY_IMAGE}/image: ${LOCAL_REGISTRY}\/${BUILD_IMAGE}/" deploy/kustomize/daily/base/runtime-component-operator.yaml
     kubectl apply -f deploy/kustomize/daily/base/runtime-component-operator.yaml -n ${TEST_NAMESPACE}
 }
 
@@ -97,7 +110,7 @@ cleanup_test() {
     mv bundle/tests/scorecard/minikube-kuttl/route-certificate bundle/tests/scorecard/kuttl/ 
     mv bundle/tests/scorecard/minikube-kuttl/stream bundle/tests/scorecard/kuttl/
 
-    git checkout -- bundle/tests/scorecard/
+    git restore bundle/tests/scorecard deploy
 }
 
 main() {
@@ -111,6 +124,7 @@ main() {
 
     echo "****** Setting up test environment..."
     setup_env
+    build_push
     install_rco
     install_tools
 

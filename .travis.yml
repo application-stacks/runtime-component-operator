@@ -18,7 +18,7 @@ stages:
   - name: e2e-test
     if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
   - name: minikube-e2e-test
-    if: (branch = main OR tag =~ ^v) AND fork = false AND type != pull_request AND type != cron
+    if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
   - name: build
     if: (branch = main OR tag =~ ^v) AND fork = false AND type != pull_request AND type != cron
   - name: build-manifest
@@ -41,6 +41,11 @@ jobs:
       os: linux
       arch: amd64
       script: travis_wait 45 make setup test-e2e || travis_terminate 1
+    - name: Build image on amd64 and test on Minikube
+      stage: minikube-e2e-test
+      os: linux
+      arch: amd64
+      script: travis_wait 45 make setup minikube-test-e2e || travis_terminate 1
     - name: Build image on ppc64le
       stage: build
       os: linux
@@ -71,11 +76,6 @@ jobs:
       os: linux
       arch: amd64
       script: travis_wait 45 make setup test-e2e RELEASE_TARGET="releases" || travis_terminate 1
-    - name: Minikube test on amd64
-      stage: minikube-e2e-test
-      os: linux
-      arch: amd64
-      script: travis_wait 45 make setup minikube-test-e2e || travis_terminate 1
     - name: Build releases on ppc64le
       stage: rebuild-releases
       os: linux
