@@ -750,25 +750,37 @@ func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseCompone
 }
 
 // CustomizeServiceAccount ...
-func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent) {
+func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent, client client.Client) error {
 	sa.Labels = ba.GetLabels()
 	sa.Annotations = MergeMaps(sa.Annotations, ba.GetAnnotations())
 
 	psr := ba.GetStatus().GetReferences()[common.StatusReferencePullSecretName]
 	if psr != "" && (ba.GetPullSecret() == nil || *ba.GetPullSecret() != psr) {
+		// There is a reference to a pull secret but it doesn't match the one
+		// from the CR (which is empty or different)
+		// so delete the refered pull secret from the service account
 		removePullSecret(sa, psr)
 	}
 
 	if ba.GetPullSecret() == nil {
+		// There is no pull secret so delete the status reference
+		// This has to happen after the reference has been used to remove the pull
+		// secret from the service account
 		delete(ba.GetStatus().GetReferences(), common.StatusReferencePullSecretName)
 	} else {
-		ba.GetStatus().SetReference(common.StatusReferencePullSecretName, *ba.GetPullSecret())
+		// Add the pull secret from the CR to the service account. First check that it is valid
+		ps := *ba.GetPullSecret()
+		err := client.Get(context.TODO(), types.NamespacedName{Name: ps, Namespace: ba.(metav1.Object).GetNamespace()}, &corev1.Secret{})
+		if err != nil {
+			return err
+		}
+		ba.GetStatus().SetReference(common.StatusReferencePullSecretName, ps)
 		if len(sa.ImagePullSecrets) == 0 {
 			sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
-				Name: *ba.GetPullSecret(),
+				Name: ps,
 			})
 		} else {
-			pullSecretName := *ba.GetPullSecret()
+			pullSecretName := ps
 			found := false
 			for _, obj := range sa.ImagePullSecrets {
 				if obj.Name == pullSecretName {
@@ -783,6 +795,7 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent)
 			}
 		}
 	}
+	return nil
 }
 
 func removePullSecret(sa *corev1.ServiceAccount, pullSecretName string) {
