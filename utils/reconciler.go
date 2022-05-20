@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	networkingv1 "k8s.io/api/networking/v1"
 	"time"
 
 	"github.com/application-stacks/runtime-component-operator/common"
@@ -472,4 +473,39 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 		return false, nil
 	}
 	return true, nil
+}
+
+func (r *ReconcilerBase) GetIngressInfo(ba common.BaseComponent) (host string, path string, protocol string) {
+	mObj := ba.(metav1.Object)
+	protocol = "http"
+	if ok, err := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route"); err != nil {
+		r.ManageError(err, common.StatusConditionTypeReconciled, ba)
+	} else if ok {
+		route := &routev1.Route{}
+		r.GetClient().Get(context.Background(), types.NamespacedName{Name: mObj.GetName(), Namespace: mObj.GetNamespace()}, route)
+		host = route.Spec.Host
+		path = route.Spec.Path
+		if route.Spec.TLS != nil {
+			protocol = "https"
+		}
+		return host, path, protocol
+	} else {
+		if ok, err := r.IsGroupVersionSupported(networkingv1.SchemeGroupVersion.String(), "Ingress"); err != nil {
+			r.ManageError(err, common.StatusConditionTypeReconciled, ba)
+		} else if ok {
+			ingress := &networkingv1.Ingress{}
+			r.GetClient().Get(context.Background(), types.NamespacedName{Name: mObj.GetName(), Namespace: mObj.GetNamespace()}, ingress)
+			if len(ingress.Spec.Rules) > 0 && ingress.Spec.Rules[0].Host != "" {
+				host = ingress.Spec.Rules[0].Host
+				if len(ingress.Spec.TLS) > 0 && len(ingress.Spec.TLS[0].Hosts) > 0 && ingress.Spec.TLS[0].Hosts[0] != "" {
+					protocol = "https"
+				}
+				if ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths != nil && len(ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths) != 0 {
+					path = ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Path
+				}
+				return host, path, protocol
+			}
+		}
+	}
+	return host, path, protocol
 }
