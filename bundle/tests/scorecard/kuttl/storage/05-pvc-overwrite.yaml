@@ -1,0 +1,26 @@
+# Check that if voulmeClaimTemplate exists it overrides storage.size and storage.className
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: storage-rc
+spec:
+  # Add fields here
+  applicationImage: k8s.gcr.io/pause:2.0
+  replicas: 1
+  volumeMounts:
+    - name: pvc
+      mountPath: /data
+  statefulSet:
+    storage:
+      size: "10Mi"
+      mountPath: "/mnt/data"
+      className: managed-nfs-storage
+      volumeClaimTemplate:
+        metadata:
+          name: pvc
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 15Mi
+          storageClassName: rook-ceph

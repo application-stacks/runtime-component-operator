@@ -1,0 +1,15 @@
+# With some storage.className configured, the operator
+# should create a PVC with the configured storageClassName
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: storage-rc
+spec:
+  # Add fields here
+  applicationImage: k8s.gcr.io/pause:2.0
+  replicas: 1
+  statefulSet:
+    storage:
+      size: "10Mi"
+      mountPath: "/mnt/data"
+      className: rook-ceph

@@ -1,0 +1,8 @@
+# Persistent Volume Claims do not get deleted when the statefulset get deleted so manually delete it
+# to pass the next test stage
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+delete:
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  name: pvc-storage-rc-0

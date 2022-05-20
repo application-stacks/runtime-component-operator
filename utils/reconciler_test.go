@@ -76,7 +76,7 @@ func TestCreateOrUpdate(t *testing.T) {
 	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
 	err := r.CreateOrUpdate(serviceAccount, runtimecomponent, func() error {
-		CustomizeServiceAccount(serviceAccount, runtimecomponent)
+		CustomizeServiceAccount(serviceAccount, runtimecomponent, r.GetClient())
 		return nil
 	})
 
