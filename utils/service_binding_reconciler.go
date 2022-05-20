@@ -7,9 +7,7 @@ import (
 	"strings"
 
 	"github.com/application-stacks/runtime-component-operator/common"
-	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
-	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -142,37 +140,10 @@ func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *corev1.Secret, ba co
 	}
 
 	if _, found = secretData["ingress-uri"]; !found && ba.GetExpose() != nil && *ba.GetExpose() {
-		if ok, err := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route"); err != nil {
-			r.ManageError(err, common.StatusConditionTypeReconciled, ba)
-		} else if ok {
-			route := &routev1.Route{}
-			r.GetClient().Get(context.Background(), types.NamespacedName{Name: mObj.GetName(), Namespace: mObj.GetNamespace()}, route)
-			routeHost := route.Spec.Host
-			routePath := route.Spec.Path
-			if route.Spec.TLS != nil {
-				secretData["ingress-uri"] = []byte(fmt.Sprintf("%s://%s%s%s", "https", routeHost, routePath, string(basePath)))
 
-			} else {
-				secretData["ingress-uri"] = []byte(fmt.Sprintf("%s://%s%s%s", "http", routeHost, routePath, string(basePath)))
-			}
-		} else {
-			if ok, err := r.IsGroupVersionSupported(networkingv1.SchemeGroupVersion.String(), "Ingress"); err != nil {
-				r.ManageError(err, common.StatusConditionTypeReconciled, ba)
-			} else if ok {
-				ingress := &networkingv1.Ingress{}
-				r.GetClient().Get(context.Background(), types.NamespacedName{Name: mObj.GetName(), Namespace: mObj.GetNamespace()}, ingress)
-				if len(ingress.Spec.Rules) > 0 && ingress.Spec.Rules[0].Host != "" {
-					host := ingress.Spec.Rules[0].Host
-					if len(ingress.Spec.TLS) > 0 && len(ingress.Spec.TLS[0].Hosts) > 0 && ingress.Spec.TLS[0].Hosts[0] != "" {
-						secretData["ingress-uri"] = []byte(fmt.Sprintf("%s://%s%s", "https", host, string(basePath)))
+		host, path, protocol := r.GetIngressInfo(ba)
+		secretData["ingress-uri"] = []byte(fmt.Sprintf("%s://%s%s%s", protocol, host, path, string(basePath)))
 
-					} else {
-						secretData["ingress-uri"] = []byte(fmt.Sprintf("%s://%s%s", "http", host, string(basePath)))
-
-					}
-				}
-			}
-		}
 	}
 	secret.Data = secretData
 }

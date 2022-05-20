@@ -1156,9 +1156,9 @@ func (s *RuntimeComponentStatus) NewStatusEndpoint(endpointName string) common.S
 
 // GetStatusEndpoint returns endpoint information with endpoint name
 func (s *RuntimeComponentStatus) GetStatusEndpoint(endpointName string) common.StatusEndpoint {
-	for _, ep := range s.Endpoints {
-		if ep.GetEndpointName() == endpointName {
-			return &ep
+	for i := range s.Endpoints {
+		if s.Endpoints[i].GetEndpointName() == endpointName {
+			return &s.Endpoints[i]
 		}
 	}
 	return nil
@@ -1168,9 +1168,9 @@ func (s *RuntimeComponentStatus) GetStatusEndpoint(endpointName string) common.S
 func (s *RuntimeComponentStatus) SetStatusEndpoint(c common.StatusEndpoint) {
 	endpoint := &StatusEndpoint{}
 	found := false
-	for _, ep := range s.Endpoints {
-		if ep.GetEndpointName() == c.GetEndpointName() {
-			endpoint = &ep
+	for i := range s.Endpoints {
+		if s.Endpoints[i].GetEndpointName() == c.GetEndpointName() {
+			endpoint = &s.Endpoints[i]
 			found = true
 			break
 		}

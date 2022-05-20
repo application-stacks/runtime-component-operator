@@ -18,14 +18,12 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/application-stacks/runtime-component-operator/common"
-	routev1 "github.com/openshift/api/route/v1"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/types"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -207,42 +205,13 @@ func (r *ReconcilerBase) ReportExternalEndpointStatus(ba common.BaseComponent) {
 		return
 	}
 
-	obj := ba.(client.Object)
-	namespacedName := types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}
-	host, path := "", ""
-
-	if ok, _ := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route"); ok {
-		// Check if route exists and get host + path
-		route := &routev1.Route{}
-		if err := r.GetClient().Get(context.TODO(), namespacedName, route); err != nil {
-			log.Error(err, "Route resource not found")
-			return
-		}
-		host = route.Spec.Host
-		path = route.Spec.Path
-	} else {
-		if ok, _ := r.IsGroupVersionSupported(networkingv1.SchemeGroupVersion.String(), "Ingress"); ok {
-			// Check if ingress exists and get host + path
-			ingress := &networkingv1.Ingress{}
-			if err := r.GetClient().Get(context.TODO(), namespacedName, ingress); err != nil {
-				log.Error(err, "Ingress resource not found")
-				return
-			}
-
-			if ingress.Spec.Rules != nil && len(ingress.Spec.Rules) != 0 {
-				host = ingress.Spec.Rules[0].Host
-				if ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths != nil && len(ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths) != 0 {
-					path = ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Path
-				}
-			}
-		}
-	}
-
+	host, path, protocol := r.GetIngressInfo(ba)
 	// If route/ingress host is empty, host is set to wildcard
 	if host == "" {
 		host = "*"
 	}
-	endpoint := host + path
+
+	endpoint := fmt.Sprintf("%s://%s%s", protocol, host, path)
 
 	oldEndpoint := s.GetStatusEndpoint(name)
 	newEndpoint := s.NewStatusEndpoint(name)
