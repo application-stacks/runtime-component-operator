@@ -1,0 +1,10 @@
+# Clean up the Persistent Volume Claim after tests end
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+delete:
+- apiVersion: rc.app.stacks/v1beta2
+  kind: RuntimeComponent
+  name: storage-rc
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  name: pvc-storage-rc-0

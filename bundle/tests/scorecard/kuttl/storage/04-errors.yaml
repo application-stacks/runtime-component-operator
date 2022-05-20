@@ -1,0 +1,16 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: storage-rc
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc-storage-rc-0
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Mi
+  volumeMode: Filesystem

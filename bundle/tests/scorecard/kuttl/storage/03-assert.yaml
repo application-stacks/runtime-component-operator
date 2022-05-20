@@ -1,0 +1,29 @@
+# The RCO travis test cluster only has 1 usable storage class so the test just checks
+# that the statefulSet.storage.* configs are correctly set
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 60
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: storage-rc
+status:
+  replicas: 1
+#  readyReplicas: 1
+#  updatedReplicas: 1
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc-storage-rc-0
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Mi
+  storageClassName: rook-ceph
+  volumeMode: Filesystem
+status:
+  phase: Pending

@@ -83,6 +83,7 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `statefulSet.updateStrategy.type`   | The type of update strategy of the StatefulSet. The type can be set to `RollingUpdate` or `OnDelete`, where `RollingUpdate` is the default update strategy.
 | `statefulSet.annotations`   | Annotations to be added only to the StatefulSet and resources owned by the StatefulSet.
 | `statefulSet.storage.size` | A convenient field to set the size of the persisted storage. Can be overridden by the `storage.volumeClaimTemplate` property.
+| `storage.className`| A convenient field to set the storage class of the persisted storage. Can be overridden by the `storage.volumeClaimTemplate` property.
 | `statefulSet.storage.mountPath` | The directory inside the container where this persisted storage will be bound to.
 | `statefulSet.storage.volumeClaimTemplate` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components++[volumeClaimTemplate] component of a `StatefulSet`.
 | `replicas` | The static number of desired replica pods that run simultaneously.
@@ -364,7 +365,7 @@ spec:
 
 ==== Basic storage
 
-With the `RuntimeComponent` CR definition below the operator will create `PersistentVolumeClaim` called `pvc` with the size of `1Gi` and `ReadWriteOnce` access mode.
+With the `RuntimeComponent` CR definition below the operator will create `PersistentVolumeClaim` called `pvc` with the size of `1Gi`, `ReadWriteOnce` access mode and use the cluster's default storage class.
 
 The operator will also create a volume mount for the `StatefulSet` mounting to `/data` folder. You can use `volumeMounts` field instead of `statefulSet.storage.mountPath` if you require to persist more then one folder.
 
