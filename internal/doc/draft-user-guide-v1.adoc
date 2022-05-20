@@ -114,7 +114,7 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `affinity.podAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podaffinity-v1-core++[PodAffinity].
 | `affinity.podAntiAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podantiaffinity-v1-core++[PodAntiAffinity].
 | `affinity.architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference.
-| `securityContext` | Security context to control privilege and permission settings for a container. See link:++https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container++[Security Context for a Container].
+| `securityContext` | Security context to control privilege and permission settings for application container. See link:++https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container++[Security Context for a Container].
 
 |===
 
@@ -344,7 +344,7 @@ spec:
 
 === Security Context
 
-A security context is used to control privilege and permission settings for a Pod or a Container. By default, the Runtime Component operator sets several security context parameters for containers as shown below.
+A security context is used to control privilege and permission settings for a Pod or a Container. By default, the Runtime Component operator sets several security context parameters for application container as shown below.
 
 [source,yaml]
 ----

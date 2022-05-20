@@ -52,17 +52,17 @@ The following example command uses the Runtime Component Operator pod name.
 
 == Troubleshooting Custom Resources (CR)
 
-If the operator is running as wanted, check the status of the `RuntimeComponent` CR instance.
+If the operator is running as expected, check the status of the `RuntimeComponent` CR instance.
 
 === Status Conditions
 
 For versions *0.8.2 and above*, the status conditions types `Reconciled`, `ResourcesReady` and `Ready` reflect the current status of `RuntimeComponent` instance in the CR.
 
-* `Reconciled` will be set `true` if the cluster state matches the declared state in the CR. When it is `false`, `message` will provide what error is encountered during the reconciliation process.
-* `ResourcesReady` will be set `true` if running replicas match the desired replicas or fall within the desired range: _[minReplicas, maxReplicas]_ when auto-scaling is in use. `message` will show the number of running replicas.
+* `Reconciled` will be set to `true` if the cluster state matches the declared state in the CR. When it is `false`, `message` will provide what error is encountered during the reconciliation process.
+* `ResourcesReady` will be set to `true` if running replicas match the desired replicas or fall within the desired range: _[minReplicas, maxReplicas]_ when auto-scaling is in use. `message` will show the number of running replicas.
   ** Reasons: `MinimumReplicasAvailable`, `MinimumReplicasUnavailable`, `ReplicaSetUpdating`, `ResourcesNotReady`. 
   ** For _Knative Services_, the condition will be set `true` if the service is successfully created.
-* `Ready` will be set `true` if the application is reconciled and the resources are ready.
+* `Ready` will be set to `true` if the application is reconciled and the resources are ready.
 
 === Check CR Instance Status
 
