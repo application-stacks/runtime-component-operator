@@ -25,6 +25,7 @@ rules:
   resources:
   - secrets
   - serviceaccounts
+  - persistentvolumeclaims
   verbs:
   - get
   - list
@@ -48,6 +49,10 @@ rules:
   - statefulsets
   verbs:
   - get
+  - list
+  - create
+  - patch
+  - delete
 - apiGroups:
   - autoscaling
   resources:
@@ -95,18 +100,28 @@ rules:
   - patch
   - delete
 - apiGroups:
-    - route.openshift.io
+  - route.openshift.io
   resources:
-    - routes
+  - routes
   verbs:
-    - get
-    - list
-    - delete
+  - get
+  - list
+  - delete
 - apiGroups:
-    - extensions
+  - networking.k8s.io
   resources:
-    - ingresses
+  - networkpolicies
   verbs:
-    - get
-    - list
-    - delete
+  - get
+  - list
+  - create
+  - patch
+  - delete
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - delete

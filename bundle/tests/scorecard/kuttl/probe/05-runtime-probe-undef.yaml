@@ -4,7 +4,6 @@ metadata:
   name: probes-rc
 spec:
   # Add fields here
-  applicationImage: icr.io/appcafe/open-liberty/samples/getting-started
   service:
     port: 9443
   probes:

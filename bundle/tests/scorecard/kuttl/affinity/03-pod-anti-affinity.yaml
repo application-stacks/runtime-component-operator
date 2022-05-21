@@ -4,7 +4,7 @@ kind: RuntimeComponent
 metadata:
   name: anti-affinity-rc
 spec:
-  applicationImage: 'k8s.gcr.io/pause:2.0'
+  applicationImage: k8s.gcr.io/pause:2.0
   replicas: 1
   affinity:
     podAntiAffinity:

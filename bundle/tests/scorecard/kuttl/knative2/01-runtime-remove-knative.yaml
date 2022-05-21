@@ -6,7 +6,5 @@ metadata:
   name: knative2-rc
 spec:
   # Add fields here
-  applicationImage: navidsh/demo-day
-  replicas: 1
   createKnativeService: false
 

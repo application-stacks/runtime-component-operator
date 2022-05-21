@@ -3,7 +3,6 @@ kind: RuntimeComponent
 metadata:
   name: network-policy-rc
 spec:
-  applicationImage: k8s.gcr.io/pause:2.0
   expose: false
   networkPolicy:
     fromLabels:
