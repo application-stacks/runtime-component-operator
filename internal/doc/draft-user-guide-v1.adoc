@@ -75,6 +75,7 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `networkPolicy.namespaceLabels` | A set of labels that selects the namespace to allow incoming traffic from. Defaults to the same namespace that the application is deployed to.
 | `networkPolicy.fromLabels` | A set of labels that selects the pod(s) to allow incoming traffic from. Defaults to pod(s) belonging to the same application.
 | `createKnativeService`   | A boolean to toggle the creation of Knative resources and usage of Knative serving.
+| `manageTLS` | A boolean to toggle automatic certificate generation and mounting TLS secret into the pod. The default value for this field is `true`.
 | `expose`   | A boolean that toggles the external exposure of this deployment via a Route or a Knative Route resource.
 | `deployment.updateStrategy`   | A field to specify the update strategy of the deployment. For more information, see link:++https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy++[updateStrategy]
 | `deployment.updateStrategy.type`   | The type of update strategy of the deployment. The type can be set to `RollingUpdate` or `Recreate`, where `RollingUpdate` is the default update strategy.
@@ -662,7 +663,7 @@ spec:
 
 By setting `.spec.expose` field, the operator creates an unsecured route based on your application service. Setting this field is the same as running `oc expose service <service-name>`.
 
-To create a secured HTTPS route, see the link:++#certificates++[Certificates] section.
+To create a secured HTTPS route, see the link:++#certificates++[Certificates / TLS] section.
 
 ==== Non-Knative deployment (Ingress)
 
@@ -848,8 +849,62 @@ spec:
       role: frontend
 ----
 
-=== Certificates
+=== Certificates / TLS
 
+==== Automatic certificate generation
+
+When `manageTLS` is `true` (default), the operator will attempt to generate certificates and mount
+them to the pod at `/etc/x509/certs`. If the `expose` is set to `true` the Route will be also configured
+automatically to enable TLS using `reencrypt` termination. This will ensure end-to-end encryption from
+external source all the way to application/pod level.
+
+===== Generating certificates using certificate manager
+
+Before using this feature, certificate manager must be installed on the Kubernetes cluster.
+
+The service certificate is generated using `cert-manager.io/v1` `Certificate` kind.
+
+Operator will create a certificate authority (CA) Issuer instance to be shared
+by applications within a single namespace. The issuer will be used to generate
+a service certificate for each application that will be mounted into the pod.
+`tls.crt`, `tls.key` and `ca.crt` files will be mounted to the pod and location
+is indicated by `TLS_DIR` environment variable.
+
+===== Generating certificate using Red Hat OpenShift service CA
+
+When running on Red Hat OpenShift Container Platform operator can automatically generate
+service certificates using OpenShift Service CA.
+
+This is a default and simplest way of generating certificates if the certificate manager operator
+is not installed on the cluster.
+
+`tls.crt`, `tls.key` files will be mounted to the pod and location
+is indicated by `TLS_DIR` environment variable. The OpenShift CA certificate
+is provided inside `/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt`
+file.
+
+If the certificate manager is installed on the cluster it will be used to generate
+service certificates unless otherwise specified by the application. To force use of
+OpenShift service CA an annotation can be added to application's YAML:
+
+[source,yaml]
+----
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: my-app
+  namespace: test
+spec:
+  applicationImage: quay.io/my-repo/my-app:1.0
+  manageTLS: true
+  expose: true
+  service:
+    annotations:
+      service.beta.openshift.io/serving-cert-secret-name: my-app-svc-tls-ocp
+    port: 9443
+----
+
+==== Bring your own Certificates
 Specify your own certificates for the Service and Route using fields `.spec.service.certificateSecretRef` and `.spec.route.certificateSecretRef`.
 
 Example of certificates specified for the Route:
