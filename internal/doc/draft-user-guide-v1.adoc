@@ -555,7 +555,12 @@ By setting the `.spec.createKnativeService` field, the operator creates a Knativ
 
 The CRD fields which are used to populate the Knative service resource include `.spec.applicationImage`, `.spec.serviceAccountName`, `.spec.probes.liveness`, `.spec.probes.readiness`, `.spec.service.Port`, `.spec.volumes`, `.spec.volumeMounts`, `.spec.env`, `.spec.envFrom`, `.spec.pullSecret` and `.spec.pullPolicy`. Startup probe is not fully supported by Knative, hence `.spec.probes.startup` will not apply when Knative service is enabled.
 
+When using private registries with Knative / OpenShift Serverless  `.spec.pullSecret` must be specified. OpenShift global
+pull secret can not be used to provide registry credentials to Knative Services.
+
 For more details on how to configure Knative for tasks such as enabling HTTPS connections and setting up a custom domain, checkout link:++https://knative.dev/docs/serving/++[Knative Documentation].
+
+_Knative Serving sidecar container can only connect to the application's container over HTTP connection. Application must be listening on HTTP port to use Knative._
 
 _Autoscaling related fields in `RuntimeComponent` are not used to configure Knative Pod Autoscaler (KPA). To learn more about how to configure KPA, see link:++https://knative.dev/docs/serving/configuring-the-autoscaler/++[Configuring the Autoscaler]._
 
