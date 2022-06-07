@@ -1065,21 +1065,15 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 		return getErr
 	}
 	secrets := sa.ImagePullSecrets
-	found := false
 	if len(secrets) > 0 {
 		// if this is our service account there will be one image pull secret
 		// For others there could be more. either way, just use the first?
 		sName := secrets[0].Name
 		err := client.Get(context.TODO(), types.NamespacedName{Name: sName, Namespace: ns}, &corev1.Secret{})
 		if err != nil {
-			return err
+			saErr := errors.New("Service account " + saName + " isn't ready. Reason: " + err.Error())
+			return saErr
 		}
-		found = true
-
-	}
-	if !found {
-		saErr := errors.New("Service account " + saName + " isn't ready")
-		return saErr
 	}
 	return nil
 }
