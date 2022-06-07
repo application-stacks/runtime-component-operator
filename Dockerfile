@@ -29,7 +29,7 @@ FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
 
 LABEL vendor="Runtime Component Community" \
       name="Runtime Component Operator" \
-      version="0.8.1" \
+      version="0.8.2" \
       summary="Image for Runtime Component Operator" \
       description="This image contains the controller for Runtime Component Operator. See https://github.com/application-stacks/runtime-component-operator"
       

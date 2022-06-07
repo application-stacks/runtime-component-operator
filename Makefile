@@ -1,7 +1,7 @@
 OPERATOR_SDK_RELEASE_VERSION ?= v1.6.4
 
 # Current Operator version
-VERSION ?= 0.8.1
+VERSION ?= 0.8.2
 
 OPERATOR_IMAGE ?= applicationstacks/operator
 
