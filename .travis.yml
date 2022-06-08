@@ -17,6 +17,8 @@ stages:
   # building and pushing the images for the other architectures.
   - name: e2e-test
     if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
+  - name: minikube-e2e-test
+    if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
   - name: build
     if: (branch = main OR tag =~ ^v) AND fork = false AND type != pull_request AND type != cron
   - name: build-manifest
@@ -39,6 +41,11 @@ jobs:
       os: linux
       arch: amd64
       script: travis_wait 45 make setup test-e2e || travis_terminate 1
+    - name: Build image on amd64 and test on Minikube
+      stage: minikube-e2e-test
+      os: linux
+      arch: amd64
+      script: travis_wait 45 make setup minikube-test-e2e || travis_terminate 1
     - name: Build image on ppc64le
       stage: build
       os: linux

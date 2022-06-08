@@ -83,8 +83,6 @@ setup_test() {
     mv bundle/tests/scorecard/minikube-kuttl/ingress-certificate bundle/tests/scorecard/kuttl/
     
     ## Remove tests that do not apply for minikube
-    mv bundle/tests/scorecard/kuttl/network-policy bundle/tests/scorecard/minikube-kuttl/
-    mv bundle/tests/scorecard/kuttl/network-policy-multiple-apps bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/routes bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/route-certificate bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/stream bundle/tests/scorecard/minikube-kuttl/
@@ -104,13 +102,11 @@ cleanup_test() {
     mv bundle/tests/scorecard/kuttl/ingress bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/ingress-certificate bundle/tests/scorecard/minikube-kuttl/
     
-    mv bundle/tests/scorecard/minikube-kuttl/network-policy bundle/tests/scorecard/kuttl/
-    mv bundle/tests/scorecard/minikube-kuttl/network-policy-multiple-apps bundle/tests/scorecard/kuttl/
     mv bundle/tests/scorecard/minikube-kuttl/routes bundle/tests/scorecard/kuttl/ 
     mv bundle/tests/scorecard/minikube-kuttl/route-certificate bundle/tests/scorecard/kuttl/ 
     mv bundle/tests/scorecard/minikube-kuttl/stream bundle/tests/scorecard/kuttl/
 
-    git restore bundle/tests/scorecard deploy
+    git restore bundle/tests/scorecard deploy/kustomize/daily/base/runtime-component-operator.yaml
 }
 
 main() {
@@ -122,7 +118,7 @@ main() {
         exit 1
     fi
 
-    echo "****** Setting up test environment..."
+    # echo "****** Setting up test environment..."
     setup_env
     build_push
     install_rco

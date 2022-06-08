@@ -10,3 +10,4 @@ spec:
           env:
             - name: WATCH_NAMESPACE
               value: ""
+              valueFrom:

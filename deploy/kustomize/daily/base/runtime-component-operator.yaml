@@ -1,4 +1,3 @@
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -222,17 +221,16 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         - name: WATCH_NAMESPACE
-          value: default
-#          valueFrom:
-#            fieldRef:
-#              fieldPath: metadata.annotations['olm.targetNamespaces']
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         image: applicationstacks/operator:daily
         imagePullPolicy: Always
         name: manager
         resources:
           limits:
             cpu: 200m
-            memory: 256Mi
+            memory: 512Mi
           requests:
             cpu: 100m
             memory: 20Mi

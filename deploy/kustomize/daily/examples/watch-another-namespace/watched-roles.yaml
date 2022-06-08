@@ -7,7 +7,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: rco-namespace-rolebinding
+  name: rco-watched-rolebinding
   namespace: rco-watched-ns2
 subjects:
 - kind: ServiceAccount
