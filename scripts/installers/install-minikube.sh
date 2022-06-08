@@ -39,6 +39,9 @@ function install_minikube() {
   minikube update-context --profile=minikube
 
   eval "$(minikube docker-env --profile=minikube)" && export DOCKER_CLI='docker'
+
+  ## Run Local Registry
+  docker run -d -p 5000:5000 --restart=always --name local-registry registry
 }
 
 function wait_for_kube() {
