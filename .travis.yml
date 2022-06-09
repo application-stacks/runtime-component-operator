@@ -16,9 +16,9 @@ stages:
   # Builds are split into 'e2e-test' and 'build' to allow e2e tests to run first. If e2e fails, don't bother
   # building and pushing the images for the other architectures.
   - name: e2e-test
-    if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
+    if: (branch = main OR branch = 0.8.x OR tag =~ ^v) AND fork = false AND type != cron
   - name: minikube-e2e-test
-    if: (branch = main OR tag =~ ^v) AND fork = false AND type != cron
+    if: (branch = main OR branch = 0.8.x OR tag =~ ^v) AND fork = false AND type != cron
   - name: build
     if: (branch = main OR tag =~ ^v) AND fork = false AND type != pull_request AND type != cron
   - name: build-manifest
