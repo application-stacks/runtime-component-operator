@@ -1,11 +1,16 @@
 apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
-  name: route-with-cert-rc
+  name: ingress-with-cert-rc
 spec:
   # Add fields here
   applicationImage: k8s.gcr.io/pause:2.0
   replicas: 1
   expose: true
   route:
+    host: myapp.mycompany.com
+    path: "/"
+    pathType: Prefix
+    certificateSecretRef: ingress-tls-secret
+    termination: reencrypt
 

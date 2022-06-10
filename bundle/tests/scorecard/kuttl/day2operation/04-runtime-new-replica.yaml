@@ -5,5 +5,5 @@ metadata:
   name: day2-operation-rc
 spec:
   # Add fields here
-  applicationImage: 'navidsh/demo-day'
+  applicationImage: navidsh/demo-day
   replicas: 1

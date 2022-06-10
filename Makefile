@@ -1,7 +1,7 @@
 OPERATOR_SDK_RELEASE_VERSION ?= v1.6.4
 
 # Current Operator version
-VERSION ?= 0.8.1
+VERSION ?= 0.8.2
 
 OPERATOR_IMAGE ?= applicationstacks/operator
 
@@ -163,6 +163,9 @@ build-manifest: setup-manifest
 
 setup-manifest:
 	./scripts/installers/install-manifest-tool.sh
+
+minikube-test-e2e:
+	./scripts/e2e-minikube.sh --test-tag "${TRAVIS_BUILD_NUMBER}"
 
 test-e2e:
 	./scripts/e2e-release.sh --registry-name default-route --registry-namespace openshift-image-registry \
