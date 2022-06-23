@@ -117,11 +117,14 @@ func main() {
 	}
 	// +kubebuilder:scaffold:builder
 
+	utils.CreateConfigMap(controllers.OperatorName)
+
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+
 }
 
 // getWatchNamespace returns the Namespace the operator should be watching for changes

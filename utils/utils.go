@@ -16,7 +16,10 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	clientcfg "sigs.k8s.io/controller-runtime/pkg/client/config"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/application-stacks/runtime-component-operator/common"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -1496,4 +1499,49 @@ func addSecretResourceVersionAsEnvVar(pts *corev1.PodTemplateSpec, object metav1
 		Name:  envNamePrefix + "_SECRET_RESOURCE_VERSION",
 		Value: secret.ResourceVersion})
 	return nil
+}
+
+// This should only be called once from main.go on operator start
+// It checks for the presence of the operators config map and
+// creates it if it doesn't exist
+func CreateConfigMap(mapName string) {
+	utilsLog := ctrl.Log.WithName("utils-setup")
+	// This function is called from main, so the normal client isn't setup properly
+	client, clerr := client.New(clientcfg.GetConfigOrDie(), client.Options{})
+	if clerr != nil {
+		utilsLog.Error(clerr, "Couldn't create a client for config map creation")
+		return
+	}
+
+	operatorNs, _ := GetOperatorNamespace()
+	if operatorNs == "" {
+		// This should only happen when running locally in development
+		// Probably best to just return. The operator global config map is tried
+		// again in the reconcile loop, and don't want to duplicate logic to
+		// guess what the namespace should be
+		utilsLog.Info("Couldn't create operator config map as operator namespace was not found")
+		return
+	}
+	configMap := &corev1.ConfigMap{}
+	err := client.Get(context.TODO(), types.NamespacedName{Name: mapName, Namespace: operatorNs}, configMap)
+	if err != nil {
+		utilsLog.Error(err, "The operator config map was not found. Attempting to create it")
+	} else {
+		utilsLog.Info("Existing operator config map was found")
+		return
+	}
+
+	newConfigMap := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: mapName, Namespace: operatorNs}}
+	// The config map doesn't exist, so need to initialize the default config data, and then
+	// store it in a new map
+	common.Config = common.DefaultOpConfig()
+	_, cerr := controllerutil.CreateOrUpdate(context.TODO(), client, newConfigMap, func() error {
+		newConfigMap.Data = common.Config
+		return nil
+	})
+	if cerr != nil {
+		utilsLog.Error(cerr, "Couldn't create config map in namespace "+operatorNs)
+	} else {
+		utilsLog.Info("Operator Config map created in namespace " + operatorNs)
+	}
 }
