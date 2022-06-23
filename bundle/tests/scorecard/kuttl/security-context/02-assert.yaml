@@ -12,7 +12,7 @@ spec:
       containers:
       - name: app
         securityContext:
-          runAsNonRoot: false
+          privileged: true
 status:
   replicas: 1
   readyReplicas: 1

@@ -7,3 +7,5 @@ spec:
   replicas: 1
   securityContext:
     allowPrivilegeEscalation: true
+    readOnlyRootFilesystem: true
+    runAsNonRoot: false
