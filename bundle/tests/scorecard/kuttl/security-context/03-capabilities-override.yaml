@@ -1,0 +1,12 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: security-context-rc
+spec:
+  applicationImage: k8s.gcr.io/pause:2.0
+  replicas: 1
+  securityContext:
+    capabilities:
+      add:
+        - NET_ADMIN
+        - SYS_TIME

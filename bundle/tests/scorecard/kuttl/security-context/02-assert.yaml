@@ -1,0 +1,19 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 60
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: security-context-rc 
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        securityContext:
+          privileged: true
+status:
+  replicas: 1
+  readyReplicas: 1
+  availableReplicas: 1
