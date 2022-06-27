@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.2]
+
+### Fixed
+
+- Fix to prevent deployments being created before the pull secret for the service account. ([#343](https://github.com/application-stacks/runtime-component-operator/pull/343))
+- Increase memory limit for manager deployment ([#359](https://github.com/application-stacks/runtime-component-operator/issues/359))
+
+### Added
+
+- If TLS termination is set to Passthrough, also set InsecureEdgeTerminationPolicy as Redirect is only possible option([#293](https://github.com/application-stacks/runtime-component-operator/pull/293))
+
 ## [0.8.1]
 
 ### Fixed
@@ -124,6 +135,7 @@ The initial release of the Runtime Component Operator 🎉
 
 
 [Unreleased]: https://github.com/application-stacks/runtime-component-operator/compare/v0.8.1...HEAD
+[0.8.2]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.8.2
 [0.8.1]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.8.1
 [0.8.0]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.8.0
 [0.7.1]: https://github.com/application-stacks/runtime-component-operator/releases/tag/v0.7.1
