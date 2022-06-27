@@ -42,7 +42,7 @@ build_push() {
 install_rco() {
     echo "****** Installing RCO in namespace: ${TEST_NAMESPACE}"
 
-    cd deploy/kustomize/daily/base && kustomize edit set namespace ${TEST_NAMESPACE} && cd ${OP_DIR}
+    make kustomize-build KUSTOMIZE_NAMESPACE=${TEST_NAMESPACE}
     sed -i "s/image: ${DAILY_IMAGE}/image: ${LOCAL_REGISTRY}\/${BUILD_IMAGE}/" deploy/kustomize/daily/base/runtime-component-operator.yaml
     kubectl apply -k deploy/kustomize/daily/base
 }

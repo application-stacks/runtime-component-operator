@@ -88,6 +88,10 @@ undeploy: manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
+# Kustomize build controller, and roles & role bindings
+kustomize-build: manifests kustomize
+	cd deploy/kustomize/daily/base && $(KUSTOMIZE) edit set namespace ${KUSTOMIZE_NAMESPACE}
+
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
