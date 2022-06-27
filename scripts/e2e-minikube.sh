@@ -1,6 +1,7 @@
 #!/bin/bash
 
 readonly usage="Usage: e2e-minikube.sh --test-tag <test-id>"
+readonly OP_DIR=$(pwd)
 
 readonly LOCAL_REGISTRY="localhost:5000"
 readonly BUILD_IMAGE="runtime-operator:latest"
@@ -40,11 +41,10 @@ build_push() {
 # install_rco: Kustomize and install Runtime-Component-Operator
 install_rco() {
     echo "****** Installing RCO in namespace: ${TEST_NAMESPACE}"
-    kubectl apply -f bundle/manifests/rc.app.stacks_runtimecomponents.yaml
-    kubectl apply -f bundle/manifests/rc.app.stacks_runtimeoperations.yaml
 
+    cd deploy/kustomize/daily/base && kustomize edit set namespace ${TEST_NAMESPACE} && cd ${OP_DIR}
     sed -i "s/image: ${DAILY_IMAGE}/image: ${LOCAL_REGISTRY}\/${BUILD_IMAGE}/" deploy/kustomize/daily/base/runtime-component-operator.yaml
-    kubectl apply -f deploy/kustomize/daily/base/runtime-component-operator.yaml -n ${TEST_NAMESPACE}
+    kubectl apply -k deploy/kustomize/daily/base
 }
 
 install_tools() {
@@ -110,7 +110,7 @@ cleanup_test() {
     mv bundle/tests/scorecard/minikube-kuttl/route-certificate bundle/tests/scorecard/kuttl/ 
     mv bundle/tests/scorecard/minikube-kuttl/stream bundle/tests/scorecard/kuttl/
 
-    git restore bundle/tests/scorecard deploy
+    git restore bundle/tests/scorecard deploy/kustomize
 }
 
 main() {
