@@ -1,0 +1,16 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: manage-tls-rc
+spec:
+  # Add fields here
+  applicationImage: k8s.gcr.io/pause:2.0
+  replicas: 1
+  expose: true
+  service:
+    certificateSecretRef: byo-svc-secret
+    port: 9443
+  route:
+    certificateSecretRef: byo-route-secret
+    host: runtimecomponentoperator.test
+    termination: reencrypt

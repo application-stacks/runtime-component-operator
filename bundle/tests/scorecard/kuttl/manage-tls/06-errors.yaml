@@ -1,0 +1,30 @@
+# Verify removal of Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: manage-tls-rc
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: TLS_DIR
+          value: /etc/x509/certs
+        - name: SA_RESOURCE_VERSION
+        - name: SERVICE_CERT_SECRET_RESOURCE_VERSION
+      - volumeMounts:
+        - name: svc-certificate
+          mountPath: /etc/x509/certs
+          readOnly: true
+      volumes:
+      - name: svc-certificate
+        secret:
+          secretName: manage-tls-rc-svc-tls-ocp
+---
+# Verify removal of the OCP Service annotation
+kind: Service
+apiVersion: v1
+metadata:
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: manage-tls-rc-svc-tls-ocp
+  name: manage-tls-rc

@@ -1,0 +1,99 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 60
+---
+# Verify the pod template spec defaults and that secretName uses BYO secret
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: manage-tls-rc
+status:
+  replicas: 1
+  readyReplicas: 1
+  updatedReplicas: 1
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: TLS_DIR
+          value: /etc/x509/certs
+        - name: SA_RESOURCE_VERSION
+        - name: SERVICE_CERT_SECRET_RESOURCE_VERSION
+        volumeMounts:
+        - name: svc-certificate
+          mountPath: /etc/x509/certs
+          readOnly: true
+      volumes:
+      - name: svc-certificate
+        secret:
+          defaultMode: 420
+          secretName: byo-svc-secret       
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: manage-tls-rc
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: manage-tls-rc
+spec:
+  host: runtimecomponentoperator.test
+  to:
+    kind: Service
+    name: manage-tls-rc
+    weight: 100
+  port:
+    targetPort: 9443-tcp
+  tls:
+    termination: reencrypt
+    certificate: |
+      -----BEGIN CERTIFICATE-----
+      MIIBkTCCATegAwIBAgIRAPGUnEd0B+EEbeiM1yJKlv8wCgYIKoZIzj0EAwIwKDEm
+      MCQGA1UEAxMdcnVudGltZWNvbXBvbmVudG9wZXJhdG9yLnRlc3QwHhcNMjIwNjI0
+      MTQzODE1WhcNMzIwNjI0MTQzODE1WjAoMSYwJAYDVQQDEx1ydW50aW1lY29tcG9u
+      ZW50b3BlcmF0b3IudGVzdDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABIBrdM1m
+      w5HtFs8MVbba3ZPYZzc3/C0DqrFvZ+jW9B36dCtMmb/5H4Z9f9aG4Aq0MfILOPRu
+      jROo2VfLcxe6Jo+jQjBAMA4GA1UdDwEB/wQEAwICpDAPBgNVHRMBAf8EBTADAQH/
+      MB0GA1UdDgQWBBSjHKjoUQ/HsoprOl8c+Jx8xjdTKTAKBggqhkjOPQQDAgNIADBF
+      AiEAhfJKObsKS5YfxAbGi/skW5RVVsF7BWZd6ZNf2rvLOd8CIBHxF5PsevmUQOxH
+      EJVqfiLdFdn5E5XYbuxgjHtT1xNI
+      -----END CERTIFICATE-----
+    key: |
+      -----BEGIN EC PRIVATE KEY-----
+      MHcCAQEEIEnJaOkQtpURwz8eeABsQm6ct27mgyGMs3pfp8vkmD8PoAoGCCqGSM49
+      AwEHoUQDQgAEgGt0zWbDke0WzwxVttrdk9hnNzf8LQOqsW9n6Nb0Hfp0K0yZv/kf
+      hn1/1obgCrQx8gs49G6NE6jZV8tzF7omjw==
+      -----END EC PRIVATE KEY-----
+    caCertificate: |
+      -----BEGIN CERTIFICATE-----
+      MIIBkTCCATegAwIBAgIRAPGUnEd0B+EEbeiM1yJKlv8wCgYIKoZIzj0EAwIwKDEm
+      MCQGA1UEAxMdcnVudGltZWNvbXBvbmVudG9wZXJhdG9yLnRlc3QwHhcNMjIwNjI0
+      MTQzODE1WhcNMzIwNjI0MTQzODE1WjAoMSYwJAYDVQQDEx1ydW50aW1lY29tcG9u
+      ZW50b3BlcmF0b3IudGVzdDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABIBrdM1m
+      w5HtFs8MVbba3ZPYZzc3/C0DqrFvZ+jW9B36dCtMmb/5H4Z9f9aG4Aq0MfILOPRu
+      jROo2VfLcxe6Jo+jQjBAMA4GA1UdDwEB/wQEAwICpDAPBgNVHRMBAf8EBTADAQH/
+      MB0GA1UdDgQWBBSjHKjoUQ/HsoprOl8c+Jx8xjdTKTAKBggqhkjOPQQDAgNIADBF
+      AiEAhfJKObsKS5YfxAbGi/skW5RVVsF7BWZd6ZNf2rvLOd8CIBHxF5PsevmUQOxH
+      EJVqfiLdFdn5E5XYbuxgjHtT1xNI
+      -----END CERTIFICATE-----
+    destinationCACertificate: |
+      -----BEGIN CERTIFICATE-----
+      MIIBcTCCARegAwIBAgIRALGilcm5pdiJdoUUcPV6mJQwCgYIKoZIzj0EAwIwGDEW
+      MBQGA1UEAxMNbWFuYWdlLXRscy1yYzAeFw0yMjA2MjcyMDU4NTJaFw0yMjA5MjUy
+      MDU4NTJaMBgxFjAUBgNVBAMTDW1hbmFnZS10bHMtcmMwWTATBgcqhkjOPQIBBggq
+      hkjOPQMBBwNCAASpod2kspxyCMgpROfQtYyRJqDm8b0+ecd5s7UBIgOtmNvPLAjy
+      QIt0iSs4GI9dTbRTtxnxKULB62CJRYdPFR06o0IwQDAOBgNVHQ8BAf8EBAMCAqQw
+      DwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUIBuNFnlOyfVtcaJtauqUicuICbsw
+      CgYIKoZIzj0EAwIDSAAwRQIhAJVelSkxxCtcp4V8dS0gIRi2ciDz/ZjPfRx866T1
+      BsrmAiAtg2w17iLuxfrAmJ6cxxNqOgGs7vdgsg36tDs4hQUuow==
+      -----END CERTIFICATE-----
+  wildcardPolicy: None
+status:
+  ingress:
+    - host: runtimecomponentoperator.test
+      conditions:
+        - type: Admitted
+          status: 'True'

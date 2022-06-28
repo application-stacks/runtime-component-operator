@@ -81,6 +81,7 @@ setup_test() {
     ## Add tests for minikube
     mv bundle/tests/scorecard/minikube-kuttl/ingress bundle/tests/scorecard/kuttl/
     mv bundle/tests/scorecard/minikube-kuttl/ingress-certificate bundle/tests/scorecard/kuttl/
+    mv bundle/tests/scorecard/minikube-kuttl/certmanager-manage-tls bundle/tests/scorecard/kuttl/
     
     ## Remove tests that do not apply for minikube
     mv bundle/tests/scorecard/kuttl/network-policy bundle/tests/scorecard/minikube-kuttl/
@@ -88,6 +89,7 @@ setup_test() {
     mv bundle/tests/scorecard/kuttl/routes bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/route-certificate bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/stream bundle/tests/scorecard/minikube-kuttl/
+    mv bundle/tests/scorecard/kuttl/manage-tls bundle/tests/scorecard/minikube-kuttl/
 
     for image in "${IMAGES[@]}"
     do 
@@ -103,12 +105,14 @@ cleanup_test() {
     ## Restore tests
     mv bundle/tests/scorecard/kuttl/ingress bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/ingress-certificate bundle/tests/scorecard/minikube-kuttl/
+    mv bundle/tests/scorecard/kuttl/certmanager-manage-tls bundle/tests/scorecard/minikube-kuttl/
     
     mv bundle/tests/scorecard/minikube-kuttl/network-policy bundle/tests/scorecard/kuttl/
     mv bundle/tests/scorecard/minikube-kuttl/network-policy-multiple-apps bundle/tests/scorecard/kuttl/
     mv bundle/tests/scorecard/minikube-kuttl/routes bundle/tests/scorecard/kuttl/ 
     mv bundle/tests/scorecard/minikube-kuttl/route-certificate bundle/tests/scorecard/kuttl/ 
     mv bundle/tests/scorecard/minikube-kuttl/stream bundle/tests/scorecard/kuttl/
+    mv bundle/tests/scorecard/minikube-kuttl/manage-tls bundle/tests/scorecard/kuttl/
 
     git restore bundle/tests/scorecard deploy
 }
