@@ -1,0 +1,31 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: rco-leader-election-role
+  namespace: rco-ns2
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: rco-manager-role
+  namespace: rco-ns2
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rco-leader-election-rolebinding
+  namespace: rco-ns2
+subjects:
+- kind: ServiceAccount
+  name: rco-controller-manager
+  namespace: rco-ns2
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rco-manager-rolebinding
+  namespace: rco-ns2
+subjects:
+- kind: ServiceAccount
+  name: rco-controller-manager
+  namespace: rco-ns2
