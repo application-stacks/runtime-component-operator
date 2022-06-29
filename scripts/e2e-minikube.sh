@@ -81,7 +81,7 @@ setup_test() {
     ## Add tests for minikube
     mv bundle/tests/scorecard/minikube-kuttl/ingress bundle/tests/scorecard/kuttl/
     mv bundle/tests/scorecard/minikube-kuttl/ingress-certificate bundle/tests/scorecard/kuttl/
-    mv bundle/tests/scorecard/minikube-kuttl/certmanager-manage-tls bundle/tests/scorecard/kuttl/
+    mv bundle/tests/scorecard/minikube-kuttl/ingress-manage-tls bundle/tests/scorecard/kuttl/
     
     ## Remove tests that do not apply for minikube
     mv bundle/tests/scorecard/kuttl/network-policy bundle/tests/scorecard/minikube-kuttl/
@@ -105,7 +105,7 @@ cleanup_test() {
     ## Restore tests
     mv bundle/tests/scorecard/kuttl/ingress bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/ingress-certificate bundle/tests/scorecard/minikube-kuttl/
-    mv bundle/tests/scorecard/kuttl/certmanager-manage-tls bundle/tests/scorecard/minikube-kuttl/
+    mv bundle/tests/scorecard/kuttl/ingress-manage-tls bundle/tests/scorecard/minikube-kuttl/
     
     mv bundle/tests/scorecard/minikube-kuttl/network-policy bundle/tests/scorecard/kuttl/
     mv bundle/tests/scorecard/minikube-kuttl/network-policy-multiple-apps bundle/tests/scorecard/kuttl/
