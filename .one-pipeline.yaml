@@ -35,9 +35,9 @@ static-scan:
     read -r SONAR_USER <<< "$(get_env sonarqube | jq -r '.parameters.user_login')"
     SONARQUBE_INSTANCE_ID=$(get_env sonarqube | jq -r '.instance_id')
     read -r SONAR_PASS <<< "$(jq -r --arg sonar_instance "$SONARQUBE_INSTANCE_ID" '[.services[] | select(."service_id"=="sonarqube")][] | select(."instance_id"==$sonar_instance) | .parameters.user_password' /toolchain/toolchain.json)"  
-    touch "$WORKSPACE"/websphere-liberty-operator/sonar-project.properties   
-    cat << EOF > "$WORKSPACE"/websphere-liberty-operator/sonar-project.properties
-    sonar.projectKey=websphere-liberty-operator
+    touch "$WORKSPACE"/runtime-component-operator/sonar-project.properties   
+    cat << EOF > "$WORKSPACE"/runtime-component-operator/sonar-project.properties
+    sonar.projectKey=runtime-component-operator
     sonar.host.url=$SONAR_HOST_URL
     sonar.sources=.
     sonar.login=$SONAR_USER
@@ -46,7 +46,7 @@ static-scan:
     sonar.cpp.file.suffixes=-
     sonar.objc.file.suffixes=-
     EOF
-    chmod -x "$WORKSPACE"/websphere-liberty-operator/sonar-project.properties
+    chmod -x "$WORKSPACE"/runtime-component-operator/sonar-project.properties
     #echo "$SONAR_PASS" >> /tmp/sonarqube-token
     "${COMMONS_PATH}"/static-scan/run.sh
     ## Perform static lint
