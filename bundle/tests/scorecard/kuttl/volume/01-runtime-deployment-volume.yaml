@@ -1,0 +1,17 @@
+# Creating deployment with volume
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: volume-rc
+spec:
+  # Add fields here
+  applicationImage: k8s.gcr.io/pause:2.0
+  replicas: 1
+  volumeMounts:
+    - name: test-volume
+      mountPath: /test
+      subPath: test
+  volumes:
+    - name: test-volume
+      secret:
+        secretName: test-volume-secret

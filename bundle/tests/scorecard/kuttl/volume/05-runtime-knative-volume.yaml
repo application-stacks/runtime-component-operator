@@ -1,0 +1,16 @@
+# Creating Knative service with volume
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: volume-rc
+spec:
+  createKnativeService: true
+  statefulSet:
+  volumeMounts:
+    - name: test-volume
+      mountPath: /test
+      subPath: test
+  volumes:
+    - name: test-volume
+      secret:
+        secretName: test-volume-secret

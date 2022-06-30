@@ -1,0 +1,5 @@
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: volume-rc
