@@ -2,4 +2,4 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: manage-tls-rc-svc-tls-cm
+  name: manage-tls-wsliberty-svc-tls-cm

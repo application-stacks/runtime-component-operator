@@ -8,8 +8,6 @@ kind: Certificate
 metadata:
   name: manage-tls-rc-svc-tls-cm
 spec:
-  issuerRef:
-    name: rco-ca-issuer
   secretName: manage-tls-rc-svc-tls-cm
 ---
 # Verify the pod template spec defaults and that secretName uses *-cm naming convention

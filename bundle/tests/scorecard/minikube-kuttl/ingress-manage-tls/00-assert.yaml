@@ -2,56 +2,23 @@ apiVersion: kuttl.dev/v1beta1
 kind: TestAssert
 timeout: 60
 ---
-# Check creation of CertManager certificates, issuers, and a secret
+# Check creation of CertManager certificates and secret
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   labels:
-    app.kubernetes.io/managed-by: runtime-component-operator   
-  name: rco-ca-cert
+    app.kubernetes.io/managed-by: runtime-component-operator
 spec:
   commonName: Runtime Component Operator
   isCA: true
-  issuerRef:
-    name: rco-self-signed
-  secretName: rco-ca-tls
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: manage-tls-rc-svc-tls-cm
 spec:
-  issuerRef:
-    name: rco-ca-issuer
   secretName: manage-tls-rc-svc-tls-cm
 --- 
-apiVersion: cert-manager.io/v1
-kind: Issuer
-metadata:
-  labels:
-    app.kubernetes.io/managed-by: runtime-component-operator
-  name: rco-ca-issuer
-spec:
-  ca:
-    secretName: rco-ca-tls
-status:
-  conditions:
-    - status: 'True'
-      type: Ready
----
-apiVersion: cert-manager.io/v1
-kind: Issuer
-metadata:
-  labels:
-    app.kubernetes.io/managed-by: runtime-component-operator
-  name: rco-self-signed
-spec:
-  selfSigned: {}
-status:
-  conditions:
-    - status: 'True'
-      type: Ready
----
 kind: Secret
 apiVersion: v1
 metadata:
