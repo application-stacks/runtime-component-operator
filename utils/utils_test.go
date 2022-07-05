@@ -55,19 +55,19 @@ var (
 	storage        = appstacksv1beta2.RuntimeComponentStorage{Size: "10Mi", MountPath: "/mnt/data", VolumeClaimTemplate: volumeCT}
 	arch           = []string{"ppc64le"}
 	readinessProbe = &corev1.Probe{
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet:   &corev1.HTTPGetAction{},
 			TCPSocket: &corev1.TCPSocketAction{},
 		},
 	}
 	livenessProbe = &corev1.Probe{
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet:   &corev1.HTTPGetAction{},
 			TCPSocket: &corev1.TCPSocketAction{},
 		},
 	}
 	startupProbe = &corev1.Probe{
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet:   &corev1.HTTPGetAction{},
 			TCPSocket: &corev1.TCPSocketAction{},
 		},

@@ -8,7 +8,7 @@ import (
 // GetDefaultMicroProfileStartupProbe returns the default values for MicroProfile Health-based startup probe.
 func GetDefaultMicroProfileStartupProbe(ba BaseComponent) *corev1.Probe {
 	return &corev1.Probe{
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/started",
 				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
@@ -24,7 +24,7 @@ func GetDefaultMicroProfileStartupProbe(ba BaseComponent) *corev1.Probe {
 // GetDefaultMicroProfileReadinessProbe returns the default values for MicroProfile Health-based readiness probe.
 func GetDefaultMicroProfileReadinessProbe(ba BaseComponent) *corev1.Probe {
 	return &corev1.Probe{
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/ready",
 				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
@@ -41,7 +41,7 @@ func GetDefaultMicroProfileReadinessProbe(ba BaseComponent) *corev1.Probe {
 // GetDefaultMicroProfileLivenessProbe returns the default values for MicroProfile Health-based liveness probe.
 func GetDefaultMicroProfileLivenessProbe(ba BaseComponent) *corev1.Probe {
 	return &corev1.Probe{
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/live",
 				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
