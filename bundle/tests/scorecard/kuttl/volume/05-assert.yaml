@@ -1,0 +1,17 @@
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: volume-rc
+spec:
+  template:
+    spec:
+      containers:
+        - volumeMounts:
+            - name: test-volume
+              mountPath: /test
+              subPath: test
+      volumes:
+      - name: test-volume
+        secret:
+          secretName: test-volume-secret

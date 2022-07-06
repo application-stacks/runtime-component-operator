@@ -1,0 +1,10 @@
+# Need to manually delete resources as kuttl does not automatically delete these at the end of the test
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+delete:
+- apiVersion: v1
+  kind: Secret
+  name: test-volume-secret
+- apiVersion: rc.app.stacks/v1beta2
+  kind: RuntimeComponent
+  name: volume-rc
