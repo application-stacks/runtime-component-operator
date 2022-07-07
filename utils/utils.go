@@ -277,7 +277,7 @@ func customizeProbe(config *corev1.Probe, defaultProbeCallback func(ba common.Ba
 	}
 
 	// Probe handler is defined in config so use probe as is
-	if config.Handler != (corev1.Handler{}) {
+	if config.ProbeHandler != (corev1.ProbeHandler{}) {
 		return config
 	}
 
