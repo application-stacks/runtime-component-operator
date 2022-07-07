@@ -5,6 +5,7 @@ metadata:
 spec:
   applicationImage: k8s.gcr.io/pause:2.0
   replicas: 1
+  expose: true
   service:
     certificateSecretRef: byo-svc-secret
     port: 9443

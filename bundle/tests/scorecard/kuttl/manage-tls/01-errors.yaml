@@ -4,7 +4,7 @@ kind: Certificate
 metadata:
   name: manage-tls-rc-svc-tls-cm
 ---
-# Verify the pod template spec uses *-cm naming convention
+# Verify that the pod template spec does not manage TLS
 apiVersion: apps/v1
 kind: Deployment
 metadata:
