@@ -147,21 +147,26 @@ acceptance-test:
   script: |
     #!/usr/bin/env bash
     echo "acceptance-test"
-    # Download and configure golang
-    wget --header "Accept: application/octet-stream"  "https://golang.org/dl/go1.16.linux-amd64.tar.gz" 
-    rm -rf /usr/local/go && tar -C /usr/local -xf go1.16.linux-amd64.tar.gz
-    export PATH=$PATH:/usr/local/go/bin
-    apt-get update
-    apt-get -y install build-essential    
-    export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
-    export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key)  
-    export DOCKER_USERNAME=$(get_env docker-username)
-    export DOCKER_PASSWORD=$(get_env docker-password)    
-    export CLUSTER_URL=$(get_env test-cluster-url)
-    export CLUSTER_TOKEN=$(get_env test-cluster-token) 
-    export TRAVIS_BUILD_NUMBER=$BUILD_NUMBER   
-    make setup
-    make test-pipeline-e2e
+    export SKIP_KIND_E2E_TEST=$(get_env SKIP_KIND_E2E_TEST)
+    if [[ $SKIP_KIND_E2E_TEST != "true" ]]; then
+      # Download and configure golang
+      wget --header "Accept: application/octet-stream"  "https://golang.org/dl/go1.16.linux-amd64.tar.gz" 
+      rm -rf /usr/local/go && tar -C /usr/local -xf go1.16.linux-amd64.tar.gz
+      export PATH=$PATH:/usr/local/go/bin
+      apt-get update
+      apt-get -y install build-essential    
+      export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
+      export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key)  
+      export DOCKER_USERNAME=$(get_env docker-username)
+      export DOCKER_PASSWORD=$(get_env docker-password)    
+      export CLUSTER_URL=$(get_env test-cluster-url)
+      export CLUSTER_TOKEN=$(get_env test-cluster-token) 
+      export TRAVIS_BUILD_NUMBER=$BUILD_NUMBER   
+      make setup
+      make test-pipeline-e2e
+    else
+      echo "skipping Acceptance test"
+    fi
 
 scan-artifact:
   abort_on_failure: false
