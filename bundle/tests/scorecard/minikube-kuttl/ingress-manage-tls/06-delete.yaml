@@ -1,10 +1,6 @@
 apiVersion: kuttl.dev/v1beta1
 kind: TestStep
 delete:
-- apiVersion: v1
-  kind: Secret
-  metadata:
-    name: manage-tls-rc-svc-tls-cm
 - apiVersion: rc.app.stacks/v1beta2
   kind: RuntimeComponent
   metadata:
