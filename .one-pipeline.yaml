@@ -13,7 +13,8 @@ test:
   script: |
     #!/usr/bin/env bash
     # Download and configure golang
-    wget --header "Accept: application/octet-stream"  "https://golang.org/dl/go1.16.linux-amd64.tar.gz" 
+    GO_VERSION=$(get_env go-version)
+    wget --header "Accept: application/octet-stream"  "https://golang.org/dl/go$GO_VERSION.linux-amd64.tar.gz"  
     rm -rf /usr/local/go && tar -C /usr/local -xf go1.16.linux-amd64.tar.gz
     export PATH=$PATH:/usr/local/go/bin
     apt-get update
