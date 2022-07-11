@@ -27,6 +27,7 @@ test:
 
 static-scan:
   dind: true
+  abort_on_failure: false
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     #!/usr/bin/env bash
@@ -47,7 +48,9 @@ static-scan:
     EOF
     chmod -x "$WORKSPACE"/runtime-component-operator/sonar-project.properties
     #echo "$SONAR_PASS" >> /tmp/sonarqube-token
-    "${ONE_PIPELINE_PATH}"/internal/sonarqube/sonarqube_run    
+    "${COMMONS_PATH}"/static-scan/run.sh
+    ## Perform static lint
+    ./scripts/pipeline/static-linter-scan.sh --git-token $(get_env git-token) --static-linter-version $(get_env static-linter-version)
 containerize:
   dind: true
   abort_on_failure: true  
@@ -111,6 +114,13 @@ containerize:
       save_artifact $i type=image name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"   
     done
 
+sign-artifact:
+  abort_on_failure: false
+  image: icr.io/continuous-delivery/pipeline/image-signing:1.0.0@sha256:e9d8e354668ba3d40be2aaee08298d2aa7f0e1c8a1829cca4094ec93830e3e6a
+  script: |
+    #!/usr/bin/env bash
+    echo "sign-artifact"
+
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
@@ -129,10 +139,6 @@ dynamic-scan:
   script: |
     #!/usr/bin/env bash
     echo "dynamic-scan"
-    #export APP_URL=$(cat ../app-url)
-    # feature preivew this until evidence locker v2 usage is full feature ready 
-    # can be triggered, and owasp will run for preview purposes 
-    #source scripts/zap/trigger_api_scan.sh
 
 acceptance-test:
   dind: true  
@@ -181,25 +187,62 @@ scan-artifact:
       done
     fi
 
+    echo "aqua scan"
+    # install docker
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sudo sh get-docker.sh
+    # get aqua scan executables
+    git clone https://$(get_env git-token)@github.ibm.com/CICD-CPP/cpp-pipelines.git
+    chmod -R +x cpp-pipelines
+    # setup and execute aqua scan
+    cd cpp-pipelines
+    export CUSTOM_SCRIPTS_PATH=/workspace/app/one-pipeline-config-repo/cpp-pipelines
+    ./commons/aqua/aqua-local-scan
+
 release:
   abort_on_failure: false
-  image: wcp-compliance-automation-team-docker-local.artifactory.swg-devops.com/ibm-compliance-automation:1.9.1@sha256:3f3e344a1efb160d83c48cf2ee878a39cbad058c8640c423472e0546316232fd
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     #!/usr/bin/env bash
-    echo "release" 
-    set_env ibmcloud-api-key $(get_env ibmcloud-api-key-prod)
 
-#owasp-zap-api:
-#  dind: true
-#  abort_on_failure: false
-#  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
-#  script: |
-#    !/usr/bin/env bash
-#    if [[ "$PIPELINE_DEBUG" == 1 ]]; then
-#      trap env EXIT
-#      env
-#      set -x
-#    fi
-    
-#    source scripts/zap/setup_api_scan.sh
-#    source scripts/zap/run_api_scan.sh
+    RELEASE_FLAG=$(get_env release "false")
+
+    if [[ $RELEASE_FLAG != "true" ]]; then
+      echo "Skipping release stage; environment property 'release' is set to $RELEASE_FLAG"
+      exit 0
+    fi
+
+    SKIP_ALL_CHECKS=$(get_env SKIP_ALL_CHECKS "false")
+    ./scripts/pipeline/evaluator.sh      
+    if [[ $? == 0 || $SKIP_ALL_CHECKS == "true" ]]; then
+      if [[  $SKIP_ALL_CHECKS == "true" ]]; then
+        echo "Skipping image scan checks"
+      fi
+      APP_REPO=$(pwd)
+      echo "Application Repository: $APP_REPO"
+      INVENTORY_REPO=$(get_env inventory-repo)
+      echo "Cloning inventory repository: $INVENTORY_REPO"
+      cd "$WORKSPACE"
+      APP_TOKEN_PATH="$WORKSPACE/secrets/app-token"
+      . "${ONE_PIPELINE_PATH}"/git/clone_repo \
+        "$INVENTORY_REPO" \
+        "master"  \
+        "" \
+        "$APP_TOKEN_PATH"
+      REPO=${INVENTORY_REPO##*/}
+      NAME=${REPO%.*}
+      echo "Inventory name: $NAME"
+      cd $WORKSPACE/$NAME
+      if [ "$(ls )" ]; then
+        echo "Clearing inventory repository: $INVENTORY_REPO"
+        git config --global user.email "tekton@example.com"
+        git config --global user.name "Tekton"
+        git rm *
+        git commit -m "Delete contents of inventory repository - $PIPELINE_RUN_ID"
+        git push origin master
+      fi
+      cd $APP_REPO
+      ./scripts/pipeline/release.sh
+    else
+      echo "Errors found.  images will not be released"
+    fi

@@ -3,12 +3,9 @@
  function install_twistlock() {
     DEBIAN_FRONTEND=noninteractive apt-get -y update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y install uuid-runtime file jq && \
-    # Install 'gh'
-    #curl -Lo /tmp/gh_1.10.2_linux_amd64.deb https://github.com/cli/cli/releases/download/v1.10.2/gh_1.10.2_linux_amd64.deb && \
-    #dpkg -i /tmp/gh_1.10.2_linux_amd64.deb && \
-    # Install 'tt' - Twistlock service cli
-    wget --no-check-certificate https://twistlock-service.cloudpaklab.ibm.com/download/tt_latest.zip && \
+    wget --no-check-certificate https://w3twistlock.sos.ibm.com/download/tt_latest.zip && \
     unzip -l tt_latest.zip | grep linux_x86_64/tt | awk '{print $4}' | xargs unzip -j tt_latest.zip -d /usr/local/bin
+    chmod +x /usr/local/bin/tt
 }
 
 # Install Twistlock
