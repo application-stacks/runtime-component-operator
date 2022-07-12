@@ -85,7 +85,7 @@ containerize:
     # Build amd64 image
     make build-pipeline-releases
     # Build ppc64le and s390x images
-    ./scripts/pipeline/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
+    #./scripts/pipeline/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
     # Build manifest
     make build-pipeline-manifest    
     # Build bundle image
