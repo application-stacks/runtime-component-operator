@@ -163,27 +163,37 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:number
       - displayName: Auto Scaling
         path: autoscaling
-      - displayName: Service Type
-        path: service.type
+      - description: Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler. Parameter .spec.resources.requests.cpu must also be specified.
+        displayName: Max Replicas
+        path: autoscaling.maxReplicas
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
+        - urn:alm:descriptor:com.tectonic.ui:number
+      - description: Lower limit for the number of pods that can be set by the autoscaler.
+        displayName: Min Replicas
+        path: autoscaling.minReplicas
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
+      - description: Target average CPU utilization, represented as a percentage of requested CPU, over all the pods.
+        displayName: Target CPU Utilization Percentage
+        path: autoscaling.targetCPUUtilizationPercentage
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
       - description: Resource requests and limits for the application container.
         displayName: Resource Requirements
         path: resources
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:resourceRequirements
-      - description: Node proxies this port into your service.
-        displayName: Node Port
-        path: service.nodePort
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:number
       - displayName: Probes
         path: probes
-      - description: The name for the port exposed by the container.
-        displayName: Port Name
-        path: service.portName
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Probe to determine successful initialization. If specified, other probes are not executed until this completes successfully.
+        displayName: Startup Probe
+        path: probes.startup
+      - description: Periodic probe of container service readiness. Container will be removed from service endpoints if the probe fails.
+        displayName: Readiness Probe
+        path: probes.readiness
+      - description: Periodic probe of container liveness. Container will be restarted if the probe fails.
+        displayName: Liveness Probe
+        path: probes.liveness
       - displayName: Deployment
         path: deployment
       - description: Annotations to be added to the service.
@@ -263,13 +273,8 @@ spec:
         path: statefulSet.updateStrategy
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - displayName: Affinity
-        path: affinity
       - displayName: Storage
         path: statefulSet.storage
-      - description: Security context for the application container.
-        displayName: Security Context
-        path: securityContext
       - description: A convenient field to set the size of the persisted storage.
         displayName: Storage Size
         path: statefulSet.storage.size
@@ -293,9 +298,15 @@ spec:
         path: statefulSet.storage.volumeClaimTemplate
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:PersistentVolumeClaim
-      - description: Labels to set on ServiceMonitor.
-        displayName: Monitoring Labels
-        path: monitoring.labels
+      - displayName: Service
+        path: service
+      - description: The port exposed by the container.
+        displayName: Service Port
+        path: service.port
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
+      - displayName: Service Type
+        path: service.type
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: A YAML snippet representing an array of Endpoint component from
@@ -328,6 +339,31 @@ spec:
         path: affinity.nodeAffinityLabels
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Annotations to be added to the service.
+        displayName: Service Annotations
+        path: service.annotations
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: The port that the operator assigns to containers inside pods. Defaults to the value of spec.service.port.
+        displayName: Target Port
+        path: service.targetPort
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
+      - description: 'A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod. The following keys are valid in the secret: ca.crt, tls.crt, and tls.key.'
+        displayName: Certificate Secret Reference
+        path: service.certificateSecretRef
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: An array consisting of service ports.
+        displayName: Ports
+        path: service.ports
+      - description: Expose the application as a bindable service. Defaults to false.
+        displayName: Bindable
+        path: service.bindable
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - displayName: Route
+        path: route
       - description: Annotations to be added to the Route.
         displayName: Route Annotations
         path: route.annotations

@@ -222,6 +222,7 @@ type BaseComponent interface {
 	GetGroupName() string
 	GetRoute() BaseComponentRoute
 	GetAffinity() BaseComponentAffinity
+	GetTopologySpreadConstraints() []corev1.TopologySpreadConstraint
 	GetSecurityContext() *corev1.SecurityContext
 	GetManageTLS() *bool
 }
