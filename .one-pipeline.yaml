@@ -144,10 +144,11 @@ acceptance-test:
   script: |
     #!/usr/bin/env bash
     echo "acceptance-test"
+    GO_VERSION=$(get_env go-version)
     export SKIP_KIND_E2E_TEST=$(get_env SKIP_KIND_E2E_TEST)
     if [[ $SKIP_KIND_E2E_TEST != "true" ]]; then
       # Download and configure golang
-      wget --header "Accept: application/octet-stream"  "https://golang.org/dl/go1.16.linux-amd64.tar.gz" 
+      wget --header "Accept: application/octet-stream"  "https://golang.org/dl/go$GO_VERSION.linux-amd64.tar.gz" 
       rm -rf /usr/local/go && tar -C /usr/local -xf go1.16.linux-amd64.tar.gz
       export PATH=$PATH:/usr/local/go/bin
       apt-get update
