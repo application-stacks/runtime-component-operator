@@ -354,22 +354,40 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			reqLogger.Error(err, "Failed to reconcile headless Service")
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		}
-
 		statefulSet := &appsv1.StatefulSet{ObjectMeta: defaultMeta}
-		err = r.CreateOrUpdate(statefulSet, instance, func() error {
-			appstacksutils.CustomizeStatefulSet(statefulSet, instance)
-			appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, instance)
-			if err := appstacksutils.CustomizePodWithSVCCertificate(&statefulSet.Spec.Template, instance, r.GetClient()); err != nil {
-				return err
-			}
-			appstacksutils.CustomizePersistence(statefulSet, instance)
-			return nil
-		})
+		err = r.CreateOrUpdate(statefulSet, instance, getStatefulSetMutateFn(statefulSet, instance, r.GetClient()))
 		if err != nil {
-			reqLogger.Error(err, "Failed to reconcile StatefulSet")
-			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+			// if the StatefulSet exists
+			if err = r.GetClient().Get(context.TODO(), req.NamespacedName, statefulSet); err == nil {
+				var isStatefulSetStorageLoaded bool
+				if len(statefulSet.Spec.Template.Spec.Containers) > 0 && len(statefulSet.Spec.VolumeClaimTemplates) > 0 {
+					appContainer := appstacksutils.GetAppContainer(statefulSet.Spec.Template.Spec.Containers)
+					for i := 0; i < len(appContainer.VolumeMounts); i++ {
+						if appContainer.VolumeMounts[i].Name == statefulSet.Spec.VolumeClaimTemplates[0].Name {
+							isStatefulSetStorageLoaded = true
+						}
+					}
+				}
+				// if storage has already been initialized recreate the StatefulSet
+				if !isStatefulSetStorageLoaded {
+					statefulSet = &appsv1.StatefulSet{ObjectMeta: defaultMeta}
+					err = r.DeleteResource(statefulSet)
+					if err != nil {
+						reqLogger.Error(err, "Failed to delete Statefulset")
+						return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+					}
+					err = r.CreateOrUpdate(statefulSet, instance, getStatefulSetMutateFn(statefulSet, instance, r.GetClient()))
+					if err != nil {
+						reqLogger.Error(err, "Failed to recreate Statefulset")
+						return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+					}
+				}
+			}
+			if err != nil {
+				reqLogger.Error(err, "Failed to reconcile StatefulSet")
+				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+			}
 		}
-
 	} else {
 		// Delete StatefulSet if exists
 		statefulSet := &appsv1.StatefulSet{ObjectMeta: defaultMeta}
@@ -621,4 +639,16 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func getMonitoringEnabledLabelName(ba common.BaseComponent) string {
 	return "monitor." + ba.GetGroupName() + "/enabled"
+}
+
+func getStatefulSetMutateFn(statefulSet *appsv1.StatefulSet, ba common.BaseComponent, client client.Client) func() error {
+	return func() error {
+		appstacksutils.CustomizeStatefulSet(statefulSet, ba)
+		appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, ba)
+		if err := appstacksutils.CustomizePodWithSVCCertificate(&statefulSet.Spec.Template, ba, client); err != nil {
+			return err
+		}
+		appstacksutils.CustomizePersistence(statefulSet, ba)
+		return nil
+	}
 }
