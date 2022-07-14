@@ -357,33 +357,20 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		statefulSet := &appsv1.StatefulSet{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(statefulSet, instance, getStatefulSetMutateFn(statefulSet, instance, r.GetClient()))
 		if err != nil {
-			// if the StatefulSet exists
-			if err = r.GetClient().Get(context.TODO(), req.NamespacedName, statefulSet); err == nil {
-				var isStatefulSetStorageLoaded bool
-				if len(statefulSet.Spec.Template.Spec.Containers) > 0 && len(statefulSet.Spec.VolumeClaimTemplates) > 0 {
-					appContainer := appstacksutils.GetAppContainer(statefulSet.Spec.Template.Spec.Containers)
-					for i := 0; i < len(appContainer.VolumeMounts); i++ {
-						if appContainer.VolumeMounts[i].Name == statefulSet.Spec.VolumeClaimTemplates[0].Name {
-							isStatefulSetStorageLoaded = true
-						}
-					}
+			// if storage is uninitialized, recreate the StatefulSet
+			if isStatefulSetStorageUninitialized(statefulSet, req.NamespacedName, r.GetClient()) {
+				statefulSet = &appsv1.StatefulSet{ObjectMeta: defaultMeta}
+				err = r.DeleteResource(statefulSet)
+				if err != nil {
+					reqLogger.Error(err, "Failed to delete StatefulSet")
+					return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 				}
-				// if storage has already been initialized recreate the StatefulSet
-				if !isStatefulSetStorageLoaded {
-					statefulSet = &appsv1.StatefulSet{ObjectMeta: defaultMeta}
-					err = r.DeleteResource(statefulSet)
-					if err != nil {
-						reqLogger.Error(err, "Failed to delete Statefulset")
-						return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-					}
-					err = r.CreateOrUpdate(statefulSet, instance, getStatefulSetMutateFn(statefulSet, instance, r.GetClient()))
-					if err != nil {
-						reqLogger.Error(err, "Failed to recreate Statefulset")
-						return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-					}
+				err = r.CreateOrUpdate(statefulSet, instance, getStatefulSetMutateFn(statefulSet, instance, r.GetClient()))
+				if err != nil {
+					reqLogger.Error(err, "Failed to create StatefulSet")
+					return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 				}
-			}
-			if err != nil {
+			} else {
 				reqLogger.Error(err, "Failed to reconcile StatefulSet")
 				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 			}
@@ -651,4 +638,19 @@ func getStatefulSetMutateFn(statefulSet *appsv1.StatefulSet, ba common.BaseCompo
 		appstacksutils.CustomizePersistence(statefulSet, ba)
 		return nil
 	}
+}
+
+func isStatefulSetStorageUninitialized(statefulSet *appsv1.StatefulSet, namespacedName types.NamespacedName, client client.Client) bool {
+	if statefulSetErr := client.Get(context.TODO(), namespacedName, statefulSet); statefulSetErr != nil {
+		return false
+	}
+	if len(statefulSet.Spec.Template.Spec.Containers) > 0 && len(statefulSet.Spec.VolumeClaimTemplates) > 0 {
+		appContainer := appstacksutils.GetAppContainer(statefulSet.Spec.Template.Spec.Containers)
+		for i := 0; i < len(appContainer.VolumeMounts); i++ {
+			if appContainer.VolumeMounts[i].Name == statefulSet.Spec.VolumeClaimTemplates[0].Name {
+				return false
+			}
+		}
+	}
+	return true
 }
