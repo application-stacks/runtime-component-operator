@@ -79,7 +79,7 @@ containerize:
     fi  
     # Build images
     export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
-    export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key)  
+    export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key-staging)  
     PIPELINE_REGISTRY=$(get_env pipeline-registry)
     PIPELINE_OPERATOR_IMAGE=$(get_env pipeline-operator-image)  
     # Build amd64 image
