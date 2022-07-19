@@ -6,7 +6,7 @@ _toolchain_read() {
 }
 
 ibmcloud_login() {
-  local -r ibmcloud_api=$(get_env ibmcloud-api "https://cloud.ibm.com")
+  local -r ibmcloud_api=$(get_env cr-va-ibmcloud-api "https://cloud.ibm.com")
 
   ibmcloud config --check-version false
   # Use `cr-va-ibmcloud-api-key` if present, if not, fall back to `ibmcloud-api-key`
