@@ -202,6 +202,8 @@ scan-artifact:
     export CUSTOM_SCRIPTS_PATH=/workspace/app/one-pipeline-config-repo/cpp-pipelines
     ./commons/aqua/aqua-local-scan
 
+    source "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
+
 release:
   abort_on_failure: false
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
