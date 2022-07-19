@@ -55,6 +55,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	OperatorName = "runtime-component-operator"
+)
+
 // RuntimeComponentReconciler reconciles a RuntimeComponent object
 type RuntimeComponentReconciler struct {
 	appstacksutils.ReconcilerBase
@@ -97,11 +101,11 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		ns = r.watchNamespaces[0]
 	}
 
-	configMap, err := r.GetOpConfigMap("runtime-component-operator", ns)
+	configMap, err := r.GetOpConfigMap(OperatorName, ns)
 	if err != nil {
 		reqLogger.Info("Failed to find runtime-component-operator config map")
 		common.Config = common.DefaultOpConfig()
-		configMap = &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "runtime-component-operator", Namespace: ns}}
+		configMap = &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: OperatorName, Namespace: ns}}
 		configMap.Data = common.Config
 	} else {
 		common.Config.LoadFromConfigMap(configMap)
