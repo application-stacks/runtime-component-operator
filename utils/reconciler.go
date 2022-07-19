@@ -350,7 +350,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 		} else if ok {
 			obj := ba.(metav1.Object)
 			svcCert := &certmanagerv1.Certificate{}
-			svcCert.Name = obj.GetName() + "-svc-tls"
+			svcCert.Name = obj.GetName() + "-svc-tls-cm"
 			svcCert.Namespace = obj.GetNamespace()
 			r.client.Delete(context.Background(), svcCert)
 		}

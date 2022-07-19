@@ -1,0 +1,13 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: manage-tls-rc
+spec:
+  applicationImage: k8s.gcr.io/pause:2.0
+  replicas: 1
+  expose: true
+  manageTLS: false # Disables usage of OpenShift service CA
+  service:
+    annotations:
+      service.beta.openshift.io/serving-cert-secret-name: manage-tls-rc-svc-tls-ocp
+    port: 9443
