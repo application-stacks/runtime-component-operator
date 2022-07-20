@@ -171,8 +171,14 @@ scan-artifact:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.6@sha256:7f588468622a981f89cf5e1212aaf75fface9da6169b5345ca52ab63d8215907
   script: |
     #!/usr/bin/env bash
+    
+    echo "whitesource scan"
+    #source "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
+    source ./scripts/pipeline/whitesource_unified_agent_scan.sh
+    
     echo "twistlock-scan"
     ./scripts/pipeline/twistlock-scan.sh 
+    
     echo "VA scan"
     . scripts/pipeline/va_scan
     if which list_artifacts >/dev/null; then
@@ -201,18 +207,8 @@ scan-artifact:
     cd cpp-pipelines
     export CUSTOM_SCRIPTS_PATH=/workspace/app/one-pipeline-config-repo/cpp-pipelines
     ./commons/aqua/aqua-local-scan
-
-
     
-    export whitesource-org-token=$(get_env whitesource-org-token)
-    export whitesource-server-url=$(get_env whitesource-server-url)
-    export whitesource-user-key=$(get_env whitesource-user-key)
-    export whitesource-product-name=$(get_env whitesource-product-name)
-    export whitesource-project-name=$(get_env whitesource-project-name)
-
-
-    #source "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
-    source ./scripts/pipeline/whitesource_unified_agent_scan.sh
+    
 
 release:
   abort_on_failure: false
