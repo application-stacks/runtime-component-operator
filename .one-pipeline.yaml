@@ -202,7 +202,17 @@ scan-artifact:
     export CUSTOM_SCRIPTS_PATH=/workspace/app/one-pipeline-config-repo/cpp-pipelines
     ./commons/aqua/aqua-local-scan
 
-    source "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
+
+    
+    export whitesource-org-token=$(get_env whitesource-org-token)
+    export whitesource-server-url=$(get_env whitesource-server-url)
+    export whitesource-user-key=$(get_env whitesource-user-key)
+    export whitesource-product-name=$(get_env whitesource-product-name)
+    export whitesource-project-name=$(get_env whitesource-project-name)
+
+
+    #source "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
+    source ./scripts/pipeline/whitesource_unified_agent_scan.sh
 
 release:
   abort_on_failure: false
