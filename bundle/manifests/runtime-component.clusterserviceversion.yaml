@@ -11,7 +11,7 @@ metadata:
             "name": "runtimecomponent-sample"
           },
           "spec": {
-            "applicationImage": "registry.connect.redhat.com/ibm/open-liberty-samples:springPetClinic",
+            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started",
             "expose": true,
             "replicas": 1,
             "service": {
@@ -38,7 +38,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: applicationstacks/operator:daily
-    createdAt: "2022-07-07T12:04:46Z"
+    createdAt: "2022-07-21T10:41:26Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     operators.operatorframework.io/builder: operator-sdk-v1.6.1+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
