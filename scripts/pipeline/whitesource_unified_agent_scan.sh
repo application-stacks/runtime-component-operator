@@ -44,42 +44,6 @@ if ((SCRIPT_RC==0)); then
 
   # Set default scan status we will pass to collect-evidence 
   SCAN_STATUS="success"
-
-  #
-  # Get the project token programmatically via API calls for the project name
-  #
-  body="{
-        \"requestType\": \"getProductProjectTags\",
-        \"userKey\": \"${WS_USERKEY}\",
-        \"productToken\": \"${WS_PRODUCTTOKEN}\"
-        }"
-
-  PROJECT_QUERY_RESULTS="${WHITESOURCE_SCAN_RESULTS_DIR}/projects.json"
-  PROJECT_QUERY_LOG="${WHITESOURCE_SCAN_RESULTS_DIR}/projects_query.log"
-  curl -X POST -H "Content-Type: application/json" -d "$body" "${WS_SERVER_URL}/api/v1.3" -o "$PROJECT_QUERY_RESULTS" >> "$PROJECT_QUERY_LOG" 2>&1
-
-  PROJECTTOKEN=""
-  if [ -e "$PROJECT_QUERY_RESULTS" ]; then
-    NUM_PROJECT_RESULTS=$(jq '.projectTags | length' "$PROJECT_QUERY_RESULTS")
-    for (( RESULTS_ROW_NUM=0; RESULTS_ROW_NUM<NUM_PROJECT_RESULTS; RESULTS_ROW_NUM++ ))
-    do
-      RETURNED_PROJECT_NAME=$(jq -r '.projectTags['"$RESULTS_ROW_NUM"'].name' $PROJECT_QUERY_RESULTS)
-      if [[ "$RETURNED_PROJECT_NAME" == "$WS_PROJECTNAME" ]]; then
-        PROJECTTOKEN=$(jq -r '.projectTags['"$RESULTS_ROW_NUM"'].token' $PROJECT_QUERY_RESULTS)
-        break
-      fi
-    done
-    
-    if [ -n "$PROJECTTOKEN" ]; then
-      debug "Whitesource project token for project name [$WS_PROJECTNAME] = [$PROJECTTOKEN]"  
-    else
-      # fail if we could not get a project token for the project name - we won't be able to query scan results
-      SCRIPT_RC=1
-      error "   Whitesource project token for project name [$WS_PROJECTNAME] could not be fetched"
-      banner "==================== PROJECT QUERY LOG ===================="
-      cat "$PROJECT_QUERY_LOG" 
-    fi  
-  fi
 fi 
 
 if ((SCRIPT_RC==0)); then
@@ -110,6 +74,55 @@ if ((SCRIPT_RC==0)); then
     debug "   scan completed in $ELAPSED_TIME seconds"
 
     if ((SCAN_RC==0)); then
+
+      #
+      # Get the project token programmatically via API calls for the project name. 
+      # Only do this once; once we have the project token variable set, don't execute this loop again. 
+      #
+      PROJECTTOKEN=""
+      if [ -z "$PROJECTTOKEN" ]; then
+
+        #
+        # Get the project token programmatically via API calls for the project name
+        #
+        body="{
+              \"requestType\": \"getProductProjectTags\",
+              \"userKey\": \"${WS_USERKEY}\",
+              \"productToken\": \"${WS_PRODUCTTOKEN}\"
+              }"
+
+        PROJECT_QUERY_RESULTS="${WHITESOURCE_SCAN_RESULTS_DIR}/projects.json"
+        PROJECT_QUERY_LOG="${WHITESOURCE_SCAN_RESULTS_DIR}/projects_query.log"
+        curl -X POST -H "Content-Type: application/json" -d "$body" "${WS_SERVER_URL}/api/v1.3" -o "$PROJECT_QUERY_RESULTS" >> "$PROJECT_QUERY_LOG" 2>&1
+
+        if [ -e "$PROJECT_QUERY_RESULTS" ]; then
+          NUM_PROJECT_RESULTS=$(jq '.projectTags | length' "$PROJECT_QUERY_RESULTS")
+          for (( RESULTS_ROW_NUM=0; RESULTS_ROW_NUM<NUM_PROJECT_RESULTS; RESULTS_ROW_NUM++ ))
+          do
+            RETURNED_PROJECT_NAME=$(jq -r '.projectTags['"$RESULTS_ROW_NUM"'].name' $PROJECT_QUERY_RESULTS)
+            if [[ "$RETURNED_PROJECT_NAME" == "$WS_PROJECTNAME" ]]; then
+              PROJECTTOKEN=$(jq -r '.projectTags['"$RESULTS_ROW_NUM"'].token' $PROJECT_QUERY_RESULTS)
+              break
+            fi
+          done
+          
+          if [ -n "$PROJECTTOKEN" ]; then
+            debug "Whitesource project token for project name [$WS_PROJECTNAME] = [$PROJECTTOKEN]"  
+          else
+            # fail if we could not get a project token for the project name - we won't be able to query scan results
+            SCRIPT_RC=1
+            error "   Whitesource project token for project name [$WS_PROJECTNAME] could not be fetched"
+            banner "==================== PROJECT QUERY LOG ===================="
+            cat "$PROJECT_QUERY_LOG" 
+
+            # break out of our repo scanning loop logic
+            break
+
+            # TODO how to handle evidence collection?
+          fi  
+        fi
+      fi
+
       #
       # Get scan results 
       #
