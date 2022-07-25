@@ -111,6 +111,10 @@ containerize:
       save_artifact $i type=image name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"   
     done
 
+    echo "whitesource scan"
+    #source "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
+    source ./scripts/pipeline/whitesource_unified_agent_scan.sh
+
 sign-artifact:
   abort_on_failure: false
   image: icr.io/continuous-delivery/pipeline/image-signing:1.0.0@sha256:e9d8e354668ba3d40be2aaee08298d2aa7f0e1c8a1829cca4094ec93830e3e6a
@@ -171,10 +175,6 @@ scan-artifact:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.6@sha256:7f588468622a981f89cf5e1212aaf75fface9da6169b5345ca52ab63d8215907
   script: |
     #!/usr/bin/env bash
-    
-    echo "whitesource scan"
-    #source "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
-    source ./scripts/pipeline/whitesource_unified_agent_scan.sh
     
     echo "twistlock-scan"
     ./scripts/pipeline/twistlock-scan.sh 
