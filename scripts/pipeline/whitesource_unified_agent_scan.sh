@@ -132,15 +132,12 @@ if ((SCRIPT_RC==0)); then
         curl -X POST -H "Content-Type: application/json" -d "$body" "${WS_SERVER_URL}/api/v1.3" -o "$WHITESOURCE_SCAN_RESULTS" >> "$WHITESOURCE_SCAN_LOG" 2>&1
 
         if [ -e "$WHITESOURCE_SCAN_RESULTS" ]; then
-<<<<<<< HEAD
 
           if [ -n "$WS_PRINT_SCAN_RESULTS" ]; then
             banner "=== Scan results for $REPO ($REPO_URL) ==="
             cat "$WHITESOURCE_SCAN_RESULTS"
           fi
 
-=======
->>>>>>> f43f35e21a86ac164558f224974fd9cbfe477d37
           debug "   saved scan results file $WHITESOURCE_SCAN_RESULTS"
           EVIDENCE_PARAMS+=(--attachment "${WHITESOURCE_SCAN_RESULTS}")
 
