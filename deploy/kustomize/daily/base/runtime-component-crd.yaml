@@ -5,7 +5,6 @@ metadata:
     controller-gen.kubebuilder.io/version: v0.6.0
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
   name: runtimecomponents.rc.app.stacks
 spec:
@@ -4742,6 +4741,12 @@ spec:
                   storage:
                     description: Defines settings of persisted storage for StatefulSets.
                     properties:
+                      className:
+                        description: A convenient field to request the storage class
+                          of the persisted storage. The name can not be specified
+                          or updated after the storage is created.
+                        pattern: .+
+                        type: string
                       mountPath:
                         description: The directory inside the container where this
                           persisted storage will be bound to.
@@ -6661,7 +6666,6 @@ metadata:
     controller-gen.kubebuilder.io/version: v0.6.0
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
   name: runtimeoperations.rc.app.stacks
 spec:
