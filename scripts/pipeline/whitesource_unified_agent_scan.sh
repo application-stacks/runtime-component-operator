@@ -135,7 +135,7 @@ if ((SCRIPT_RC==0)); then
 
           if [ -n "$WS_PRINT_SCAN_RESULTS" ]; then
             banner "=== Scan results for $REPO ($REPO_URL) ==="
-            cat "$WHITESOURCE_SCAN_RESULTS"
+            cat "$WHITESOURCE_SCAN_RESULTS" | jq
           fi
 
           debug "   saved scan results file $WHITESOURCE_SCAN_RESULTS"
