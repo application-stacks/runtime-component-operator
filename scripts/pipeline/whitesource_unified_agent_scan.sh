@@ -74,17 +74,12 @@ if ((SCRIPT_RC==0)); then
     debug "   scan completed in $ELAPSED_TIME seconds"
 
     if ((SCAN_RC==0)); then
-
       #
       # Get the project token programmatically via API calls for the project name. 
       # Only do this once; once we have the project token variable set, don't execute this loop again. 
       #
       PROJECTTOKEN=""
       if [ -z "$PROJECTTOKEN" ]; then
-
-        #
-        # Get the project token programmatically via API calls for the project name
-        #
         body="{
               \"requestType\": \"getProductProjectTags\",
               \"userKey\": \"${WS_USERKEY}\",
@@ -111,50 +106,56 @@ if ((SCRIPT_RC==0)); then
           else
             # fail if we could not get a project token for the project name - we won't be able to query scan results
             SCRIPT_RC=1
-            error "   Whitesource project token for project name [$WS_PROJECTNAME] could not be fetched"
-            banner "==================== PROJECT QUERY LOG ===================="
-            cat "$PROJECT_QUERY_LOG" 
-
-            # break out of our repo scanning loop logic
-            break
-
-            # TODO how to handle evidence collection?
-          fi  
+            error "   Whitesource project token for project name [$WS_PROJECTNAME] was not found in query results"
+          fi 
+        else
+          # PROJECT_QUERY_RESULTS json file wasn't written, the query must have failed 
+          SCRIPT_RC=1
+          error "   Whitesource project token query failed"
         fi
       fi
 
-      #
-      # Get scan results 
-      #
-      WS_PROJECTTOKEN="$PROJECTTOKEN"
-      body="{
-          \"requestType\": \"getProjectAlerts\",
-          \"userKey\": \"${WS_USERKEY}\",
-          \"projectToken\": \"${WS_PROJECTTOKEN}\"
-      }"
-      WHITESOURCE_SCAN_RESULTS="${WHITESOURCE_SCAN_RESULTS_DIR}/$REPO_PATH-ws_scan_results.json"
-      curl -X POST -H "Content-Type: application/json" -d "$body" "${WS_SERVER_URL}/api/v1.3" -o "$WHITESOURCE_SCAN_RESULTS" >> "$WHITESOURCE_SCAN_LOG" 2>&1
+      if ((SCRIPT_RC==0)); then
+        #
+        # Get scan results 
+        #
+        WS_PROJECTTOKEN="$PROJECTTOKEN"
+        body="{
+            \"requestType\": \"getProjectAlerts\",
+            \"userKey\": \"${WS_USERKEY}\",
+            \"projectToken\": \"${WS_PROJECTTOKEN}\"
+        }"
+        WHITESOURCE_SCAN_RESULTS="${WHITESOURCE_SCAN_RESULTS_DIR}/$REPO_PATH-ws_scan_results.json"
+        curl -X POST -H "Content-Type: application/json" -d "$body" "${WS_SERVER_URL}/api/v1.3" -o "$WHITESOURCE_SCAN_RESULTS" >> "$WHITESOURCE_SCAN_LOG" 2>&1
 
-      if [ -e "$WHITESOURCE_SCAN_RESULTS" ]; then
-        debug "   saved scan results file $WHITESOURCE_SCAN_RESULTS"
-        EVIDENCE_PARAMS+=(
-          --attachment "${WHITESOURCE_SCAN_RESULTS}"
-        )
+        if [ -e "$WHITESOURCE_SCAN_RESULTS" ]; then
+          debug "   saved scan results file $WHITESOURCE_SCAN_RESULTS"
+          EVIDENCE_PARAMS+=(--attachment "${WHITESOURCE_SCAN_RESULTS}")
 
-      else 
-        SCRIPT_RC=1
-        error "   Whitesource Unified Agent scan results could not be fetched"
+        else 
+          SCRIPT_RC=1
+          error "   Whitesource Unified Agent scan results could not be fetched"
+          banner "==================== SCAN LOG ===================="
+          cat "$WHITESOURCE_SCAN_LOG" 
+          EVIDENCE_PARAMS+=(--attachment "${WHITESOURCE_SCAN_LOG}")
+        fi
+      else  
+        # we were not able to query the project token  
+        banner "==================== PROJECT QUERY LOG ===================="
+        cat "$PROJECT_QUERY_LOG"         
         banner "==================== SCAN LOG ===================="
         cat "$WHITESOURCE_SCAN_LOG" 
+        EVIDENCE_PARAMS+=(--attachment "${WHITESOURCE_SCAN_LOG}")
+        EVIDENCE_PARAMS+=(--attachment "${PROJECT_QUERY_LOG}")
       fi
     else  
-      # scan returned a non-zero return code  
+      # scan returned a non-zero return code 
       SCRIPT_RC=$SCAN_RC
       error "   Whitesource Unified Agent scan returned exit code $SCAN_RC"
       banner "==================== SCAN LOG ===================="
       cat "$WHITESOURCE_SCAN_LOG" 
+      EVIDENCE_PARAMS+=(--attachment "${WHITESOURCE_SCAN_LOG}")
     fi
-
     #
     # report evidence using `collect-evidence`
     #
