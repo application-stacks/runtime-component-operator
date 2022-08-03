@@ -445,7 +445,12 @@ Once a `RuntimeComponent` application is exposed as a Provisioned Service, a ser
 
 Runtime Component Operator can create a `ServiceMonitor` resource to integrate with `Prometheus Operator`.
 
-**For users on Red Hat OpenShift Container Platform v4.6+**. Before using the feature, you must install `Prometheus Operator` by following our link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/openshift-monitoring.adoc#application-monitoring-on-rhocp-46++[Application Monitoring on RHOCP 4.6+] guide. Configure the `RuntimeComponent` CR instance with the basic or advanced monitoring specification below, then view Prometheus Metrics through the OpenShift UI as "Administrator" under the `Observe` > `Metrics` tab. 
+**For users on Red Hat OpenShift Container Platform v4.6+:**
+
+1. Follow the OpenShift guide on link:++https://docs.openshift.com/container-platform/4.10/monitoring/configuring-the-monitoring-stack.html++[Configuring the monitoring stack] which creates two `ConfigMap` resources, `cluster-monitoring-config` and `user-workload-monitoring-config`.
+1. Follow the OpenShift guide on link:++https://docs.openshift.com/container-platform/4.10/monitoring/enabling-monitoring-for-user-defined-projects.html++[Enabling monitoring for user-defined projects] to enable user workloads. 
+1. Create a `RuntimeComponent` CR instance with the link:++#basic-monitoring-specification++[basic] or link:++#advanced-monitoring-specification++[advanced] monitoring specification below.
+1. View metrics through the OpenShift UI as "Administrator" under the `Observe` > `Metrics` tab. 
 
 _The community version of Prometheus Operator is not supported for users on Red Hat OpenShift Container Platform._ 
 
