@@ -23,7 +23,7 @@ setup:
       # curl -u :$GH_TOKEN https://api.github.com/repos/$REPO/branches/$BRANCH/protection -H "Accept: application/vnd.github.v3+json" -X PUT -d '{"required_pull_request_reviews":{"dismiss_stale_reviews":true,"required_approving_review_count":1},"enforce_admins":null,"restrictions":null,"required_status_checks":null}'
     fi
 
-    Only sync-up main branch and actual releases (i.e. 1.0.0 tag)
+    # Only sync-up main branch and actual releases (i.e. 1.0.0 tag)
     if [[ "$BRANCH" == "main" || "$BRANCH" =~ ^[0-9]+.[0-9]+.[0-9]+$ ]]; then
       # Update repo with Whitesource enabled
       GHE_TOKEN=$(get_env git-token)
