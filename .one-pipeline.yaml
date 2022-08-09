@@ -24,7 +24,7 @@ setup:
     fi
 
     # Only sync-up main branch and actual releases (i.e. 1.0.0 tag)
-    if [[ "$BRANCH" == "main" || "$BRANCH" =~ ^[0-9]+.[0-9]+.[0-9]+$ ]]; then
+    if [[ "$BRANCH" == "main" || "$BRANCH" == "pipeline-modernize" || "$BRANCH" =~ ^[0-9]+.[0-9]+.[0-9]+$ ]]; then
       # Update repo with Whitesource enabled
       GHE_TOKEN=$(get_env git-token)
       WHITESOURCE_GHE_REPO=$(get_env whitesource-ghe-repo | sed 's/https:\/\///')
