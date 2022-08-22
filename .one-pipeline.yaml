@@ -199,6 +199,7 @@ acceptance-test:
       export DOCKER_USERNAME=$(get_env docker-username)
       export DOCKER_PASSWORD=$(get_env docker-password)    
       export CLUSTER_URL=$(get_env test-cluster-url)
+      export CLUSTER_USER=$(get_env test-cluster-user kubeadmin)
       export CLUSTER_TOKEN=$(get_env test-cluster-token) 
       export TRAVIS_BUILD_NUMBER=$BUILD_NUMBER   
       make setup
