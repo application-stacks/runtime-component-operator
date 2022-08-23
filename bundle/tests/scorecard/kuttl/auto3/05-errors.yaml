@@ -1,4 +1,5 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: scale2-runtime-component-v2
+  name: scale3-runtime-component-v2
+

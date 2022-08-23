@@ -3,16 +3,7 @@
 apiVersion: rc.app.stacks/v1beta2
 kind: RuntimeComponent
 metadata:
-  name: autoscaling1-rc
+  name: scale3-runtime-component
 spec:
   autoscaling:
-    maxReplicas: 4
-    minReplicas: 0
-    metrics:
-      type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 20
-
+    targetCPUUtilizationPercentage: 50

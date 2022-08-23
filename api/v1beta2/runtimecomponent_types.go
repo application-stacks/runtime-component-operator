@@ -23,6 +23,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -196,6 +197,13 @@ type RuntimeComponentAutoScaling struct {
 	// Target average CPU utilization, represented as a percentage of requested CPU, over all the pods.
 	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Target CPU Utilization Percentage",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
 	TargetCPUUtilizationPercentage *int32 `json:"targetCPUUtilizationPercentage,omitempty"`
+
+	// Target average Memory utilization, represented as a percentage of requested memory, over all the pods.
+	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Target Memory Utilization Percentage",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
+	TargetMemoryUtilizationPercentage *int32 `json:"targetMemoryUtilizationPercentage,omitempty"`
+
+	// Specifications used for replica count calculation
+	Metrics *autoscalingv2.MetricSpec `json:"metrics,omitempty"`
 }
 
 // Configures parameters for the network service of pods.
@@ -691,6 +699,16 @@ func (a *RuntimeComponentAutoScaling) GetMaxReplicas() int32 {
 // GetTargetCPUUtilizationPercentage returns target cpu usage
 func (a *RuntimeComponentAutoScaling) GetTargetCPUUtilizationPercentage() *int32 {
 	return a.TargetCPUUtilizationPercentage
+}
+
+// GetTargetCPUUtilizationPercentage returns target memory usage
+func (a *RuntimeComponentAutoScaling) GetTargetMemoryUtilizationPercentage() *int32 {
+	return a.TargetMemoryUtilizationPercentage
+}
+
+// GetMetrics returns metrics for resource utilization
+func (a *RuntimeComponentAutoScaling) GetMetrics() *autoscalingv2.MetricSpec {
+	return a.Metrics
 }
 
 // GetSize returns persistent volume size

@@ -82,8 +82,14 @@ setup_test() {
     mv bundle/tests/scorecard/minikube-kuttl/ingress bundle/tests/scorecard/kuttl/
     mv bundle/tests/scorecard/minikube-kuttl/ingress-certificate bundle/tests/scorecard/kuttl/
     mv bundle/tests/scorecard/minikube-kuttl/ingress-manage-tls bundle/tests/scorecard/kuttl/
+    mv bundle/tests/scorecard/minikube-kuttl/auto1-v1 bundle/tests/scorecard/kuttl/
+    mv bundle/tests/scorecard/minikube-kuttl/auto2-v1 bundle/tests/scorecard/kuttl/
+    mv bundle/tests/scorecard/minikube-kuttl/auto3-v1 bundle/tests/scorecard/kuttl/
     
     ## Remove tests that do not apply for minikube
+    mv bundle/tests/scorecard/kuttl/auto1 bundle/tests/scorecard/minikube-kuttl/
+    mv bundle/tests/scorecard/kuttl/auto2 bundle/tests/scorecard/minikube-kuttl/
+    mv bundle/tests/scorecard/kuttl/auto3 bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/network-policy bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/network-policy-multiple-apps bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/routes bundle/tests/scorecard/minikube-kuttl/
@@ -106,7 +112,13 @@ cleanup_test() {
     mv bundle/tests/scorecard/kuttl/ingress bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/ingress-certificate bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/ingress-manage-tls bundle/tests/scorecard/minikube-kuttl/
+    mv bundle/tests/scorecard/kuttl/auto1-v1 bundle/tests/scorecard/minikube-kuttl/
+    mv bundle/tests/scorecard/kuttl/auto1-v2 bundle/tests/scorecard/minikube-kuttl/
+    mv bundle/tests/scorecard/kuttl/auto1-v3 bundle/tests/scorecard/minikube-kuttl/
     
+    mv bundle/tests/scorecard/minikube-kuttl/auto1 bundle/tests/scorecard/kuttl/
+    mv bundle/tests/scorecard/minikube-kuttl/auto2 bundle/tests/scorecard/kuttl/
+    mv bundle/tests/scorecard/minikube-kuttl/auto3 bundle/tests/scorecard/kuttl/
     mv bundle/tests/scorecard/minikube-kuttl/network-policy bundle/tests/scorecard/kuttl/
     mv bundle/tests/scorecard/minikube-kuttl/network-policy-multiple-apps bundle/tests/scorecard/kuttl/
     mv bundle/tests/scorecard/minikube-kuttl/routes bundle/tests/scorecard/kuttl/ 

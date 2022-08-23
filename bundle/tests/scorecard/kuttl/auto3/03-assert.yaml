@@ -1,27 +1,27 @@
 apiVersion: kuttl.dev/v1beta1
 kind: TestAssert
-timeout: 60
+timeout: 120
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: autoscaling1-rc
+  name: scale3-runtime-component
 status:
-  replicas: 2
-  readyReplicas: 2
-  updatedReplicas: 2
+  replicas: 3
+  readyReplicas: 3
+  updatedReplicas: 3
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: autoscaling1-rc-v2
+  name: scale3-runtime-component-v2
 spec:
-  maxReplicas: 3
-  minReplicas: 2
+  maxReplicas: 5
+  minReplicas: 3
   metrics:
   - type: Resource
     resource:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 30
+        averageUtilization: 50

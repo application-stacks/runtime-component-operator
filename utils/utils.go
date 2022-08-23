@@ -28,6 +28,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -895,8 +896,8 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	}
 }
 
-// CustomizeHPA ...
-func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseComponent) {
+// CustomizeHPAv1 for autoscaling/v1
+func CustomizeHPAv1(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	hpa.Labels = ba.GetLabels()
 	hpa.Annotations = MergeMaps(hpa.Annotations, ba.GetAnnotations())
@@ -904,6 +905,53 @@ func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseComp
 	hpa.Spec.MaxReplicas = ba.GetAutoscaling().GetMaxReplicas()
 	hpa.Spec.MinReplicas = ba.GetAutoscaling().GetMinReplicas()
 	hpa.Spec.TargetCPUUtilizationPercentage = ba.GetAutoscaling().GetTargetCPUUtilizationPercentage()
+
+	hpa.Spec.ScaleTargetRef.Name = obj.GetName()
+	hpa.Spec.ScaleTargetRef.APIVersion = "apps/v1"
+
+	if ba.GetStatefulSet() != nil {
+		hpa.Spec.ScaleTargetRef.Kind = "StatefulSet"
+	} else {
+		hpa.Spec.ScaleTargetRef.Kind = "Deployment"
+	}
+}
+
+// CustomizeHPA for autoscaling/v2
+func CustomizeHPAv2(hpa *autoscalingv2.HorizontalPodAutoscaler, ba common.BaseComponent) {
+	obj := ba.(metav1.Object)
+	hpa.Labels = ba.GetLabels()
+	hpa.Annotations = MergeMaps(hpa.Annotations, ba.GetAnnotations())
+
+	hpa.Spec.MaxReplicas = ba.GetAutoscaling().GetMaxReplicas()
+	hpa.Spec.MinReplicas = ba.GetAutoscaling().GetMinReplicas()
+
+	metrics := ba.GetAutoscaling().GetMetrics()
+	if metrics != nil {
+		metricsList := []autoscalingv2.MetricSpec{*metrics}
+		hpa.Spec.Metrics = metricsList
+	}
+
+	cpuPer := ba.GetAutoscaling().GetTargetCPUUtilizationPercentage()
+	memPer := ba.GetAutoscaling().GetTargetMemoryUtilizationPercentage()
+
+	if cpuPer != nil || memPer != nil {
+		metricSpec := autoscalingv2.MetricSpec{
+			Type: autoscalingv2.ResourceMetricSourceType,
+			Resource: &autoscalingv2.ResourceMetricSource{
+				Target: autoscalingv2.MetricTarget{Type: autoscalingv2.UtilizationMetricType},
+			},
+		}
+
+		if cpuPer != nil {
+			metricSpec.Resource.Name = corev1.ResourceCPU
+			metricSpec.Resource.Target.AverageUtilization = cpuPer
+		} else if memPer != nil {
+			metricSpec.Resource.Name = corev1.ResourceMemory
+			metricSpec.Resource.Target.AverageUtilization = memPer
+		}
+		metricsList := []autoscalingv2.MetricSpec{metricSpec}
+		hpa.Spec.Metrics = metricsList
+	}
 
 	hpa.Spec.ScaleTargetRef.Name = obj.GetName()
 	hpa.Spec.ScaleTargetRef.APIVersion = "apps/v1"

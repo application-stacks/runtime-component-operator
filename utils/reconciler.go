@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	networkingv1 "k8s.io/api/networking/v1"
 	"time"
+
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
+	networkingv1 "k8s.io/api/networking/v1"
 
 	"github.com/application-stacks/runtime-component-operator/common"
 	certmanagerv1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
@@ -291,6 +293,15 @@ func (r *ReconcilerBase) IsOpenShift() bool {
 		return false
 	}
 	return isOpenShift
+}
+
+// IsAutoscalingV2Supported returns true if the cluster supports autoscaling/v2
+func (r *ReconcilerBase) IsAutoscalingV2Supported() bool {
+	isSupported, err := r.IsGroupVersionSupported(autoscalingv2.SchemeGroupVersion.String(), "HorizontalPodAutoscaler")
+	if err != nil {
+		return false
+	}
+	return isSupported
 }
 
 // GetRouteTLSValues returns certificate an key values to be used in the route

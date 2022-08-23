@@ -6,11 +6,5 @@ spec:
   autoscaling:
     maxReplicas: 3
     minReplicas: 2
-    metrics:
-      type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 30
+    targetCPUUtilizationPercentage: 30
 

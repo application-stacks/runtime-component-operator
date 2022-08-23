@@ -4,6 +4,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -99,6 +100,8 @@ type BaseComponentAutoscaling interface {
 	GetMinReplicas() *int32
 	GetMaxReplicas() int32
 	GetTargetCPUUtilizationPercentage() *int32
+	GetTargetMemoryUtilizationPercentage() *int32
+	GetMetrics() *autoscalingv2.MetricSpec
 }
 
 // BaseComponentStorage represents basic PVC configuration

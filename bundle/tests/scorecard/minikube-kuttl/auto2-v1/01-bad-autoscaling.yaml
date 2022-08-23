@@ -10,10 +10,5 @@ spec:
       cpu: "0.2"
   autoscaling:
     minReplicas: 5
-    metrics:
-      type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 50
+    targetCPUUtilizationPercentage: 50
+

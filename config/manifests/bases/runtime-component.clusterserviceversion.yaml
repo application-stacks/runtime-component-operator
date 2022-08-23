@@ -83,6 +83,11 @@ spec:
         path: autoscaling.targetCPUUtilizationPercentage
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
+      - description: Target average Memory utilization, represented as a percentage of requested memory, over all the pods.
+        displayName: Target Memory Utilization Percentage
+        path: autoscaling.targetMemoryUtilizationPercentage
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
       - description: Periodic probe of container liveness. Container will be restarted if the probe fails.
         displayName: Liveness Probe
         path: probes.liveness

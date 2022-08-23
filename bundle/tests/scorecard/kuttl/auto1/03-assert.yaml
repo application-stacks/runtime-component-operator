@@ -11,11 +11,17 @@ status:
   readyReplicas: 2
   updatedReplicas: 2
 ---
-apiVersion: autoscaling/v1
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: autoscaling1-rc
+  name: autoscaling1-rc-v2
 spec:
   maxReplicas: 3
   minReplicas: 2
-  targetCPUUtilizationPercentage: 30
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 30

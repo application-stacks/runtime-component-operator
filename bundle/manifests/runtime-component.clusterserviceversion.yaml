@@ -38,7 +38,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: applicationstacks/operator:daily
-    createdAt: "2022-07-21T10:41:26Z"
+    createdAt: "2022-08-22T21:42:53Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     operators.operatorframework.io/builder: operator-sdk-v1.6.1+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
@@ -114,6 +114,11 @@ spec:
       - description: Target average CPU utilization, represented as a percentage of requested CPU, over all the pods.
         displayName: Target CPU Utilization Percentage
         path: autoscaling.targetCPUUtilizationPercentage
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
+      - description: Target average Memory utilization, represented as a percentage of requested memory, over all the pods.
+        displayName: Target Memory Utilization Percentage
+        path: autoscaling.targetMemoryUtilizationPercentage
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
       - description: Periodic probe of container liveness. Container will be restarted if the probe fails.
