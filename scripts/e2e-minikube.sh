@@ -113,8 +113,8 @@ cleanup_test() {
     mv bundle/tests/scorecard/kuttl/ingress-certificate bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/ingress-manage-tls bundle/tests/scorecard/minikube-kuttl/
     mv bundle/tests/scorecard/kuttl/auto1-v1 bundle/tests/scorecard/minikube-kuttl/
-    mv bundle/tests/scorecard/kuttl/auto1-v2 bundle/tests/scorecard/minikube-kuttl/
-    mv bundle/tests/scorecard/kuttl/auto1-v3 bundle/tests/scorecard/minikube-kuttl/
+    mv bundle/tests/scorecard/kuttl/auto2-v1 bundle/tests/scorecard/minikube-kuttl/
+    mv bundle/tests/scorecard/kuttl/auto3-v1 bundle/tests/scorecard/minikube-kuttl/
     
     mv bundle/tests/scorecard/minikube-kuttl/auto1 bundle/tests/scorecard/kuttl/
     mv bundle/tests/scorecard/minikube-kuttl/auto2 bundle/tests/scorecard/kuttl/
