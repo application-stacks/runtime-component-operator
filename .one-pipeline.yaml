@@ -115,6 +115,7 @@ containerize:
       skopeo --version
     fi  
     # Build images
+    export RELEASE_TARGET=$(get_env branch)
     export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
     export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key-staging)  
     PIPELINE_REGISTRY=$(get_env pipeline-registry)
