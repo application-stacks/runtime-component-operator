@@ -49,6 +49,9 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+# Produce files under deploy/kustomize/daily with default namespace
+KUSTOMIZE_NAMESPACE = default
+
 all: manager
 
 # Run tests
@@ -84,6 +87,10 @@ deploy: manifests kustomize
 undeploy: manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
+
+# Kustomize build controller, and roles & role bindings
+kustomize-build: manifests kustomize
+	cd deploy/kustomize/daily/base && $(KUSTOMIZE) edit set namespace ${KUSTOMIZE_NAMESPACE}
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
@@ -148,6 +155,11 @@ bundle: manifests setup
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	
+	$(KUSTOMIZE) build config/kustomize/crd -o deploy/kustomize/daily/base/runtime-component-crd.yaml
+	cd config/kustomize/operator && $(KUSTOMIZE) edit set namespace $(KUSTOMIZE_NAMESPACE)
+	$(KUSTOMIZE) build config/kustomize/operator -o deploy/kustomize/daily/base/runtime-component-operator.yaml
+	
 	mv config/manifests/patches/csvAnnotations.yaml.bak config/manifests/patches/csvAnnotations.yaml
 	operator-sdk bundle validate ./bundle
 
