@@ -248,39 +248,8 @@ scan-artifact:
   script: |
     #!/usr/bin/env bash
     
-    echo "twistlock-scan"
-    ./scripts/pipeline/twistlock-scan.sh 
-    
-    echo "VA scan"
-    . scripts/pipeline/va_scan
-    if which list_artifacts >/dev/null; then
-      list_artifacts | while IFS= read -r artifact; do
-        image="$(load_artifact "$artifact" "name")"
-        type="$(load_artifact "$artifact" "type")"
-        digest="$(load_artifact "$artifact" "digest")"
-        name="$(echo "$artifact" | awk '{print $1}')"
-
-        if [[ "$type" == "image" ]]; then
-          if [[ "$image" == *"icr.io"* ]]; then
-            start_va_scan "$name" "$image" "$digest"
-          fi
-        fi
-      done
-    fi
-
-    echo "aqua scan"
-    # install docker
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sudo sh get-docker.sh
-    # get aqua scan executables
-    git clone https://$(get_env git-token)@github.ibm.com/CICD-CPP/cpp-pipelines.git
-    chmod -R +x cpp-pipelines
-    # setup and execute aqua scan
-    cd cpp-pipelines
-    export CUSTOM_SCRIPTS_PATH=/workspace/app/one-pipeline-config-repo/cpp-pipelines
-    ./commons/aqua/aqua-local-scan
-    
-    
+    # ========== Security Scanner ==========
+    ./scripts/pipeline/ci_to_secure_pipeline_scan.sh
 
 release:
   abort_on_failure: false
