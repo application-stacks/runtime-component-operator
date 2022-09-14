@@ -142,7 +142,7 @@ containerize:
     PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
 
     if [[ ! -z "$PERIODIC_SCAN" && "$PERIODIC_SCAN" != "false" && "$PERIODIC_SCAN" != "no"  ]]; then
-      echo "Skipping unit-tests. This is a periodic run that is only meant to produce CVE information."
+      echo "Skipping containerize stage. This is a periodic run that is only meant to produce CVE information."
     else 
       # Build amd64 image
       make build-pipeline-releases
