@@ -247,7 +247,6 @@ scan-artifact:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.15
   script: |
     #!/usr/bin/env bash
-    
     # ========== Security Scanner ==========
     ./scripts/pipeline/ci_to_secure_pipeline_scan.sh
 
