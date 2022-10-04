@@ -114,7 +114,7 @@ function launch_travis() {
                             \"os\": \"linux\",
                             \"arch\": \"ppc64le\",
                             \"script\": [
-                                \"make build-pipeline-releases\"
+                                \"make build-pipeline-releases RELEASE_TARGET=$BRANCH\"
                             ]
                         },
                         {
@@ -122,7 +122,7 @@ function launch_travis() {
                             \"os\": \"linux\",
                             \"arch\": \"s390x\",
                             \"script\": [
-                                \"make build-pipeline-releases\"
+                                \"make build-pipeline-releases RELEASE_TARGET=$BRANCH\"
                             ]
                         }
                     ]

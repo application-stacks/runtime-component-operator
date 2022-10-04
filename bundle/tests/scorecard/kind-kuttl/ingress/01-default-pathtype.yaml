@@ -1,0 +1,10 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: ingress
+spec:
+  # Add fields here
+  route:
+    host: myapp.mycompany.com
+    path: "/"
+    pathType:

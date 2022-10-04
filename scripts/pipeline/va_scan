@@ -142,7 +142,7 @@ check_va_scan_result() {
 
     echo -e "${iter} STATUS ${status} : A vulnerability report was not found for the specified image.">&2
     echo "Either the image doesn't exist or the scan hasn't completed yet. ">&2
-    echo "Waiting 10s for scan to complete...">&2
+    echo "Waiting ${retry_sleep}s for scan to complete...">&2
 
     sleep "$retry_sleep"
   done
