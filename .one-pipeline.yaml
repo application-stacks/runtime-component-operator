@@ -55,7 +55,7 @@ setup:
       echo "git push --prune https://$GHE_TOKEN@$WHITESOURCE_GHE_REPO $BRANCH_REFSPEC +refs/tags/*:refs/tags/*"
       git push --prune https://$GHE_TOKEN@$WHITESOURCE_GHE_REPO $BRANCH_REFSPEC +refs/tags/*:refs/tags/*
     fi
-  
+
 test:
   dind: true
   abort_on_failure: true
@@ -92,14 +92,16 @@ static-scan:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     #!/usr/bin/env bash
+
     PERIODIC_SCAN=$(get_env periodic-rescan)
     PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
 
     if [[ ! -z "$PERIODIC_SCAN" && "$PERIODIC_SCAN" != "false" && "$PERIODIC_SCAN" != "no"  ]]; then
-      echo "Skipping static scan. This is a periodic run that is only meant to produce CVE information."
+      echo "Skipping static-scan. This is a periodic run that is only meant to produce CVE information."
       exit 0
     fi
 
+    BRANCH=$(get_env branch) 
     read -r SONAR_HOST_URL <<< "$(get_env sonarqube | jq -r '.parameters.dashboard_url' | sed 's:/*$::')"
     read -r SONAR_USER <<< "$(get_env sonarqube | jq -r '.parameters.user_login')"
     SONARQUBE_INSTANCE_ID=$(get_env sonarqube | jq -r '.instance_id')
@@ -109,6 +111,7 @@ static-scan:
     sonar.projectKey=runtime-component-operator
     sonar.host.url=$SONAR_HOST_URL
     sonar.sources=.
+    sonar.branch.name=$BRANCH
     sonar.login=$SONAR_USER
     sonar.password=$SONAR_PASS
     sonar.c.file.suffixes=-
@@ -118,6 +121,7 @@ static-scan:
     chmod -x "$WORKSPACE"/runtime-component-operator/sonar-project.properties
     #echo "$SONAR_PASS" >> /tmp/sonarqube-token
     "${COMMONS_PATH}"/static-scan/run.sh
+
     ## Perform static lint
     ./scripts/pipeline/static-linter-scan.sh --git-token $(get_env git-token) --static-linter-version $(get_env static-linter-version)
     
@@ -152,25 +156,17 @@ containerize:
     export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
     export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key-staging)  
     PIPELINE_REGISTRY=$(get_env pipeline-registry)
-    PIPELINE_OPERATOR_IMAGE=$(get_env pipeline-operator-image) 
-    
-    PERIODIC_SCAN=$(get_env periodic-rescan)
-    PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
-
-    if [[ ! -z "$PERIODIC_SCAN" && "$PERIODIC_SCAN" != "false" && "$PERIODIC_SCAN" != "no"  ]]; then
-      echo "Skipping containerize stage. This is a periodic run that is only meant to produce CVE information."
-    else 
-      # Build amd64 image
-      make build-pipeline-releases
-      # Build ppc64le and s390x images
-      ./scripts/pipeline/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
-      # Build manifest
-      make build-pipeline-manifest    
-      # Build bundle image
-      ./scripts/pipeline/launch-catalog-build.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
-    fi
+    PIPELINE_OPERATOR_IMAGE=$(get_env pipeline-operator-image)  
+    # Build amd64 image
+    make build-pipeline-releases
+    # Build ppc64le and s390x images
+    ./scripts/pipeline/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
+    # Build manifest
+    make build-pipeline-manifest    
+    # Build bundle image
+    ./scripts/pipeline/launch-catalog-build.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
     # Save artifacts
-    declare -a tags=("daily-amd64" "daily-ppc64le" "daily-s390x") 
+    declare -a tags=("${RELEASE_TARGET}" "${RELEASE_TARGET}-amd64" "${RELEASE_TARGET}-ppc64le" "${RELEASE_TARGET}-s390x") 
     for i in "${tags[@]}"
     do
       IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE:$i
@@ -179,7 +175,7 @@ containerize:
       echo "Saving artifact $i name=$IMAGE digest=$DIGEST"
       save_artifact $i type=image name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"   
     done
-    declare -a catalogs=("catalog-daily")
+    declare -a catalogs=("catalog-${RELEASE_TARGET}")
     for i in "${catalogs[@]}"
     do
       IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE:$i
@@ -190,9 +186,9 @@ containerize:
       save_artifact $i type=image name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"   
     done
 
-    echo "whitesource scan"
-    chmod +x "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
-    source "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
+    # echo "whitesource scan"
+    # #source "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
+    # source ./scripts/pipeline/whitesource_unified_agent_scan.sh
 
 sign-artifact:
   abort_on_failure: false
@@ -201,10 +197,27 @@ sign-artifact:
     #!/usr/bin/env bash
     echo "sign-artifact"
 
+    PERIODIC_SCAN=$(get_env periodic-rescan)
+    PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
+
+    if [[ ! -z "$PERIODIC_SCAN" && "$PERIODIC_SCAN" != "false" && "$PERIODIC_SCAN" != "no"  ]]; then
+      echo "Skipping sign-artifact. This is a periodic run that is only meant to produce CVE information."
+      exit 0
+    fi
+
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     #!/usr/bin/env bash
+
+
+    PERIODIC_SCAN=$(get_env periodic-rescan)
+    PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
+
+    if [[ ! -z "$PERIODIC_SCAN" && "$PERIODIC_SCAN" != "false" && "$PERIODIC_SCAN" != "no"  ]]; then
+      echo "Skipping deploy. This is a periodic run that is only meant to produce CVE information."
+      exit 0
+    fi
 
     if [[ "$PIPELINE_DEBUG" == 1 ]]; then
       trap env EXIT
@@ -213,15 +226,27 @@ deploy:
     fi
     echo "deploy"
 
-dynamic-scan: 
+dynamic-scan:
   abort_on_failure: false
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     #!/usr/bin/env bash
     echo "dynamic-scan"
+    PERIODIC_SCAN=$(get_env periodic-rescan)
+    PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
+
+    if [[ ! -z "$PERIODIC_SCAN" && "$PERIODIC_SCAN" != "false" && "$PERIODIC_SCAN" != "no"  ]]; then
+      echo "Skipping dynamic-scan. This is a periodic run that is only meant to produce CVE information."
+      exit 0
+    fi
+
+    #export APP_URL=$(cat ../app-url)
+    # feature preview this until evidence locker v2 usage is full feature ready
+    # can be triggered, and owasp will run for preview purposes
+    #source scripts/zap/trigger_api_scan.sh
 
 acceptance-test:
-  dind: true  
+  dind: true
   abort_on_failure: true
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
@@ -232,42 +257,86 @@ acceptance-test:
     PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
 
     if [[ ! -z "$PERIODIC_SCAN" && "$PERIODIC_SCAN" != "false" && "$PERIODIC_SCAN" != "no"  ]]; then
-      echo "Skipping e2e-tests. This is a periodic run that is only meant to produce CVE information."
+      echo "Skipping acceptance-test. This is a periodic run that is only meant to produce CVE information."
       exit 0
     fi
 
+    SKIP_KIND_E2E_TEST=$(get_env SKIP_KIND_E2E_TEST)
+    SKIP_KIND_E2E_TEST="$(echo "$SKIP_KIND_E2E_TEST" | tr '[:upper:]' '[:lower:]')"
+    if [[ ! -z "$SKIP_KIND_E2E_TEST" && "$SKIP_KIND_E2E_TEST" != "false" && "$SKIP_KIND_E2E_TEST" != "no"  ]]; then
+      echo "Skipping acceptance-test, SKIP_KIND_E2E_TEST=$SKIP_KIND_E2E_TEST"
+      exit 0
+    fi
+
+    # Download and configure golang
     GO_VERSION=$(get_env go-version)
     if [[ -z "${GO_VERSION}" ]]; then
       GO_VERSION="$(grep '^go [0-9]\+.[0-9]\+' go.mod | cut -d ' ' -f 2)"
     fi
+    export GO_VERSION
+    rm -rf /usr/local/go && wget --no-verbose --header "Accept: application/octet-stream" "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz" -O - | tar -xz -C /usr/local/
+    export PATH=$PATH:/usr/local/go/bin
+    
 
-    export SKIP_KIND_E2E_TEST=$(get_env SKIP_KIND_E2E_TEST)
-    if [[ $SKIP_KIND_E2E_TEST != "true" ]]; then
+    # OCP test
+    export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
+    export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key-staging)  
+    export PIPELINE_REGISTRY=$(get_env pipeline-registry)
+    export PIPELINE_OPERATOR_IMAGE=$(get_env pipeline-operator-image)
+    export DOCKER_USERNAME=$(get_env docker-username)
+    export DOCKER_PASSWORD=$(get_env docker-password)    
+    export CLUSTER_URL=$(get_env test-cluster-url)
+    export CLUSTER_USER=$(get_env test-cluster-user kubeadmin)
+    export CLUSTER_TOKEN=$(get_env test-cluster-token)
+    export RELEASE_TARGET=$(get_env branch)
+    export DEBUG_FAILURE=$(get_env debug-failure)
 
-      # Download and configure golang
-      rm -rf /usr/local/go && wget --no-verbose --header "Accept: application/octet-stream" "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz" -O - | tar -xz -C /usr/local/
-      export PATH=$PATH:/usr/local/go/bin
+    # Kind test
+    export FYRE_USER=$(get_env fyre-user)
+    export FYRE_KEY=$(get_env fyre-key)
+    export FYRE_PASS=$(get_env fyre-pass)
+    export FYRE_PRODUCT_GROUP_ID=$(get_env fyre-product-group-id)
 
-      apt-get update
-      apt-get -y install build-essential    
-      export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
-      export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key-staging)  
-      export DOCKER_USERNAME=$(get_env docker-username)
-      export DOCKER_PASSWORD=$(get_env docker-password)    
-      export CLUSTER_URL=$(get_env test-cluster-url)
-      export CLUSTER_TOKEN=$(get_env test-cluster-token) 
-      export TRAVIS_BUILD_NUMBER=$BUILD_NUMBER   
-      make setup
-      make test-pipeline-e2e
-    else
-      echo "skipping Acceptance test"
-    fi
+    scripts/acceptance-test.sh
+
 
 scan-artifact:
   abort_on_failure: false
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.15
   script: |
     #!/usr/bin/env bash
+    # echo "twistlock-scan"
+    # ./scripts/pipeline/twistlock-scan.sh
+    # echo "VA scan"
+    # . scripts/pipeline/va_scan
+    # if which list_artifacts >/dev/null; then
+    #   list_artifacts | while IFS= read -r artifact; do
+    #     image="$(load_artifact "$artifact" "name")"
+    #     type="$(load_artifact "$artifact" "type")"
+    #     digest="$(load_artifact "$artifact" "digest")"
+    #     name="$(echo "$artifact" | awk '{print $1}')"
+    #     if [[ "$type" == "image" ]]; then
+    #       if [[ "$image" == *"icr.io"* ]]; then
+    #         echo "Starting VA scan for $image"
+    #         start_va_scan "$name" "$image" "$digest"
+    #       else
+    #         echo "Skipping VA scan for $image"
+    #       fi
+    #     fi
+    #   done
+    # fi
+
+    # echo "aqua scan"
+    # # install docker
+    # curl -fsSL https://get.docker.com -o get-docker.sh
+    # sudo sh get-docker.sh
+    # # get aqua scan executables
+    # git clone https://$(get_env git-token)@github.ibm.com/CICD-CPP/cpp-pipelines.git
+    # chmod -R +x cpp-pipelines
+    # # setup and execute aqua scan
+    # cd cpp-pipelines
+    # export CUSTOM_SCRIPTS_PATH=/workspace/app/one-pipeline-config-repo/cpp-pipelines
+    # ./commons/aqua/aqua-local-scan
     # ========== Security Scanner ==========
     ./scripts/pipeline/ci_to_secure_pipeline_scan.sh
 
@@ -276,12 +345,11 @@ release:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     #!/usr/bin/env bash
-
     PERIODIC_SCAN=$(get_env periodic-rescan)
     PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
 
     if [[ ! -z "$PERIODIC_SCAN" && "$PERIODIC_SCAN" != "false" && "$PERIODIC_SCAN" != "no"  ]]; then
-      echo "Skipping release stage. This is a periodic run that is only meant to produce CVE information."
+      echo "Skipping release. This is a periodic run that is only meant to produce CVE information."
       exit 0
     fi
 

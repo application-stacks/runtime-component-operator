@@ -34,7 +34,7 @@ for artifact_image in $(list_artifacts); do
   # the results will be dumped to file here.
 
   # twistlock command
-tt images pull-and-scan ${IMAGE_LOCATION} --iam-api-key $IBMCLOUD_API_KEY -u "$(get_env twistlock-user-id):$(get_env twistlock-api-key)" -g "websphere"   
+  tt images pull-and-scan ${IMAGE_LOCATION} --iam-api-key $IBMCLOUD_API_KEY -u "$(get_env twistlock-user-id):$(get_env twistlock-api-key)" -g "websphere"   
 
   # save the artifact
   for i in twistlock-scan-results*; do save_result scan-artifact ${i}; done
