@@ -38,6 +38,7 @@ import (
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 )
 
+var APIVersionNotFoundError = errors.New("APIVersion is not available")
 // CustomizeDeployment ...
 func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
