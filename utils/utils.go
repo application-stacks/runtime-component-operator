@@ -1395,7 +1395,7 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 }
 
 // Get security context from CR and apply customization to default settings
-func getSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
+func GetSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
 	baSecurityContext := ba.GetSecurityContext()
 
 	valFalse := false
