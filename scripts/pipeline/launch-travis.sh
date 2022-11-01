@@ -92,7 +92,7 @@ function launch_travis() {
                 \"dist\": \"focal\",
                 \"language\": \"go\",
                 \"go\": [
-                    \"1.16.x\"
+                    \"1.19.x\"
                 ],
                 \"go_import_path\": \"github.com/application-stacks/runtime-component-operator\",
                 \"services\": [
