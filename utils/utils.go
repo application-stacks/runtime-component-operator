@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	certmanagerv1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	"os"
 	"sort"
 	"strconv"
@@ -37,6 +38,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 )
+
+var APIVersionNotFoundError = errors.New("APIVersion is not available")
 
 // CustomizeDeployment ...
 func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseComponent) {
@@ -1543,5 +1546,26 @@ func CreateConfigMap(mapName string) {
 		utilsLog.Error(cerr, "Couldn't create config map in namespace "+operatorNs)
 	} else {
 		utilsLog.Info("Operator Config map created in namespace " + operatorNs)
+	}
+}
+
+func GetIssuerResourceVersion(client client.Client, certificate *certmanagerv1.Certificate) (string, error) {
+	issuer := &certmanagerv1.Issuer{}
+	err := client.Get(context.Background(), types.NamespacedName{Name: certificate.Spec.IssuerRef.Name,
+		Namespace: certificate.Namespace}, issuer)
+	if err != nil {
+		return "", err
+	}
+	if issuer.Spec.CA != nil {
+		caSecret := &corev1.Secret{}
+		err = client.Get(context.Background(), types.NamespacedName{Name: issuer.Spec.CA.SecretName,
+			Namespace: certificate.Namespace}, caSecret)
+		if err != nil {
+			return "", err
+		} else {
+			return issuer.ResourceVersion + "," + caSecret.ResourceVersion, nil
+		}
+	} else {
+		return issuer.ResourceVersion, nil
 	}
 }

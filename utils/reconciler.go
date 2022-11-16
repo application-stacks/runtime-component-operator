@@ -43,7 +43,7 @@ type ReconcilerBase struct {
 	controller controller.Controller
 }
 
-//NewReconcilerBase creates a new ReconcilerBase
+// NewReconcilerBase creates a new ReconcilerBase
 func NewReconcilerBase(apiReader client.Reader, client client.Client, scheme *runtime.Scheme, restConfig *rest.Config, recorder record.EventRecorder) ReconcilerBase {
 	return ReconcilerBase{
 		apiReader:  apiReader,
@@ -76,7 +76,8 @@ func (r *ReconcilerBase) GetClient() client.Client {
 // with Get, but some resources such as the ImageStreamTag kind does not
 // implement the Watch verb, which caused errors.
 // Here is an example of how the error would look like:
-//  `Failed to watch *v1.ImageStreamTag: the server does not allow this method on the requested resource (get imagestreamtags.image.openshift.io)`
+//
+//	`Failed to watch *v1.ImageStreamTag: the server does not allow this method on the requested resource (get imagestreamtags.image.openshift.io)`
 func (r *ReconcilerBase) GetAPIReader() client.Reader {
 	return r.apiReader
 }
@@ -341,6 +342,90 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string,
 	return key, cert, ca, destCa, nil
 }
 
+func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACommonName string, operatorName string) error {
+	if ok, err := r.IsGroupVersionSupported(certmanagerv1.SchemeGroupVersion.String(), "Issuer"); err != nil {
+		return err
+	} else if !ok {
+		return APIVersionNotFoundError
+	}
+
+	issuer := &certmanagerv1.Issuer{ObjectMeta: metav1.ObjectMeta{
+		Name:      prefix + "-self-signed",
+		Namespace: namespace,
+	}}
+	err := r.CreateOrUpdate(issuer, nil, func() error {
+		issuer.Spec.SelfSigned = &certmanagerv1.SelfSignedIssuer{}
+		issuer.Labels = MergeMaps(issuer.Labels, map[string]string{"app.kubernetes.io/managed-by": operatorName})
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	caCert := &certmanagerv1.Certificate{ObjectMeta: metav1.ObjectMeta{
+		Name:      prefix + "-ca-cert",
+		Namespace: namespace,
+	}}
+
+	err = r.CreateOrUpdate(caCert, nil, func() error {
+		caCert.Labels = MergeMaps(caCert.Labels, map[string]string{"app.kubernetes.io/managed-by": operatorName})
+		caCert.Spec.CommonName = CACommonName
+		caCert.Spec.IsCA = true
+		caCert.Spec.SecretName = prefix + "-ca-tls"
+		caCert.Spec.IssuerRef = certmanagermetav1.ObjectReference{
+			Name: prefix + "-self-signed",
+		}
+
+		duration, err := time.ParseDuration(common.Config[common.OpConfigCMCADuration])
+		if err != nil {
+			return err
+		}
+		caCert.Spec.Duration = &metav1.Duration{Duration: duration}
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+	CustomCACert := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{
+		Name:      prefix + "-custom-ca-tls",
+		Namespace: namespace,
+	}}
+	customCACertFound := false
+	err = r.GetClient().Get(context.Background(), types.NamespacedName{Name: CustomCACert.GetName(),
+		Namespace: CustomCACert.GetNamespace()}, CustomCACert)
+	if err == nil {
+		customCACertFound = true
+	}
+
+	issuer = &certmanagerv1.Issuer{ObjectMeta: metav1.ObjectMeta{
+		Name:      prefix + "-ca-issuer",
+		Namespace: namespace,
+	}}
+	err = r.CreateOrUpdate(issuer, nil, func() error {
+		issuer.Labels = MergeMaps(issuer.Labels, map[string]string{"app.kubernetes.io/managed-by": operatorName})
+		issuer.Spec.CA = &certmanagerv1.CAIssuer{}
+		issuer.Spec.CA.SecretName = prefix + "-ca-tls"
+		if issuer.Annotations == nil {
+			issuer.Annotations = map[string]string{}
+		}
+		if customCACertFound {
+			issuer.Spec.CA.SecretName = CustomCACert.Name
+
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	for i := range issuer.Status.Conditions {
+		if issuer.Status.Conditions[i].Type == certmanagerv1.IssuerConditionReady && issuer.Status.Conditions[i].Status == certmanagermetav1.ConditionFalse {
+			return errors.New("Certificate is not ready")
+		}
+	}
+	return nil
+}
+
 func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string) (bool, error) {
 
 	delete(ba.GetStatus().GetReferences(), common.StatusReferenceCertSecretName)
@@ -383,61 +468,13 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 	} else if ok {
 		bao := ba.(metav1.Object)
 
-		issuer := &certmanagerv1.Issuer{ObjectMeta: metav1.ObjectMeta{
-			Name:      prefix + "-self-signed",
-			Namespace: bao.GetNamespace(),
-		}}
-		err = r.CreateOrUpdate(issuer, nil, func() error {
-			issuer.Spec.SelfSigned = &certmanagerv1.SelfSignedIssuer{}
-			issuer.Labels = MergeMaps(issuer.Labels, map[string]string{"app.kubernetes.io/managed-by": operatorName})
-			return nil
-		})
+		err = r.GenerateCMIssuer(bao.GetNamespace(), prefix, CACommonName, operatorName)
 		if err != nil {
+			if errors.Is(err, APIVersionNotFoundError) {
+				return false, nil
+			}
 			return true, err
 		}
-		caCert := &certmanagerv1.Certificate{ObjectMeta: metav1.ObjectMeta{
-			Name:      prefix + "-ca-cert",
-			Namespace: bao.GetNamespace(),
-		}}
-		err = r.CreateOrUpdate(caCert, nil, func() error {
-			caCert.Labels = MergeMaps(caCert.Labels, map[string]string{"app.kubernetes.io/managed-by": operatorName})
-			caCert.Spec.CommonName = CACommonName
-			caCert.Spec.IsCA = true
-			caCert.Spec.SecretName = prefix + "-ca-tls"
-			caCert.Spec.IssuerRef = certmanagermetav1.ObjectReference{
-				Name: prefix + "-self-signed",
-			}
-
-			duration, err := time.ParseDuration(common.Config[common.OpConfigCMCADuration])
-			if err != nil {
-				return err
-			}
-			caCert.Spec.Duration = &metav1.Duration{Duration: duration}
-			return nil
-		})
-		if err != nil {
-			return true, err
-		}
-		issuer = &certmanagerv1.Issuer{ObjectMeta: metav1.ObjectMeta{
-			Name:      prefix + "-ca-issuer",
-			Namespace: bao.GetNamespace(),
-		}}
-		err = r.CreateOrUpdate(issuer, nil, func() error {
-			issuer.Labels = MergeMaps(issuer.Labels, map[string]string{"app.kubernetes.io/managed-by": operatorName})
-			issuer.Spec.CA = &certmanagerv1.CAIssuer{}
-			issuer.Spec.CA.SecretName = prefix + "-ca-tls"
-			return nil
-		})
-		if err != nil {
-			return true, err
-		}
-
-		for i := range issuer.Status.Conditions {
-			if issuer.Status.Conditions[i].Type == certmanagerv1.IssuerConditionReady && issuer.Status.Conditions[i].Status == certmanagermetav1.ConditionFalse {
-				return true, errors.New("Certificate is not ready")
-			}
-		}
-
 		svcCertSecretName := bao.GetName() + "-svc-tls-cm"
 
 		svcCert := &certmanagerv1.Certificate{ObjectMeta: metav1.ObjectMeta{
@@ -445,6 +482,19 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 			Namespace: bao.GetNamespace(),
 		}}
 
+		customIssuer := &certmanagerv1.Issuer{ObjectMeta: metav1.ObjectMeta{
+			Name:      prefix + "-custom-issuer",
+			Namespace: bao.GetNamespace(),
+		}}
+
+		customIssuerFound := false
+		err = r.GetClient().Get(context.Background(), types.NamespacedName{Name: customIssuer.Name,
+			Namespace: customIssuer.Namespace}, customIssuer)
+		if err == nil {
+			customIssuerFound = true
+		}
+
+		shouldRefreshCertSecret := false
 		err = r.CreateOrUpdate(svcCert, bao, func() error {
 			svcCert.Labels = ba.GetLabels()
 
@@ -456,7 +506,27 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 			svcCert.Spec.IssuerRef = certmanagermetav1.ObjectReference{
 				Name: prefix + "-ca-issuer",
 			}
+			if customIssuerFound {
+				svcCert.Spec.IssuerRef.Name = customIssuer.Name
+			}
+
+			rVersion, _ := GetIssuerResourceVersion(r.client, svcCert)
+			if svcCert.Spec.SecretTemplate == nil {
+				svcCert.Spec.SecretTemplate = &certmanagerv1.CertificateSecretTemplate{
+					Annotations: map[string]string{},
+				}
+			}
+
+			if svcCert.Spec.SecretTemplate.Annotations[ba.GetGroupName()+"/cm-issuer-version"] != rVersion {
+				if svcCert.Spec.SecretTemplate.Annotations == nil {
+					svcCert.Spec.SecretTemplate.Annotations = map[string]string{}
+				}
+				svcCert.Spec.SecretTemplate.Annotations[ba.GetGroupName()+"/cm-issuer-version"] = rVersion
+				shouldRefreshCertSecret = true
+			}
+
 			svcCert.Spec.SecretName = svcCertSecretName
+
 			duration, err := time.ParseDuration(common.Config[common.OpConfigCMCertDuration])
 			if err != nil {
 				return err
@@ -467,6 +537,9 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 		})
 		if err != nil {
 			return true, err
+		}
+		if shouldRefreshCertSecret {
+			r.DeleteResource(&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: svcCertSecretName, Namespace: svcCert.Namespace}})
 		}
 		ba.GetStatus().SetReference(common.StatusReferenceCertSecretName, svcCertSecretName)
 	} else {
