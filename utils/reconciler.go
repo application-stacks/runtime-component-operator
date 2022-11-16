@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	networkingv1 "k8s.io/api/networking/v1"
 	"time"
+
+	networkingv1 "k8s.io/api/networking/v1"
 
 	"github.com/application-stacks/runtime-component-operator/common"
 	certmanagerv1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
@@ -229,9 +230,16 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 	statusCondition.SetMessage("")
 	statusCondition.SetStatus(corev1.ConditionTrue)
 	s.SetCondition(statusCondition)
+	retryInterval := ReconcileInterval * time.Second
 
-	//Check application status (reconciliation & resource status & endpoint status)
-	readyStatus := r.CheckApplicationStatus(ba)
+	if conditionType != common.StatusConditionTypeResourcesReady {
+		//Check application status (reconciliation & resource status & endpoint status)
+		readyStatus := r.CheckApplicationStatus(ba)
+		// If resources are not ready
+		if readyStatus != corev1.ConditionTrue {
+			retryInterval = time.Second
+		}
+	}
 
 	err := r.UpdateStatus(ba.(client.Object))
 	if err != nil {
@@ -240,15 +248,6 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 			RequeueAfter: time.Second,
 			Requeue:      true,
 		}, nil
-	}
-
-	var retryInterval time.Duration
-
-	// If resources are not ready
-	if readyStatus != corev1.ConditionTrue {
-		retryInterval = time.Second
-	} else {
-		retryInterval = ReconcileInterval * time.Second
 	}
 
 	return reconcile.Result{RequeueAfter: retryInterval}, nil
