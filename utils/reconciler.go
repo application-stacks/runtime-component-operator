@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	networkingv1 "k8s.io/api/networking/v1"
 	"time"
+
+	networkingv1 "k8s.io/api/networking/v1"
 
 	"github.com/application-stacks/runtime-component-operator/common"
 	certmanagerv1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
@@ -189,8 +190,10 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 	newCondition.SetStatus(corev1.ConditionFalse)
 	s.SetCondition(newCondition)
 
-	//Check Application status (reconciliation & resource status & endpoint status)
-	r.CheckApplicationStatus(ba)
+	if conditionType != common.StatusConditionTypeResourcesReady {
+		//Check Application status (reconciliation & resource status & endpoint status)
+		r.CheckApplicationStatus(ba)
+	}
 
 	err := r.UpdateStatus(obj)
 	if err != nil {
