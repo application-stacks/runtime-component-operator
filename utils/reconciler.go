@@ -190,8 +190,10 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 	newCondition.SetStatus(corev1.ConditionFalse)
 	s.SetCondition(newCondition)
 
-	//Check Application status (reconciliation & resource status & endpoint status)
-	r.CheckApplicationStatus(ba)
+	if conditionType != common.StatusConditionTypeResourcesReady {
+		//Check Application status (reconciliation & resource status & endpoint status)
+		r.CheckApplicationStatus(ba)
+	}
 
 	err := r.UpdateStatus(obj)
 	if err != nil {
@@ -230,16 +232,9 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 	statusCondition.SetMessage("")
 	statusCondition.SetStatus(corev1.ConditionTrue)
 	s.SetCondition(statusCondition)
-	retryInterval := ReconcileInterval * time.Second
 
-	if conditionType != common.StatusConditionTypeResourcesReady {
-		//Check application status (reconciliation & resource status & endpoint status)
-		readyStatus := r.CheckApplicationStatus(ba)
-		// If resources are not ready
-		if readyStatus != corev1.ConditionTrue {
-			retryInterval = time.Second
-		}
-	}
+	//Check application status (reconciliation & resource status & endpoint status)
+	readyStatus := r.CheckApplicationStatus(ba)
 
 	err := r.UpdateStatus(ba.(client.Object))
 	if err != nil {
@@ -248,6 +243,15 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 			RequeueAfter: time.Second,
 			Requeue:      true,
 		}, nil
+	}
+
+	var retryInterval time.Duration
+
+	// If resources are not ready
+	if readyStatus != corev1.ConditionTrue {
+		retryInterval = time.Second
+	} else {
+		retryInterval = ReconcileInterval * time.Second
 	}
 
 	return reconcile.Result{RequeueAfter: retryInterval}, nil
