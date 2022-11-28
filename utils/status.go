@@ -52,7 +52,7 @@ func (r *ReconcilerBase) CheckApplicationStatus(ba common.BaseComponent) corev1.
 			reason = "ResourcesNotReady"
 		} else {
 			status = corev1.ConditionTrue
-			msg = "Application is reconciled and resources are ready."
+			msg = common.StatusConditionTypeReadyMessage
 		}
 	}
 
