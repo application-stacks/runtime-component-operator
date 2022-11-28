@@ -89,6 +89,9 @@ const (
 	StatusConditionTypeResourcesReady StatusConditionType = "ResourcesReady"
 	StatusConditionTypeReady          StatusConditionType = "Ready"
 
+	// Status Condition Type Messages
+	StatusConditionTypeReadyMessage string = "Application is reconciled and resources are ready."
+
 	// Status Endpoint Scopes
 	StatusEndpointScopeExternal StatusEndpointScope = "External"
 	StatusEndpointScopeInternal StatusEndpointScope = "Internal"
