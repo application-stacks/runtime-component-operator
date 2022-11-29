@@ -194,16 +194,16 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 		//Check Application status (reconciliation & resource status & endpoint status)
 		r.CheckApplicationStatus(ba)
 	} else {
-		// If the new condition type is ResourcesReady (false), make sure the existing
+		// If the new condition type is ResourcesReady (false), make sure the
 		// conditions for Ready and Reconciled are set to false
 		readyNewCondition := s.NewCondition(common.StatusConditionTypeReady)
 		readyNewCondition.SetStatus(corev1.ConditionFalse)
-		readyNewCondition.SetMessage("Resources not ready.")
+		readyNewCondition.SetMessage("Resources are not ready.")
 		readyNewCondition.SetReason("")
 		s.SetCondition(readyNewCondition)
 		reconciledNewCondition := s.NewCondition(common.StatusConditionTypeReconciled)
 		reconciledNewCondition.SetStatus(corev1.ConditionFalse)
-		reconciledNewCondition.SetMessage("Resources not ready.")
+		reconciledNewCondition.SetMessage("Resources are not ready.")
 		reconciledNewCondition.SetReason("")
 		s.SetCondition(reconciledNewCondition)
 	}
