@@ -515,7 +515,7 @@ The CRD fields which are used to populate the Knative service resource include `
 
 For more details on how to configure Knative for tasks such as enabling HTTPS connections and setting up a custom domain, checkout link:++https://knative.dev/docs/serving/++[Knative Documentation].
 
-_Autoscaling related fields in `RuntimeComponent` are not used to configure Knative Pod Autoscaler (KPA). To learn more about how to configure KPA, see link:++https://knative.dev/docs/serving/configuring-the-autoscaler/++[Configuring the Autoscaler]._
+_Autoscaling related fields in `RuntimeComponent` are not used to configure Knative Pod Autoscaler (KPA). To learn more about how to configure KPA, see link:++https://knative.dev/docs/serving/autoscaling/++[Configuring the Autoscaler]._
 
 _This feature is only available if you have Knative installed on your cluster._
 
