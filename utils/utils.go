@@ -6,11 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	certmanagerv1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
+
+	certmanagerv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/client-go/kubernetes"
