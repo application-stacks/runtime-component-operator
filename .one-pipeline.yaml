@@ -105,7 +105,7 @@ static-scan:
 containerize:
   dind: true
   abort_on_failure: true  
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
   script: |
     #!/usr/bin/env bash
 
@@ -120,17 +120,9 @@ containerize:
     export PATH=$PATH:/usr/local/go/bin
     apt-get update
     apt-get -qq -y install build-essential software-properties-common uidmap
-    # Download and install skopeo
-    if ! command -v skopeo &> /dev/null; then  
-      if [ ! -f "/apt/sources.list.d/devel:kubic:libcontainers:stable.list" ]; then
-        sudo sh -c "echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_18.04/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list"      
-        wget --no-check-certificate -nv https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_18.04/Release.key -O- | sudo apt-key add -
-        sudo apt-get update -qq
-      fi
-      sudo apt-get -y install skopeo
-    else
-      skopeo --version
-    fi  
+   
+    skopeo --version
+      
     # Build images
     export RELEASE_TARGET=$(get_env branch)
     export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
