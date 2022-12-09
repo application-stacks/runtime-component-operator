@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- Fix to prevent deployments being created before the pull secret for the service account. ([#343](https://github.com/application-stacks/runtime-component-operator/pull/343))
+- Check for secrets only if service account pull secrets exist. ([#377](https://github.com/application-stacks/runtime-component-operator/pull/377))
 - Increase memory limit for manager deployment ([#359](https://github.com/application-stacks/runtime-component-operator/issues/359))
 
 ### Added
