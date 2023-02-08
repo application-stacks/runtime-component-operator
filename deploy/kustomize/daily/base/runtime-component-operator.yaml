@@ -275,6 +275,7 @@ spec:
     spec:
       containers:
       - args:
+        - --health-probe-bind-address=:8081
         - --enable-leader-election
         command:
         - /manager
@@ -289,7 +290,27 @@ spec:
               fieldPath: metadata.namespace
         image: applicationstacks/operator:daily
         imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 8081
+            scheme: HTTP
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 10
         name: manager
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /readyz
+            port: 8081
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 10
         resources:
           limits:
             cpu: 200m
