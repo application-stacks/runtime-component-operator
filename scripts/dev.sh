@@ -254,19 +254,12 @@ bundle() {
     echo "------------"
     # Special case, Makefile make bundle only handles semantic versioning
     if [[ "$VERSION" == "latest" ]]; then
-        echo "here1"
-                     echo "img:"$IMG
-             echo "version:"$VERSION
         make -C  $MAKEFILE_DIR bundle IMG=$IMG VERSION=9.9.9
         sed -i 's/$OCP_REGISTRY_URL\/$NAMESPACE\/$OPERATOR_NAME:v9.9.9/$OCP_REGISTRY_URL\/$NAMESPACE\/$OPERATOR_NAME:latest/g' $MAKEFILE_DIR/bundle/manifests/runtime-component.clusterserviceversion.yaml
     else
-             echo "here2"
-             echo "img:"$IMG
-             echo "version:"$VERSION
         make -C  $MAKEFILE_DIR bundle IMG=$IMG VERSION=$VERSION
     fi
    
-
     echo "------------"
     echo "bundle-build"
     echo "------------"
