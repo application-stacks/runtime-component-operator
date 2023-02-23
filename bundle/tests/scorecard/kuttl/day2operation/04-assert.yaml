@@ -11,7 +11,7 @@ status:
   readyReplicas: 1
   updatedReplicas: 1
 ---
-apiVersion: rc.app.stacks/v1beta2
+apiVersion: rc.app.stacks/v1
 kind: RuntimeOperation
 metadata:
   name: example-runtime-operation-1
