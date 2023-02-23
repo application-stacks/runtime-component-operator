@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
+	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	"github.com/application-stacks/runtime-component-operator/controllers"
 	"github.com/application-stacks/runtime-component-operator/utils"
 	certmanagerv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
@@ -50,7 +50,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(appstacksv1beta2.AddToScheme(scheme))
+	utilruntime.Must(appstacksv1.AddToScheme(scheme))
 
 	utilruntime.Must(routev1.AddToScheme(scheme))
 

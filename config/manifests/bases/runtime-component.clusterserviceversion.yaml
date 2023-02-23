@@ -28,9 +28,6 @@ spec:
       - kind: HorizontalPodAutoscaler
         name: ""
         version: v1
-      - kind: NetworkPolicy
-        name: ""
-        version: v1
       - kind: Route
         name: ""
         version: v1
@@ -122,11 +119,6 @@ spec:
         path: expose
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: Enable management of TLS certificates. Defaults to true.
-        displayName: Manage TLS
-        path: manageTLS
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Number of pods to create. Not applicable when .spec.autoscaling
           or .spec.createKnativeService is specified.
         displayName: Replicas
@@ -178,9 +170,8 @@ spec:
         path: statefulSet
       - displayName: Service
         path: service
-      - description: 'A name of a secret that already contains TLS key, certificate
-          and CA to be mounted in the pod. The following keys are valid in the secret:
-          ca.crt, tls.crt, and tls.key.'
+      - description: A name of a secret that already contains TLS key, certificate
+          and CA to be mounted in the pod.
         displayName: Certificate Secret Reference
         path: service.certificateSecretRef
         x-descriptors:
@@ -234,20 +225,9 @@ spec:
         path: affinity
       - displayName: Storage
         path: statefulSet.storage
-      - description: Security context for the application container.
-        displayName: Security Context
-        path: securityContext
       - description: A convenient field to set the size of the persisted storage.
         displayName: Storage Size
         path: statefulSet.storage.size
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
-      - displayName: Network Policy
-        path: networkPolicy
-      - description: A convenient field to request the storage class of the persisted
-          storage. The name can not be specified or updated after the storage is created.
-        displayName: Storage Class Name
-        path: statefulSet.storage.className
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: The directory inside the container where this persisted storage
@@ -312,10 +292,8 @@ spec:
         path: route.path
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: 'A name of a secret that already contains TLS key, certificate
-          and CA to be used in the route. It can also contain destination CA certificate.
-          The following keys are valid in the secret: ca.crt, destCA.crt, tls.crt,
-          and tls.key.'
+      - description: A name of a secret that already contains TLS key, certificate
+          and CA to be used in the route. Also can contain destination CA certificate.
         displayName: Certificate Secret Reference
         path: route.certificateSecretRef
         x-descriptors:
@@ -329,23 +307,6 @@ spec:
           and None.
         displayName: Insecure Edge Termination Policy
         path: route.insecureEdgeTerminationPolicy
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Disable the creation of the network policy. Defaults to false.
-        displayName: Disable
-        path: networkPolicy.disable
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: Specify the labels of namespaces that incoming traffic is allowed
-          from.
-        displayName: Namespace Labels
-        path: networkPolicy.namespaceLabels
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Specify the labels of pod(s) that incoming traffic is allowed
-          from.
-        displayName: From Labels
-        path: networkPolicy.fromLabels
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       statusDescriptors:

@@ -2,8 +2,7 @@ package controllers
 
 import (
 	"context"
-
-	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
+	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	appstacksutils "github.com/application-stacks/runtime-component-operator/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -63,7 +62,7 @@ func (e *EnqueueRequestsForCustomIndexField) handle(evtMeta metav1.Object, evtOb
 
 // CustomMatcher is an interface for matching apps that satisfy a custom logic
 type CustomMatcher interface {
-	Match(metav1.Object) ([]appstacksv1beta2.RuntimeComponent, error)
+	Match(metav1.Object) ([]appstacksv1.RuntimeComponent, error)
 }
 
 // ImageStreamMatcher implements CustomMatcher for Image Streams
@@ -73,8 +72,8 @@ type ImageStreamMatcher struct {
 }
 
 // Match returns all applications using the input ImageStreamTag
-func (i *ImageStreamMatcher) Match(imageStreamTag metav1.Object) ([]appstacksv1beta2.RuntimeComponent, error) {
-	apps := []appstacksv1beta2.RuntimeComponent{}
+func (i *ImageStreamMatcher) Match(imageStreamTag metav1.Object) ([]appstacksv1.RuntimeComponent, error) {
+	apps := []appstacksv1.RuntimeComponent{}
 	var namespaces []string
 	if appstacksutils.IsClusterWide(i.WatchNamespaces) {
 		nsList := &corev1.NamespaceList{}
@@ -88,7 +87,7 @@ func (i *ImageStreamMatcher) Match(imageStreamTag metav1.Object) ([]appstacksv1b
 		namespaces = i.WatchNamespaces
 	}
 	for _, ns := range namespaces {
-		appList := &appstacksv1beta2.RuntimeComponentList{}
+		appList := &appstacksv1.RuntimeComponentList{}
 		err := i.Klient.List(context.Background(),
 			appList,
 			client.InNamespace(ns),

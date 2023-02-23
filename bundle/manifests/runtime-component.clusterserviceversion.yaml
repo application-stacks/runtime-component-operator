@@ -38,18 +38,21 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: applicationstacks/operator:daily
-    createdAt: "2023-02-13T13:52:57Z"
+    createdAt: "2023-02-22T19:34:39Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     operators.operatorframework.io/builder: operator-sdk-v1.24.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
-  name: runtime-component.v0.8.1
+  name: runtime-component.v1.0.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - kind: RuntimeComponent
+      name: runtimecomponents.rc.app.stacks
+      version: v1
     - description: Represents the deployment of a runtime component
       displayName: RuntimeComponent
       kind: RuntimeComponent
@@ -59,9 +62,6 @@ spec:
         name: ""
         version: v1
       - kind: HorizontalPodAutoscaler
-        name: ""
-        version: v1
-      - kind: NetworkPolicy
         name: ""
         version: v1
       - kind: Route
@@ -155,11 +155,6 @@ spec:
         path: expose
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: Enable management of TLS certificates. Defaults to true.
-        displayName: Manage TLS
-        path: manageTLS
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Number of pods to create. Not applicable when .spec.autoscaling
           or .spec.createKnativeService is specified.
         displayName: Replicas
@@ -211,9 +206,8 @@ spec:
         path: statefulSet
       - displayName: Service
         path: service
-      - description: 'A name of a secret that already contains TLS key, certificate
-          and CA to be mounted in the pod. The following keys are valid in the secret:
-          ca.crt, tls.crt, and tls.key.'
+      - description: A name of a secret that already contains TLS key, certificate
+          and CA to be mounted in the pod.
         displayName: Certificate Secret Reference
         path: service.certificateSecretRef
         x-descriptors:
@@ -267,20 +261,9 @@ spec:
         path: affinity
       - displayName: Storage
         path: statefulSet.storage
-      - description: Security context for the application container.
-        displayName: Security Context
-        path: securityContext
       - description: A convenient field to set the size of the persisted storage.
         displayName: Storage Size
         path: statefulSet.storage.size
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
-      - displayName: Network Policy
-        path: networkPolicy
-      - description: A convenient field to request the storage class of the persisted
-          storage. The name can not be specified or updated after the storage is created.
-        displayName: Storage Class Name
-        path: statefulSet.storage.className
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: The directory inside the container where this persisted storage
@@ -345,10 +328,8 @@ spec:
         path: route.path
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: 'A name of a secret that already contains TLS key, certificate
-          and CA to be used in the route. It can also contain destination CA certificate.
-          The following keys are valid in the secret: ca.crt, destCA.crt, tls.crt,
-          and tls.key.'
+      - description: A name of a secret that already contains TLS key, certificate
+          and CA to be used in the route. Also can contain destination CA certificate.
         displayName: Certificate Secret Reference
         path: route.certificateSecretRef
         x-descriptors:
@@ -364,23 +345,6 @@ spec:
         path: route.insecureEdgeTerminationPolicy
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Disable the creation of the network policy. Defaults to false.
-        displayName: Disable
-        path: networkPolicy.disable
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: Specify the labels of namespaces that incoming traffic is allowed
-          from.
-        displayName: Namespace Labels
-        path: networkPolicy.namespaceLabels
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Specify the labels of pod(s) that incoming traffic is allowed
-          from.
-        displayName: From Labels
-        path: networkPolicy.fromLabels
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
       statusDescriptors:
       - displayName: Service Binding
         path: binding
@@ -394,6 +358,9 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes:Secret
       version: v1beta2
+    - kind: RuntimeOperation
+      name: runtimeoperations.rc.app.stacks
+      version: v1
     - description: Day-2 operation to execute on an instance of runtime component
       displayName: RuntimeOperation
       kind: RuntimeOperation
@@ -491,6 +458,7 @@ spec:
             spec:
               containers:
               - args:
+                - --health-probe-bind-address=:8081
                 - --enable-leader-election
                 command:
                 - /manager
@@ -762,4 +730,4 @@ spec:
   maturity: beta
   provider:
     name: Community
-  version: 0.8.1
+  version: 1.0.0
