@@ -267,7 +267,7 @@ bundle() {
     echo "------------"
     echo "bundle-push"
     echo "------------"
-    make -C  $MAKEFILE_DIR bundle-push VERSION=$VVERSION IMG=$IMG IMAGE_TAG_BASE=$IMAGE_TAG_BASE BUNDLE_IMG=$BUNDLE_IMG CATALOG_IMG=$CATALOG_IMG TLS_VERIFY=false
+    make  -C  $MAKEFILE_DIR bundle-push PUBLISH_REGISTRY=$OCP_REGISTRY_URL BUNDLE_IMG=$NAMESPACE/$OPERATOR_NAME-bundle:$VVERSION TLS_VERIFY=false
 }
 
 ###################################
