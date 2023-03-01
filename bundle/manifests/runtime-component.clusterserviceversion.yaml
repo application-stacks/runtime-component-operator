@@ -5,6 +5,35 @@ metadata:
     alm-examples: |-
       [
         {
+          "apiVersion": "rc.app.stacks/v1",
+          "kind": "RuntimeComponent",
+          "metadata": {
+            "name": "runtimecomponent-sample"
+          },
+          "spec": {
+            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started",
+            "expose": true,
+            "replicas": 1,
+            "service": {
+              "port": 9080
+            }
+          }
+        },
+        {
+          "apiVersion": "rc.app.stacks/v1",
+          "kind": "RuntimeOperation",
+          "metadata": {
+            "name": "runtimeoperation-sample"
+          },
+          "spec": {
+            "command": [
+              "./your_script.sh"
+            ],
+            "containerName": "app",
+            "podName": "Specify_Pod_Name_Here"
+          }
+        },
+        {
           "apiVersion": "rc.app.stacks/v1beta2",
           "kind": "RuntimeComponent",
           "metadata": {
