@@ -38,7 +38,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: applicationstacks/operator:daily
-    createdAt: "2023-02-22T19:34:39Z"
+    createdAt: "2023-03-01T12:55:30Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     operators.operatorframework.io/builder: operator-sdk-v1.24.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
@@ -50,8 +50,349 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
-    - kind: RuntimeComponent
+    - description: Represents the deployment of a runtime component
+      displayName: RuntimeComponent
+      kind: RuntimeComponent
       name: runtimecomponents.rc.app.stacks
+      resources:
+      - kind: Deployment
+        name: ""
+        version: v1
+      - kind: HorizontalPodAutoscaler
+        name: ""
+        version: v1
+      - kind: NetworkPolicy
+        name: ""
+        version: v1
+      - kind: Route
+        name: ""
+        version: v1
+      - kind: Secret
+        name: ""
+        version: v1
+      - kind: Service
+        name: ""
+        version: v1
+      - kind: ServiceAccount
+        name: ""
+        version: v1
+      - kind: StatefulSet
+        name: ""
+        version: v1
+      specDescriptors:
+      - description: Application image to deploy.
+        displayName: Application Image
+        path: applicationImage
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Required field for autoscaling. Upper limit for the number of
+          pods that can be set by the autoscaler. Parameter .spec.resources.requests.cpu
+          must also be specified.
+        displayName: Max Replicas
+        path: autoscaling.maxReplicas
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
+      - description: Probe to determine successful initialization. If specified, other
+          probes are not executed until this completes successfully.
+        displayName: Startup Probe
+        path: probes.startup
+      - description: Name of the application. Defaults to the name of this custom
+          resource.
+        displayName: Application Name
+        path: applicationName
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Lower limit for the number of pods that can be set by the autoscaler.
+        displayName: Min Replicas
+        path: autoscaling.minReplicas
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
+      - description: Periodic probe of container service readiness. Container will
+          be removed from service endpoints if the probe fails.
+        displayName: Readiness Probe
+        path: probes.readiness
+      - description: Version of the application.
+        displayName: Application Version
+        path: applicationVersion
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Target average CPU utilization, represented as a percentage of
+          requested CPU, over all the pods.
+        displayName: Target CPU Utilization Percentage
+        path: autoscaling.targetCPUUtilizationPercentage
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
+      - description: Periodic probe of container liveness. Container will be restarted
+          if the probe fails.
+        displayName: Liveness Probe
+        path: probes.liveness
+      - description: Policy for pulling container images. Defaults to IfNotPresent.
+        displayName: Pull Policy
+        path: pullPolicy
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:imagePullPolicy
+      - description: Name of the Secret to use to pull images from the specified repository.
+          It is not required if the cluster is configured with a global image pull
+          secret.
+        displayName: Pull Secret
+        path: pullSecret
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Secret
+      - description: Name of the service account to use for deploying the application.
+          A service account is automatically created if it's not specified.
+        displayName: Service Account Name
+        path: serviceAccountName
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Create Knative resources and use Knative serving.
+        displayName: Create Knative Service
+        path: createKnativeService
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Expose the application externally via a Route, a Knative Route
+          or an Ingress resource.
+        displayName: Expose
+        path: expose
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Enable management of TLS certificates. Defaults to true.
+        displayName: Manage TLS
+        path: manageTLS
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Number of pods to create. Not applicable when .spec.autoscaling
+          or .spec.createKnativeService is specified.
+        displayName: Replicas
+        path: replicas
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:podCount
+      - description: The port exposed by the container.
+        displayName: Service Port
+        path: service.port
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
+      - displayName: Auto Scaling
+        path: autoscaling
+      - displayName: Service Type
+        path: service.type
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Resource requests and limits for the application container.
+        displayName: Resource Requirements
+        path: resources
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:resourceRequirements
+      - description: Node proxies this port into your service.
+        displayName: Node Port
+        path: service.nodePort
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
+      - displayName: Probes
+        path: probes
+      - description: The name for the port exposed by the container.
+        displayName: Port Name
+        path: service.portName
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - displayName: Deployment
+        path: deployment
+      - description: Annotations to be added to the service.
+        displayName: Service Annotations
+        path: service.annotations
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: The port that the operator assigns to containers inside pods.
+          Defaults to the value of spec.service.port.
+        displayName: Target Port
+        path: service.targetPort
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
+      - displayName: StatefulSet
+        path: statefulSet
+      - displayName: Service
+        path: service
+      - description: 'A name of a secret that already contains TLS key, certificate
+          and CA to be mounted in the pod. The following keys are valid in the secret:
+          ca.crt, tls.crt, and tls.key.'
+        displayName: Certificate Secret Reference
+        path: service.certificateSecretRef
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - displayName: Route
+        path: route
+      - description: An array consisting of service ports.
+        displayName: Ports
+        path: service.ports
+      - displayName: Monitoring
+        path: monitoring
+      - description: Expose the application as a bindable service. Defaults to false.
+        displayName: Bindable
+        path: service.bindable
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: An array of environment variables for the application container.
+        displayName: Environment Variables
+        path: env
+      - description: List of sources to populate environment variables in the application
+          container.
+        displayName: Environment Variables from Sources
+        path: envFrom
+      - description: Represents a volume with data that is accessible to the application
+          container.
+        displayName: Volumes
+        path: volumes
+      - description: Specifies the strategy to replace old deployment pods with new
+          pods.
+        displayName: Deployment Update Strategy
+        path: deployment.updateStrategy
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:updateStrategy
+      - description: Represents where to mount the volumes into the application container.
+        displayName: Volume Mounts
+        path: volumeMounts
+      - description: List of containers to run before other containers in a pod.
+        displayName: Init Containers
+        path: initContainers
+      - description: List of sidecar containers. These are additional containers to
+          be added to the pods.
+        displayName: Sidecar Containers
+        path: sidecarContainers
+      - description: Specifies the strategy to replace old statefulSet pods with new
+          pods.
+        displayName: StatefulSet Update Strategy
+        path: statefulSet.updateStrategy
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - displayName: Affinity
+        path: affinity
+      - displayName: Storage
+        path: statefulSet.storage
+      - description: Security context for the application container.
+        displayName: Security Context
+        path: securityContext
+      - description: A convenient field to set the size of the persisted storage.
+        displayName: Storage Size
+        path: statefulSet.storage.size
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - displayName: Network Policy
+        path: networkPolicy
+      - description: A convenient field to request the storage class of the persisted
+          storage. The name can not be specified or updated after the storage is created.
+        displayName: Storage Class Name
+        path: statefulSet.storage.className
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: The directory inside the container where this persisted storage
+          will be bound to.
+        displayName: Storage Mount Path
+        path: statefulSet.storage.mountPath
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: A YAML object that represents a volumeClaimTemplate component
+          of a StatefulSet.
+        displayName: Storage Volume Claim Template
+        path: statefulSet.storage.volumeClaimTemplate
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:PersistentVolumeClaim
+      - description: Labels to set on ServiceMonitor.
+        displayName: Monitoring Labels
+        path: monitoring.labels
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: A YAML snippet representing an array of Endpoint component from
+          ServiceMonitor.
+        displayName: Monitoring Endpoints
+        path: monitoring.endpoints
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:endpointList
+      - description: Controls which nodes the pod are scheduled to run on, based on
+          labels on the node.
+        displayName: Node Affinity
+        path: affinity.nodeAffinity
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:nodeAffinity
+      - description: Controls the nodes the pod are scheduled to run on, based on
+          labels on the pods that are already running on the node.
+        displayName: Pod Affinity
+        path: affinity.podAffinity
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:podAffinity
+      - description: Enables the ability to prevent running a pod on the same node
+          as another pod.
+        displayName: Pod Anti Affinity
+        path: affinity.podAntiAffinity
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:podAntiAffinity
+      - description: A YAML object that contains a set of required labels and their
+          values.
+        displayName: Node Affinity Labels
+        path: affinity.nodeAffinityLabels
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Annotations to be added to the Route.
+        displayName: Route Annotations
+        path: route.annotations
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Hostname to be used for the Route.
+        displayName: Route Host
+        path: route.host
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Path to be used for Route.
+        displayName: Route Path
+        path: route.path
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: 'A name of a secret that already contains TLS key, certificate
+          and CA to be used in the route. It can also contain destination CA certificate.
+          The following keys are valid in the secret: ca.crt, destCA.crt, tls.crt,
+          and tls.key.'
+        displayName: Certificate Secret Reference
+        path: route.certificateSecretRef
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: TLS termination policy. Can be one of edge, reencrypt and passthrough.
+        displayName: Termination
+        path: route.termination
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: HTTP traffic policy with TLS enabled. Can be one of Allow, Redirect
+          and None.
+        displayName: Insecure Edge Termination Policy
+        path: route.insecureEdgeTerminationPolicy
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Disable the creation of the network policy. Defaults to false.
+        displayName: Disable
+        path: networkPolicy.disable
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Specify the labels of namespaces that incoming traffic is allowed
+          from.
+        displayName: Namespace Labels
+        path: networkPolicy.namespaceLabels
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Specify the labels of pod(s) that incoming traffic is allowed
+          from.
+        displayName: From Labels
+        path: networkPolicy.fromLabels
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      statusDescriptors:
+      - displayName: Service Binding
+        path: binding
+      - displayName: Status Conditions
+        path: conditions
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes.conditions
+      - description: Service Binding Secret
+        displayName: Secret
+        path: binding.name
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Secret
       version: v1
     - description: Represents the deployment of a runtime component
       displayName: RuntimeComponent
@@ -352,14 +693,27 @@ spec:
         path: conditions
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes.conditions
-      - description: Service Binding Secret
-        displayName: Secret
-        path: binding.name
-        x-descriptors:
-        - urn:alm:descriptor:io.kubernetes:Secret
       version: v1beta2
-    - kind: RuntimeOperation
+    - description: Day-2 operation to execute on an instance of runtime component
+      displayName: RuntimeOperation
+      kind: RuntimeOperation
       name: runtimeoperations.rc.app.stacks
+      specDescriptors:
+      - description: Command to execute. Not executed within a shell.
+        displayName: Command
+        path: command
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - displayName: Container Name
+        path: containerName
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Name of the Pod to perform runtime operation on. Pod must be
+          from the same namespace as the RuntimeOperation instance.
+        displayName: Pod Name
+        path: podName
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       version: v1
     - description: Day-2 operation to execute on an instance of runtime component
       displayName: RuntimeOperation
