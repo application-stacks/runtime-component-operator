@@ -1,5 +1,5 @@
 # Creating statefulset with volume
-apiVersion: rc.app.stacks/v1beta2
+apiVersion: rc.app.stacks/v1
 kind: RuntimeComponent
 metadata:
   name: volume-rc

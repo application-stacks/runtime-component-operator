@@ -4,6 +4,12 @@ repo: github.com/application-stacks/runtime-component-operator
 resources:
 - group: rc.app.stacks
   kind: RuntimeComponent
+  version: v1
+- group: rc.app.stacks
+  kind: RuntimeOperation
+  version: v1
+- group: rc.app.stacks
+  kind: RuntimeComponent
   version: v1beta2
 - group: rc.app.stacks
   kind: RuntimeOperation

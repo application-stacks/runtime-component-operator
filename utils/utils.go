@@ -26,7 +26,7 @@ import (
 	"github.com/application-stacks/runtime-component-operator/common"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
-	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
+	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
@@ -1045,7 +1045,7 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComp
 }
 
 // GetCondition ...
-func GetCondition(conditionType appstacksv1beta2.StatusConditionType, status *appstacksv1beta2.RuntimeComponentStatus) *appstacksv1beta2.StatusCondition {
+func GetCondition(conditionType appstacksv1.StatusConditionType, status *appstacksv1.RuntimeComponentStatus) *appstacksv1.StatusCondition {
 	for i := range status.Conditions {
 		if status.Conditions[i].Type == conditionType {
 			return &status.Conditions[i]
@@ -1056,7 +1056,7 @@ func GetCondition(conditionType appstacksv1beta2.StatusConditionType, status *ap
 }
 
 // SetCondition ...
-func SetCondition(condition appstacksv1beta2.StatusCondition, status *appstacksv1beta2.RuntimeComponentStatus) {
+func SetCondition(condition appstacksv1.StatusCondition, status *appstacksv1.RuntimeComponentStatus) {
 	for i := range status.Conditions {
 		if status.Conditions[i].Type == condition.Type {
 			status.Conditions[i] = condition

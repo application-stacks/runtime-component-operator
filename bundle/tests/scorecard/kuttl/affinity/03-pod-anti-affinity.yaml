@@ -1,5 +1,5 @@
 # Check if there is a matching pod anti-affinity a correct deployment is created and status has a readied pod
-apiVersion: rc.app.stacks/v1beta2
+apiVersion: rc.app.stacks/v1
 kind: RuntimeComponent
 metadata:
   name: anti-affinity-rc

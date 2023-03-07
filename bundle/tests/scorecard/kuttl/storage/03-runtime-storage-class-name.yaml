@@ -1,6 +1,6 @@
 # With some storage.className configured, the operator
 # should create a PVC with the configured storageClassName
-apiVersion: rc.app.stacks/v1beta2
+apiVersion: rc.app.stacks/v1
 kind: RuntimeComponent
 metadata:
   name: storage-rc

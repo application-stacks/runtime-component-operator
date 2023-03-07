@@ -2,5 +2,5 @@ apiVersion: kuttl.dev/v1beta1
 kind: TestStep
 delete:
 # Delete all RuntimeComponents in the test namespace
-- apiVersion: rc.app.stacks/v1beta2
+- apiVersion: rc.app.stacks/v1
   kind: RuntimeComponent
