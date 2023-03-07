@@ -169,6 +169,7 @@ cat << EOF > $CATALOG_FILE
       image: $CATALOG_IMG
       imagePullPolicy: Always
       displayName: Runtime Component Catalog
+      publisher: Runtime Component
       updateStrategy:
         registryPoll:
           interval: 1m
@@ -185,14 +186,16 @@ cat << EOF > $SUBCRIPTION_FILE
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: runtime-component-operator-operator-subscription
+  name: runtime-component-subscription
   namespace: $NAMESPACE
 spec:
   channel:  beta2
-  name: runtime-component-operator
+  name: runtime-component
   source: runtime-component-operator-catalog
   sourceNamespace: $NAMESPACE
   installPlanApproval: Automatic
+
+
 EOF
 
     oc apply -f $SUBCRIPTION_FILE
