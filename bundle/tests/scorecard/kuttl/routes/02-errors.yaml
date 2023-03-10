@@ -1,0 +1,9 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: route
+  annotations:
+    step: "02"
+spec:
+  path: /mypath
+

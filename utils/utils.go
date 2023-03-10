@@ -151,6 +151,9 @@ func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, c
 			}
 		}
 	}
+	if ba.GetRoute() == nil {
+		route.Spec.Path = ""
+	}
 	if ba.GetRoute() == nil || ba.GetRoute().GetTermination() == nil {
 		route.Spec.TLS = nil
 	}
