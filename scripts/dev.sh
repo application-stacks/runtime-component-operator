@@ -194,8 +194,6 @@ spec:
   source: runtime-component-operator-catalog
   sourceNamespace: $NAMESPACE
   installPlanApproval: Automatic
-
-
 EOF
 
     oc apply -f $SUBCRIPTION_FILE
