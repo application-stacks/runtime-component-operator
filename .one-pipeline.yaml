@@ -1,13 +1,11 @@
 version: '1'
 
 setup:
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
   script: |
     #!/usr/bin/env bash
 
     echo "setup"
-    apt-get update
-    apt-get -y install build-essential
 
     # Download Go
     GO_VERSION=$(get_env go-version)
@@ -59,7 +57,7 @@ setup:
 test:
   dind: true
   abort_on_failure: true
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
   script: |
     #!/usr/bin/env bash
 
@@ -89,7 +87,7 @@ test:
 static-scan:
   dind: true
   abort_on_failure: false
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
   script: |
     #!/usr/bin/env bash
 
@@ -160,13 +158,15 @@ containerize:
     # Build amd64 image
     make build-pipeline-releases
     # Build ppc64le and s390x images
-    ./scripts/pipeline/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
+    #./scripts/pipeline/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
     # Build manifest
     make build-pipeline-manifest    
     # Build bundle image
-    ./scripts/pipeline/launch-catalog-build.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
+    # ./scripts/pipeline/launch-catalog-build.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
+    make install-opm
+    make bundle-pipeline-releases RELEASE_TARGET=${RELEASE_TARGET}
     # Save artifacts
-    declare -a tags=("${RELEASE_TARGET}" "${RELEASE_TARGET}-amd64" "${RELEASE_TARGET}-ppc64le" "${RELEASE_TARGET}-s390x") 
+    declare -a tags=("${RELEASE_TARGET}" "${RELEASE_TARGET}-amd64") 
     for i in "${tags[@]}"
     do
       IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE:$i
@@ -206,7 +206,8 @@ sign-artifact:
     fi
 
 deploy:
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
+
   script: |
     #!/usr/bin/env bash
 
@@ -228,7 +229,7 @@ deploy:
 
 dynamic-scan:
   abort_on_failure: false
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
   script: |
     #!/usr/bin/env bash
     echo "dynamic-scan"
@@ -293,7 +294,7 @@ acceptance-test:
 
 scan-artifact:
   abort_on_failure: false
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.15
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
   script: |
     #!/usr/bin/env bash
     # echo "twistlock-scan"
@@ -333,7 +334,7 @@ scan-artifact:
 
 release:
   abort_on_failure: false
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
   script: |
     #!/usr/bin/env bash
     PERIODIC_SCAN=$(get_env periodic-rescan)

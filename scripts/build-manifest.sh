@@ -65,7 +65,7 @@ build_manifest() {
   local target="${IMAGE}:${tag}"
   
   manifest-tool push from-args \
-    --platforms "linux/amd64,linux/s390x,linux/ppc64le" \
+    --platforms "linux/amd64" \
     --template "${target}-ARCH" \
     --target "${target}" \
     || echo "*** WARN: Target architectures not available"

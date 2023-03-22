@@ -266,7 +266,7 @@ bundle-build: ## Build the bundle image.
 
 .PHONY: bundle-push
 bundle-push: ## Push the bundle image.
-        $(CONTAINER_COMMAND) push $(PODMAN_SKIP_TLS_VERIFY)  "${PUBLISH_REGISTRY}/${BUNDLE_IMG}"
+	$(CONTAINER_COMMAND) push $(PODMAN_SKIP_TLS_VERIFY)  "${BUNDLE_IMG}"
 
 build-manifest: setup-manifest
 	./scripts/build-manifest.sh --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}" --target "${RELEASE_TARGET}"
@@ -318,13 +318,13 @@ bundle-push-podman:
 	podman push --format=docker "${BUNDLE_IMG}"
 
 build-catalog:
-	opm index add --bundles "${BUNDLE_IMG}" --tag "${CATALOG_IMG}"
+	opm index add --bundles "${BUNDLE_IMG}" --tag "${CATALOG_IMG}" -c docker
 
 push-catalog: 
-	podman push --format=docker "${CATALOG_IMG}"
+	docker push "${CATALOG_IMG}"
 
 push-pipeline-catalog: 
-	podman push --format=docker "${CATALOG_IMG}"
+	docker push "${CATALOG_IMG}"
 
 # Build a catalog image by adding bundle images to an empty catalog using the operator package manager tool, 'opm'.
 # This recipe invokes 'opm' in 'semver' bundle add mode. For more information on add modes, see:
