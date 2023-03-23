@@ -1,5 +1,5 @@
 # Test to see that if affinity is setup but there is no matching label, no pod is readied
-apiVersion: rc.app.stacks/v1beta2
+apiVersion: rc.app.stacks/v1
 kind: RuntimeComponent
 metadata:
   name: affinity-rc

@@ -26,7 +26,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -65,10 +64,6 @@ type RuntimeComponentSpec struct {
 	// Expose the application externally via a Route, a Knative Route or an Ingress resource.
 	// +operator-sdk:csv:customresourcedefinitions:order=8,type=spec,displayName="Expose",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	Expose *bool `json:"expose,omitempty"`
-
-	// Enable management of TLS certificates. Defaults to true.
-	// +operator-sdk:csv:customresourcedefinitions:order=8,type=spec,displayName="Manage TLS",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
-	ManageTLS *bool `json:"manageTLS,omitempty"`
 
 	// Number of pods to create. Not applicable when .spec.autoscaling or .spec.createKnativeService is specified.
 	// +operator-sdk:csv:customresourcedefinitions:order=9,type=spec,displayName="Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:podCount"
@@ -135,13 +130,6 @@ type RuntimeComponentSpec struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:order=24,type=spec,displayName="Affinity"
 	Affinity *RuntimeComponentAffinity `json:"affinity,omitempty"`
-
-	// Security context for the application container.
-	// +operator-sdk:csv:customresourcedefinitions:order=25,type=spec,displayName="Security Context"
-	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
-
-	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Network Policy"
-	NetworkPolicy *RuntimeComponentNetworkPolicy `json:"networkPolicy,omitempty"`
 }
 
 // Define health checks on application container to determine whether it is alive or ready to receive traffic
@@ -159,8 +147,22 @@ type RuntimeComponentProbes struct {
 	Startup *corev1.Probe `json:"startup,omitempty"`
 }
 
+func (in *RuntimeComponentProbes) GetDefaultLivenessProbe(ba common.BaseComponent) *corev1.Probe {
+	return nil
+}
+
+func (in *RuntimeComponentProbes) GetDefaultReadinessProbe(ba common.BaseComponent) *corev1.Probe {
+	return nil
+
+}
+
+func (in *RuntimeComponentProbes) GetDefaultStartupProbe(ba common.BaseComponent) *corev1.Probe {
+	return nil
+}
+
 // Configure pods to run on particular Nodes.
 type RuntimeComponentAffinity struct {
+
 	// Controls which nodes the pod are scheduled to run on, based on labels on the node.
 	// +operator-sdk:csv:customresourcedefinitions:order=33,type=spec,displayName="Node Affinity",xDescriptors="urn:alm:descriptor:com.tectonic.ui:nodeAffinity"
 	NodeAffinity *corev1.NodeAffinity `json:"nodeAffinity,omitempty"`
@@ -210,8 +212,8 @@ type RuntimeComponentService struct {
 	Type *corev1.ServiceType `json:"type,omitempty"`
 
 	// Node proxies this port into your service.
-	// +kubebuilder:validation:Maximum=32767
-	// +kubebuilder:validation:Minimum=30000
+	// +kubebuilder:validation:Maximum=65535
+	// +kubebuilder:validation:Minimum=0
 	// +operator-sdk:csv:customresourcedefinitions:order=11,type=spec,displayName="Node Port",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
 	NodePort *int32 `json:"nodePort,omitempty"`
 
@@ -229,7 +231,7 @@ type RuntimeComponentService struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=14,type=spec,displayName="Target Port",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
 	TargetPort *int32 `json:"targetPort,omitempty"`
 
-	// A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod. The following keys are valid in the secret: ca.crt, tls.crt, and tls.key.
+	// A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod.
 	// +k8s:openapi-gen=true
 	// +operator-sdk:csv:customresourcedefinitions:order=15,type=spec,displayName="Certificate Secret Reference",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
@@ -241,21 +243,6 @@ type RuntimeComponentService struct {
 	// Expose the application as a bindable service. Defaults to false.
 	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Bindable",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	Bindable *bool `json:"bindable,omitempty"`
-}
-
-// Defines the network policy
-type RuntimeComponentNetworkPolicy struct {
-	// Disable the creation of the network policy. Defaults to false.
-	// +operator-sdk:csv:customresourcedefinitions:order=46,type=spec,displayName="Disable",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
-	Disable *bool `json:"disable,omitempty"`
-
-	// Specify the labels of namespaces that incoming traffic is allowed from.
-	// +operator-sdk:csv:customresourcedefinitions:order=47,type=spec,displayName="Namespace Labels",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
-	NamespaceLabels *map[string]string `json:"namespaceLabels,omitempty"`
-
-	// Specify the labels of pod(s) that incoming traffic is allowed from.
-	// +operator-sdk:csv:customresourcedefinitions:order=48,type=spec,displayName="From Labels",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
-	FromLabels *map[string]string `json:"fromLabels,omitempty"`
 }
 
 // Defines the desired state and cycle of applications.
@@ -291,18 +278,17 @@ type RuntimeComponentStorage struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=25,type=spec,displayName="Storage Size",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Size string `json:"size,omitempty"`
 
-	// A convenient field to request the storage class of the persisted storage. The name can not be specified or updated after the storage is created.
-	// +kubebuilder:validation:Pattern=.+
-	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Storage Class Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
-	ClassName string `json:"className,omitempty"`
-
 	// The directory inside the container where this persisted storage will be bound to.
-	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="Storage Mount Path",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Storage Mount Path",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	MountPath string `json:"mountPath,omitempty"`
 
 	// A YAML object that represents a volumeClaimTemplate component of a StatefulSet.
-	// +operator-sdk:csv:customresourcedefinitions:order=28,type=spec,displayName="Storage Volume Claim Template",xDescriptors="urn:alm:descriptor:com.tectonic.ui:PersistentVolumeClaim"
+	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="Storage Volume Claim Template",xDescriptors="urn:alm:descriptor:com.tectonic.ui:PersistentVolumeClaim"
 	VolumeClaimTemplate *corev1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
+}
+
+func (in *RuntimeComponentStorage) GetClassName() string {
+	return ""
 }
 
 // Specifies parameters for Service Monitor.
@@ -337,7 +323,7 @@ type RuntimeComponentRoute struct {
 	// Path type to be used for Ingress.
 	PathType networkingv1.PathType `json:"pathType,omitempty"`
 
-	// A name of a secret that already contains TLS key, certificate and CA to be used in the route. It can also contain destination CA certificate. The following keys are valid in the secret: ca.crt, destCA.crt, tls.crt, and tls.key.
+	// A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
 	// +operator-sdk:csv:customresourcedefinitions:order=41,type=spec,displayName="Certificate Secret Reference",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
 
@@ -356,13 +342,42 @@ type RuntimeComponentStatus struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Status Conditions",xDescriptors="urn:alm:descriptor:io.kubernetes.conditions"
 	Conditions     []StatusCondition `json:"conditions,omitempty"`
-	Endpoints      []StatusEndpoint  `json:"endpoints,omitempty"`
 	ImageReference string            `json:"imageReference,omitempty"`
 
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Service Binding"
 	Binding *corev1.LocalObjectReference `json:"binding,omitempty"`
+}
 
-	References common.StatusReferences `json:"references,omitempty"`
+func (in *RuntimeComponentStatus) NewCondition(conditionType common.StatusConditionType) common.StatusCondition {
+	return &StatusCondition{}
+}
+
+func (in *RuntimeComponentStatus) GetStatusEndpoint(s string) common.StatusEndpoint {
+	return nil
+}
+
+func (in *RuntimeComponentStatus) SetStatusEndpoint(endpoint common.StatusEndpoint) {
+	return
+}
+
+func (in *RuntimeComponentStatus) NewStatusEndpoint(s string) common.StatusEndpoint {
+	return nil
+}
+
+func (in *RuntimeComponentStatus) RemoveStatusEndpoint(s string) {
+	return
+}
+
+func (in *RuntimeComponentStatus) GetReferences() common.StatusReferences {
+	return nil
+}
+
+func (in *RuntimeComponentStatus) SetReferences(references common.StatusReferences) {
+	return
+}
+
+func (in *RuntimeComponentStatus) SetReference(s string, s2 string) {
+	return
 }
 
 // Defines possible status conditions.
@@ -374,29 +389,16 @@ type StatusCondition struct {
 	Type               StatusConditionType    `json:"type,omitempty"`
 }
 
+func (in *StatusCondition) SetConditionFields(s string, s2 string, status corev1.ConditionStatus) common.StatusCondition {
+	return nil
+}
+
 // Defines the type of status condition.
 type StatusConditionType string
 
-// Reports endpoint information.
-type StatusEndpoint struct {
-	Name  string              `json:"name,omitempty"`
-	Scope StatusEndpointScope `json:"scope,omitempty"`
-	Type  string              `json:"type,omitempty"`
-	URI   string              `json:"uri,omitempty"`
-}
-
-// Defines the scope of endpoint information in status.
-type StatusEndpointScope string
-
 const (
-	// Status Condition Types
-	StatusConditionTypeReconciled     StatusConditionType = "Reconciled"
-	StatusConditionTypeResourcesReady StatusConditionType = "ResourcesReady"
-	StatusConditionTypeReady          StatusConditionType = "Ready"
-
-	// Status Endpoint Scopes
-	StatusEndpointScopeExternal StatusEndpointScope = "External"
-	StatusEndpointScopeInternal StatusEndpointScope = "Internal"
+	// StatusConditionTypeReconciled ...
+	StatusConditionTypeReconciled StatusConditionType = "Reconciled"
 )
 
 // +kubebuilder:resource:path=runtimecomponents,scope=Namespaced,shortName=comp;comps
@@ -405,16 +407,10 @@ const (
 // +kubebuilder:printcolumn:name="Image",type="string",JSONPath=".spec.applicationImage",priority=0,description="Absolute name of the deployed image containing registry and tag"
 // +kubebuilder:printcolumn:name="Exposed",type="boolean",JSONPath=".spec.expose",priority=0,description="Specifies whether deployment is exposed externally via default Route"
 // +kubebuilder:printcolumn:name="Reconciled",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].status",priority=0,description="Status of the reconcile condition"
-// +kubebuilder:printcolumn:name="ReconciledReason",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].reason",priority=1,description="Reason for the failure of reconcile condition"
-// +kubebuilder:printcolumn:name="ReconciledMessage",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].message",priority=1,description="Failure message from reconcile condition"
-// +kubebuilder:printcolumn:name="ResourcesReady",type="string",JSONPath=".status.conditions[?(@.type=='ResourcesReady')].status",priority=0,description="Status of the resource ready condition"
-// +kubebuilder:printcolumn:name="ResourcesReadyReason",type="string",JSONPath=".status.conditions[?(@.type=='ResourcesReady')].reason",priority=1,description="Reason for the failure of resource ready condition"
-// +kubebuilder:printcolumn:name="ResourcesReadyMessage",type="string",JSONPath=".status.conditions[?(@.type=='ResourcesReady')].message",priority=1,description="Failure message from resource ready condition"
-// +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status",priority=0,description="Status of the component ready condition"
-// +kubebuilder:printcolumn:name="ReadyReason",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].reason",priority=1,description="Reason for the failure of component ready condition"
-// +kubebuilder:printcolumn:name="ReadyMessage",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].message",priority=1,description="Failure message from component ready condition"
+// +kubebuilder:printcolumn:name="Reason",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].reason",priority=1,description="Reason for the failure of reconcile condition"
+// +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.conditions[?(@.type=='Reconciled')].message",priority=1,description="Failure message from reconcile condition"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",priority=0,description="Age of the resource"
-// +operator-sdk:csv:customresourcedefinitions:displayName="RuntimeComponent",resources={{Deployment,v1},{Service,v1},{StatefulSet,v1},{Route,v1},{HorizontalPodAutoscaler,v1},{ServiceAccount,v1},{Secret,v1},{NetworkPolicy,v1}}
+//+operator-sdk:csv:customresourcedefinitions:displayName="RuntimeComponent",resources={{Deployment,v1},{Service,v1},{StatefulSet,v1},{Route,v1},{HorizontalPodAutoscaler,v1},{ServiceAccount,v1},{Secret,v1}}
 
 // Represents the deployment of a runtime component
 type RuntimeComponent struct {
@@ -485,21 +481,6 @@ func (p *RuntimeComponentProbes) GetStartupProbe() *corev1.Probe {
 	return p.Startup
 }
 
-// GetDefaultLivenessProbe returns default values for liveness probe
-func (p *RuntimeComponentProbes) GetDefaultLivenessProbe(ba common.BaseComponent) *corev1.Probe {
-	return common.GetDefaultMicroProfileLivenessProbe(ba)
-}
-
-// GetDefaultReadinessProbe returns default values for readiness probe
-func (p *RuntimeComponentProbes) GetDefaultReadinessProbe(ba common.BaseComponent) *corev1.Probe {
-	return common.GetDefaultMicroProfileReadinessProbe(ba)
-}
-
-// GetDefaultStartupProbe returns default values for startup probe
-func (p *RuntimeComponentProbes) GetDefaultStartupProbe(ba common.BaseComponent) *corev1.Probe {
-	return common.GetDefaultMicroProfileStartupProbe(ba)
-}
-
 // GetVolumes returns volumes slice
 func (cr *RuntimeComponent) GetVolumes() []corev1.Volume {
 	return cr.Spec.Volumes
@@ -559,10 +540,6 @@ func (cr *RuntimeComponent) GetService() common.BaseComponentService {
 	return cr.Spec.Service
 }
 
-func (cr *RuntimeComponent) GetNetworkPolicy() common.BaseComponentNetworkPolicy {
-	return cr.Spec.NetworkPolicy
-}
-
 // GetApplicationVersion returns application version
 func (cr *RuntimeComponent) GetApplicationVersion() string {
 	return cr.Spec.ApplicationVersion
@@ -615,11 +592,6 @@ func (cr *RuntimeComponent) GetAffinity() common.BaseComponentAffinity {
 		return nil
 	}
 	return cr.Spec.Affinity
-}
-
-// GetAffinity returns deployment's node and pod affinity settings
-func (cr *RuntimeComponent) GetManageTLS() *bool {
-	return cr.Spec.ManageTLS
 }
 
 // GetDeployment returns deployment settings
@@ -698,11 +670,6 @@ func (s *RuntimeComponentStorage) GetSize() string {
 	return s.Size
 }
 
-// GetClassName returns persistent volume ClassName
-func (s *RuntimeComponentStorage) GetClassName() string {
-	return s.ClassName
-}
-
 // GetMountPath returns mount path for persistent volume
 func (s *RuntimeComponentStorage) GetMountPath() string {
 	return s.MountPath
@@ -759,24 +726,6 @@ func (s *RuntimeComponentService) GetCertificateSecretRef() *string {
 // GetBindable returns whether the application should be exposable as a service
 func (s *RuntimeComponentService) GetBindable() *bool {
 	return s.Bindable
-}
-
-func (np *RuntimeComponentNetworkPolicy) GetNamespaceLabels() map[string]string {
-	if np == nil || np.NamespaceLabels == nil {
-		return nil
-	}
-	return *np.NamespaceLabels
-}
-
-func (np *RuntimeComponentNetworkPolicy) GetFromLabels() map[string]string {
-	if np == nil || np.FromLabels == nil {
-		return nil
-	}
-	return *np.FromLabels
-}
-
-func (np *RuntimeComponentNetworkPolicy) IsDisabled() bool {
-	return np != nil && np.Disable != nil && *np.Disable
 }
 
 // GetLabels returns labels to be added on ServiceMonitor
@@ -849,11 +798,6 @@ func (a *RuntimeComponentAffinity) GetNodeAffinityLabels() map[string]string {
 	return a.NodeAffinityLabels
 }
 
-// GetSecurityContext returns container security context
-func (cr *RuntimeComponent) GetSecurityContext() *corev1.SecurityContext {
-	return cr.Spec.SecurityContext
-}
-
 // Initialize the RuntimeComponent instance
 func (cr *RuntimeComponent) Initialize() {
 	if cr.Spec.PullPolicy == nil {
@@ -892,24 +836,16 @@ func (cr *RuntimeComponent) Initialize() {
 		cr.Spec.Service.Port = 8080
 	}
 
-	// If TargetPorts on Serviceports are not set, default them to the Port value in the CR
-	numOfAdditionalPorts := len(cr.GetService().GetPorts())
-	for i := 0; i < numOfAdditionalPorts; i++ {
-		if cr.Spec.Service.Ports[i].TargetPort.String() == "0" {
-			cr.Spec.Service.Ports[i].TargetPort = intstr.FromInt(int(cr.Spec.Service.Ports[i].Port))
-		}
-	}
 }
 
 // GetLabels returns set of labels to be added to all resources
 func (cr *RuntimeComponent) GetLabels() map[string]string {
 	labels := map[string]string{
-		"app.kubernetes.io/instance":     cr.Name,
-		"app.kubernetes.io/name":         cr.Name,
-		"app.kubernetes.io/managed-by":   "runtime-component-operator",
-		"app.kubernetes.io/component":    "backend",
-		"app.kubernetes.io/part-of":      cr.Spec.ApplicationName,
-		common.GetComponentNameLabel(cr): cr.Name,
+		"app.kubernetes.io/instance":   cr.Name,
+		"app.kubernetes.io/name":       cr.Name,
+		"app.kubernetes.io/managed-by": "runtime-component-operator",
+		"app.kubernetes.io/component":  "backend",
+		"app.kubernetes.io/part-of":    cr.Spec.ApplicationName,
 	}
 
 	if cr.Spec.ApplicationVersion != "" {
@@ -945,7 +881,7 @@ func (c *StatusCondition) SetType(ct common.StatusConditionType) {
 	c.Type = convertFromCommonStatusConditionType(ct)
 }
 
-// GetLastTransitionTime returns time of last status change
+// GetLastTransitionTime return time of last status change
 func (c *StatusCondition) GetLastTransitionTime() *metav1.Time {
 	return c.LastTransitionTime
 }
@@ -955,7 +891,7 @@ func (c *StatusCondition) SetLastTransitionTime(t *metav1.Time) {
 	c.LastTransitionTime = t
 }
 
-// GetMessage returns condition's message
+// GetMessage return condition's message
 func (c *StatusCondition) GetMessage() string {
 	return c.Message
 }
@@ -965,7 +901,7 @@ func (c *StatusCondition) SetMessage(m string) {
 	c.Message = m
 }
 
-// GetReason returns condition's message
+// GetReason return condition's message
 func (c *StatusCondition) GetReason() string {
 	return c.Reason
 }
@@ -975,7 +911,7 @@ func (c *StatusCondition) SetReason(r string) {
 	c.Reason = r
 }
 
-// GetStatus returns condition's status
+// GetStatus return condition's status
 func (c *StatusCondition) GetStatus() corev1.ConditionStatus {
 	return c.Status
 }
@@ -983,21 +919,6 @@ func (c *StatusCondition) GetStatus() corev1.ConditionStatus {
 // SetStatus sets condition's status
 func (c *StatusCondition) SetStatus(s corev1.ConditionStatus) {
 	c.Status = s
-}
-
-// SetConditionFields sets status condition fields
-func (c *StatusCondition) SetConditionFields(message string, reason string, status corev1.ConditionStatus) common.StatusCondition {
-	c.Message = message
-	c.Reason = reason
-	c.Status = status
-	return c
-}
-
-// NewCondition returns new condition
-func (s *RuntimeComponentStatus) NewCondition(ct common.StatusConditionType) common.StatusCondition {
-	c := &StatusCondition{}
-	c.Type = convertFromCommonStatusConditionType(ct)
-	return c
 }
 
 // GetConditions returns slice of conditions
@@ -1009,7 +930,7 @@ func (s *RuntimeComponentStatus) GetConditions() []common.StatusCondition {
 	return conditions
 }
 
-// GetCondition returns status condition with status condition type
+// GetCondition ...
 func (s *RuntimeComponentStatus) GetCondition(t common.StatusConditionType) common.StatusCondition {
 	for i := range s.Conditions {
 		if s.Conditions[i].GetType() == t {
@@ -1019,7 +940,7 @@ func (s *RuntimeComponentStatus) GetCondition(t common.StatusConditionType) comm
 	return nil
 }
 
-// SetCondition sets status condition
+// SetCondition ...
 func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 	condition := &StatusCondition{}
 	found := false
@@ -1027,11 +948,10 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 		if s.Conditions[i].GetType() == c.GetType() {
 			condition = &s.Conditions[i]
 			found = true
-			break
 		}
 	}
 
-	if condition.GetStatus() != c.GetStatus() || condition.GetMessage() != c.GetMessage() {
+	if condition.GetStatus() != c.GetStatus() {
 		condition.SetLastTransitionTime(&metav1.Time{Time: time.Now()})
 	}
 
@@ -1044,32 +964,10 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 	}
 }
 
-func (s *RuntimeComponentStatus) GetReferences() common.StatusReferences {
-	if s.References == nil {
-		s.References = make(common.StatusReferences)
-	}
-	return s.References
-}
-
-func (s *RuntimeComponentStatus) SetReferences(refs common.StatusReferences) {
-	s.References = refs
-}
-
-func (s *RuntimeComponentStatus) SetReference(name string, value string) {
-	if s.References == nil {
-		s.References = make(common.StatusReferences)
-	}
-	s.References[name] = value
-}
-
 func convertToCommonStatusConditionType(c StatusConditionType) common.StatusConditionType {
 	switch c {
 	case StatusConditionTypeReconciled:
 		return common.StatusConditionTypeReconciled
-	case StatusConditionTypeResourcesReady:
-		return common.StatusConditionTypeResourcesReady
-	case StatusConditionTypeReady:
-		return common.StatusConditionTypeReady
 	default:
 		panic(c)
 	}
@@ -1079,129 +977,6 @@ func convertFromCommonStatusConditionType(c common.StatusConditionType) StatusCo
 	switch c {
 	case common.StatusConditionTypeReconciled:
 		return StatusConditionTypeReconciled
-	case common.StatusConditionTypeResourcesReady:
-		return StatusConditionTypeResourcesReady
-	case common.StatusConditionTypeReady:
-		return StatusConditionTypeReady
-	default:
-		panic(c)
-	}
-}
-
-// GetEndpointName returns endpoint name in status
-func (e *StatusEndpoint) GetEndpointName() string {
-	return e.Name
-}
-
-// SetEndpointName sets endpoint name in status
-func (e *StatusEndpoint) SetEndpointName(n string) {
-	e.Name = n
-}
-
-// GetEndpointScope returns endpoint scope in status
-func (e *StatusEndpoint) GetEndpointScope() common.StatusEndpointScope {
-	return convertToCommonStatusEndpointScope(e.Scope)
-}
-
-// SetEndpointScope sets endpoint scope in status
-func (e *StatusEndpoint) SetEndpointScope(s common.StatusEndpointScope) {
-	e.Scope = convertFromCommonStatusEndpointScope(s)
-}
-
-// GetEndpointType returns endpoint type in status
-func (e *StatusEndpoint) GetEndpointType() string {
-	return e.Type
-}
-
-// SetEndpointType sets endpoint type in status
-func (e *StatusEndpoint) SetEndpointType(t string) {
-	e.Type = t
-}
-
-// GetEndpointUri returns endpoint uri in status
-func (e *StatusEndpoint) GetEndpointUri() string {
-	return e.URI
-}
-
-// SetEndpointUri sets endpoint uri in status
-func (e *StatusEndpoint) SetEndpointUri(u string) {
-	e.URI = u
-}
-
-// SetStatusEndpointFields sets endpoint information fields
-func (e *StatusEndpoint) SetStatusEndpointFields(eScope common.StatusEndpointScope, eType string, eUri string) common.StatusEndpoint {
-	e.Scope = convertFromCommonStatusEndpointScope(eScope)
-	e.Type = eType
-	e.URI = eUri
-	return e
-}
-
-// RemoveEndpoint removes endpoint in status
-func (s *RuntimeComponentStatus) RemoveStatusEndpoint(endpointName string) {
-	endpoints := s.Endpoints
-	for i, ep := range endpoints {
-		if ep.GetEndpointName() == endpointName {
-			s.Endpoints = append(endpoints[:i], endpoints[i+1:]...)
-			break
-		}
-	}
-}
-
-// NewStatusEndpoint returns new endpoint information
-func (s *RuntimeComponentStatus) NewStatusEndpoint(endpointName string) common.StatusEndpoint {
-	e := &StatusEndpoint{}
-	e.Name = endpointName
-	return e
-}
-
-// GetStatusEndpoint returns endpoint information with endpoint name
-func (s *RuntimeComponentStatus) GetStatusEndpoint(endpointName string) common.StatusEndpoint {
-	for i := range s.Endpoints {
-		if s.Endpoints[i].GetEndpointName() == endpointName {
-			return &s.Endpoints[i]
-		}
-	}
-	return nil
-}
-
-// SetStatusEndpoint sets endpoint in status
-func (s *RuntimeComponentStatus) SetStatusEndpoint(c common.StatusEndpoint) {
-	endpoint := &StatusEndpoint{}
-	found := false
-	for i := range s.Endpoints {
-		if s.Endpoints[i].GetEndpointName() == c.GetEndpointName() {
-			endpoint = &s.Endpoints[i]
-			found = true
-			break
-		}
-	}
-
-	endpoint.SetEndpointName(c.GetEndpointName())
-	endpoint.SetEndpointScope(c.GetEndpointScope())
-	endpoint.SetEndpointType(c.GetEndpointType())
-	endpoint.SetEndpointUri(c.GetEndpointUri())
-	if !found {
-		s.Endpoints = append(s.Endpoints, *endpoint)
-	}
-}
-
-func convertToCommonStatusEndpointScope(c StatusEndpointScope) common.StatusEndpointScope {
-	switch c {
-	case StatusEndpointScopeExternal:
-		return common.StatusEndpointScopeExternal
-	case StatusEndpointScopeInternal:
-		return common.StatusEndpointScopeInternal
-	default:
-		panic(c)
-	}
-}
-
-func convertFromCommonStatusEndpointScope(c common.StatusEndpointScope) StatusEndpointScope {
-	switch c {
-	case common.StatusEndpointScopeExternal:
-		return StatusEndpointScopeExternal
-	case common.StatusEndpointScopeInternal:
-		return StatusEndpointScopeInternal
 	default:
 		panic(c)
 	}

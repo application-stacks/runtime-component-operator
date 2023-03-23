@@ -13,6 +13,16 @@ patches:
     kind: ClusterServiceVersion
     name: runtime-component.v0.0.0
     namespace: placeholder
+- path: probesPatch.yaml
+  target:
+    kind: ClusterServiceVersion
+    name: runtime-component.v0.0.0
+    namespace: placeholder
+- path: securityContextPatch.yaml
+  target:
+    kind: ClusterServiceVersion
+    name: runtime-component.v0.0.0
+    namespace: placeholder
 
 # [WEBHOOK] To enable webhooks, uncomment all the sections with [WEBHOOK] prefix.
 # Do NOT uncomment sections with prefix [CERTMANAGER], as OLM does not support cert-manager.

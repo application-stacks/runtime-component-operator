@@ -39,7 +39,7 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	appstacksv1beta2 "github.com/application-stacks/runtime-component-operator/api/v1beta2"
+	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/openshift/library-go/pkg/image/imageutil"
@@ -121,7 +121,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	// Fetch the RuntimeComponent instance
-	instance := &appstacksv1beta2.RuntimeComponent{}
+	instance := &appstacksv1.RuntimeComponent{}
 	var ba common.BaseComponent = instance
 	err = r.GetClient().Get(context.TODO(), req.NamespacedName, instance)
 	if err != nil {
@@ -515,8 +515,8 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 // SetupWithManager initializes reconciler
 func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
-	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1beta2.RuntimeComponent{}, indexFieldImageStreamName, func(obj client.Object) []string {
-		instance := obj.(*appstacksv1beta2.RuntimeComponent)
+	mgr.GetFieldIndexer().IndexField(context.Background(), &appstacksv1.RuntimeComponent{}, indexFieldImageStreamName, func(obj client.Object) []string {
+		instance := obj.(*appstacksv1.RuntimeComponent)
 		image, err := imageutil.ParseDockerImageReference(instance.Spec.ApplicationImage)
 		if err == nil {
 			imageNamespace := image.Namespace
@@ -588,7 +588,7 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	}
 
-	b := ctrl.NewControllerManagedBy(mgr).For(&appstacksv1beta2.RuntimeComponent{}, builder.WithPredicates(pred)).
+	b := ctrl.NewControllerManagedBy(mgr).For(&appstacksv1.RuntimeComponent{}, builder.WithPredicates(pred)).
 		Owns(&corev1.Service{}, builder.WithPredicates(predSubResource)).
 		Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource)).
 		Owns(&appsv1.Deployment{}, builder.WithPredicates(predSubResWithGenCheck)).

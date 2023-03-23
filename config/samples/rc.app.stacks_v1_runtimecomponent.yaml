@@ -1,0 +1,11 @@
+apiVersion: rc.app.stacks/v1
+kind: RuntimeComponent
+metadata:
+  name: runtimecomponent-sample
+spec:
+  # Add fields here
+  applicationImage: icr.io/appcafe/open-liberty/samples/getting-started@sha256:60ca13dd15d5dd583a594436d3568fc69fc7a58081dc40885dc4d2b16a6e4c69
+  expose: true
+  replicas: 1
+  service:
+    port: 9080

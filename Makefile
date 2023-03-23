@@ -1,5 +1,5 @@
 # Current Operator version.
-VERSION ?= 0.8.1
+VERSION ?= 1.0.0
 OPERATOR_SDK_RELEASE_VERSION ?= v1.24.0
 
 # CHANNELS define the bundle channels used in the bundle.
@@ -177,6 +177,7 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 
 .PHONY: bundle
 bundle: manifests setup kustomize ## Generate bundle manifests and metadata, then validate generated files.
+	scripts/update-sample.sh
 	sed -i.bak "s,IMAGE,${IMG},g;s,CREATEDAT,${CREATEDAT},g" config/manifests/patches/csvAnnotations.yaml
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)

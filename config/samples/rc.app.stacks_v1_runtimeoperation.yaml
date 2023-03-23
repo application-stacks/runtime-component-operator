@@ -1,0 +1,9 @@
+apiVersion: rc.app.stacks/v1
+kind: RuntimeOperation
+metadata:
+  name: runtimeoperation-sample
+spec:
+  podName: Specify_Pod_Name_Here
+  containerName: app
+  command:
+    - ./your_script.sh

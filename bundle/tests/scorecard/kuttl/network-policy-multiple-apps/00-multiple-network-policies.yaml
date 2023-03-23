@@ -1,4 +1,4 @@
-apiVersion: rc.app.stacks/v1beta2
+apiVersion: rc.app.stacks/v1
 kind: RuntimeComponent
 metadata:
   name: network-policy-frontend-rc
@@ -12,7 +12,7 @@ spec:
       - port: 9443
         protocol: TCP
 ---
-apiVersion: rc.app.stacks/v1beta2
+apiVersion: rc.app.stacks/v1
 kind: RuntimeComponent
 metadata:
   name: network-policy-backend-rc

@@ -1,6 +1,6 @@
 # Removing the storage, and the operator should
 # move from a stateful set back to a deployment
-apiVersion: rc.app.stacks/v1beta2
+apiVersion: rc.app.stacks/v1
 kind: RuntimeComponent
 metadata:
   name: storage-rc
