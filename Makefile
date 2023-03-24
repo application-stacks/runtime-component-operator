@@ -340,3 +340,20 @@ catalog-push: ## Push a catalog image.
 
 dev: 
 	./scripts/dev.sh all
+
+## Multi-Arch changes
+.PHONY: setup-go
+setup-go: ## Ensure Go is installed.
+	./scripts/installers/install-go.sh ${GO_RELEASE_VERSION}
+
+build-operator-pipeline:
+	./scripts/build/build-operator.sh --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
+
+build-manifest-pipeline:
+	./scripts/build/build-manifest.sh --registry "${REGISTRY}" --image "${IMAGE}" --tag "${RELEASE_TARGET}"
+
+build-bundle-pipeline:
+	./scripts/build/build-bundle.sh --prod-image "${PIPELINE_PRODUCTION_IMAGE}" --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
+
+build-catalog-pipeline: opm ## Build a catalog image.
+	./scripts/build/build-catalog.sh -n "v${OPM_VERSION}" -b "${REDHAT_BASE_IMAGE}" -o "${OPM}" --container-tool "docker" -r "${REGISTRY}" -i "${PIPELINE_OPERATOR_IMAGE}-bundle:${RELEASE_TARGET}" -p "${PIPELINE_PRODUCTION_IMAGE}-bundle" -a "${PIPELINE_OPERATOR_IMAGE}-catalog:${RELEASE_TARGET}" -t "${PWD}/operator-build" -v "${VERSION}"
