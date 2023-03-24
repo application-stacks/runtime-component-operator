@@ -1,0 +1,33 @@
+# Verify that CertManager Certificate *-svc-tls-cm is deleted
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: manage-tls-rc-svc-tls-cm
+---
+# Verify that the pod template spec does not manage TLS
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: manage-tls-rc
+status:
+  replicas: 1
+  readyReplicas: 1
+  updatedReplicas: 1
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: TLS_DIR
+          value: /etc/x509/certs
+        - name: SA_RESOURCE_VERSION
+        - name: SERVICE_CERT_SECRET_RESOURCE_VERSION
+        volumeMounts:
+        - name: svc-certificate
+          mountPath: /etc/x509/certs
+          readOnly: true
+      volumes:
+      - name: svc-certificate
+        secret:
+          defaultMode: 420
+          secretName: manage-tls-rc-svc-tls-cm

@@ -266,11 +266,13 @@ bundle-build: ## Build the bundle image.
 
 .PHONY: bundle-push
 bundle-push: ## Push the bundle image.
-        $(CONTAINER_COMMAND) push $(PODMAN_SKIP_TLS_VERIFY)  "${PUBLISH_REGISTRY}/${BUNDLE_IMG}"
+	$(CONTAINER_COMMAND) push $(PODMAN_SKIP_TLS_VERIFY)  "${BUNDLE_IMG}"
 
 build-manifest: setup-manifest
 	./scripts/build-manifest.sh --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}" --target "${RELEASE_TARGET}"
 
+kind-e2e-test:
+	./scripts/e2e-kind.sh --test-tag "${TRAVIS_BUILD_NUMBER}"
 build-pipeline-manifest: setup-manifest
 	./scripts/build-manifest.sh -u "${PIPELINE_USERNAME}" -p "${PIPELINE_PASSWORD}" --registry "${PIPELINE_REGISTRY}" --image "${PIPELINE_REGISTRY}/${PIPELINE_OPERATOR_IMAGE}"	--target "${RELEASE_TARGET}"
 
@@ -292,10 +294,10 @@ test-e2e:
 
 test-pipeline-e2e:
 	./scripts/pipeline/fyre-e2e.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" \
-                     --cluster-url "${CLUSTER_URL}" --cluster-token "${CLUSTER_TOKEN}" \
-                     --registry-name "${PIPELINE_REGISTRY}" --registry-namespace "${PIPELINE_REGISTRY_NAMESPACE}" \
-					 --registry-user "${PIPELINE_USERNAME}" --registry-password "${PIPELINE_PASSWORD}" \
-                     --test-tag "${TRAVIS_BUILD_NUMBER}" --release "${RELEASE_TARGET}"					 
+                     --cluster-url "${CLUSTER_URL}" --cluster-user "${CLUSTER_USER}" --cluster-token "${CLUSTER_TOKEN}" \
+                     --registry-name "${PIPELINE_REGISTRY}" --registry-image "${PIPELINE_OPERATOR_IMAGE}" \
+                     --registry-user "${PIPELINE_USERNAME}" --registry-password "${PIPELINE_PASSWORD}" \
+                     --test-tag "${TRAVIS_BUILD_NUMBER}" --release "${RELEASE_TARGET}" --channel "${DEFAULT_CHANNEL}"
 
 build-releases:
 	./scripts/build-releases.sh --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}" --target "${RELEASE_TARGET}"
@@ -316,13 +318,13 @@ bundle-push-podman:
 	podman push --format=docker "${BUNDLE_IMG}"
 
 build-catalog:
-	opm index add --bundles "${BUNDLE_IMG}" --tag "${CATALOG_IMG}"
+	opm index add --bundles "${BUNDLE_IMG}" --tag "${CATALOG_IMG}" -c docker
 
 push-catalog: 
-	podman push --format=docker "${CATALOG_IMG}"
+	docker push "${CATALOG_IMG}"
 
 push-pipeline-catalog: 
-	podman push --format=docker "${CATALOG_IMG}"
+	docker push "${CATALOG_IMG}"
 
 # Build a catalog image by adding bundle images to an empty catalog using the operator package manager tool, 'opm'.
 # This recipe invokes 'opm' in 'semver' bundle add mode. For more information on add modes, see:

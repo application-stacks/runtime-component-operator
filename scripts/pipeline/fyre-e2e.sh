@@ -1,7 +1,6 @@
 #!/bin/bash
 
 readonly usage="Usage: fyre-e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace> --registry-user <user> --registry-password <password> --release <daily|release-tag> --test-tag <test-id>"
-#readonly SERVICE_ACCOUNT="travis-tests"
 readonly OC_CLIENT_VERSION="4.6.0"
 readonly CONTROLLER_MANAGER_NAME="rco-controller-manager"
 
@@ -14,21 +13,13 @@ setup_env() {
 
     # Start a cluster and login
     echo "****** Logging into remote cluster..."
-    oc login "${CLUSTER_URL}" -u kubeadmin -p "${CLUSTER_TOKEN}" --insecure-skip-tls-verify=true
+    oc login "${CLUSTER_URL}" -u "${CLUSTER_USER:-kubeadmin}" -p "${CLUSTER_TOKEN}" --insecure-skip-tls-verify=true
 
     # Set variables for rest of script to use
-    #readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
     readonly TEST_NAMESPACE="runtime-operator-test-${TEST_TAG}"
-    readonly BUILD_IMAGE="${REGISTRY_NAME}/${REGISTRY_NAMESPACE}/rco-operator:${RELEASE}"
-    readonly BUNDLE_IMAGE="${REGISTRY_NAME}/${REGISTRY_NAMESPACE}/rco-operator:bundle-${RELEASE}"
 
     echo "****** Creating test namespace: ${TEST_NAMESPACE} for release ${RELEASE}"
     oc new-project "${TEST_NAMESPACE}" || oc project "${TEST_NAMESPACE}"
-
-    ## Switch to release branch
-    if [[ "${RELEASE}" != "daily" ]]; then
-      git checkout -q "${RELEASE}"
-    fi
 
     ## Create service account for Kuttl tests
     oc apply -f config/rbac/kuttl-rbac.yaml
@@ -37,6 +28,15 @@ setup_env() {
 ## cleanup_env : Delete generated resources that are not bound to a test TEST_NAMESPACE.
 cleanup_env() {
   oc delete project "${TEST_NAMESPACE}"
+}
+
+## trap_cleanup : Call cleanup_env and exit. For use by a trap to detect if the script is exited at any point.
+trap_cleanup() {
+  last_status=$?
+  if [[ $last_status != 0 ]]; then
+    cleanup_env
+  fi
+  exit $last_status
 }
 
 #push_images() {
@@ -79,8 +79,14 @@ main() {
         exit 1
     fi
 
-    if [[ -z "${REGISTRY_NAME}" ]] || [[ -z "${REGISTRY_NAMESPACE}" ]]; then
-        echo "****** Missing OCP registry name or registry namespace, see usage"
+    if [[ -z "${REGISTRY_NAME}" ]]; then
+        echo "****** Missing OCP registry name, see usage"
+        echo "${usage}"
+        exit 1
+    fi
+
+    if [[ -z "${REGISTRY_IMAGE}" ]]; then
+        echo "****** Missing REGISTRY_IMAGE definition, see usage"
         echo "${usage}"
         exit 1
     fi
@@ -97,20 +103,34 @@ main() {
         exit 1
     fi
 
+    if [[ -z "${CATALOG_IMAGE}" ]]; then
+        echo "****** Missing catalog image, see usage"
+        echo "${usage}"
+        exit 1
+    fi
+
+    if [[ -z "${CHANNEL}" ]]; then
+        echo "****** Missing channel, see usage"
+        echo "${usage}"
+        exit 1
+    fi
+
     echo "****** Setting up test environment..."
     setup_env
 
+    if [[ -z "${DEBUG_FAILURE}" ]]; then
+        trap trap_cleanup EXIT
+    else
+        echo "#####################################################################################"
+        echo "WARNING: --debug-failure is set. If e2e tests fail, any created resources will remain"
+        echo "on the cluster for debugging/troubleshooting. YOU MUST DELETE THESE RESOURCES when"
+        echo "you're done, or else they will cause future tests to fail. To cleanup manually, just"
+        echo "delete the namespace \"${TEST_NAMESPACE}\": oc delete project \"${TEST_NAMESPACE}\" "
+        echo "#####################################################################################"
+    fi
+
     # login to docker to avoid rate limiting during build
     echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-
-    #echo "****** Building image..."
-    #docker build -t "${BUILD_IMAGE}" .
-
-    #echo "****** Building bundle..."
-    #IMG="${BUILD_IMAGE}" BUNDLE_IMG="${BUNDLE_IMAGE}" make kustomize bundle bundle-build
-
-    #echo "****** Pushing operator and operator bundle images into registry..."
-    #push_images
 
     trap "rm -f /tmp/pull-secret-*.yaml" EXIT
 
@@ -128,11 +148,8 @@ main() {
     echo "Updating global pull secret"
     oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=/tmp/pull-secret-merged.yaml
 
-    echo "****** Installing bundle..."
-    operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}" || {
-        echo "****** Installing bundle failed..."
-        exit 1
-    }
+    echo "****** Installing operator from catalog: ${CATALOG_IMAGE}"
+    install_operator
 
     # Wait for operator deployment to be ready
     while [[ $(oc get deploy "${CONTROLLER_MANAGER_NAME}" -o jsonpath='{ .status.readyReplicas }') -ne "1" ]]; do
@@ -155,6 +172,50 @@ main() {
     return $result
 }
 
+install_operator() {
+    # Apply the catalog
+    echo "****** Applying the catalog source..."
+    cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: rco-catalog
+  namespace: $TEST_NAMESPACE
+spec:
+  sourceType: grpc
+  image: $CATALOG_IMAGE
+  displayName: Runtime Component Operator Catalog
+  publisher: IBM
+EOF
+
+    echo "****** Applying the operator group..."
+    cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: runtime-component-operator-group
+  namespace: $TEST_NAMESPACE
+spec:
+  targetNamespaces:
+    - $TEST_NAMESPACE
+EOF
+
+    echo "****** Applying the subscription..."
+    cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: runtime-component-operator-subscription
+  namespace: $TEST_NAMESPACE
+spec:
+  channel: $DEFAULT_CHANNEL
+  name: runtime-component
+  source: rco-catalog
+  sourceNamespace: $TEST_NAMESPACE
+  installPlanApproval: Automatic
+EOF
+}
+
 parse_args() {
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -170,6 +231,10 @@ parse_args() {
       shift
       readonly CLUSTER_URL="${1}"
       ;;
+    --cluster-user)
+      shift
+      readonly CLUSTER_USER="${1}"
+      ;;
     --cluster-token)
       shift
       readonly CLUSTER_TOKEN="${1}"
@@ -178,9 +243,9 @@ parse_args() {
       shift
       readonly REGISTRY_NAME="${1}"
       ;;
-    --registry-namespace)
+    --registry-image)
       shift
-      readonly REGISTRY_NAMESPACE="${1}"
+      readonly REGISTRY_IMAGE="${1}"
       ;;
     --registry-user)
       shift
@@ -198,6 +263,17 @@ parse_args() {
       shift
       readonly TEST_TAG="${1}"
       ;;
+    --debug-failure)
+      readonly DEBUG_FAILURE=true
+      ;;
+    --catalog-image)
+      shift
+      readonly CATALOG_IMAGE="${1}"
+      ;;
+    --channel)
+      shift
+      readonly CHANNEL="${1}"
+      ;;
     *)
       echo "Error: Invalid argument - $1"
       echo "$usage"
@@ -209,4 +285,3 @@ parse_args() {
 }
 
 main "$@"
-

@@ -119,7 +119,7 @@ function launch_travis() {
                                 \"make install-opm\"
                             ],    
                             \"script\": [
-                                \"make bundle-pipeline-releases\"
+                                \"make bundle-pipeline-releases RELEASE_TARGET=$BRANCH\"
                             ]
                         }
                     ]

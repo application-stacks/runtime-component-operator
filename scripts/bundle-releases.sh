@@ -36,11 +36,11 @@ main() {
     exit 1
   fi
 
-  if [[ -z "${REGISTRY}" ]]; then  
+  if [[ -z "${REGISTRY}" ]]; then
     echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
   else
     echo "${DOCKER_PASSWORD}" | docker login "${REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin
-  fi       
+  fi
 
   # Bundle target release(s)
   if [[ "${TARGET}" != "releases" ]]; then
@@ -67,7 +67,7 @@ bundle_release() {
 
   # Build the bundle
   local bundle_ref="${IMAGE}:bundle-${release_tag}"
-  make kustomize bundle bundle-build-podman bundle-push-podman IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}"
+  make kustomize bundle bundle-build bundle-push IMG="${operator_ref}" BUNDLE_IMG="${bundle_ref}"
 
   # Build the catalog
   local catalog_ref="${IMAGE}:catalog-${release_tag}"

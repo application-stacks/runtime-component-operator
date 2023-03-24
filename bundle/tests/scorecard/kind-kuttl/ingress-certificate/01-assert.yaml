@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-with-cert-rc
+status:
+  replicas: 1
+  readyReplicas: 1
+  updatedReplicas: 1
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: ingress-with-cert-rc
+spec:
+  tls:
+    - hosts:
+        - myapp.mycompany.com
+      secretName: ingress-tls-secret
+  rules:
+    - host: myapp.mycompany.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
