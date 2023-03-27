@@ -7,12 +7,12 @@ properties([
       string(name: 'ebcBranch', defaultValue: "${env.ecosystem_branch}", description: 'Git branch used for ebc code'),
       // Container build relevant properties
       //name: 'scriptBranch', defaultValue: "main", description: 'Git branch containing docker build scripts'),
-      string(name: 'scriptOrg', defaultValue: "WASdev", description: 'Git org containing docker build scripts'),
+      string(name: 'scriptOrg', defaultValue: "application-stacks", description: 'Git org containing docker build scripts'),
       string(name: 'command', defaultValue: "make build-operator-pipeline REGISTRY=cp.stg.icr.io", description: 'Build command to execute on target arch machine, e.g. make build-pipeline-releases'),
-      string(name: 'PIPELINE_OPERATOR_IMAGE', defaultValue: "cp/websphere-liberty-operator", description: 'namespace to push image to in registry'),
+      string(name: 'PIPELINE_OPERATOR_IMAGE', defaultValue: "cp/runtime-component-operator", description: 'namespace to push image to in registry'),
       string(name: 'RELEASE_TARGET', defaultValue: "main", description: 'release branch to use'),
       string(name: 'OPM_VERSION', defaultValue: "4.10", description: 'Redhat CLI OPM version'),
-      string(name: 'PIPELINE_PRODUCTION_IMAGE', defaultValue: "icr.io/cpopen/websphere-liberty-operator", description: 'namespace in prod registry'),
+      string(name: 'PIPELINE_PRODUCTION_IMAGE', defaultValue: "icr.io/cpopen/runtime-component-operator", description: 'namespace in prod registry'),
       string(name: 'REDHAT_BASE_IMAGE', defaultValue: "registry.redhat.io/openshift4/ose-operator-registry", description: 'base image for operator'),
       string(name: 'REDHAT_REGISTRY', defaultValue: "registry.redhat.io", description: 'RH registry used for docker login'),
       string(name: 'PIPELINE_REGISTRY', defaultValue: "cp.stg.icr.io", description: 'staging registry to push images to'),
@@ -84,14 +84,14 @@ timestamps {
 // Clone the git repo and stash it, so that the jenkins agent machine can grab it later
 def gitCloneAndStash() {
   dir('websphere-liberty-operator') {
-      git branch: RELEASE_TARGET, url: "git@github.com:${scriptOrg}/websphere-liberty-operator.git"
+      git branch: RELEASE_TARGET, url: "git@github.com:${scriptOrg}/runtime-component-operator.git"
   }
   dir('operators') {
       git branch: "main", url: "git@github.ibm.com:websphere/operators.git"
   }
-  sh "cp -rf operators/scripts/build websphere-liberty-operator/scripts/"
-  dir('websphere-liberty-operator') {
-      stash(name: 'websphere-liberty-operator')
+  sh "cp -rf operators/scripts/build runtime-component-operator/scripts/"
+  dir('runtime-component-operator') {
+      stash(name: 'runtime-component-operator')
    }
    sh "ls -l"
 }
@@ -101,7 +101,7 @@ def void doWork(){
    // Setup global variables
    
    // Unstash the git repo
-   unstash(name: 'websphere-liberty-operator')
+   unstash(name: 'runtime-component-operator')
    sh "./scripts/build/build-initialize.sh"
    sh "${command}"
 }
