@@ -83,7 +83,7 @@ timestamps {
 
 // Clone the git repo and stash it, so that the jenkins agent machine can grab it later
 def gitCloneAndStash() {
-  dir('websphere-liberty-operator') {
+  dir('runtime-component-operator') {
       git branch: RELEASE_TARGET, url: "git@github.com:${scriptOrg}/runtime-component-operator.git"
   }
   dir('operators') {
