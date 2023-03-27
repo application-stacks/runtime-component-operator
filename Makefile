@@ -291,7 +291,7 @@ test-e2e:
                      --test-tag "${TRAVIS_BUILD_NUMBER}" --target "${RELEASE_TARGET}"
 
 test-pipeline-e2e:
-	./scripts/pipeline/fyre-e2e.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" \
+	./scripts/pipeline/ocp-cluster-e2e.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" \
                      --cluster-url "${CLUSTER_URL}" --cluster-token "${CLUSTER_TOKEN}" \
                      --registry-name "${PIPELINE_REGISTRY}" --registry-namespace "${PIPELINE_REGISTRY_NAMESPACE}" \
 					 --registry-user "${PIPELINE_USERNAME}" --registry-password "${PIPELINE_PASSWORD}" \

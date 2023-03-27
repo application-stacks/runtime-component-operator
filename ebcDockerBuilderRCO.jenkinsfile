@@ -1,0 +1,143 @@
+properties([
+   parameters([
+      // EBC relevant properties
+      string(name: 'executionId', defaultValue: UUID.randomUUID().toString(), description: 'Unique execution id'),
+      string(name: 'ebcPriority', defaultValue: '200', description: 'EBC Priority'),
+      string(name: 'ebcPlan', defaultValue: 'svl-dockerJenkins-ubuntu20_ppcle.yml', description: 'EBC plan to use when provisioning a Jenkins node'),
+      string(name: 'ebcBranch', defaultValue: "${env.ecosystem_branch}", description: 'Git branch used for ebc code'),
+      // Container build relevant properties
+      //name: 'scriptBranch', defaultValue: "main", description: 'Git branch containing docker build scripts'),
+      string(name: 'scriptOrg', defaultValue: "WASdev", description: 'Git org containing docker build scripts'),
+      string(name: 'command', defaultValue: "make build-operator-pipeline REGISTRY=cp.stg.icr.io", description: 'Build command to execute on target arch machine, e.g. make build-pipeline-releases'),
+      string(name: 'PIPELINE_OPERATOR_IMAGE', defaultValue: "cp/websphere-liberty-operator", description: 'namespace to push image to in registry'),
+      string(name: 'RELEASE_TARGET', defaultValue: "main", description: 'release branch to use'),
+      string(name: 'OPM_VERSION', defaultValue: "4.10", description: 'Redhat CLI OPM version'),
+      string(name: 'PIPELINE_PRODUCTION_IMAGE', defaultValue: "icr.io/cpopen/websphere-liberty-operator", description: 'namespace in prod registry'),
+      string(name: 'REDHAT_BASE_IMAGE', defaultValue: "registry.redhat.io/openshift4/ose-operator-registry", description: 'base image for operator'),
+      string(name: 'REDHAT_REGISTRY', defaultValue: "registry.redhat.io", description: 'RH registry used for docker login'),
+      string(name: 'PIPELINE_REGISTRY', defaultValue: "cp.stg.icr.io", description: 'staging registry to push images to'),
+      string(name: 'ARTIFACTORY_REPO_URL', defaultValue: "hyc-taas-onepipeline-team-docker-local.artifactory.swg-devops.com", description: 'artifactory repo url [only used if disable artifactory is false]]'),
+      string(name: 'DISABLE_ARTIFACTORY', defaultValue: "false", description: 'whether to back up container images to artifactorys')
+   ])
+])
+timestamps {
+   // Identify if the job was kicked off by the seed job.
+   def causes = currentBuild.getBuildCauses()
+   for(cause in causes) {
+      if ("seed".equalsIgnoreCase(cause.upstreamProject)) {
+         // As the seed job kicked off this build, bail early returning success.
+         // This allows the jenkinsfile's properties to be populated.
+         currentBuild.result = 'SUCCESS'
+         println "Returning success as upstream job is the seed job; this is therefore a dummy run to populate job parameters."
+         return
+      }
+   }
+
+   def ebcPriority = "${params.ebcPriority}"
+   def executionId = "${params.executionId}"
+   def ebcPlan = "${params.ebcPlan}"
+
+   try {
+      node (label: 'built-in') {
+         ws("workspace/${env.JOB_NAME}-${env.BUILD_NUMBER}") {
+            stage ("EBC Demand"){
+               //This is executing on Jenkins Server
+               ebcDemand()
+               gitCloneAndStash();
+            }
+         }
+      }
+
+      node(label: "ebc_${executionId}"){
+         stage("Running Job"){
+            withCredentials([usernamePassword(credentialsId: 'operator_icrId', usernameVariable: 'PIPELINE_USERNAME', passwordVariable: 'PIPELINE_PASSWORD'),
+                             usernamePassword(credentialsId: 'operatorRH_REG_ID', usernameVariable: 'REDHAT_USERNAME', passwordVariable: 'REDHAT_PASSWORD'),
+                             usernamePassword(credentialsId: 'operator_artifactory_ID', usernameVariable: 'ARTIFACTORY_USERNAME', passwordVariable: 'ARTIFACTORY_TOKEN'),
+                             usernamePassword(credentialsId: 'dockerId', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+               //This is executing on ebc dynamic machine
+               doWork();
+            } // withCredentials() end
+         }
+      }
+   } finally {
+      node (label: 'built-in') {
+         ws("workspace/${env.JOB_NAME}-${env.BUILD_NUMBER}") {
+            stage ("EBC Cleanup"){
+               //This is executing on Jenkins Server
+               ebcCleanup();
+               // Clean up the workspace
+               cleanWs(cleanWhenAborted: true,
+                    cleanWhenFailure: true,
+                    cleanWhenNotBuilt: false,
+                    cleanWhenSuccess: true,
+                    cleanWhenUnstable: true,
+                    deleteDirs: true,
+                    disableDeferredWipeout: false,
+                    notFailBuild: true)
+            }
+         }
+      }
+   }
+}
+// Functions Only Below here
+
+// Clone the git repo and stash it, so that the jenkins agent machine can grab it later
+def gitCloneAndStash() {
+  dir('websphere-liberty-operator') {
+      git branch: RELEASE_TARGET, url: "git@github.com:${scriptOrg}/websphere-liberty-operator.git"
+  }
+  dir('operators') {
+      git branch: "main", url: "git@github.ibm.com:websphere/operators.git"
+  }
+  sh "cp -rf operators/scripts/build websphere-liberty-operator/scripts/"
+  dir('websphere-liberty-operator') {
+      stash(name: 'websphere-liberty-operator')
+   }
+   sh "ls -l"
+}
+  
+// Job Specific Functions
+def void doWork(){
+   // Setup global variables
+   
+   // Unstash the git repo
+   unstash(name: 'websphere-liberty-operator')
+   sh "./scripts/build/build-initialize.sh"
+   sh "${command}"
+}
+
+// EBC Functions
+def void ebcDemand(){
+   buildName executionId
+   //cleanWs()
+   git branch: ebcBranch, url:'git@github.ibm.com:elastic-build-cloud/ebc-gateway-http'
+   withCredentials([usernamePassword(credentialsId: 'intranetId', usernameVariable: 'intranetId_USR', passwordVariable: 'intranetId_PSW')]) {
+      withEnv([
+         "demandId=${executionId}",
+         "ebcEnvironment=${ebcBranch}",
+         "ebc_plan=${ebcPlan}",
+         "ebc_priority=${ebcPriority}",
+         "ebc_autoCompleteAfterXHours=24",
+         "ebc_reasonForEnvironment=${env.BUILD_URL}",
+         "ebc_jenkins_agent_label=ebc_${executionId}",
+         "ebc_jenkins_server_instance_name=${env.jenkins_server_instance_name}",
+         "ebc_jenkins_service_name=${env.jenkins_service_name}"
+      ]){
+         sh "./ebc_demand.sh"
+      }
+   }
+   stash(name: 'ebc-gateway-http')
+}
+
+def void ebcCleanup(){
+   //cleanWs()
+   unstash(name: 'ebc-gateway-http')
+   withCredentials([usernamePassword(credentialsId: 'intranetId', usernameVariable: 'intranetId_USR', passwordVariable: 'intranetId_PSW')]) {
+      withEnv([
+            "demandId=${executionId}",
+            "ebcEnvironment=${ebcBranch}"
+         ]){
+         sh "./ebc_complete.sh"
+      }
+   }
+}
