@@ -1,7 +1,7 @@
 #!/bin/bash
 
 GH_API_ROOT="https://api.github.com"
-GH_BRANCH="main"
+GH_BRANCH="multi-arch-davec"
 GH_REPOSITORY="runtime-component-operator"
 GH_ORG="application-stacks"
 CI_TRIGGER="wlodocker"
