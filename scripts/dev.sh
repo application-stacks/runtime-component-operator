@@ -337,7 +337,7 @@ install_rook() {
     tmp_dir=$(mktemp -d -t ceph-XXXXXXXXXX)
     cd "$tmp_dir"
 
-    git clone --single-branch --branch master https://github.com/rook/rook.git
+    git clone --single-branch --branch v1.10.11 https://github.com/rook/rook.git
     cd rook/deploy/examples
 
     oc create -f crds.yaml
