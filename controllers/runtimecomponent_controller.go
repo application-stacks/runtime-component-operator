@@ -234,6 +234,13 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", servingv1.SchemeGroupVersion.String()))
 	}
 
+	// Check if there is an existing Deployment, Statefulset or Knative service by this name
+	// not managed by this operator
+	err = appstacksutils.CheckForExistingDeployments("RuntimeComponent", instance.Name, instance.Namespace, r.GetClient(), req, isKnativeSupported)
+	if err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+	}
+
 	if instance.Spec.CreateKnativeService != nil && *instance.Spec.CreateKnativeService {
 		// Clean up non-Knative resources
 		resources := []client.Object{
