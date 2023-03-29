@@ -38,6 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 var APIVersionNotFoundError = errors.New("APIVersion is not available")
@@ -1569,4 +1570,50 @@ func GetIssuerResourceVersion(client client.Client, certificate *certmanagerv1.C
 	} else {
 		return issuer.ResourceVersion, nil
 	}
+}
+
+func CheckForExistingDeployments(operator string, name string, namespace string, client client.Client, request reconcile.Request, isKnativeSupported bool) error {
+	defaultMeta := metav1.ObjectMeta{
+		Name:      name,
+		Namespace: namespace,
+	}
+	// Check to see if the knative service is owned by us
+	if isKnativeSupported {
+		ksvc := &servingv1.Service{ObjectMeta: defaultMeta}
+		err := client.Get(context.TODO(), request.NamespacedName, ksvc)
+		if err == nil {
+			for _, element := range ksvc.OwnerReferences {
+				if element.Kind != operator {
+					message := "Existing Knative Service \"" + name + "\" is not managed by this operator. It is being managed by \"" + element.Kind + "\". Resolve the naming conflict."
+					err = errors.New(message)
+					return err
+				}
+			}
+		}
+	}
+	// Check to see if the existing deployment or statefulsets are owned by us
+	deploy := &appsv1.Deployment{ObjectMeta: defaultMeta}
+	err := client.Get(context.TODO(), request.NamespacedName, deploy)
+	if err == nil {
+		for _, element := range deploy.OwnerReferences {
+			if element.Kind != operator {
+				message := "Existing Deployment \"" + name + "\" is not managed by this operator. It is being managed by \"" + element.Kind + "\". Resolve the naming conflict."
+				err = errors.New(message)
+				return err
+			}
+		}
+	}
+	// Check to see if the existing statefulset is owned by us
+	statefulSet := &appsv1.StatefulSet{ObjectMeta: defaultMeta}
+	err = client.Get(context.TODO(), request.NamespacedName, statefulSet)
+	if err == nil {
+		for _, element := range statefulSet.OwnerReferences {
+			if element.Kind != operator {
+				message := "Existing StatefulSet \"" + name + "\" is not managed by this operator. It is being managed by \"" + element.Kind + "\". Resolve the naming conflict."
+				err = errors.New(message)
+				return err
+			}
+		}
+	}
+	return nil
 }
