@@ -4,6 +4,6 @@ metadata:
   name: init-runtime-stateful
 spec:
   # Add fields here
-  applicationImage: k8s.gcr.io/pause:2.0
+  applicationImage: k8s.gcr.io/pause:3.2
   replicas: 1
   statefulSet: {}

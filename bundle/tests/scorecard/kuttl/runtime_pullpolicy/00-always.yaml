@@ -3,7 +3,7 @@ kind: RuntimeComponent
 metadata:
   name: example-runtime-component
 spec:
-  applicationImage: navidsh/demo-day
+  applicationImage: icr.io/appcafe/open-liberty
   replicas: 1
   pullPolicy: "Always"
 

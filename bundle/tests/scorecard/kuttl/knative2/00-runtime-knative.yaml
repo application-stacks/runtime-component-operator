@@ -4,7 +4,7 @@ metadata:
   name: knative2-rc
 spec:
   # Add fields here
-  applicationImage: navidsh/demo-day
+  applicationImage: icr.io/appcafe/open-liberty
   replicas: 1
   createKnativeService: true
 

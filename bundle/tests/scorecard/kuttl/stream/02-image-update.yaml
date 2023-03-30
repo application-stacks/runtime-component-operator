@@ -6,6 +6,6 @@ spec:
   tags:
   - from:
       kind: DockerImage
-      name: navidsh/demo-day:v0.2.0
+      name: icr.io/appcafe/open-liberty:23.0.0.2-full-java8-openj9-ubi
     name: latest
 
