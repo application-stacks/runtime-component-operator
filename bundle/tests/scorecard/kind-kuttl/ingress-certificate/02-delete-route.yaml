@@ -1,0 +1,8 @@
+apiVersion: rc.app.stacks/v1beta2
+kind: RuntimeComponent
+metadata:
+  name: ingress-with-cert-rc
+spec:
+  # Add fields here
+  expose: false
+

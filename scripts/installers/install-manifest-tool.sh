@@ -5,11 +5,11 @@ set -o nounset
 
 main() {
   if [[ -x "$(command -v manifest-tool)" ]]; then
-    manifest-tool version
+    manifest-tool --version
     exit 0
   fi
 
-  DEFAULT_RELEASE=v0.9.0
+  DEFAULT_RELEASE=v1.0.2
   RELEASE_VERSION=${1:-$DEFAULT_RELEASE}
 
   ## Define current arc variable

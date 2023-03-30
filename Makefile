@@ -266,11 +266,13 @@ bundle-build: ## Build the bundle image.
 
 .PHONY: bundle-push
 bundle-push: ## Push the bundle image.
-        $(CONTAINER_COMMAND) push $(PODMAN_SKIP_TLS_VERIFY)  "${PUBLISH_REGISTRY}/${BUNDLE_IMG}"
+	$(CONTAINER_COMMAND) push $(PODMAN_SKIP_TLS_VERIFY)  "${BUNDLE_IMG}"
 
 build-manifest: setup-manifest
 	./scripts/build-manifest.sh --image "${PUBLISH_REGISTRY}/${OPERATOR_IMAGE}" --target "${RELEASE_TARGET}"
 
+kind-e2e-test:
+	./scripts/e2e-kind.sh --test-tag "${TRAVIS_BUILD_NUMBER}"
 build-pipeline-manifest: setup-manifest
 	./scripts/build-manifest.sh -u "${PIPELINE_USERNAME}" -p "${PIPELINE_PASSWORD}" --registry "${PIPELINE_REGISTRY}" --image "${PIPELINE_REGISTRY}/${PIPELINE_OPERATOR_IMAGE}"	--target "${RELEASE_TARGET}"
 
@@ -316,13 +318,13 @@ bundle-push-podman:
 	podman push --format=docker "${BUNDLE_IMG}"
 
 build-catalog:
-	opm index add --bundles "${BUNDLE_IMG}" --tag "${CATALOG_IMG}"
+	opm index add --bundles "${BUNDLE_IMG}" --tag "${CATALOG_IMG}" -c docker
 
 push-catalog: 
-	podman push --format=docker "${CATALOG_IMG}"
+	docker push "${CATALOG_IMG}"
 
 push-pipeline-catalog: 
-	podman push --format=docker "${CATALOG_IMG}"
+	docker push "${CATALOG_IMG}"
 
 # Build a catalog image by adding bundle images to an empty catalog using the operator package manager tool, 'opm'.
 # This recipe invokes 'opm' in 'semver' bundle add mode. For more information on add modes, see:
@@ -338,3 +340,20 @@ catalog-push: ## Push a catalog image.
 
 dev: 
 	./scripts/dev.sh all
+
+## Multi-Arch changes
+.PHONY: setup-go
+setup-go: ## Ensure Go is installed.
+	./scripts/installers/install-go.sh ${GO_RELEASE_VERSION}
+
+build-operator-pipeline:
+	./scripts/build/build-operator.sh --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
+
+build-manifest-pipeline:
+	./scripts/build/build-manifest.sh --registry "${REGISTRY}" --image "${IMAGE}" --tag "${RELEASE_TARGET}"
+
+build-bundle-pipeline:
+	./scripts/build/build-bundle.sh --prod-image "${PIPELINE_PRODUCTION_IMAGE}" --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
+
+build-catalog-pipeline: opm ## Build a catalog image.
+	./scripts/build/build-catalog.sh -n "v${OPM_VERSION}" -b "${REDHAT_BASE_IMAGE}" -o "${OPM}" --container-tool "docker" -r "${REGISTRY}" -i "${PIPELINE_OPERATOR_IMAGE}-bundle:${RELEASE_TARGET}" -p "${PIPELINE_PRODUCTION_IMAGE}-bundle" -a "${PIPELINE_OPERATOR_IMAGE}-catalog:${RELEASE_TARGET}" -t "${PWD}/operator-build" -v "${VERSION}"
