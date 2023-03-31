@@ -1572,7 +1572,7 @@ func GetIssuerResourceVersion(client client.Client, certificate *certmanagerv1.C
 	}
 }
 
-func CheckForExistingDeployments(operator string, name string, namespace string, client client.Client, request reconcile.Request, isKnativeSupported bool) error {
+func CheckForNameConflicts(operator string, name string, namespace string, client client.Client, request reconcile.Request, isKnativeSupported bool) error {
 	defaultMeta := metav1.ObjectMeta{
 		Name:      name,
 		Namespace: namespace,
