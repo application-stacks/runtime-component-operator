@@ -135,6 +135,20 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return reconcile.Result{}, err
 	}
 
+	isKnativeSupported, err := r.IsGroupVersionSupported(servingv1.SchemeGroupVersion.String(), "Service")
+	if err != nil {
+		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+	} else if !isKnativeSupported {
+		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", servingv1.SchemeGroupVersion.String()))
+	}
+
+	// Check if there is an existing Deployment, Statefulset or Knative service by this name
+	// not managed by this operator
+	err = appstacksutils.CheckForNameConflicts("RuntimeComponent", instance.Name, instance.Namespace, r.GetClient(), req, isKnativeSupported)
+	if err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+	}
+
 	// initialize the RuntimeComponent instance
 	instance.Initialize()
 	_, err = appstacksutils.Validate(instance)
@@ -225,13 +239,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	saErr := appstacksutils.ServiceAccountPullSecretExists(instance, r.GetClient())
 	if saErr != nil {
 		return r.ManageError(saErr, common.StatusConditionTypeReconciled, instance)
-	}
-
-	isKnativeSupported, err := r.IsGroupVersionSupported(servingv1.SchemeGroupVersion.String(), "Service")
-	if err != nil {
-		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-	} else if !isKnativeSupported {
-		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", servingv1.SchemeGroupVersion.String()))
 	}
 
 	if instance.Spec.CreateKnativeService != nil && *instance.Spec.CreateKnativeService {
