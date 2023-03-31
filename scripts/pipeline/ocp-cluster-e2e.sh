@@ -2,7 +2,7 @@
 
 readonly usage="Usage: ocp-cluster-e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-image <ns/image> --registry-user <user> --registry-password <password> --release <daily|release-tag> --test-tag <test-id> --catalog-image <catalog-image> --channel <channel>"
 readonly OC_CLIENT_VERSION="4.6.0"
-readonly CONTROLLER_MANAGER_NAME="wlo-controller-manager"
+readonly CONTROLLER_MANAGER_NAME="rco-controller-manager"
 
 # setup_env: Download oc cli, log into our persistent cluster, and create a test project
 setup_env() {
@@ -16,13 +16,13 @@ setup_env() {
     oc login "${CLUSTER_URL}" -u "${CLUSTER_USER:-kubeadmin}" -p "${CLUSTER_TOKEN}" --insecure-skip-tls-verify=true
 
     # Set variables for rest of script to use
-    readonly TEST_NAMESPACE="wlo-test-${TEST_TAG}"
+    readonly TEST_NAMESPACE="rco-test-${TEST_TAG}"
     if [[ $INSTALL_MODE = "SingleNamespace" ]]; then
-      readonly INSTALL_NAMESPACE="wlo-test-single-namespace-${TEST_TAG}"
+      readonly INSTALL_NAMESPACE="rco-test-single-namespace-${TEST_TAG}"
     elif [[ $INSTALL_MODE = "AllNamespaces" ]]; then
       readonly INSTALL_NAMESPACE="openshift-operators"
     else
-      readonly INSTALL_NAMESPACE="wlo-test-${TEST_TAG}"
+      readonly INSTALL_NAMESPACE="rco-test-${TEST_TAG}"
     fi
 
     if [ $INSTALL_MODE != "AllNamespaces" ]; then
@@ -40,22 +40,22 @@ setup_env() {
 ## cleanup_env : Delete generated resources that are not bound to a test INSTALL_NAMESPACE.
 cleanup_env() {
   ## Delete CRDs
-  WLO_CRD_NAMES=$(oc get crd -o name | grep liberty.websphere | cut -d/ -f2)
+  rco_CRD_NAMES=$(oc get crd -o name | grep liberty.websphere | cut -d/ -f2)
   echo "*** Deleting CRDs ***"
-  echo "*** ${WLO_CRD_NAMES}"
-  oc delete crd $WLO_CRD_NAMES
+  echo "*** ${RCO_CRD_NAMES}"
+  oc delete crd $RCO_CRD_NAMES
 
   ## Delete Subscription
-  WLO_SUBSCRIPTION_NAME=$(oc -n $INSTALL_NAMESPACE get subscription -o name | grep websphere-liberty | cut -d/ -f2)
+  RCO_SUBSCRIPTION_NAME=$(oc -n $INSTALL_NAMESPACE get subscription -o name | grep websphere-liberty | cut -d/ -f2)
   echo "*** Deleting Subscription ***"
-  echo "*** ${WLO_SUBSCRIPTION_NAME}"
-  oc -n $INSTALL_NAMESPACE delete subscription $WLO_SUBSCRIPTION_NAME
+  echo "*** ${RCO_SUBSCRIPTION_NAME}"
+  oc -n $INSTALL_NAMESPACE delete subscription $RCO_SUBSCRIPTION_NAME
 
   ## Delete CSVs
-  WLO_CSV_NAME=$(oc -n $INSTALL_NAMESPACE get csv -o name | grep websphere-liberty | cut -d/ -f2)
+  RCO_CSV_NAME=$(oc -n $INSTALL_NAMESPACE get csv -o name | grep websphere-liberty | cut -d/ -f2)
   echo "*** Deleting CSVs ***"
-  echo "*** ${WLO_CSV_NAME}"
-  oc -n $INSTALL_NAMESPACE delete csv $WLO_CSV_NAME
+  echo "*** ${RCO_CSV_NAME}"
+  oc -n $INSTALL_NAMESPACE delete csv $RCO_CSV_NAME
 
   if [ $INSTALL_MODE != "OwnNamespace" ]; then
     echo "*** Deleting project ${TEST_NAMESPACE}"
