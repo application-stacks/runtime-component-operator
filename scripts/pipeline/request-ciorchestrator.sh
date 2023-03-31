@@ -6,7 +6,7 @@ GH_REPOSITORY="runtime-component-operator"
 GH_ORG="application-stacks"
 CI_TRIGGER="wlodocker"
 CI_CONFIG_FILE=".ci-orchestrator/runtime-component-operator-build.yml"
-pipelineName="Runtime Component Operator Docker Build"
+pipelineName="Runtime Componet Operator Docker Build"
 command="make build-pipeline-releases"
 
 
