@@ -235,7 +235,7 @@ containerize:
         # Build catalog image
         if [[ "$arch" == "ZXP" ]]; then
           echo "<ciorchestrator> Sending request to build P and Z catalogs"
-          DISABLE_ARTIFACTORY=true ./scripts/pipeline/request-ciorchestrator.sh --command "make build-catalog-pipeline REGISTRY=${PIPELINE_REGISTRY}" --user "$W3_USERNAME" --password "$W3_PASSWORD" --branch "$RELEASE_TARGET" --repository "runtime-component-operator" --org "WASdev" --trigger "rcodocker" --configFile ".ci-orchestrator/runtime-component-operator-build.yml" 
+          DISABLE_ARTIFACTORY=true ./scripts/pipeline/request-ciorchestrator.sh --command "make build-catalog-pipeline REGISTRY=${PIPELINE_REGISTRY}" --user "$W3_USERNAME" --password "$W3_PASSWORD" --branch "$RELEASE_TARGET" --repository "runtime-component-operator" --org "application-stacks" --trigger "rcodocker" --configFile ".ci-orchestrator/runtime-component-operator-build.yml" 
           pipelineid=$(cat ciorchestrator-submit.id)
           echo "<ciorchestrator> waiting on request to build P and Z catalogs"
           ./scripts/pipeline/await-ciorchestrator.sh --user "$W3_USERNAME" --password "$W3_PASSWORD" --pipelineId "$pipelineid"
@@ -333,9 +333,11 @@ containerize:
           save_artifact catalog-$i type=$TYPE name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"
         fi
       done
+
       echo "MEND unified agent scan"
       chmod +x "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
       source "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
+      
       ## Perform lint
       IMAGE="${PIPELINE_REGISTRY}/${PIPELINE_OPERATOR_IMAGE}-bundle:${RELEASE_TARGET}"
       DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
