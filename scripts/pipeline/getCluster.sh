@@ -2,8 +2,8 @@
 arch=$1
 timestamp=$(date +%s)
 echo $timestamp
-wlo_demand_id="wlo_$timestamp"_"$arch"
-echo "wlo_demand_id=$wlo_demand_id"
+rco_demand_id="rco_$timestamp"_"$arch"
+echo "rco_demand_id=$rco_demand_id"
     
 #git clone https://$(get_env git-token)@github.ibm.com/elastic-build-cloud/ebc-gateway-http.git
 cd ebc-gateway-http
@@ -14,9 +14,9 @@ echo "arch=$arch"
 export intranetId_USR=$(get_env ebc_id)
 export intranetId_PSW=$(get_env ebc_pw)
 
-export demandId=$wlo_demand_id
-set_env WLO_DEMAND_ID_$arch "$wlo_demand_id"
-echo "wlo_demand_id=$wlo_demand_id"
+export demandId=$rco_demand_id
+set_env rco_DEMAND_ID_$arch "$rco_demand_id"
+echo "rco_demand_id=$rco_demand_id"
 
 PRE_RELEASE=$(get_env pre-release)
 PRE_RELEASE="$(echo "$PRE_RELEASE" | tr '[:upper:]' '[:lower:]')"

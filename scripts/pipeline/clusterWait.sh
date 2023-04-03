@@ -2,8 +2,8 @@
 arch=$1
 
 
-wlo_demand_id=$(get_env WLO_DEMAND_ID_$arch)
-export demandId=$wlo_demand_id
+rco_demand_id=$(get_env rco_DEMAND_ID_$arch)
+export demandId=$rco_demand_id
 echo "calling ebc_waitForDemand.sh for $arch"
 cd ebc-gateway-http
    
@@ -16,9 +16,9 @@ echo "return from ebc_waitForDemand.sh for $arch"
 cd ..
 
 if [[ "$rc" == 0 ]]; then
-    echo "EBC create of id: $wlo_demand_id cluster successful"
+    echo "EBC create of id: $rco_demand_id cluster successful"
 else
-    echo "EBC create of id: $wlo_demand_id cluster failed, ask #was-ebc slack channel for help mentioning your demand id: $wlo_demand_id"
+    echo "EBC create of id: $rco_demand_id cluster failed, ask #was-ebc slack channel for help mentioning your demand id: $rco_demand_id"
     exit 1
 fi
 

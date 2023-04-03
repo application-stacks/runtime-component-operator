@@ -61,8 +61,8 @@ if [[ "$rc" == 0 ]]; then
 else
     hours=$(get_env ebc_autocomplete_hours "6")
     echo "Your acceptance test failed, the cluster will be retained for $hours hours."
-    echo "debug of cluster may be required, issue @ebc debug $wlo_demand_id in #was-ebc channel to keep cluster for debug"
-    echo "issue @ebc debugcomplete $wlo_demand_id when done debugging in #was-ebc channel "
+    echo "debug of cluster may be required, issue @ebc debug $rco_demand_id in #was-ebc channel to keep cluster for debug"
+    echo "issue @ebc debugcomplete $rco_demand_id when done debugging in #was-ebc channel "
     echo "access console at: $console"
     echo "credentials: kubeadmin/$token"
     slack_users=$(get_env slack_users)
@@ -77,7 +77,7 @@ else
     curl -X POST -H 'Content-type: application/json' --data '{"text":"Your acceptance test failed."}' $(get_env slack_web_hook_url) </dev/null
     curl -X POST -H 'Content-type: application/json' --data '{"text":"Failing pipeline: '$pipeline_url'"}' $(get_env slack_web_hook_url) </dev/null
     curl -X POST -H 'Content-type: application/json' --data '{"text":"The cluster will be retained for '$hours' hours.  If you need more time to debug ( 72 hours ):"}' $(get_env slack_web_hook_url) </dev/null
-    curl -X POST -H 'Content-type: application/json' --data '{"text":"issue @ebc debug '$wlo_demand_id' in #was-ebc channel to keep cluster for debug"}' $(get_env slack_web_hook_url) </dev/null
+    curl -X POST -H 'Content-type: application/json' --data '{"text":"issue @ebc debug '$rco_demand_id' in #was-ebc channel to keep cluster for debug"}' $(get_env slack_web_hook_url) </dev/null
     curl -X POST -H 'Content-type: application/json' --data '{"text":"access console at: '$console'"}' $(get_env slack_web_hook_url) </dev/null
     curl -X POST -H 'Content-type: application/json' --data '{"text":"credentials: kubeadmin/'$token'"}' $(get_env slack_web_hook_url) </dev/null
 fi
