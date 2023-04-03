@@ -1,6 +1,6 @@
 #!/bin/bash
 
-readonly usage="Usage: ocp-cluster-e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace> --registry-user <user> --registry-password <password> --release <daily|release-tag> --test-tag <test-id>"
+readonly usage="Usage: ocp-cluster-e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-image <ns/image> --registry-user <user> --registry-password <password> --release <daily|release-tag> --test-tag <test-id> --catalog-image <catalog-image> --channel <channel>"
 readonly OC_CLIENT_VERSION="4.6.0"
 readonly CONTROLLER_MANAGER_NAME="rco-controller-manager"
 
@@ -16,18 +16,56 @@ setup_env() {
     oc login "${CLUSTER_URL}" -u "${CLUSTER_USER:-kubeadmin}" -p "${CLUSTER_TOKEN}" --insecure-skip-tls-verify=true
 
     # Set variables for rest of script to use
-    readonly TEST_NAMESPACE="runtime-operator-test-${TEST_TAG}"
+    readonly TEST_NAMESPACE="rco-test-${TEST_TAG}"
+    if [[ $INSTALL_MODE = "SingleNamespace" ]]; then
+      readonly INSTALL_NAMESPACE="rco-test-single-namespace-${TEST_TAG}"
+    elif [[ $INSTALL_MODE = "AllNamespaces" ]]; then
+      readonly INSTALL_NAMESPACE="openshift-operators"
+    else
+      readonly INSTALL_NAMESPACE="rco-test-${TEST_TAG}"
+    fi
+
+    if [ $INSTALL_MODE != "AllNamespaces" ]; then
+      echo "****** Creating install namespace: ${INSTALL_NAMESPACE} for release ${RELEASE}"
+      oc new-project "${INSTALL_NAMESPACE}" || oc project "${INSTALL_NAMESPACE}"
+    fi
 
     echo "****** Creating test namespace: ${TEST_NAMESPACE} for release ${RELEASE}"
     oc new-project "${TEST_NAMESPACE}" || oc project "${TEST_NAMESPACE}"
 
     ## Create service account for Kuttl tests
-    oc apply -f config/rbac/kuttl-rbac.yaml
+    oc -n $TEST_NAMESPACE apply -f config/rbac/kuttl-rbac.yaml
 }
 
-## cleanup_env : Delete generated resources that are not bound to a test TEST_NAMESPACE.
+## cleanup_env : Delete generated resources that are not bound to a test INSTALL_NAMESPACE.
 cleanup_env() {
-  oc delete project "${TEST_NAMESPACE}"
+  ## Delete CRDs
+  RCO_CRD_NAMES=$(oc get crd -o name | grep rc.app.stacks | cut -d/ -f2)
+  echo "*** Deleting CRDs ***"
+  echo "*** ${RCO_CRD_NAMES}"
+  oc delete crd $RCO_CRD_NAMES
+
+  ## Delete Subscription
+  RCO_SUBSCRIPTION_NAME=$(oc -n $INSTALL_NAMESPACE get subscription -o name | grep runtime-component | cut -d/ -f2)
+  echo "*** Deleting Subscription ***"
+  echo "*** ${RCO_SUBSCRIPTION_NAME}"
+  oc -n $INSTALL_NAMESPACE delete subscription $RCO_SUBSCRIPTION_NAME
+
+  ## Delete CSVs
+  RCO_CSV_NAME=$(oc -n $INSTALL_NAMESPACE get csv -o name | grep runtime-component | cut -d/ -f2)
+  echo "*** Deleting CSVs ***"
+  echo "*** ${RCO_CSV_NAME}"
+  oc -n $INSTALL_NAMESPACE delete csv $RCO_CSV_NAME
+
+  if [ $INSTALL_MODE != "OwnNamespace" ]; then
+    echo "*** Deleting project ${TEST_NAMESPACE}"
+    oc delete project "${TEST_NAMESPACE}"
+  fi
+
+  if [ $INSTALL_MODE != "AllNamespaces" ]; then
+    echo "*** Deleting project ${INSTALL_NAMESPACE}"
+    oc delete project "${INSTALL_NAMESPACE}"
+  fi
 }
 
 ## trap_cleanup : Call cleanup_env and exit. For use by a trap to detect if the script is exited at any point.
@@ -115,6 +153,12 @@ main() {
         exit 1
     fi
 
+    if [[ -z "${INSTALL_MODE}" ]]; then
+        echo "****** Missing install-mode, see usage"
+        echo "${usage}"
+        exit 1
+    fi
+
     echo "****** Setting up test environment..."
     setup_env
 
@@ -125,7 +169,7 @@ main() {
         echo "WARNING: --debug-failure is set. If e2e tests fail, any created resources will remain"
         echo "on the cluster for debugging/troubleshooting. YOU MUST DELETE THESE RESOURCES when"
         echo "you're done, or else they will cause future tests to fail. To cleanup manually, just"
-        echo "delete the namespace \"${TEST_NAMESPACE}\": oc delete project \"${TEST_NAMESPACE}\" "
+        echo "delete the namespace \"${INSTALL_NAMESPACE}\": oc delete project \"${INSTALL_NAMESPACE}\" "
         echo "#####################################################################################"
     fi
 
@@ -137,22 +181,28 @@ main() {
     echo "****** Logging into private registry..."
     echo "${REGISTRY_PASSWORD}" | docker login ${REGISTRY_NAME} -u "${REGISTRY_USER}" --password-stdin
 
-    echo "****** Creating pull secret..."
-    oc create secret docker-registry regcred --docker-server=${REGISTRY_NAME} "--docker-username=${REGISTRY_USER}" "--docker-password=${REGISTRY_PASSWORD}" --docker-email=unused 
-
-    oc get secret/regcred -o jsonpath='{.data.\.dockerconfigjson}' | base64 --decode > /tmp/pull-secret-new.yaml
-    oc get secret/pull-secret -n openshift-config -o jsonpath='{.data.\.dockerconfigjson}' | base64 --decode > /tmp/pull-secret-global.yaml
-
-    jq -s '.[1] * .[0]' /tmp/pull-secret-new.yaml /tmp/pull-secret-global.yaml > /tmp/pull-secret-merged.yaml
-
-    echo "Updating global pull secret"
-    oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=/tmp/pull-secret-merged.yaml
-
-    echo "****** Installing operator from catalog: ${CATALOG_IMAGE}"
+    echo "sleep for 3 minutes to wait for rook-cepth, knative and cert-manager to start installing, then start monitoring for completion"
+    sleep 3m
+    echo "monitoring knative"
+    ./wait.sh deployment knative-serving
+    rc_kn=$?
+    echo "rc_kn=$rc_kn"
+    if [[ "$rc_kn" == 0 ]]; then
+        echo "knative up"
+    fi
+    echo "monitoring rook-ceph"
+    ./wait.sh deployment rook-ceph
+    rc_rk=$?
+    echo "rc_rk=$rc_rk"
+    if [[ "$rc_rk" == 0 ]]; then
+        echo "rook-ceph up"
+    fi
+    echo "****** Installing operator from catalog: ${CATALOG_IMAGE} using install mode of ${INSTALL_MODE}"
+    echo "****** Install namespace is ${INSTALL_NAMESPACE}.  Test namespace is ${TEST_NAMESPACE}"    
     install_operator
 
     # Wait for operator deployment to be ready
-    while [[ $(oc get deploy "${CONTROLLER_MANAGER_NAME}" -o jsonpath='{ .status.readyReplicas }') -ne "1" ]]; do
+    while [[ $(oc -n $INSTALL_NAMESPACE get deploy "${CONTROLLER_MANAGER_NAME}" -o jsonpath='{ .status.readyReplicas }') -ne "1" ]]; do
         echo "****** Waiting for ${CONTROLLER_MANAGER_NAME} to be ready..."
         sleep 10
     done
@@ -160,9 +210,9 @@ main() {
     echo "****** ${CONTROLLER_MANAGER_NAME} deployment is ready..."
 
     echo "****** Starting scorecard tests..."
-    operator-sdk scorecard --verbose --kubeconfig  ${HOME}/.kube/config --selector=suite=kuttlsuite --namespace="${TEST_NAMESPACE}" --service-account="scorecard-kuttl" --wait-time 30m ./bundle || {
-        echo "****** Scorecard tests failed..."
-        exit 1
+    operator-sdk scorecard --verbose --kubeconfig  ${HOME}/.kube/config --selector=suite=kuttlsuite --namespace="${TEST_NAMESPACE}" --service-account="scorecard-kuttl" --wait-time 45m ./bundle || {
+       echo "****** Scorecard tests failed..."
+       exit 1
     }
     result=$?
 
@@ -179,26 +229,28 @@ install_operator() {
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:
-  name: rco-catalog
-  namespace: $TEST_NAMESPACE
+  name: runtime-component-catalog
+  namespace: openshift-marketplace
 spec:
   sourceType: grpc
   image: $CATALOG_IMAGE
-  displayName: Runtime Component Operator Catalog
+  displayName: Runtime Component Catalog
   publisher: IBM
 EOF
 
+if [ $INSTALL_MODE != "AllNamespaces" ]; then
     echo "****** Applying the operator group..."
     cat <<EOF | oc apply -f -
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
   name: runtime-component-operator-group
-  namespace: $TEST_NAMESPACE
+  namespace: $INSTALL_NAMESPACE
 spec:
   targetNamespaces:
     - $TEST_NAMESPACE
 EOF
+fi
 
     echo "****** Applying the subscription..."
     cat <<EOF | oc apply -f -
@@ -206,12 +258,12 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: runtime-component-operator-subscription
-  namespace: $TEST_NAMESPACE
+  namespace: $INSTALL_NAMESPACE
 spec:
   channel: $DEFAULT_CHANNEL
   name: runtime-component
-  source: rco-catalog
-  sourceNamespace: $TEST_NAMESPACE
+  source: runtime-component-catalog
+  sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic
 EOF
 }
@@ -273,6 +325,10 @@ parse_args() {
     --channel)
       shift
       readonly CHANNEL="${1}"
+      ;;
+    --install-mode)
+      shift
+      readonly INSTALL_MODE="${1}"
       ;;
     *)
       echo "Error: Invalid argument - $1"
