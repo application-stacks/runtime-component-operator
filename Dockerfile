@@ -35,7 +35,7 @@ ARG SUMMARY="Runtime Component Operator"
 ARG DESCRIPTION="This image contains the controller for Runtime Component Operator."
 
 LABEL name=$NAME \
-      vendor=Runtime Component Community \
+      vendor="Runtime Component Community" \
       version=$VERSION_LABEL \
       release=$RELEASE_LABEL \
       description=$DESCRIPTION \
