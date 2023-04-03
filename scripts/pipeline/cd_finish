@@ -33,7 +33,7 @@ curl  -H "Accept: application/vnd.github.v3+json"  -H "Authorization: token $(ge
 set_env ibmcloud-api "cloud.ibm.com"
 . "${ONE_PIPELINE_PATH}"/internal/security-compliance/scan
 
-. "${ONE_PIPELINE_PATH}"/internal/doi/publish_acceptance_test
+. "${ONE_PIPELINE_PATH}"/internal/doi/publish_acceptance_tests
 
 #publish_acceptance_test "$(get_env ACCEPTANCE_TESTS_TASK_NAME)" "$(get_env ACCEPTANCE_TESTS_STEP_NAME)" "com.ibm.acceptance_tests"
 

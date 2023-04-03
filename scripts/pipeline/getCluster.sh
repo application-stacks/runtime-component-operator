@@ -15,7 +15,7 @@ export intranetId_USR=$(get_env ebc_id)
 export intranetId_PSW=$(get_env ebc_pw)
 
 export demandId=$rco_demand_id
-set_env rco_DEMAND_ID_$arch "$rco_demand_id"
+set_env RCO_DEMAND_ID_$arch "$rco_demand_id"
 echo "rco_demand_id=$rco_demand_id"
 
 PRE_RELEASE=$(get_env pre-release)

@@ -2,7 +2,7 @@
 arch=$1
 
 
-rco_demand_id=$(get_env rco_DEMAND_ID_$arch)
+rco_demand_id=$(get_env RCO_DEMAND_ID_$arch)
 export demandId=$rco_demand_id
 echo "calling ebc_waitForDemand.sh for $arch"
 cd ebc-gateway-http

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-readonly usage="Usage: e2e-minikube.sh --test-tag <test-id>"
+readonly usage="Usage: scripts/e2e-kind.sh --test-tag <test-id> -u <fyre-user> -k <fyre-API-key> -p <fyre-root-password> -pgid <fyre-product-group-id>"
 
 readonly KUBE_CLUSTER_NAME="kind-e2e-cluster"
 readonly BUILD_IMAGE="runtime-component-operator:latest"
@@ -35,7 +35,7 @@ main() {
     exit 0
   fi
 
-  echo "****** Starting minikube scorecard tests..."
+  echo "****** Starting kind scorecard tests..."
   operator-sdk scorecard --verbose --kubeconfig ${HOME}/.kube/config --selector=suite=kuttlsuite --namespace "${TEST_NAMESPACE}" --service-account scorecard-kuttl --wait-time 45m ./bundle || {
       echo "****** Scorecard tests failed..."
       exit 1
@@ -57,8 +57,8 @@ setup_env() {
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io sshpass jq
 
     if ! command -v kubectl &> /dev/null; then
-      echo "****** Installing kubectl v1.19.4..."
-      curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.4/bin/linux/amd64/kubectl && chmod +x /usr/local/bin/kubectl
+      echo "****** Installing kubectl v1.24.2..."
+      curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.24.2/bin/linux/amd64/kubectl && chmod +x /usr/local/bin/kubectl
     fi
 
     # Create a remote Kind cluster
@@ -97,12 +97,11 @@ build_push() {
     }
 }
 
-# install_rco: Kustomize and install Runtime Component Operator
+# install_rco: Kustomize and install RuntimeComponent-Operator
 install_rco() {
   echo "****** Installing RCO in namespace: ${TEST_NAMESPACE}"
   kubectl apply -f bundle/manifests/rc.app.stacks_runtimecomponents.yaml
   kubectl apply -f bundle/manifests/rc.app.stacks_runtimeoperations.yaml
-
 
   sed -i "s|image: .*|image: ${LOCAL_REGISTRY}/${BUILD_IMAGE}|
           s|RUNTIME_COMPONENT_WATCH_NAMESPACE|${TEST_NAMESPACE}|" internal/deploy/kubectl/runtime-component-operator.yaml
@@ -115,14 +114,14 @@ install_rco() {
 
 install_tools() {
   echo "****** Installing Prometheus"
-  kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml
+  kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml
 
   echo "****** Installing Knative"
-  kubectl apply -f https://github.com/knative/serving/releases/download/knative-v1.3.0/serving-crds.yaml
-  kubectl apply -f https://github.com/knative/eventing/releases/download/knative-v1.3.0/eventing-crds.yaml
+  kubectl apply -f https://github.com/knative/serving/releases/download/knative-v1.7.4/serving-crds.yaml
+  kubectl apply -f https://github.com/knative/eventing/releases/download/knative-v1.7.4/eventing-crds.yaml
 
   echo "****** Installing Cert Manager"
-  kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml
+  kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.2/cert-manager.yaml
 
   echo "****** Enabling Ingress"
   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
@@ -139,16 +138,15 @@ setup_test() {
     export PATH="$HOME/.krew/bin:$PATH"
     kubectl krew install kuttl
 
-    ## Add tests for minikube
+    ## Add tests for kind cluster
     mv bundle/tests/scorecard/kind-kuttl/ingress bundle/tests/scorecard/kuttl/
     mv bundle/tests/scorecard/kind-kuttl/ingress-certificate bundle/tests/scorecard/kuttl/
     
-    ## Remove tests that do not apply for minikube
+    ## Remove tests that do not apply for kind cluster
     mv bundle/tests/scorecard/kuttl/network-policy bundle/tests/scorecard/kind-kuttl/
     mv bundle/tests/scorecard/kuttl/network-policy-multiple-apps bundle/tests/scorecard/kind-kuttl/
     mv bundle/tests/scorecard/kuttl/routes bundle/tests/scorecard/kind-kuttl/
     mv bundle/tests/scorecard/kuttl/route-certificate bundle/tests/scorecard/kind-kuttl/
-    mv bundle/tests/scorecard/kuttl/stream bundle/tests/scorecard/kind-kuttl/
     mv bundle/tests/scorecard/kuttl/manage-tls bundle/tests/scorecard/kind-kuttl/
 
     for image in "${IMAGES[@]}"; do
@@ -215,18 +213,9 @@ cleanup() {
     echo "****** Cleaning up test environment..."
     $(dirname $0)/delete-fyre-stack.sh --cluster-name ${REMOTE_CLUSTER_NAME} --user "${FYRE_USER}" --key "${FYRE_KEY}"
 
-    ## Restore tests
-    mv bundle/tests/scorecard/kuttl/ingress bundle/tests/scorecard/kind-kuttl/
-    mv bundle/tests/scorecard/kuttl/ingress-certificate bundle/tests/scorecard/kind-kuttl/
-
-    mv bundle/tests/scorecard/kind-kuttl/network-policy bundle/tests/scorecard/kuttl/
-    mv bundle/tests/scorecard/kind-kuttl/network-policy-multiple-apps bundle/tests/scorecard/kuttl/
-    mv bundle/tests/scorecard/kind-kuttl/routes bundle/tests/scorecard/kuttl/
-    mv bundle/tests/scorecard/kind-kuttl/route-certificate bundle/tests/scorecard/kuttl/
-    #mv bundle/tests/scorecard/kind-kuttl/image-stream bundle/tests/scorecard/kuttl/
-    #mv bundle/tests/scorecard/kind-kuttl/stream bundle/tests/scorecard/kuttl/
-
-    git checkout bundle/tests/scorecard internal/deploy
+    ## Restore tests and configs
+    git clean -fd bundle/tests/scorecard
+    git restore bundle/tests/scorecard internal/deploy
 }
 
 trap_cleanup() {
