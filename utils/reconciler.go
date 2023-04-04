@@ -516,6 +516,14 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 		shouldRefreshCertSecret := false
 		err = r.CreateOrUpdate(svcCert, bao, func() error {
 			svcCert.Labels = ba.GetLabels()
+			svcCert.Annotations = MergeMaps(svcCert.Annotations, ba.GetAnnotations())
+			if ba.GetService() != nil {
+				if ba.GetService().GetCertificate() != nil {
+					if ba.GetService().GetCertificate().GetAnnotations() != nil {
+						svcCert.Annotations = MergeMaps(svcCert.Annotations, ba.GetService().GetCertificate().GetAnnotations())
+					}
+				}
+			}
 
 			svcCert.Spec.CommonName = bao.GetName() + "." + bao.GetNamespace() + ".svc"
 			svcCert.Spec.DNSNames = make([]string, 2)

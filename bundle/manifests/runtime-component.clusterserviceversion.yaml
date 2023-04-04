@@ -11,7 +11,7 @@ metadata:
             "name": "runtimecomponent-sample"
           },
           "spec": {
-            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:60ca13dd15d5dd583a594436d3568fc69fc7a58081dc40885dc4d2b16a6e4c69",
+            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:9a6f6352bee814302fcf939dd640b7d3b3e02307330f82bc32b782e7a9feb8a3",
             "expose": true,
             "replicas": 1,
             "service": {
@@ -67,7 +67,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: applicationstacks/operator:daily
-    createdAt: "2023-03-09T10:51:34Z"
+    createdAt: "2023-04-04T16:54:45Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     operators.operatorframework.io/builder: operator-sdk-v1.24.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
@@ -230,6 +230,11 @@ spec:
         path: service.annotations
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Annotations to be added to the service.
+        displayName: Service Annotations
+        path: service.certificate.annotations
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: The port that the operator assigns to containers inside pods.
           Defaults to the value of spec.service.port.
         displayName: Target Port
@@ -249,19 +254,22 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:text
       - displayName: Route
         path: route
+      - description: Certificate parameters for a certificate request.
+        displayName: Service Certificate parameters
+        path: service.certificate
+      - displayName: Monitoring
+        path: monitoring
       - description: An array consisting of service ports.
         displayName: Ports
         path: service.ports
-      - displayName: Monitoring
-        path: monitoring
+      - description: An array of environment variables for the application container.
+        displayName: Environment Variables
+        path: env
       - description: Expose the application as a bindable service. Defaults to false.
         displayName: Bindable
         path: service.bindable
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: An array of environment variables for the application container.
-        displayName: Environment Variables
-        path: env
       - description: List of sources to populate environment variables in the application
           container.
         displayName: Environment Variables from Sources
