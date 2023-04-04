@@ -234,6 +234,8 @@ type RuntimeComponentService struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=15,type=spec,displayName="Certificate Secret Reference",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
 
+	Certificate *RuntimeComponentCertificate `json:"certificate,omitempty"`
+
 	// An array consisting of service ports.
 	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec
 	Ports []corev1.ServicePort `json:"ports,omitempty"`
@@ -241,6 +243,10 @@ type RuntimeComponentService struct {
 	// Expose the application as a bindable service. Defaults to false.
 	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Bindable",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	Bindable *bool `json:"bindable,omitempty"`
+}
+
+type RuntimeComponentCertificate struct {
+	Annotations map[string]string
 }
 
 // Defines the network policy
@@ -757,6 +763,11 @@ func (s *RuntimeComponentService) GetCertificateSecretRef() *string {
 	return s.CertificateSecretRef
 }
 
+// GetCertificateSecretRef returns a secret reference with a certificate
+func (s *RuntimeComponentService) GetCertificate() common.BaseComponentCertificate {
+	return s.Certificate
+}
+
 // GetBindable returns whether the application should be exposable as a service
 func (s *RuntimeComponentService) GetBindable() *bool {
 	return s.Bindable
@@ -1184,6 +1195,10 @@ func (s *RuntimeComponentStatus) SetStatusEndpoint(c common.StatusEndpoint) {
 	if !found {
 		s.Endpoints = append(s.Endpoints, *endpoint)
 	}
+}
+
+func (c *RuntimeComponentCertificate) GetAnnotations() map[string]string {
+	return c.Annotations
 }
 
 func convertToCommonStatusEndpointScope(c StatusEndpointScope) common.StatusEndpointScope {
