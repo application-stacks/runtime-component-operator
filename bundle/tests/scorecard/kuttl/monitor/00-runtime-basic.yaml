@@ -4,7 +4,7 @@ metadata:
   name: service-monitor-rc
 spec:
   # Add fields here
-  applicationImage: navidsh/demo-day
+  applicationImage: icr.io/appcafe/open-liberty
   service:
     type: "ClusterIP"
     port: 3000
