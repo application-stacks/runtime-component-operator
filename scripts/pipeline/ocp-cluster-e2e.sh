@@ -11,6 +11,15 @@ setup_env() {
     curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OC_CLIENT_VERSION}/openshift-client-linux.tar.gz | tar xvz
     sudo mv oc kubectl /usr/local/bin/
 
+    if [[ "$ARCHITECTURE" == "Z" ]]; then
+    {
+      echo "****** Installing kubectl-kuttl..."
+      curl -L -o kubectl-kuttl https://github.com/kudobuilder/kuttl/releases/download/v0.15.0/kubectl-kuttl_0.15.0_linux_x86_64
+      chmod +x kubectl-kuttl
+      sudo mv kubectl-kuttl /usr/local/bin
+    }
+    fi
+
     # Start a cluster and login
     echo "****** Logging into remote cluster..."
     oc login "${CLUSTER_URL}" -u "${CLUSTER_USER:-kubeadmin}" -p "${CLUSTER_TOKEN}" --insecure-skip-tls-verify=true
@@ -158,9 +167,20 @@ main() {
         echo "${usage}"
         exit 1
     fi
+    
+    if [[ -z "${ARCHITECTURE}" ]]; then
+        echo "****** Missing architecture, see usage"
+        echo "${usage}"
+        exit 1
+    fi
 
     echo "****** Setting up test environment..."
     setup_env
+
+    if [[ "${ARCHITECTURE}" != "X" ]]; then
+        echo "****** Setting up tests for ${ARCHITECTURE} architecture"
+        setup_tests
+    fi
 
     if [[ -z "${DEBUG_FAILURE}" ]]; then
         trap trap_cleanup EXIT
@@ -190,12 +210,14 @@ main() {
     if [[ "$rc_kn" == 0 ]]; then
         echo "knative up"
     fi
-    echo "monitoring rook-ceph"
-    ./wait.sh deployment rook-ceph
-    rc_rk=$?
-    echo "rc_rk=$rc_rk"
-    if [[ "$rc_rk" == 0 ]]; then
-        echo "rook-ceph up"
+    if [[ "${ARCHITECTURE}" == "X" ]]; then
+      echo "monitoring rook-ceph if architecture is ${ARCHITECTURE}"
+      ./wait.sh deployment rook-ceph
+      rc_rk=$?
+      echo "rc_rk=$rc_rk"
+      if [[ "$rc_rk" == 0 ]]; then
+          echo "rook-ceph up"
+      fi
     fi
     echo "****** Installing operator from catalog: ${CATALOG_IMAGE} using install mode of ${INSTALL_MODE}"
     echo "****** Install namespace is ${INSTALL_NAMESPACE}.  Test namespace is ${TEST_NAMESPACE}"    
@@ -209,14 +231,25 @@ main() {
 
     echo "****** ${CONTROLLER_MANAGER_NAME} deployment is ready..."
 
-    echo "****** Starting scorecard tests..."
-    operator-sdk scorecard --verbose --kubeconfig  ${HOME}/.kube/config --selector=suite=kuttlsuite --namespace="${TEST_NAMESPACE}" --service-account="scorecard-kuttl" --wait-time 45m ./bundle || {
-       echo "****** Scorecard tests failed..."
+    if [[ "$ARCHITECTURE" != "Z" ]]; then
+      echo "****** Testing on ${ARCHITECTURE} so starting scorecard tests..." 
+      operator-sdk scorecard --verbose --kubeconfig  ${HOME}/.kube/config --selector=suite=kuttlsuite --namespace="${TEST_NAMESPACE}" --service-account="scorecard-kuttl" --wait-time 45m ./bundle || {
+        echo "****** Scorecard tests failed..."
+        exit 1
+    }
+    else
+    echo "****** Testing on ${ARCHITECTURE} so running kubectl-kuttl tests..."
+    kubectl-kuttl test ./bundle/tests/scorecard/kuttl --namespace "${TEST_NAMESPACE}" --timeout 200 --suppress-log=events --parallel 1 || {
+       echo "****** kubectl kuttl tests failed..."
        exit 1
     }
+    fi    
     result=$?
 
     echo "****** Cleaning up test environment..."
+    if [[ "${ARCHITECTURE}" != "X" ]]; then
+      revert_tests
+    fi
     cleanup_env
 
     return $result
@@ -266,6 +299,37 @@ spec:
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic
 EOF
+}
+
+setup_tests () {
+  echo " As the architecture is ${ARCHITECTURE}..."
+  if [[ "$ARCHITECTURE" == "P" ]]; then
+  echo "Change affinity tests to look for ppc64le nodes"
+  sed -i.bak "s,amd64,ppc64le," $(find ./bundle/tests/scorecard/kuttl/affinity -type f)
+  echo "Change storage test to set storageclass to managed-nfs-storage"
+  sed -i.bak "s,rook-cephfs,managed-nfs-storage," $(find ./bundle/tests/scorecard/kuttl/storage -type f)
+  # These will need changing if a different image is used
+  echo "Change image-stream tests to the correct digest for correct architecture"
+  sed -i.bak "s,sha256:928559729352bfc852388b0b0db6c99593c9964c67f63ee5081fef27a4eeaa74,sha256:a59ae007d52ceaf39dd3d4ae7689cbff77cb29910e4b2e7e11edd914a7cc0875," $(find ./bundle/tests/scorecard/kuttl/image-stream -type f)
+  sed -i.bak "s,sha256:3d8bfaf38927e0feb81357de701b500df129547304594d54944e75c7b15930a9,sha256:c83478e91fde4285198aa718afec3cf1e6664291b5de1aa4251a125e91bbbb41," $(find ./bundle/tests/scorecard/kuttl/image-stream -type f)
+  elif [[ "$ARCHITECTURE" == "Z" ]]; then
+  echo "Change affinity tests to look for s390x nodes"
+  sed -i.bak "s,amd64,s390x," $(find ./bundle/tests/scorecard/kuttl/affinity -type f)
+  echo "Change storage test to set storageclass to managed-nfs-storage"
+  sed -i.bak "s,rook-cephfs,managed-nfs-storage," $(find ./bundle/tests/scorecard/kuttl/storage -type f)
+  # These will need changing if a different image is used
+  echo "Change image-stream tests to the correct digest for correct architecture"
+  sed -i.bak "s,sha256:928559729352bfc852388b0b0db6c99593c9964c67f63ee5081fef27a4eeaa74,sha256:357b350302f5199477982eb5e6928397220f99dc551c9a95c284f3d8c5c5695d," $(find ./bundle/tests/scorecard/kuttl/image-stream -type f)
+  sed -i.bak "s,sha256:3d8bfaf38927e0feb81357de701b500df129547304594d54944e75c7b15930a9,sha256:ed90adf813ee3e6f7429a226914827ee805e1b394c545b2e2ae4e640c9545944," $(find ./bundle/tests/scorecard/kuttl/image-stream -type f)
+  else
+    echo "${ARCHITECTURE} is an invalid architecture type"
+    exit 1
+  fi
+}
+
+revert_tests() {
+  echo "Reverting test changes back to amd64"
+  find ./bundle/tests/scorecard/kuttl/* -name "*.bak" -exec sh -c 'mv -f $0 ${0%.bak}' {} \;
 }
 
 parse_args() {
@@ -330,6 +394,10 @@ parse_args() {
       shift
       readonly INSTALL_MODE="${1}"
       ;;
+    --architecture)
+      shift
+      readonly ARCHITECTURE="${1}"
+      ;;  
     *)
       echo "Error: Invalid argument - $1"
       echo "$usage"

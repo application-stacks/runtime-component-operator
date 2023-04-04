@@ -25,6 +25,7 @@ export GO_VERSION=$(get_env go-version)
 make setup-go GO_RELEASE_VERSION=$GO_VERSION
 export PATH=$PATH:/usr/local/go/bin
 export INSTALL_MODE=$(get_env install-mode)
+export ARCHITECTURE=$arch
 
 # OCP test
 export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
@@ -81,3 +82,9 @@ else
     curl -X POST -H 'Content-type: application/json' --data '{"text":"access console at: '$console'"}' $(get_env slack_web_hook_url) </dev/null
     curl -X POST -H 'Content-type: application/json' --data '{"text":"credentials: kubeadmin/'$token'"}' $(get_env slack_web_hook_url) </dev/null
 fi
+
+echo "Cleaning up after tests have be completed"
+echo "switching back to scripts/pipeline directory"
+cd ..
+oc logout
+export CLUSTER_URL=""
