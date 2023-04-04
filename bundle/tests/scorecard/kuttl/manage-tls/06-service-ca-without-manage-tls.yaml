@@ -3,7 +3,7 @@ kind: RuntimeComponent
 metadata:
   name: manage-tls-rc
 spec:
-  applicationImage: k8s.gcr.io/pause:2.0
+  applicationImage: k8s.gcr.io/pause:3.2
   replicas: 1
   expose: true
   manageTLS: false # Disables usage of OpenShift service CA
