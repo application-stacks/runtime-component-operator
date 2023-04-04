@@ -150,7 +150,6 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 	test -s $(LOCALBIN)/controller-gen || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.9.2
 
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
-# TODO iain - This was 3.8.7 in previous version
 KUSTOMIZE_VERSION ?= 4.5.5
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/kustomize/v${KUSTOMIZE_VERSION}/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -196,25 +195,11 @@ bundle: manifests setup kustomize ## Generate bundle manifests and metadata, the
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle $(BUNDLE_GEN_FLAGS)
 	./scripts/csv_description_update.sh update_csv
 
-#	$(KUSTOMIZE) build config/kustomize/crd -o internal/deploy/kustomize/daily/base/websphere-liberty-crd.yaml
 	$(KUSTOMIZE) build config/kustomize/crd -o deploy/kustomize/daily/base/runtime-component-crd.yaml
 	cd config/kustomize/operator && $(KUSTOMIZE) edit set namespace $(KUSTOMIZE_NAMESPACE)
-#	$(KUSTOMIZE) build config/kustomize/operator -o internal/deploy/kustomize/daily/base/websphere-liberty-deployment.yaml
 	$(KUSTOMIZE) build config/kustomize/operator -o deploy/kustomize/daily/base/runtime-component-operator.yaml
-# This does two replacements 
-# ${IMG} becomes ${KUSTOMIZE_IMG}
-# serviceAccountName: controller-manager becomes serviceAccountName: websphere-liberty-controller-manager
-# The second one looks unneeded, as the equivalent is already in the deployment file
-# TODO iain
-# Not sure about the first
-# Probably
-#	sed -i.bak "s,${IMG},${KUSTOMIZE_IMG},g;s,serviceAccountName: controller-manager,serviceAccountName: websphere-liberty-controller-manager,g" internal/deploy/kustomize/daily/base/websphere-liberty-deployment.yaml
-	sed -i.bak "s,${IMG},${KUSTOMIZE_IMG},g" deploy/kustomize/daily/base/runtime-component-operator.yaml
-# TODO iain - I think these are included in the deployment file for RCO
-#	$(KUSTOMIZE) build config/kustomize/roles -o internal/deploy/kustomize/daily/base/websphere-liberty-roles.yaml
 
 	mv config/manifests/patches/csvAnnotations.yaml.bak config/manifests/patches/csvAnnotations.yaml
-#	rm internal/deploy/kustomize/daily/base/websphere-liberty-deployment.yaml.bak
 	operator-sdk bundle validate ./bundle
 
 .PHONY: fmt
@@ -234,7 +219,6 @@ test: manifests generate fmt vet ## Run tests.
 
 .PHONY: unit-test
 unit-test: ## Run unit tests
-#	go test -v -mod=vendor -tags=unit github.com/WASdev/websphere-liberty-operator/...
 	go test -v -mod=vendor -tags=unit github.com/application-stacks/runtime-component-operator/...
 
 .PHONY: run
