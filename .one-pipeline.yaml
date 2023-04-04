@@ -136,54 +136,98 @@ containerize:
       set -x
     fi
     
-    # Download Go
-    GO_VERSION=$(get_env go-version)
-    if [[ -z "${GO_VERSION}" ]]; then
-      GO_VERSION="$(grep '^go [0-9]\+.[0-9]\+' go.mod | cut -d ' ' -f 2)"
-    fi
-    rm -rf /usr/local/go && wget --no-verbose --header "Accept: application/octet-stream" "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz" -O - | tar -xz -C /usr/local/
+    ## Setup required tooling
+    make setup-go GO_RELEASE_VERSION=$(get_env go-version)
     export PATH=$PATH:/usr/local/go/bin
+    yum -y -q update
 
-    apt-get update
-    apt-get -qq -y install build-essential software-properties-common uidmap
-   
-    skopeo --version
-      
-    # Build images
+    # PERIODIC_SCAN=$(get_env periodic-rescan)
+    # PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
+    #  Build images
     export RELEASE_TARGET=$(get_env branch)
     export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
-    export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key-staging)  
-    PIPELINE_REGISTRY=$(get_env pipeline-registry)
-    PIPELINE_OPERATOR_IMAGE=$(get_env pipeline-operator-image)  
+    export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key-staging)
+    export PIPELINE_REGISTRY=$(get_env pipeline-registry)
+    export PIPELINE_OPERATOR_IMAGE=$(get_env pipeline-operator-image)
+    export PIPELINE_PRODUCTION_IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE
+    export REDHAT_BASE_IMAGE=$(get_env redhat-base-image)
+    export OPM_VERSION=$(get_env opm-version)
+    export DISABLE_ARTIFACTORY=$(get_env disable-artifactory)
+    # export REDHAT_USERNAME=$(get_env redhat-user-id)
+    # export REDHAT_PASSWORD=$(get_env redhat-password)
+    # export REDHAT_REGISTRY=$(get_env redhat-registry)
+    # export W3_USERNAME=$(get_env w3_username)
+    # export W3_PASSWORD=$(get_env w3_password)
+
+    # flags for P and/or Z
+    export arch=$(get_env architecture)
+
+    git clone https://$(get_env git-token)@github.ibm.com/websphere/operators.git
+    cp -rf operators/scripts/build ./scripts/
+    # Temporary catalog build scripts (registry mirror to be done)
+    cp ./scripts/build-catalog.sh ./scripts/build/build-catalog.sh
+   
+    echo "skopeo version"
+    skopeo --version || exit 1
+      
+    # Docker login and setup build configurations
+    scripts/build/build-initialize.sh
+
     # Build amd64 image
-    make build-pipeline-releases
-    # Build ppc64le and s390x images
-    #./scripts/pipeline/launch-travis.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
+    make build-operator-pipeline REGISTRY=${PIPELINE_REGISTRY}
+
     # Build manifest
-    make build-pipeline-manifest    
+    make build-manifest-pipeline REGISTRY=${PIPELINE_REGISTRY} IMAGE=${PIPELINE_OPERATOR_IMAGE}
+
     # Build bundle image
-    # ./scripts/pipeline/launch-catalog-build.sh -t $(get_env travis-token) -r "https://github.com/application-stacks/runtime-component-operator" -b $(get_env branch) -l
-    make install-opm
-    make bundle-pipeline-releases RELEASE_TARGET=${RELEASE_TARGET}
-    # Save artifacts
-    declare -a tags=("${RELEASE_TARGET}" "${RELEASE_TARGET}-amd64") 
+    make build-bundle-pipeline REGISTRY=${PIPELINE_REGISTRY}
+
+    # Build catalog image
+    make build-catalog-pipeline REGISTRY=${PIPELINE_REGISTRY}
+
+    # Build catalog manifest
+    make build-manifest-pipeline REGISTRY=${PIPELINE_REGISTRY} IMAGE=${PIPELINE_OPERATOR_IMAGE}-catalog
+    
+    echo "**** Saving Artifacts ****"
+    if [[ "$arch" == "ZXP" ]]; then
+      declare -a tags=("${RELEASE_TARGET}" "${RELEASE_TARGET}-amd64" "${RELEASE_TARGET}-ppc64le" "${RELEASE_TARGET}-s390x")
+    else
+      declare -a tags=("${RELEASE_TARGET}" "${RELEASE_TARGET}-amd64")
+    fi
+
     for i in "${tags[@]}"
     do
       IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE:$i
       DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
-      ARCH=$(echo $i | cut -d'-' -f 2)
-      echo "Saving artifact $i name=$IMAGE digest=$DIGEST"
-      save_artifact $i type=image name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"   
+      { ARCH="$(echo $i | grep -o '\(amd64\|s390x\|ppc64le\)$')" && TYPE="image"; } || { TYPE="manifest"; }
+
+      if [[ "$TYPE" == "manifest" ]]; then
+        echo "Saving artifact operator-$i type=$TYPE name=$IMAGE digest=$DIGEST"
+        save_artifact operator-$i type=$TYPE name="$IMAGE" "digest=$DIGEST"
+      else
+        echo "Saving artifact operator-$i type=$TYPE name=$IMAGE digest=$DIGEST arch=$ARCH"
+        save_artifact operator-$i type=$TYPE name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"
+      fi
     done
-    declare -a catalogs=("catalog-${RELEASE_TARGET}")
-    for i in "${catalogs[@]}"
+
+    IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE-bundle:${RELEASE_TARGET}
+    DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
+    echo "Saving artifact bundle-${RELEASE_TARGET} name=$IMAGE digest=$DIGEST"
+    save_artifact bundle-${RELEASE_TARGET} type=image name="$IMAGE" "digest=$DIGEST"
+
+    for i in "${tags[@]}"
     do
-      IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE:$i
+      IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE-catalog:$i
       DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
-      #ARCH=$(echo $i | cut -d'-' -f 2)
-      ARCH=amd64
-      echo "Saving artifact $i name=$IMAGE digest=$DIGEST"
-      save_artifact $i type=image name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"   
+      { ARCH="$(echo $i | grep -o '\(amd64\|s390x\|ppc64le\)$')" && TYPE="image"; } || { ARCH="amd64" && TYPE="manifest"; }
+
+      if [[ "$TYPE" == "manifest" ]]; then
+        echo "Saving artifact catalog-$i type=$TYPE name=$IMAGE digest=$DIGEST"
+        save_artifact catalog-$i type=$TYPE name="$IMAGE" "digest=$DIGEST"
+      else
+        echo "Saving artifact catalog-$i type=$TYPE name=$IMAGE digest=$DIGEST arch=$ARCH"
+        save_artifact catalog-$i type=$TYPE name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"
+      fi
     done
 
     # echo "whitesource scan"
@@ -265,6 +309,7 @@ acceptance-test:
       echo "Skipping acceptance-test, SKIP_KIND_E2E_TEST=$SKIP_KIND_E2E_TEST"
       exit 0
     fi
+    
     # Download and configure golang
     GO_VERSION=$(get_env go-version)
     if [[ -z "${GO_VERSION}" ]]; then

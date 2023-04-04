@@ -183,7 +183,7 @@ spec:
 EOF
 
   rm -rf /root/rook
-  git clone --single-branch --branch master https://github.com/rook/rook.git
+  git clone --single-branch --branch v1.10.11 https://github.com/rook/rook.git
   cd /root/rook/deploy/examples
   kubectl apply -f crds.yaml -f common.yaml -f operator.yaml
 

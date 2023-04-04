@@ -1,8 +1,6 @@
 # Build the manager binary
 FROM golang:1.19 as builder
 
-ARG GO_ARCH=amd64
-
 WORKDIR /workspace
 # Copy the Go Modules manifests
 COPY go.mod go.mod
@@ -21,7 +19,7 @@ COPY common/ common/
 COPY utils/ utils/
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=$GO_ARCH GO111MODULE=on go build -ldflags="-s -w" -mod vendor -a -o manager main.go
+RUN CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -ldflags="-s -w" -mod vendor -a -o manager main.go
 
 
 #Build final image
