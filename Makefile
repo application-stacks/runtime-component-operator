@@ -214,7 +214,7 @@ bundle: manifests setup kustomize ## Generate bundle manifests and metadata, the
 #	$(KUSTOMIZE) build config/kustomize/roles -o internal/deploy/kustomize/daily/base/websphere-liberty-roles.yaml
 
 	mv config/manifests/patches/csvAnnotations.yaml.bak config/manifests/patches/csvAnnotations.yaml
-	rm internal/deploy/kustomize/daily/base/websphere-liberty-deployment.yaml.bak
+#	rm internal/deploy/kustomize/daily/base/websphere-liberty-deployment.yaml.bak
 	operator-sdk bundle validate ./bundle
 
 .PHONY: fmt
