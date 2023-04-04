@@ -14,7 +14,7 @@ spec:
     storage:
       size: "10Mi"
       mountPath: "/mnt/data"
-      className: managed-nfs-storage
+      className: rook-ceph-block
       volumeClaimTemplate:
         metadata:
           name: pvc
@@ -23,4 +23,4 @@ spec:
           resources:
             requests:
               storage: 15Mi
-          storageClassName: rook-ceph
+          storageClassName: rook-cephfs
