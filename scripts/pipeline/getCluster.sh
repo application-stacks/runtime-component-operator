@@ -40,7 +40,7 @@ if [[ ! -z "$PRE_RELEASE" && "$PRE_RELEASE" != "false" && "$PRE_RELEASE" != "no"
     fi
     if [[ "$arch" == "Z" ]]; then
         # Z values
-        export ebc_plan=svl-onepipeline-ocpplus_z_custom.yml
+        export ebc_shortlist=onepipeline-ocpplus_z_custom.yml
         export ebc_fyre_kernel_url=${rhcos_level_z}/rhcos-live-kernel-s390x
         export ebc_fyre_initramfs_url=${rhcos_level_z}/rhcos-live-initramfs.s390x.img
         export ebc_fyre_metal_url=${rhcos_level_z}/rhcos-metal.s390x.raw.gz
@@ -60,7 +60,8 @@ else
         echo "setting ebc plan for X: $ebc_plan"
     fi
     if [[ "$arch" == "Z" ]]; then
-       export ebc_plan=svl-onepipeline-ocpplus_z.yml
+       # export ebc_plan=svl-onepipeline-ocpplus_z.yml
+       export ebc_shortlist=onepipeline-ocpplus_z.yml
     fi
     if [[ "$arch" == "P" ]]; then
         export ebc_plan=svl-onepipeline-ocpplus_p.yml
