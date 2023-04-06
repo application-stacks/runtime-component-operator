@@ -20,12 +20,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/application-stacks/runtime-component-operator/common"
-	"github.com/pkg/errors"
 
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -50,13 +47,15 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
-	OperatorName = "runtime-component-operator"
+	OperatorFullName  = "Runtime Component Operator"
+	OperatorName      = "runtime-component-operator"
+	OperatorShortName = "rco"
+	APIName           = "RuntimeComponent"
 )
 
 // RuntimeComponentReconciler reconciles a RuntimeComponent object
@@ -83,48 +82,17 @@ type RuntimeComponentReconciler struct {
 func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 
 	reqLogger := r.Log.WithValues("Request.Namespace", req.Namespace, "Request.Name", req.Name)
-	reqLogger.Info("Reconciling RuntimeComponent")
+	reqLogger.Info("Reconcile " + APIName + " - starting")
 
-	ns, err := appstacksutils.GetOperatorNamespace()
-	// When running the operator locally, `ns` will be empty string
-	if ns == "" {
-		// Since this method can be called directly from unit test, populate `watchNamespaces`.
-		if r.watchNamespaces == nil {
-			r.watchNamespaces, err = appstacksutils.GetWatchNamespaces()
-			if err != nil {
-				reqLogger.Error(err, "Error getting watch namespace")
-				return reconcile.Result{}, err
-			}
-		}
-		// If the operator is running locally, use the first namespace in the `watchNamespaces`
-		// `watchNamespaces` must have at least one item
-		ns = r.watchNamespaces[0]
-	}
-
-	configMap, err := r.GetOpConfigMap(OperatorName, ns)
-	if err != nil {
-		reqLogger.Info("Failed to find runtime-component-operator config map")
-		common.Config = common.DefaultOpConfig()
-		configMap = &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: OperatorName, Namespace: ns}}
-		configMap.Data = common.Config
+	if ns, err := r.CheckOperatorNamespace(r.watchNamespaces); err != nil {
+		return reconcile.Result{}, err
 	} else {
-		common.Config.LoadFromConfigMap(configMap)
-	}
-
-	_, err = controllerutil.CreateOrUpdate(context.TODO(), r.GetClient(), configMap, func() error {
-		configMap.Data = common.Config
-		return nil
-	})
-
-	if err != nil {
-		reqLogger.Info("Failed to update runtime-component-operator config map")
+		r.UpdateConfigMap(OperatorName, ns)
 	}
 
 	// Fetch the RuntimeComponent instance
 	instance := &appstacksv1.RuntimeComponent{}
-	var ba common.BaseComponent = instance
-	err = r.GetClient().Get(context.TODO(), req.NamespacedName, instance)
-	if err != nil {
+	if err := r.GetClient().Get(context.TODO(), req.NamespacedName, instance); err != nil {
 		if kerrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
@@ -144,8 +112,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Check if there is an existing Deployment, Statefulset or Knative service by this name
 	// not managed by this operator
-	err = appstacksutils.CheckForNameConflicts("RuntimeComponent", instance.Name, instance.Namespace, r.GetClient(), req, isKnativeSupported)
-	if err != nil {
+	if err = appstacksutils.CheckForNameConflicts(APIName, instance.Name, instance.Namespace, r.GetClient(), req, isKnativeSupported); err != nil {
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
@@ -154,7 +121,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	_, err = appstacksutils.Validate(instance)
 	// If there's any validation error, don't bother with requeuing
 	if err != nil {
-		reqLogger.Error(err, "Error validating RuntimeComponent")
+		reqLogger.Error(err, "Error validating "+APIName)
 		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		return reconcile.Result{}, nil
 	}
@@ -165,126 +132,44 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		instance.Annotations = appstacksutils.MergeMaps(instance.Annotations, appstacksutils.GetOpenShiftAnnotations(instance))
 	}
 
-	err = r.GetClient().Update(context.TODO(), instance)
-	if err != nil {
-		reqLogger.Error(err, "Error updating RuntimeComponent")
+	if err = r.GetClient().Update(context.TODO(), instance); err != nil {
+		reqLogger.Error(err, "Error updating "+APIName)
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
-
-	// currentGen := instance.Generation
-	// if currentGen == 1 {
-	// 	return reconcile.Result{RequeueAfter: common.ReconcileInterval * time.Second}, nil
-	// }
 
 	defaultMeta := metav1.ObjectMeta{
 		Name:      instance.Name,
 		Namespace: instance.Namespace,
 	}
 
-	imageReferenceOld := instance.Status.ImageReference
-	instance.Status.ImageReference = instance.Spec.ApplicationImage
-	if r.IsOpenShift() {
-		image, err := imageutil.ParseDockerImageReference(instance.Spec.ApplicationImage)
-		if err == nil {
-			isTag := &imagev1.ImageStreamTag{}
-			isTagName := imageutil.JoinImageStreamTag(image.Name, image.Tag)
-			isTagNamespace := image.Namespace
-			if isTagNamespace == "" {
-				isTagNamespace = instance.Namespace
-			}
-			key := types.NamespacedName{Name: isTagName, Namespace: isTagNamespace}
-			err = r.GetAPIReader().Get(context.Background(), key, isTag)
-			// Call ManageError only if the error type is not found or is not forbidden. Forbidden could happen
-			// when the operator tries to call GET for ImageStreamTags on a namespace that doesn't exists (e.g.
-			// cannot get imagestreamtags.image.openshift.io in the namespace "navidsh": no RBAC policy matched)
-			if err == nil {
-				image := isTag.Image
-				if image.DockerImageReference != "" {
-					instance.Status.ImageReference = image.DockerImageReference
-				}
-			} else if err != nil && !kerrors.IsNotFound(err) && !kerrors.IsForbidden(err) && !strings.Contains(isTagName, "/") {
-				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-			}
-		}
+	err, imageReferenceOld := r.UpdateImageReference(instance)
+	if err != nil {
+		reqLogger.Error(err, "Error updating "+APIName)
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 	if imageReferenceOld != instance.Status.ImageReference {
 		reqLogger.Info("Updating status.imageReference", "status.imageReference", instance.Status.ImageReference)
 		err = r.UpdateStatus(instance)
 		if err != nil {
-			reqLogger.Error(err, "Error updating RuntimeComponent status")
+			reqLogger.Error(err, "Error updating "+APIName+" status")
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		}
 	}
 
-	if instance.Spec.ServiceAccountName == nil || *instance.Spec.ServiceAccountName == "" {
-		serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
-		err = r.CreateOrUpdate(serviceAccount, instance, func() error {
-			return appstacksutils.CustomizeServiceAccount(serviceAccount, instance, r.GetClient())
-		})
-		if err != nil {
-			reqLogger.Error(err, "Failed to reconcile ServiceAccount")
-			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-		}
-	} else {
-		serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
-		err = r.DeleteResource(serviceAccount)
-		if err != nil {
-			reqLogger.Error(err, "Failed to delete ServiceAccount")
-			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-		}
+	if err = r.UpdateServiceAccount(instance, defaultMeta); err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
-	// Check if the ServiceAccount has a valid pull secret before creating the deployment/statefulset
-	// or setting up knative. Otherwise the pods can go into an ImagePullBackOff loop
-	saErr := appstacksutils.ServiceAccountPullSecretExists(instance, r.GetClient())
-	if saErr != nil {
-		return r.ManageError(saErr, common.StatusConditionTypeReconciled, instance)
-	}
-
+	// When Knative is supported and Knative serving is being used
 	if instance.Spec.CreateKnativeService != nil && *instance.Spec.CreateKnativeService {
-		// Clean up non-Knative resources
-		resources := []client.Object{
-			&corev1.Service{ObjectMeta: defaultMeta},
-			&corev1.Service{ObjectMeta: metav1.ObjectMeta{Name: instance.Name + "-headless", Namespace: instance.Namespace}},
-			&appsv1.Deployment{ObjectMeta: defaultMeta},
-			&appsv1.StatefulSet{ObjectMeta: defaultMeta},
-			&autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta},
-		}
-		err = r.DeleteResources(resources)
+		err = r.UpdateKnativeService(instance, defaultMeta, isKnativeSupported)
 		if err != nil {
-			reqLogger.Error(err, "Failed to clean up non-Knative resources")
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-		}
-
-		if ok, _ := r.IsGroupVersionSupported(networkingv1.SchemeGroupVersion.String(), "Ingress"); ok {
-			r.DeleteResource(&networkingv1.Ingress{ObjectMeta: defaultMeta})
-		}
-
-		if r.IsOpenShift() {
-			route := &routev1.Route{ObjectMeta: defaultMeta}
-			err = r.DeleteResource(route)
-			if err != nil {
-				reqLogger.Error(err, "Failed to clean up non-Knative resource Route")
-				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-			}
-		}
-
-		if isKnativeSupported {
-			ksvc := &servingv1.Service{ObjectMeta: defaultMeta}
-			err = r.CreateOrUpdate(ksvc, instance, func() error {
-				appstacksutils.CustomizeKnativeService(ksvc, instance)
-				return nil
-			})
-
-			if err != nil {
-				reqLogger.Error(err, "Failed to reconcile Knative Service")
-				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-			}
+		} else {
 			return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)
 		}
-		return r.ManageError(errors.New("failed to reconcile Knative service as operator could not find Knative CRDs"), common.StatusConditionTypeReconciled, instance)
 	}
-
+	// When Knative is supported but Knative serving is not used
 	if isKnativeSupported {
 		ksvc := &servingv1.Service{ObjectMeta: defaultMeta}
 		err = r.DeleteResource(ksvc)
@@ -294,75 +179,29 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	useCertmanager, err := r.GenerateSvcCertSecret(ba, "rco", "Runtime Component Operator", "runtime-component-operator")
+	useCertmanager, err := r.UpdateSvcCertSecret(instance, OperatorShortName, OperatorFullName, OperatorName)
 	if err != nil {
-		reqLogger.Error(err, "Failed to reconcile CertManager Certificate")
-		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-	}
-	if ba.GetService().GetCertificateSecretRef() != nil {
-		ba.GetStatus().SetReference(common.StatusReferenceCertSecretName, *ba.GetService().GetCertificateSecretRef())
-	}
-
-	svc := &corev1.Service{ObjectMeta: defaultMeta}
-	err = r.CreateOrUpdate(svc, instance, func() error {
-		appstacksutils.CustomizeService(svc, ba)
-		svc.Annotations = appstacksutils.MergeMaps(svc.Annotations, instance.Spec.Service.Annotations)
-		if !useCertmanager && r.IsOpenShift() {
-			appstacksutils.AddOCPCertAnnotation(ba, svc)
-		}
-		monitoringEnabledLabelName := getMonitoringEnabledLabelName(ba)
-		if instance.Spec.Monitoring != nil {
-			svc.Labels[monitoringEnabledLabelName] = "true"
-		} else {
-			delete(svc.Labels, monitoringEnabledLabelName)
-		}
-		return nil
-	})
-	if err != nil {
-		reqLogger.Error(err, "Failed to reconcile Service")
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
-	networkPolicy := &networkingv1.NetworkPolicy{ObjectMeta: defaultMeta}
-	if np := instance.Spec.NetworkPolicy; !np.IsDisabled() {
-		err = r.CreateOrUpdate(networkPolicy, instance, func() error {
-			appstacksutils.CustomizeNetworkPolicy(networkPolicy, r.IsOpenShift(), instance)
-			return nil
-		})
-		if err != nil {
-			reqLogger.Error(err, "Failed to reconcile network policy")
-			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-		}
-	} else {
-		if err := r.DeleteResource(networkPolicy); err != nil {
-			reqLogger.Error(err, "Failed to delete network policy")
-			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-		}
+	if err = r.UpdateService(instance, defaultMeta, useCertmanager); err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
-	err = r.ReconcileBindings(instance)
-	if err != nil {
-		return r.ManageError(err, common.StatusConditionTypeReconciled, ba)
+	if err = r.UpdateTLSReference(instance); err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+	}
+
+	if err = r.UpdateNetworkPolicy(instance, defaultMeta); err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+	}
+
+	if err = r.ReconcileBindings(instance); err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
 	if instance.Spec.StatefulSet != nil {
-		// Delete Deployment if exists
-		deploy := &appsv1.Deployment{ObjectMeta: defaultMeta}
-		err = r.DeleteResource(deploy)
-
-		if err != nil {
-			reqLogger.Error(err, "Failed to delete Deployment")
-			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-		}
-		svc := &corev1.Service{ObjectMeta: metav1.ObjectMeta{Name: instance.Name + "-headless", Namespace: instance.Namespace}}
-		err = r.CreateOrUpdate(svc, instance, func() error {
-			appstacksutils.CustomizeService(svc, instance)
-			svc.Spec.ClusterIP = corev1.ClusterIPNone
-			svc.Spec.Type = corev1.ServiceTypeClusterIP
-			return nil
-		})
-		if err != nil {
-			reqLogger.Error(err, "Failed to reconcile headless Service")
+		if err = r.UpdateStatefulSetReq(instance, defaultMeta); err != nil {
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		}
 
@@ -370,10 +209,10 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		err = r.CreateOrUpdate(statefulSet, instance, func() error {
 			appstacksutils.CustomizeStatefulSet(statefulSet, instance)
 			appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, instance)
+			appstacksutils.CustomizePersistence(statefulSet, instance)
 			if err := appstacksutils.CustomizePodWithSVCCertificate(&statefulSet.Spec.Template, instance, r.GetClient()); err != nil {
 				return err
 			}
-			appstacksutils.CustomizePersistence(statefulSet, instance)
 			return nil
 		})
 		if err != nil {
@@ -382,22 +221,10 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 
 	} else {
-		// Delete StatefulSet if exists
-		statefulSet := &appsv1.StatefulSet{ObjectMeta: defaultMeta}
-		err = r.DeleteResource(statefulSet)
-		if err != nil {
-			reqLogger.Error(err, "Failed to delete Statefulset")
+		if err = r.UpdateDeploymentReq(instance, defaultMeta); err != nil {
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		}
 
-		// Delete StatefulSet if exists
-		headlesssvc := &corev1.Service{ObjectMeta: metav1.ObjectMeta{Name: instance.Name + "-headless", Namespace: instance.Namespace}}
-		err = r.DeleteResource(headlesssvc)
-
-		if err != nil {
-			reqLogger.Error(err, "Failed to delete headless Service")
-			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-		}
 		deploy := &appsv1.Deployment{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(deploy, instance, func() error {
 			appstacksutils.CustomizeDeployment(deploy, instance)
@@ -411,111 +238,21 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			reqLogger.Error(err, "Failed to reconcile Deployment")
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		}
-
 	}
 
-	if instance.Spec.Autoscaling != nil {
-		hpa := &autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta}
-		err = r.CreateOrUpdate(hpa, instance, func() error {
-			appstacksutils.CustomizeHPA(hpa, instance)
-			return nil
-		})
-
-		if err != nil {
-			reqLogger.Error(err, "Failed to reconcile HorizontalPodAutoscaler")
-			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-		}
-	} else {
-		hpa := &autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta}
-		err = r.DeleteResource(hpa)
-		if err != nil {
-			reqLogger.Error(err, "Failed to delete HorizontalPodAutoscaler")
-			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-		}
+	if err = r.UpdateAutoscaling(instance, defaultMeta); err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
-	if ok, err := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route"); err != nil {
-		reqLogger.Error(err, fmt.Sprintf("Failed to check if %s is supported", routev1.SchemeGroupVersion.String()))
-		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-	} else if ok {
-		if instance.Spec.Expose != nil && *instance.Spec.Expose {
-			route := &routev1.Route{ObjectMeta: defaultMeta}
-			err = r.CreateOrUpdate(route, instance, func() error {
-				key, cert, caCert, destCACert, err := r.GetRouteTLSValues(ba)
-				if err != nil {
-					return err
-				}
-				appstacksutils.CustomizeRoute(route, ba, key, cert, caCert, destCACert)
-
-				return nil
-			})
-			if err != nil {
-				reqLogger.Error(err, "Failed to reconcile Route")
-				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-			}
-		} else {
-			route := &routev1.Route{ObjectMeta: defaultMeta}
-			err = r.DeleteResource(route)
-			if err != nil {
-				reqLogger.Error(err, "Failed to delete Route")
-				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-			}
-		}
-	} else {
-
-		if ok, err := r.IsGroupVersionSupported(networkingv1.SchemeGroupVersion.String(), "Ingress"); err != nil {
-			reqLogger.Error(err, fmt.Sprintf("Failed to check if %s is supported", networkingv1.SchemeGroupVersion.String()))
-			r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-		} else if ok {
-			if instance.Spec.Expose != nil && *instance.Spec.Expose {
-				ing := &networkingv1.Ingress{ObjectMeta: defaultMeta}
-				err = r.CreateOrUpdate(ing, instance, func() error {
-					appstacksutils.CustomizeIngress(ing, instance)
-					return nil
-				})
-				if err != nil {
-					reqLogger.Error(err, "Failed to reconcile Ingress")
-					return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-				}
-			} else {
-				ing := &networkingv1.Ingress{ObjectMeta: defaultMeta}
-				err = r.DeleteResource(ing)
-				if err != nil {
-					reqLogger.Error(err, "Failed to delete Ingress")
-					return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-				}
-			}
-		}
+	if err = r.UpdateRouteOrIngress(instance, defaultMeta); err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
-	if ok, err := r.IsGroupVersionSupported(prometheusv1.SchemeGroupVersion.String(), "ServiceMonitor"); err != nil {
-		reqLogger.Error(err, fmt.Sprintf("Failed to check if %s is supported", prometheusv1.SchemeGroupVersion.String()))
-		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-	} else if ok {
-		if instance.Spec.Monitoring != nil && (instance.Spec.CreateKnativeService == nil || !*instance.Spec.CreateKnativeService) {
-			sm := &prometheusv1.ServiceMonitor{ObjectMeta: defaultMeta}
-			err = r.CreateOrUpdate(sm, instance, func() error {
-				appstacksutils.CustomizeServiceMonitor(sm, instance)
-				return nil
-			})
-			if err != nil {
-				reqLogger.Error(err, "Failed to reconcile ServiceMonitor")
-				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-			}
-		} else {
-			sm := &prometheusv1.ServiceMonitor{ObjectMeta: defaultMeta}
-			err = r.DeleteResource(sm)
-			if err != nil {
-				reqLogger.Error(err, "Failed to delete ServiceMonitor")
-				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-			}
-		}
-
-	} else {
-		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported", prometheusv1.SchemeGroupVersion.String()))
+	if err = r.UpdateServiceMonitor(instance, defaultMeta); err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
-	reqLogger.Info("Reconcile RuntimeComponent - completed")
+	reqLogger.Info("Reconcile " + APIName + " - completed")
 	return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)
 }
 
@@ -628,8 +365,4 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		})
 	}
 	return b.Complete(r)
-}
-
-func getMonitoringEnabledLabelName(ba common.BaseComponent) string {
-	return "monitor." + ba.GetGroupName() + "/enabled"
 }

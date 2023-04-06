@@ -174,6 +174,31 @@ func (r *ReconcilerBase) GetOpConfigMap(name string, ns string) (*corev1.ConfigM
 	return configMap, nil
 }
 
+// CheckOperatorNamespace ...
+func (r *ReconcilerBase) CheckOperatorNamespace(watchNamespaces []string) (string, error) {
+
+	ns, err := GetOperatorNamespace()
+	if err != nil {
+		log.Info("Failed to get operator namespace, error: " + err.Error())
+	}
+
+	// When running the operator locally, `ns` will be empty string
+	if ns == "" {
+		// Since this method can be called directly from unit test, populate `watchNamespaces`.
+		if watchNamespaces == nil {
+			watchNamespaces, err = GetWatchNamespaces()
+			if err != nil {
+				log.Error(err, "Error getting watch namespace")
+				return "", err
+			}
+		}
+		// If the operator is running locally, use the first namespace in the `watchNamespaces`
+		// `watchNamespaces` must have at least one item
+		ns = watchNamespaces[0]
+	}
+	return ns, nil
+}
+
 // ManageError ...
 func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
 	s := ba.GetStatus()
