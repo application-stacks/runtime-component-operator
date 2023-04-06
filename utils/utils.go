@@ -332,7 +332,7 @@ func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShi
 	isExposed := ba.GetExpose() != nil && *ba.GetExpose()
 	var rule networkingv1.NetworkPolicyIngressRule
 
-	if config.GetNamespaceLabels() != nil && len(config.GetNamespaceLabels()) == 0 &&
+	if config != nil && config.GetNamespaceLabels() != nil && len(config.GetNamespaceLabels()) == 0 &&
 		config.GetFromLabels() != nil && len(config.GetFromLabels()) == 0 {
 		rule = createAllowAllNetworkPolicyIngressRule()
 	} else if isOpenShift {
@@ -412,20 +412,20 @@ func createNetworkPolicyPeer(appName string, namespace string, networkPolicy com
 		PodSelector:       &metav1.LabelSelector{},
 	}
 
-	if nsLabels := networkPolicy.GetNamespaceLabels(); nsLabels == nil {
+	if networkPolicy == nil || networkPolicy.GetNamespaceLabels() == nil {
 		peer.NamespaceSelector.MatchLabels = map[string]string{
 			"kubernetes.io/metadata.name": namespace,
 		}
 	} else {
-		peer.NamespaceSelector.MatchLabels = nsLabels
+		peer.NamespaceSelector.MatchLabels = networkPolicy.GetNamespaceLabels()
 	}
 
-	if podLabels := networkPolicy.GetFromLabels(); podLabels == nil {
+	if networkPolicy == nil || networkPolicy.GetFromLabels() == nil {
 		peer.PodSelector.MatchLabels = map[string]string{
 			"app.kubernetes.io/part-of": appName,
 		}
 	} else {
-		peer.PodSelector.MatchLabels = podLabels
+		peer.PodSelector.MatchLabels = networkPolicy.GetFromLabels()
 	}
 
 	return peer
