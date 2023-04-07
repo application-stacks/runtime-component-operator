@@ -29,6 +29,9 @@ ip=$(echo "$ip" | tr -d '"')
 PRIVATE_KEY="$(get_env private_key "")"
 echo -n "${PRIVATE_KEY}" | base64 -d > id_rsa
 
+echo "value of private key: "
+cat id_rsa
+
 chmod 600 id_rsa
 pwd
 ls -l id_rsa
