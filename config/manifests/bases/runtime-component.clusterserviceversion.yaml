@@ -6,7 +6,7 @@ metadata:
     capabilities: Auto Pilot
     categories: Application Runtime
     certified: "true"
-    containerImage: applicationstacks/operator:daily
+    containerImage: icr.io/appcafe/runtime-component-operator:daily
     createdAt: "2022-02-25T09:00:00Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     olm.skipRange: '>=0.8.0 <1.2.0'
