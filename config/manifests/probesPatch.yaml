@@ -1,0 +1,48 @@
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    description: Hide liveness probe's Exec field
+    displayName: Livness Probe's Exec
+    path: probes.liveness.exec
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:hidden
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    description: Hide liveness probe's TCP Socket field
+    displayName: Livness Probe's Exec
+    path: probes.liveness.tcpSocket
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:hidden
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    description: Hide readiness probe's Exec field
+    displayName: Readiness Probe's Exec
+    path: probes.readiness.exec
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:hidden
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    description: Hide readiness probe's TCP Socket field
+    displayName: Readiness Probe's TCP Socket
+    path: probes.readiness.tcpSocket
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:hidden
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    description: Hide startup probe's Exec field
+    displayName: Startup Probe's Exec
+    path: probes.startup.exec
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:hidden
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    description: Hide startup probe's TCP Socket field
+    displayName: Startup Probe's Exec
+    path: probes.startup.tcpSocket
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:hidden

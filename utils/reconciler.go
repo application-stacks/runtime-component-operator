@@ -436,7 +436,10 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 
 	for i := range issuer.Status.Conditions {
 		if issuer.Status.Conditions[i].Type == certmanagerv1.IssuerConditionReady && issuer.Status.Conditions[i].Status == certmanagermetav1.ConditionFalse {
-			return errors.New("Certificate is not ready")
+			return errors.New("Certificate Issuer is not ready")
+		}
+		if issuer.Status.Conditions[i].Type == certmanagerv1.IssuerConditionReady && issuer.Status.Conditions[i].ObservedGeneration != issuer.ObjectMeta.Generation {
+			return errors.New("Certificate Issuer is not ready")
 		}
 	}
 	return nil

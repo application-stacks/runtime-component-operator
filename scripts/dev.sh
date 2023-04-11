@@ -169,6 +169,7 @@ cat << EOF > $CATALOG_FILE
       image: $CATALOG_IMG
       imagePullPolicy: Always
       displayName: Runtime Component Catalog
+      publisher: Runtime Component
       updateStrategy:
         registryPoll:
           interval: 1m
@@ -185,11 +186,11 @@ cat << EOF > $SUBCRIPTION_FILE
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: runtime-component-operator-operator-subscription
+  name: runtime-component-subscription
   namespace: $NAMESPACE
 spec:
   channel:  beta2
-  name: runtime-component-operator
+  name: runtime-component
   source: runtime-component-operator-catalog
   sourceNamespace: $NAMESPACE
   installPlanApproval: Automatic
@@ -267,7 +268,7 @@ bundle() {
     echo "------------"
     echo "bundle-push"
     echo "------------"
-    make -C  $MAKEFILE_DIR bundle-push VERSION=$VVERSION IMG=$IMG IMAGE_TAG_BASE=$IMAGE_TAG_BASE BUNDLE_IMG=$BUNDLE_IMG CATALOG_IMG=$CATALOG_IMG TLS_VERIFY=false
+    make  -C  $MAKEFILE_DIR bundle-push VERSION=$VVERSION IMG=$IMG IMAGE_TAG_BASE=$IMAGE_TAG_BASE BUNDLE_IMG=$BUNDLE_IMG CATALOG_IMG=$CATALOG_IMG TLS_VERIFY=false
 }
 
 ###################################
@@ -336,7 +337,7 @@ install_rook() {
     tmp_dir=$(mktemp -d -t ceph-XXXXXXXXXX)
     cd "$tmp_dir"
 
-    git clone --single-branch --branch master https://github.com/rook/rook.git
+    git clone --single-branch --branch v1.10.11 https://github.com/rook/rook.git
     cd rook/deploy/examples
 
     oc create -f crds.yaml

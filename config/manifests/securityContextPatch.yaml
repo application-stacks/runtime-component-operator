@@ -1,0 +1,71 @@
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Type
+    path: securityContext.seccompProfile.type
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:select:RuntimeDefault
+      - urn:alm:descriptor:com.tectonic.ui:select:Localhost
+      - urn:alm:descriptor:com.tectonic.ui:select:Unconfined
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Localhost Profile
+    path: securityContext.seccompProfile.localhostProfile
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:text
+      - urn:alm:descriptor:com.tectonic.ui:fieldDependency:securityContext.seccompProfile.type:Localhost
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Read-Only Root Filesystem
+    path: securityContext.readOnlyRootFilesystem
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Run as Non-Root
+    path: securityContext.runAsNonRoot
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Privileged
+    path: securityContext.privileged
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Allow Privilege Escalation
+    path: securityContext.allowPrivilegeEscalation
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: GMSA Credential Spec Name
+    path: securityContext.windowsOptions.gmsaCredentialSpecName
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:text
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: GMSA Credential Spec
+    path: securityContext.windowsOptions.gmsaCredentialSpec
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:text
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Host Process
+    path: securityContext.windowsOptions.hostProcess
+    x-descriptors:
+      - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: SE Linux Options
+    path: securityContext.seLinuxOptions

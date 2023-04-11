@@ -46,12 +46,18 @@ if [[ -z "${TRIGGER_NAME}" ]]; then
     TRIGGER_NAME="Security Scan Manual Trigger Multiscan"
 fi
 
+#AGGREGATE_IMAGE_SCAN_ISSUES=(get_env aggregate-image-scan-issues)
+#if [[ -z "${AGGREGATE_IMAGE_SCAN_ISSUES}" ]]; then
+AGGREGATE_IMAGE_SCAN_ISSUES="squad"
+#fi
+
 EVIDENCE_REPO=$(get_env evidence-repo)
 INCIDENT_REPO=$(get_env incident-repo)
 if [[ -z $EVIDENCE_REPO || -z $INCIDENT_REPO ]]; then
     TRIGGER_PROPERTIES_JSON="{\"images-to-scan\": \"$(echo ${IMAGES_TO_SCAN})\"}" 
 else
     TRIGGER_PROPERTIES_JSON="{
+    \"aggregate-image-scan-issues\": \"$(echo ${AGGREGATE_IMAGE_SCAN_ISSUES})\",
     \"images-to-scan\": \"$(echo ${IMAGES_TO_SCAN})\", 
     \"evidence-repo\": \"${EVIDENCE_REPO}\",
     \"incident-repo\": \"${INCIDENT_REPO}\"
