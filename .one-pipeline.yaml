@@ -71,23 +71,6 @@ setup:
         fi 
     fi
 
-    SKIP_ACCEPTANCE_TEST=$(get_env SKIP_ACCEPTANCE_TEST)
-    SKIP_ACCEPTANCE_TEST="$(echo "$SKIP_ACCEPTANCE_TEST" | tr '[:upper:]' '[:lower:]')"
-    if [[ ! -z "$SKIP_ACCEPTANCE_TEST" && "$SKIP_ACCEPTANCE_TEST" != "false" && "$SKIP_ACCEPTANCE_TEST" != "no"  ]]; then
-      echo "Skipping acceptance-test, SKIP_ACCEPTANCE_TEST=$SKIP_ACCEPTANCE_TEST"
-      exit 0
-    else
-        export arch=$(get_env architecture)
-        git clone https://$(get_env git-token)@github.ibm.com/elastic-build-cloud/ebc-gateway-http.git
-        if [[ "$arch" == "X" ]]; then
-          ./scripts/pipeline/getCluster.sh "X"
-        else
-          ./scripts/pipeline/getCluster.sh "Z"
-          ./scripts/pipeline/getCluster.sh "X" 
-          ./scripts/pipeline/getCluster.sh "P"
-        fi 
-    fi
-
 test:
   dind: true
   abort_on_failure: true
