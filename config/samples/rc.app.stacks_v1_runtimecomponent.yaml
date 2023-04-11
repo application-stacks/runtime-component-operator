@@ -3,9 +3,7 @@ kind: RuntimeComponent
 metadata:
   name: runtimecomponent-sample
 spec:
-  # Add fields here
-  applicationImage: icr.io/appcafe/open-liberty/samples/getting-started@sha256:60ca13dd15d5dd583a594436d3568fc69fc7a58081dc40885dc4d2b16a6e4c69
-  expose: true
-  replicas: 1
+  applicationImage: icr.io/appcafe/open-liberty/samples/getting-started@sha256:9a6f6352bee814302fcf939dd640b7d3b3e02307330f82bc32b782e7a9feb8a3
+  manageTLS: true
   service:
-    port: 9080
+    port: 9443
