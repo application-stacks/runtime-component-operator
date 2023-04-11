@@ -34,24 +34,41 @@ setup:
       # curl -u :$GH_TOKEN https://api.github.com/repos/$REPO/branches/$BRANCH/protection -H "Accept: application/vnd.github.v3+json" -X PUT -d '{"required_pull_request_reviews":{"dismiss_stale_reviews":true,"required_approving_review_count":1},"enforce_admins":null,"restrictions":null,"required_status_checks":null}'
     fi
 
-    # Only sync-up main branch and actual releases (i.e. 1.0.0 tag)
-    if [[ "$BRANCH" == "main" || "$BRANCH" == "pipeline-modernize" || "$BRANCH" =~ ^[0-9]+.[0-9]+.[0-9]+$ ]]; then
-      # Update repo with Whitesource enabled
-      GHE_TOKEN=$(get_env git-token)
-      WHITESOURCE_GHE_REPO=$(get_env whitesource-ghe-repo | sed 's/https:\/\///')
-      BRANCH_REFSPEC="+refs/remotes/origin/$BRANCH:refs/heads/$BRANCH"
+    # # Only sync-up main branch and actual releases (i.e. 1.0.0 tag)
+    # if [[ "$BRANCH" == "main" || "$BRANCH" == "pipeline-modernize" || "$BRANCH" =~ ^[0-9]+.[0-9]+.[0-9]+$ ]]; then
+    #   # Update repo with Whitesource enabled
+    #   GHE_TOKEN=$(get_env git-token)
+    #   WHITESOURCE_GHE_REPO=$(get_env whitesource-ghe-repo | sed 's/https:\/\///')
+    #   BRANCH_REFSPEC="+refs/remotes/origin/$BRANCH:refs/heads/$BRANCH"
 
-      if [[ -n "$(git branch --list -r origin/$BRANCH)" ]]; then
-        echo "Pushing branch $BRANCH to $WHITESOURCE_GHE_REPO"
-      elif [[ -n "$(git tag --list $BRANCH)" ]]; then
-        echo "The given 'branch' ($BRANCH) is a tag. Pushing only tags to $WHITESOURCE_GHE_REPO."
-        BRANCH_REFSPEC=""
-      else
-        echo "Warning: Could not find a matching branch or tag named '$BRANCH'. Trying anyway!"
-      fi
+    #   if [[ -n "$(git branch --list -r origin/$BRANCH)" ]]; then
+    #     echo "Pushing branch $BRANCH to $WHITESOURCE_GHE_REPO"
+    #   elif [[ -n "$(git tag --list $BRANCH)" ]]; then
+    #     echo "The given 'branch' ($BRANCH) is a tag. Pushing only tags to $WHITESOURCE_GHE_REPO."
+    #     BRANCH_REFSPEC=""
+    #   else
+    #     echo "Warning: Could not find a matching branch or tag named '$BRANCH'. Trying anyway!"
+    #   fi
 
-      echo "git push --prune https://$GHE_TOKEN@$WHITESOURCE_GHE_REPO $BRANCH_REFSPEC +refs/tags/*:refs/tags/*"
-      git push --prune https://$GHE_TOKEN@$WHITESOURCE_GHE_REPO $BRANCH_REFSPEC +refs/tags/*:refs/tags/*
+    #   echo "git push --prune https://$GHE_TOKEN@$WHITESOURCE_GHE_REPO $BRANCH_REFSPEC +refs/tags/*:refs/tags/*"
+    #   git push --prune https://$GHE_TOKEN@$WHITESOURCE_GHE_REPO $BRANCH_REFSPEC +refs/tags/*:refs/tags/*
+    # fi
+
+    SKIP_ACCEPTANCE_TEST=$(get_env SKIP_ACCEPTANCE_TEST)
+    SKIP_ACCEPTANCE_TEST="$(echo "$SKIP_ACCEPTANCE_TEST" | tr '[:upper:]' '[:lower:]')"
+    if [[ ! -z "$SKIP_ACCEPTANCE_TEST" && "$SKIP_ACCEPTANCE_TEST" != "false" && "$SKIP_ACCEPTANCE_TEST" != "no"  ]]; then
+      echo "Skipping acceptance-test, SKIP_ACCEPTANCE_TEST=$SKIP_ACCEPTANCE_TEST"
+      exit 0
+    else
+        export arch=$(get_env architecture)
+        git clone https://$(get_env git-token)@github.ibm.com/elastic-build-cloud/ebc-gateway-http.git
+        if [[ "$arch" == "X" ]]; then
+          ./scripts/pipeline/getCluster.sh "X"
+        else
+          ./scripts/pipeline/getCluster.sh "Z"
+          ./scripts/pipeline/getCluster.sh "X" 
+          ./scripts/pipeline/getCluster.sh "P"
+        fi 
     fi
 
 test:
@@ -128,111 +145,204 @@ containerize:
   abort_on_failure: true  
   image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
   script: |
-    #!/usr/bin/env bash
+      #!/usr/bin/env bash
 
-    if [[ "$PIPELINE_DEBUG" == 1 ]]; then
-      trap env EXIT
-      env
-      set -x
-    fi
-    
-    ## Setup required tooling
-    make setup-go GO_RELEASE_VERSION=$(get_env go-version)
-    export PATH=$PATH:/usr/local/go/bin
-    yum -y -q update
+      # instruct bash to exit if any command fails
+      set -e
 
-    # PERIODIC_SCAN=$(get_env periodic-rescan)
-    # PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
-    #  Build images
-    export RELEASE_TARGET=$(get_env branch)
-    export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
-    export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key-staging)
-    export PIPELINE_REGISTRY=$(get_env pipeline-registry)
-    export PIPELINE_OPERATOR_IMAGE=$(get_env pipeline-operator-image)
-    export PIPELINE_PRODUCTION_IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE
-    export REDHAT_BASE_IMAGE=$(get_env redhat-base-image)
-    export OPM_VERSION=$(get_env opm-version)
-    export DISABLE_ARTIFACTORY=$(get_env disable-artifactory)
-    # export REDHAT_USERNAME=$(get_env redhat-user-id)
-    # export REDHAT_PASSWORD=$(get_env redhat-password)
-    # export REDHAT_REGISTRY=$(get_env redhat-registry)
-    # export W3_USERNAME=$(get_env w3_username)
-    # export W3_PASSWORD=$(get_env w3_password)
+      echo $STAGE
 
-    # flags for P and/or Z
-    export arch=$(get_env architecture)
+      echo "*** OS release ***"
+      cat /etc/os-release
 
-    git clone https://$(get_env git-token)@github.ibm.com/websphere/operators.git
-    cp -rf operators/scripts/build ./scripts/
-    # Temporary catalog build scripts (registry mirror to be done)
-    cp ./scripts/build-catalog.sh ./scripts/build/build-catalog.sh
-   
-    echo "skopeo version"
-    skopeo --version || exit 1
+      PERIODIC_SCAN=$(get_env periodic-rescan)
+      PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
+      #  Build images
+      export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
+      export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key-staging)
+      export PIPELINE_REGISTRY=$(get_env pipeline-registry)
+      export PIPELINE_PRODUCTION_IMAGE=$(get_env pipeline-production-image)
+      export PIPELINE_OPERATOR_IMAGE=$(get_env pipeline-operator-image)
+      export REDHAT_USERNAME=$(get_env redhat-user-id)
+      export REDHAT_PASSWORD=$(get_env redhat-password)
+      export REDHAT_BASE_IMAGE=$(get_env redhat-base-image)
+      export REDHAT_REGISTRY=$(get_env redhat-registry)
+      export OPM_VERSION=$(get_env opm-version)
+      export DISABLE_ARTIFACTORY=$(get_env disable-artifactory)
+      export W3_USERNAME=$(get_env w3_username)
+      export W3_PASSWORD=$(get_env w3_password)
+
+      # flags for P and/or Z
+      export arch=$(get_env architecture)
+
+      git clone https://$(get_env git-token)@github.ibm.com/websphere/operators.git
+      cp -rf operators/scripts/build ./scripts/
       
-    # Docker login and setup build configurations
-    scripts/build/build-initialize.sh
 
-    # Build amd64 image
-    make build-operator-pipeline REGISTRY=${PIPELINE_REGISTRY}
+      echo "skopeo version"
+      skopeo --version || exit 1
 
-    # Build manifest
-    make build-manifest-pipeline REGISTRY=${PIPELINE_REGISTRY} IMAGE=${PIPELINE_OPERATOR_IMAGE}
-
-    # Build bundle image
-    make build-bundle-pipeline REGISTRY=${PIPELINE_REGISTRY}
-
-    # Build catalog image
-    make build-catalog-pipeline REGISTRY=${PIPELINE_REGISTRY}
-
-    # Build catalog manifest
-    make build-manifest-pipeline REGISTRY=${PIPELINE_REGISTRY} IMAGE=${PIPELINE_OPERATOR_IMAGE}-catalog
-    
-    echo "**** Saving Artifacts ****"
-    if [[ "$arch" == "ZXP" ]]; then
-      declare -a tags=("${RELEASE_TARGET}" "${RELEASE_TARGET}-amd64" "${RELEASE_TARGET}-ppc64le" "${RELEASE_TARGET}-s390x")
-    else
-      declare -a tags=("${RELEASE_TARGET}" "${RELEASE_TARGET}-amd64")
-    fi
-
-    for i in "${tags[@]}"
-    do
-      IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE:$i
-      DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
-      { ARCH="$(echo $i | grep -o '\(amd64\|s390x\|ppc64le\)$')" && TYPE="image"; } || { TYPE="manifest"; }
-
-      if [[ "$TYPE" == "manifest" ]]; then
-        echo "Saving artifact operator-$i type=$TYPE name=$IMAGE digest=$DIGEST"
-        save_artifact operator-$i type=$TYPE name="$IMAGE" "digest=$DIGEST"
+      if [[ ! -z "$PERIODIC_SCAN" && "$PERIODIC_SCAN" != "false" && "$PERIODIC_SCAN" != "no"  ]]; then
+        echo "Skipping containerize, but generating list of images. This is a periodic run that is only meant to produce CVE information."
+        RELEASE_TARGET=$(curl --silent "https://api.github.com/repos/WASdev/websphere-liberty-operator/releases/latest" | jq -r .tag_name)
+        #RELEASE_TARGET=$(get_env branch)
       else
-        echo "Saving artifact operator-$i type=$TYPE name=$IMAGE digest=$DIGEST arch=$ARCH"
-        save_artifact operator-$i type=$TYPE name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"
+        if [[ "$PIPELINE_DEBUG" == 1 ]]; then
+          trap env EXIT
+          env
+          set -x
+        fi
+
+        ## Setup required tooling
+        make setup-go GO_RELEASE_VERSION=$(get_env go-version)
+        export PATH=$PATH:/usr/local/go/bin
+        yum -y -q update
+
+        #  Build images
+        export RELEASE_TARGET=$(get_env branch)
+        
+        if [[ -z $DISABLE_ARTIFACTORY ]]; then
+          export DISABLE_ARTIFACTORY="false"
+        fi
+
+        # Staging registry build
+        echo "Running builds for staging registry."
+
+        # Docker login and setup build configurations
+        scripts/build/build-initialize.sh
+        # update Jenkins job to run shallow clone and scripts/build/build-initialize.sh
+        if [[ "$arch" == "ZXP" ]]; then
+          echo "<ciorchestrator> Sending request to build P and Z"
+          DISABLE_ARTIFACTORY=true ./scripts/pipeline/request-ciorchestrator.sh --command "make build-operator-pipeline REGISTRY=${PIPELINE_REGISTRY}" --user "$W3_USERNAME" --password "$W3_PASSWORD" --branch "$RELEASE_TARGET" --repository "runtime-component-operator" --org "application-stacks" --trigger "rcodocker" --configFile ".ci-orchestrator/runtime-component-operator-build.yml" 
+          pipelineid=$(cat ciorchestrator-submit.id)
+        fi
+          
+        # Build operator image
+        make build-operator-pipeline REGISTRY=${PIPELINE_REGISTRY}
+        if [[ "$arch" == "ZXP" ]]; then
+          # wait for build ppc64le and s390x images
+          echo "<ciorchestrator> waiting on request to build P and Z"
+          ./scripts/pipeline/await-ciorchestrator.sh --user "$W3_USERNAME" --password "$W3_PASSWORD" --pipelineId "$pipelineid"
+        fi
+        # Build operator manifest (after 3 arch operator builds)
+        make build-manifest-pipeline REGISTRY=${PIPELINE_REGISTRY} IMAGE=${PIPELINE_OPERATOR_IMAGE}
+
+        # Build bundle image
+        make build-bundle-pipeline REGISTRY=${PIPELINE_REGISTRY}
+
+        # Build catalog image for amd64 first - then p and z
+        make build-catalog-pipeline REGISTRY=${PIPELINE_REGISTRY}
+        # Build catalog image
+        if [[ "$arch" == "ZXP" ]]; then
+          echo "<ciorchestrator> Sending request to build P and Z catalogs"
+          DISABLE_ARTIFACTORY=true ./scripts/pipeline/request-ciorchestrator.sh --command "make build-catalog-pipeline REGISTRY=${PIPELINE_REGISTRY}" --user "$W3_USERNAME" --password "$W3_PASSWORD" --branch "$RELEASE_TARGET" --repository "runtime-component-operator" --org "application-stacks" --trigger "rcodocker" --configFile ".ci-orchestrator/runtime-component-operator-build.yml" 
+          pipelineid=$(cat ciorchestrator-submit.id)
+          echo "<ciorchestrator> waiting on request to build P and Z catalogs"
+          ./scripts/pipeline/await-ciorchestrator.sh --user "$W3_USERNAME" --password "$W3_PASSWORD" --pipelineId "$pipelineid"
+        fi
+
+        # Build catalog manifest
+        make build-manifest-pipeline REGISTRY=${PIPELINE_REGISTRY} IMAGE=${PIPELINE_OPERATOR_IMAGE}-catalog
+
+
+        if [[ "$DISABLE_ARTIFACTORY" == "false" ]]; then
+          echo "Running builds for artifactory repository."
+
+          read -r ARTIFACTORY_REPO_URL_VALUE <<< "$(get_env artifactorybackup | jq -r '.parameters.repository_url' | sed 's:/*$::')"
+          read -r ARTIFACTORY_USERNAME_VALUE <<< "$(get_env artifactorybackup | jq -r '.parameters.user_id')"
+          read -r ARTIFACTORY_TOKEN_VALUE <<< "$(get_env artifactorybackup | jq -r '.parameters.token')"
+
+          export ARTIFACTORY_REPO_URL="${ARTIFACTORY_REPO_URL_VALUE#*://}"  # Cuts the http(s):// off of the front of the url
+          export ARTIFACTORY_USERNAME="$ARTIFACTORY_USERNAME_VALUE"
+          export ARTIFACTORY_TOKEN="$ARTIFACTORY_TOKEN_VALUE"
+          
+          # Docker login and setup build configurations
+          scripts/build/build-initialize.sh
+          # update Jenkins job to run shallow clone and scripts/build/build-initialize.sh
+          if [[ "$arch" == "ZXP" ]]; then
+            echo "<ciorchestrator> Sending request to build P and Z ( artifactory )"
+            ./scripts/pipeline/request-ciorchestrator.sh --command "make build-operator-pipeline REGISTRY=${ARTIFACTORY_REPO_URL}" --user "$W3_USERNAME" --password "$W3_PASSWORD" --branch "$RELEASE_TARGET" --repository "runtime-component-operator" --org "application-stacks" --trigger "rcodocker" --configFile ".ci-orchestrator/runtime-component-operator-build.yml" 
+            pipelineid=$(cat ciorchestrator-submit.id)
+          fi
+          
+          # Build operator image
+          make build-operator-pipeline REGISTRY=${ARTIFACTORY_REPO_URL}
+          if [[ "$arch" == "ZXP" ]]; then
+            # wait for build ppc64le and s390x images
+            echo "<ciorchestrator> waiting on request to build P and Z ( artifactory )"
+            ./scripts/pipeline/await-ciorchestrator.sh --user "$W3_USERNAME" --password "$W3_PASSWORD" --pipelineId "$pipelineid"
+          fi
+          # Build operator manifest (after 3 arch operator builds)
+          make build-manifest-pipeline REGISTRY=${ARTIFACTORY_REPO_URL} IMAGE=${PIPELINE_OPERATOR_IMAGE}
+
+          # Build bundle image
+          make build-bundle-pipeline REGISTRY=${ARTIFACTORY_REPO_URL}
+
+          # Build catalog image for amd64 first - then p and z
+          make build-catalog-pipeline REGISTRY=${ARTIFACTORY_REPO_URL}
+          # Build catalog image
+          if [[ "$arch" == "ZXP" ]]; then
+            echo "<ciorchestrator> Sending request to build P and Z catalogs ( artifactory )"
+            ./scripts/pipeline/request-ciorchestrator.sh --command "make build-catalog-pipeline REGISTRY=${ARTIFACTORY_REPO_URL}" --user "$W3_USERNAME" --password "$W3_PASSWORD" --branch "$RELEASE_TARGET" --repository "runtime-component-operator" --org "application-stacks" --trigger "rcodocker" --configFile ".ci-orchestrator/runtime-component-operator-build.yml" 
+            pipelineid=$(cat ciorchestrator-submit.id)
+            echo "<ciorchestrator> waiting on request to build P and Z catalogs ( artifactory )"
+            ./scripts/pipeline/await-ciorchestrator.sh --user "$W3_USERNAME" --password "$W3_PASSWORD" --pipelineId "$pipelineid"
+          fi
+
+          # Build catalog manifest
+          make build-manifest-pipeline REGISTRY=${ARTIFACTORY_REPO_URL} IMAGE=${PIPELINE_OPERATOR_IMAGE}-catalog
+
+          echo "Completed pushing to artifactory."
+
+        fi
       fi
-    done
 
-    IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE-bundle:${RELEASE_TARGET}
-    DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
-    echo "Saving artifact bundle-${RELEASE_TARGET} name=$IMAGE digest=$DIGEST"
-    save_artifact bundle-${RELEASE_TARGET} type=image name="$IMAGE" "digest=$DIGEST"
-
-    for i in "${tags[@]}"
-    do
-      IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE-catalog:$i
-      DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
-      { ARCH="$(echo $i | grep -o '\(amd64\|s390x\|ppc64le\)$')" && TYPE="image"; } || { ARCH="amd64" && TYPE="manifest"; }
-
-      if [[ "$TYPE" == "manifest" ]]; then
-        echo "Saving artifact catalog-$i type=$TYPE name=$IMAGE digest=$DIGEST"
-        save_artifact catalog-$i type=$TYPE name="$IMAGE" "digest=$DIGEST"
+      echo "**** Saving Artifacts ****"
+      if [[ "$arch" == "ZXP" ]]; then
+        declare -a tags=("${RELEASE_TARGET}" "${RELEASE_TARGET}-amd64" "${RELEASE_TARGET}-ppc64le" "${RELEASE_TARGET}-s390x")
       else
-        echo "Saving artifact catalog-$i type=$TYPE name=$IMAGE digest=$DIGEST arch=$ARCH"
-        save_artifact catalog-$i type=$TYPE name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"
+        declare -a tags=("${RELEASE_TARGET}" "${RELEASE_TARGET}-amd64")
       fi
-    done
+      for i in "${tags[@]}"
+      do
+        IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE:$i
+        DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
+        { ARCH="$(echo $i | grep -o '\(amd64\|s390x\|ppc64le\)$')" && TYPE="image"; } || { TYPE="manifest"; }
+        if [[ "$TYPE" == "manifest" ]]; then
+          echo "Saving artifact operator-$i type=$TYPE name=$IMAGE digest=$DIGEST"
+          save_artifact operator-$i type=$TYPE name="$IMAGE" "digest=$DIGEST"
+        else
+          echo "Saving artifact operator-$i type=$TYPE name=$IMAGE digest=$DIGEST arch=$ARCH"
+          save_artifact operator-$i type=$TYPE name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"
+        fi
+      done
+      IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE-bundle:${RELEASE_TARGET}
+      DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
+      echo "Saving artifact bundle-${RELEASE_TARGET} name=$IMAGE digest=$DIGEST"
+      save_artifact bundle-${RELEASE_TARGET} type=image name="$IMAGE" "digest=$DIGEST"
+      for i in "${tags[@]}"
+      do
+        IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE-catalog:$i
+        DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
+        { ARCH="$(echo $i | grep -o '\(amd64\|s390x\|ppc64le\)$')" && TYPE="image"; } || { ARCH="amd64" && TYPE="manifest"; }
+        if [[ "$TYPE" == "manifest" ]]; then
+          echo "Saving artifact catalog-$i type=$TYPE name=$IMAGE digest=$DIGEST"
+          save_artifact catalog-$i type=$TYPE name="$IMAGE" "digest=$DIGEST"
+        else
+          echo "Saving artifact catalog-$i type=$TYPE name=$IMAGE digest=$DIGEST arch=$ARCH"
+          save_artifact catalog-$i type=$TYPE name="$IMAGE" "digest=$DIGEST" "arch=$ARCH"
+        fi
+      done
 
-    # echo "whitesource scan"
-    # #source "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
-    # source ./scripts/pipeline/whitesource_unified_agent_scan.sh
+      echo "MEND unified agent scan"
+      chmod +x "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
+      source "${COMMONS_PATH}/whitesource/whitesource_unified_agent_scan.sh"
+      
+      ## Perform lint
+      IMAGE="${PIPELINE_REGISTRY}/${PIPELINE_OPERATOR_IMAGE}-bundle:${RELEASE_TARGET}"
+      DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
+      BUNDLE_IMAGE_WITH_DIGEST="${IMAGE}@${DIGEST}"
+      ./scripts/pipeline/static-linter-scan.sh --git-token $(get_env git-token) --bundle-image $BUNDLE_IMAGE_WITH_DIGEST --static-linter-version $(get_env static-linter-version)
 
 sign-artifact:
   abort_on_failure: false
@@ -296,45 +406,41 @@ acceptance-test:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
   script: |
     #!/usr/bin/env bash
-    echo "acceptance-test"
+
+    echo $STAGE
+
     PERIODIC_SCAN=$(get_env periodic-rescan)
     PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
+
     if [[ ! -z "$PERIODIC_SCAN" && "$PERIODIC_SCAN" != "false" && "$PERIODIC_SCAN" != "no"  ]]; then
       echo "Skipping acceptance-test. This is a periodic run that is only meant to produce CVE information."
       exit 0
     fi
-    SKIP_KIND_E2E_TEST=$(get_env SKIP_KIND_E2E_TEST)
-    SKIP_KIND_E2E_TEST="$(echo "$SKIP_KIND_E2E_TEST" | tr '[:upper:]' '[:lower:]')"
-    if [[ ! -z "$SKIP_KIND_E2E_TEST" && "$SKIP_KIND_E2E_TEST" != "false" && "$SKIP_KIND_E2E_TEST" != "no"  ]]; then
-      echo "Skipping acceptance-test, SKIP_KIND_E2E_TEST=$SKIP_KIND_E2E_TEST"
+
+    SKIP_ACCEPTANCE_TEST=$(get_env SKIP_ACCEPTANCE_TEST)
+    SKIP_ACCEPTANCE_TEST="$(echo "$SKIP_ACCEPTANCE_TEST" | tr '[:upper:]' '[:lower:]')"
+    if [[ ! -z "$SKIP_ACCEPTANCE_TEST" && "$SKIP_ACCEPTANCE_TEST" != "false" && "$SKIP_ACCEPTANCE_TEST" != "no"  ]]; then
+      echo "Skipping acceptance-test, SKIP_ACCEPTANCE_TEST=$SKIP_ACCEPTANCE_TEST"
       exit 0
     fi
-    
-    # Download and configure golang
-    GO_VERSION=$(get_env go-version)
-    if [[ -z "${GO_VERSION}" ]]; then
-      GO_VERSION="$(grep '^go [0-9]\+.[0-9]\+' go.mod | cut -d ' ' -f 2)"
-    fi
-    export GO_VERSION
-    # OCP test
-    export PIPELINE_USERNAME=$(get_env ibmcloud-api-user)
-    export PIPELINE_PASSWORD=$(get_env ibmcloud-api-key-staging)  
-    export PIPELINE_REGISTRY=$(get_env pipeline-registry)
-    export PIPELINE_OPERATOR_IMAGE=$(get_env pipeline-operator-image)
-    export DOCKER_USERNAME=$(get_env docker-username)
-    export DOCKER_PASSWORD=$(get_env docker-password)    
-    export CLUSTER_URL=$(get_env test-cluster-url)
-    export CLUSTER_USER=$(get_env test-cluster-user kubeadmin)
-    export CLUSTER_TOKEN=$(get_env test-cluster-token)
-    export RELEASE_TARGET=$(get_env branch)
-    export DEBUG_FAILURE=$(get_env debug-failure)
-    # Kind test
-    export FYRE_USER=$(get_env fyre-user)
-    export FYRE_KEY=$(get_env fyre-key)
-    export FYRE_PASS=$(get_env fyre-pass)
-    export FYRE_PRODUCT_GROUP_ID=$(get_env fyre-product-group-id)
-    scripts/acceptance-test.sh
 
+    export intranetId_USR=$(get_env ebc_id)
+    export intranetId_PSW=$(get_env ebc_pw)
+    export ebcEnvironment=prod
+
+    cd scripts/pipeline
+    rm -rf .git
+    git clone https://$(get_env git-token)@github.ibm.com/elastic-build-cloud/ebc-gateway-http.git
+
+    export arch=$(get_env architecture)
+    
+    if [[ "$arch" == "ZXP" ]]; then
+      source runTest.sh Z
+      source runTest.sh X
+      source runTest.sh P
+    else
+      source runTest.sh X
+    fi
 
 
 scan-artifact:
@@ -342,38 +448,7 @@ scan-artifact:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
   script: |
     #!/usr/bin/env bash
-    # echo "twistlock-scan"
-    # ./scripts/pipeline/twistlock-scan.sh
-    # echo "VA scan"
-    # . scripts/pipeline/va_scan
-    # if which list_artifacts >/dev/null; then
-    #   list_artifacts | while IFS= read -r artifact; do
-    #     image="$(load_artifact "$artifact" "name")"
-    #     type="$(load_artifact "$artifact" "type")"
-    #     digest="$(load_artifact "$artifact" "digest")"
-    #     name="$(echo "$artifact" | awk '{print $1}')"
-    #     if [[ "$type" == "image" ]]; then
-    #       if [[ "$image" == *"icr.io"* ]]; then
-    #         echo "Starting VA scan for $image"
-    #         start_va_scan "$name" "$image" "$digest"
-    #       else
-    #         echo "Skipping VA scan for $image"
-    #       fi
-    #     fi
-    #   done
-    # fi
-
-    # echo "aqua scan"
-    # # install docker
-    # curl -fsSL https://get.docker.com -o get-docker.sh
-    # sudo sh get-docker.sh
-    # # get aqua scan executables
-    # git clone https://$(get_env git-token)@github.ibm.com/CICD-CPP/cpp-pipelines.git
-    # chmod -R +x cpp-pipelines
-    # # setup and execute aqua scan
-    # cd cpp-pipelines
-    # export CUSTOM_SCRIPTS_PATH=/workspace/app/one-pipeline-config-repo/cpp-pipelines
-    # ./commons/aqua/aqua-local-scan
+    
     # ========== Security Scanner ==========
     ./scripts/pipeline/ci_to_secure_pipeline_scan.sh
 

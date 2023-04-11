@@ -4,7 +4,6 @@ set -o errexit
 set -o nounset
 
 main() {
-
   DEFAULT_RELEASE_VERSION=v1.24.0
   RELEASE_VERSION=${1:-$DEFAULT_RELEASE_VERSION}
 
@@ -34,12 +33,11 @@ main() {
   fi
 
   echo "****** Installing operator-sdk version $RELEASE_VERSION on $(uname)"
-  curl -L -o operator-sdk $binary_url
+  curl -L -o operator-sdk "${binary_url}"
   chmod +x operator-sdk
   sudo mv operator-sdk /usr/local/bin/operator-sdk
 
   operator-sdk version
 }
 
-main $@
-
+main "$@"

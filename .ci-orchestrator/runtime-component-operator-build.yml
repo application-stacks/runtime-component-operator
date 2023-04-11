@@ -1,0 +1,30 @@
+type: pipeline_definition
+product: Liberty
+name: Runtime Componet Operator Docker Build
+description: A build to run the websphere-liberty operator docker container build
+triggers:
+- type: manual
+  triggerName: "rcodocker"
+  propertyDefinitions:
+  - name: RELEASE_TARGET
+    defaultValue: "main"        
+  - name: command
+    defaultValue: "make build-operator-pipeline REGISTRY=cp.stg.icr.io"
+
+steps:
+- stepName: Z Build
+  workType: Jenkins
+  projectName: ebcDockerBuilderRCO
+  timeoutInMinutes: 1440
+  # Need properties for Makefile or build script for WLO
+  properties:  
+    ebcPlan: svl-dockerJenkins-ubuntu20_s390x.yml
+    
+
+- stepName: P Build
+  workType: Jenkins
+  projectName: ebcDockerBuilderRCO
+  timeoutInMinutes: 1440
+  # Need properties for Makefile or build script for WLO
+  properties:  
+    ebcPlan: svl-dockerJenkins-ubuntu20_ppcle.yml

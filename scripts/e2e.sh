@@ -18,9 +18,9 @@ setup_env() {
 
     # Set variables for rest of script to use
     readonly DEFAULT_REGISTRY=$(oc get route "${REGISTRY_NAME}" -o jsonpath="{ .spec.host }" -n "${REGISTRY_NAMESPACE}")
-    readonly TEST_NAMESPACE="runtime-operator-test-${TEST_TAG}"
-    readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/runtime-operator
-    readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/rco-bundle:latest"
+    readonly TEST_NAMESPACE="rco-test-${TRAVIS_BUILD_NUMBER}"
+    readonly BUILD_IMAGE=${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/operator
+    readonly BUNDLE_IMAGE="${DEFAULT_REGISTRY}/${TEST_NAMESPACE}/operator-bundle:latest"
 
     echo "****** Creating test namespace ${TEST_NAMESPACE} for release ${RELEASE}"
     oc new-project "${TEST_NAMESPACE}" || oc project "${TEST_NAMESPACE}"
@@ -107,7 +107,7 @@ main() {
     push_images
 
     echo "****** Installing bundle..."
-    operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}" || {
+    operator-sdk run bundle --install-mode OwnNamespace --pull-secret-name regcred "${BUNDLE_IMAGE}" --timeout 5m || {
         echo "****** Installing bundle failed..."
         exit 1
     }

@@ -1,0 +1,132 @@
+# Documentation on available configuration
+# https://pages.github.ibm.com/one-pipeline/docs/custom-scripts.html
+
+version: "1"
+
+setup:
+  dind: true
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
+  script: |
+    #!/usr/bin/env bash
+    echo "setup stage"
+    skopeo --version || exit 1
+    INVENTORY_PATH="$(get_env inventory-path)"
+    INVENTORY_ENTRIES_PATH="$WORKSPACE/$(get_env INVENTORY_ENTRIES_PATH)"
+    INVENTORY_ENTRIES=$(cat "${INVENTORY_ENTRIES_PATH}")
+    echo "$(get_env ibmcloud-api-key-staging)" | docker login "$(get_env staging-registry)"  -u "$(get_env ibmcloud-api-user)" --password-stdin
+    for INVENTORY_ENTRY in $(echo "${INVENTORY_ENTRIES}" | jq -r '.[] '); do
+      APP=$(cat "${INVENTORY_PATH}/${INVENTORY_ENTRY}")
+      ARTIFACT=$(echo "${APP}" | jq -r '.artifact')
+      DIGEST=$(echo "${APP}" | jq -r '.sha256' )
+
+      echo "${ARTIFACT}"
+      echo "${DIGEST}"
+      echo "${APP}" | jq '.'
+
+      SAVED_DIGEST="$(skopeo inspect docker://$ARTIFACT | grep Digest | grep -o 'sha[^\"]*')"
+      if [[ ${DIGEST} == ${SAVED_DIGEST} ]]; then
+        echo "Image, $ARTIFACT, passes validation"
+      else
+        echo "Image, $ARTIFACT, does not exist or digests do not match"
+        exit 1
+      fi
+    done
+
+deploy:
+  dind: true
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
+  script: |
+    #!/usr/bin/env bash
+    if [[ "$PIPELINE_DEBUG" == 1 ]]; then
+      trap env EXIT
+      env
+      set -x
+    fi
+    echo "deploy stage"
+    skopeo --version || exit 1
+    TARGET_ENVIRONMENT="$(get_env environment)"
+    INVENTORY_PATH="$(get_env inventory-path)"
+    INVENTORY_ENTRIES_PATH="$WORKSPACE/$(get_env INVENTORY_ENTRIES_PATH)"
+    INVENTORY_ENTRIES=$(cat "${INVENTORY_ENTRIES_PATH}")
+
+    echo "Target environment: ${TARGET_ENVIRONMENT}"
+    echo "Inventory entries"
+    echo ""
+
+    echo "$INVENTORY_ENTRIES" | jq '.'
+
+    echo ""
+    echo "Inventory content"
+    echo ""
+
+    ls -la ${INVENTORY_PATH}
+
+    for INVENTORY_ENTRY in $(echo "${INVENTORY_ENTRIES}" | jq -r '.[] '); do
+      APP=$(cat "${INVENTORY_PATH}/${INVENTORY_ENTRY}")
+      ARTIFACT=$(echo "${APP}" | jq -r '.artifact')
+      NAME=$(echo "${APP}" | jq -r '.name')
+      DIGEST=$(echo "${APP}" | jq -r '.sha256' )
+      TYPE=$(echo "${APP}" | jq -r '.type' )
+      REPO=$(echo "${APP}" | jq -r '.repository_url' ).git
+      COMMIT=$(echo "${APP}" | jq -r '.commit_sha' )
+      echo "${ARTIFACT}"
+      #echo "${ARTIFACT##*/}"
+      IMAGE_NAME="${ARTIFACT##*/}"
+      echo "Image name: $IMAGE_NAME"
+      PRODUCTION_IMAGE=$(get_env production-registry)/$(get_env production-namespace)/$IMAGE_NAME
+      echo "Production image: $PRODUCTION_IMAGE"
+      echo "skopeo copy --all --src-creds $(get_env source-user):$(get_env source-key) --dest-creds $(get_env dest-user):$(get_env dest-key) docker://${ARTIFACT} docker://${PRODUCTION_IMAGE}"
+      skopeo copy --all --src-creds $(get_env source-user):$(get_env source-key) --dest-creds $(get_env dest-user):$(get_env dest-key) docker://${ARTIFACT} docker://${PRODUCTION_IMAGE}
+      save_artifact $NAME type=$TYPE name="${PRODUCTION_IMAGE}" digest="$DIGEST" source="${REPO}#${COMMIT}"
+    done
+
+sign-artifact:
+  image: docker-eu-public.artifactory.swg-devops.com/wcp-compliance-automation-team-docker-local/csso-image-sign:6.0.0@sha256:3499f75eb669416536f0d680104e7e9e37147c168459152d716a1fbf9b1af5a2
+  script: |
+    #!/usr/bin/env bash
+    echo "sign-artifact stage"
+    # image-signing
+    set_env IMAGE_SIGNING_TASK_NAME "build-sign-artifact"
+    set_env IMAGE_SIGNING_STEP_NAME "run-stage"
+    "${COMMONS_PATH}"/ciso/sign_icr.sh
+    fingerprint=$(/opt/Garantir/bin/gpg --homedir $HOME/.gnupggrs/ --fingerprint --with-colons | grep fpr | tr -d 'fpr:')
+    echo "GNUPGHOME="$GNUPGHOME
+    gpg2 --homedir $HOME/.gnupggrs --output rco.pub --armor --export $fingerprint
+    save_file pub_file rco.pub
+    cat rco.pub
+
+acceptance-test:
+  image: docker-eu-public.artifactory.swg-devops.com/wcp-compliance-automation-team-docker-local/csso-image-sign:6.0.0@sha256:3499f75eb669416536f0d680104e7e9e37147c168459152d716a1fbf9b1af5a2
+  script: |
+    #!/usr/bin/env bash
+    echo "acceptance-test stage"
+    load_file pub_file > rco.pub
+    gpg2 --import rco.pub
+    export fingerprint=$(gpg --fingerprint --with-colons | grep fpr | tr -d 'fpr:')
+    echo "fingerprint=$fingerprint"
+    mkdir -p images
+    if which list_artifacts >/dev/null; then
+      list_artifacts | while IFS= read -r artifact; do
+        image_name="$(load_artifact "$artifact" "name")"
+        type="$(load_artifact "$artifact" "type")"
+        echo "type="$type
+        if [[ "$type" == "image" ]]; then
+          echo "Verifying image ${image_name}"
+          skopeo copy --src-creds $(get_env dest-user):$(get_env dest-key) docker://${image_name} dir:./images
+          skopeo standalone-verify ./images/manifest.json ${image_name} ${fingerprint} ./images/signature-1
+          if [[ $? != 0 ]]; then
+            exit 1
+          fi
+          rm images/*
+        else
+          echo "Skipping image ${image_name}"
+        fi
+      done
+    fi
+
+finish:
+  image: icr.io/continuous-delivery/toolchains/devsecops/baseimage@sha256:2132bf3187b63496d119f61d375bbb656d0b3e4a664970478c44b527c4c058c5
+  script: |
+    #!/usr/bin/env bash
+    echo "finish stage"
+    ./scripts/pipeline/cd_finish
