@@ -34,24 +34,41 @@ setup:
       # curl -u :$GH_TOKEN https://api.github.com/repos/$REPO/branches/$BRANCH/protection -H "Accept: application/vnd.github.v3+json" -X PUT -d '{"required_pull_request_reviews":{"dismiss_stale_reviews":true,"required_approving_review_count":1},"enforce_admins":null,"restrictions":null,"required_status_checks":null}'
     fi
 
-    # Only sync-up main branch and actual releases (i.e. 1.0.0 tag)
-    if [[ "$BRANCH" == "main" || "$BRANCH" == "pipeline-modernize" || "$BRANCH" =~ ^[0-9]+.[0-9]+.[0-9]+$ ]]; then
-      # Update repo with Whitesource enabled
-      GHE_TOKEN=$(get_env git-token)
-      WHITESOURCE_GHE_REPO=$(get_env whitesource-ghe-repo | sed 's/https:\/\///')
-      BRANCH_REFSPEC="+refs/remotes/origin/$BRANCH:refs/heads/$BRANCH"
+    # # Only sync-up main branch and actual releases (i.e. 1.0.0 tag)
+    # if [[ "$BRANCH" == "main" || "$BRANCH" == "pipeline-modernize" || "$BRANCH" =~ ^[0-9]+.[0-9]+.[0-9]+$ ]]; then
+    #   # Update repo with Whitesource enabled
+    #   GHE_TOKEN=$(get_env git-token)
+    #   WHITESOURCE_GHE_REPO=$(get_env whitesource-ghe-repo | sed 's/https:\/\///')
+    #   BRANCH_REFSPEC="+refs/remotes/origin/$BRANCH:refs/heads/$BRANCH"
 
-      if [[ -n "$(git branch --list -r origin/$BRANCH)" ]]; then
-        echo "Pushing branch $BRANCH to $WHITESOURCE_GHE_REPO"
-      elif [[ -n "$(git tag --list $BRANCH)" ]]; then
-        echo "The given 'branch' ($BRANCH) is a tag. Pushing only tags to $WHITESOURCE_GHE_REPO."
-        BRANCH_REFSPEC=""
-      else
-        echo "Warning: Could not find a matching branch or tag named '$BRANCH'. Trying anyway!"
-      fi
+    #   if [[ -n "$(git branch --list -r origin/$BRANCH)" ]]; then
+    #     echo "Pushing branch $BRANCH to $WHITESOURCE_GHE_REPO"
+    #   elif [[ -n "$(git tag --list $BRANCH)" ]]; then
+    #     echo "The given 'branch' ($BRANCH) is a tag. Pushing only tags to $WHITESOURCE_GHE_REPO."
+    #     BRANCH_REFSPEC=""
+    #   else
+    #     echo "Warning: Could not find a matching branch or tag named '$BRANCH'. Trying anyway!"
+    #   fi
 
-      echo "git push --prune https://$GHE_TOKEN@$WHITESOURCE_GHE_REPO $BRANCH_REFSPEC +refs/tags/*:refs/tags/*"
-      git push --prune https://$GHE_TOKEN@$WHITESOURCE_GHE_REPO $BRANCH_REFSPEC +refs/tags/*:refs/tags/*
+    #   echo "git push --prune https://$GHE_TOKEN@$WHITESOURCE_GHE_REPO $BRANCH_REFSPEC +refs/tags/*:refs/tags/*"
+    #   git push --prune https://$GHE_TOKEN@$WHITESOURCE_GHE_REPO $BRANCH_REFSPEC +refs/tags/*:refs/tags/*
+    # fi
+
+    SKIP_ACCEPTANCE_TEST=$(get_env SKIP_ACCEPTANCE_TEST)
+    SKIP_ACCEPTANCE_TEST="$(echo "$SKIP_ACCEPTANCE_TEST" | tr '[:upper:]' '[:lower:]')"
+    if [[ ! -z "$SKIP_ACCEPTANCE_TEST" && "$SKIP_ACCEPTANCE_TEST" != "false" && "$SKIP_ACCEPTANCE_TEST" != "no"  ]]; then
+      echo "Skipping acceptance-test, SKIP_ACCEPTANCE_TEST=$SKIP_ACCEPTANCE_TEST"
+      exit 0
+    else
+        export arch=$(get_env architecture)
+        git clone https://$(get_env git-token)@github.ibm.com/elastic-build-cloud/ebc-gateway-http.git
+        if [[ "$arch" == "X" ]]; then
+          ./scripts/pipeline/getCluster.sh "X"
+        else
+          ./scripts/pipeline/getCluster.sh "Z"
+          ./scripts/pipeline/getCluster.sh "X" 
+          ./scripts/pipeline/getCluster.sh "P"
+        fi 
     fi
 
     SKIP_ACCEPTANCE_TEST=$(get_env SKIP_ACCEPTANCE_TEST)
