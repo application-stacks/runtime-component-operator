@@ -1,7 +1,7 @@
 #!/bin/bash
 
 readonly usage="Usage: ocp-cluster-e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-image <ns/image> --registry-user <user> --registry-password <password> --release <daily|release-tag> --test-tag <test-id> --catalog-image <catalog-image> --channel <channel>"
-readonly OC_CLIENT_VERSION="4.6.0"
+readonly OC_CLIENT_VERSION="latest-4.10"
 readonly CONTROLLER_MANAGER_NAME="rco-controller-manager"
 
 # setup_env: Download oc cli, log into our persistent cluster, and create a test project

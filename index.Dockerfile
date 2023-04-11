@@ -2,7 +2,7 @@ FROM registry.redhat.io/openshift4/ose-operator-registry:v4.10 AS builder
 
 FROM registry.redhat.io/ubi8/ubi-minimal
 
-ARG VERSION_LABEL=1.0.0
+ARG VERSION_LABEL=1.2.0
 ARG RELEASE_LABEL=XX
 ARG VCS_REF=0123456789012345678901234567890123456789
 ARG VCS_URL="https://github.com/application-stacks/runtime-component-operator"
