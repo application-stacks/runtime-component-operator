@@ -1,0 +1,10 @@
+apiVersion: rc.app.stacks/v1
+kind: RuntimeComponent
+metadata:
+  name: route
+spec:
+  route:
+    host: myapp.mycompany.com
+    path: /mypath
+
+

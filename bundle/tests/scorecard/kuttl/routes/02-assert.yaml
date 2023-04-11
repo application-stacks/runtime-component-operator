@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: route
+  annotations:
+    step: "02"
 status:
   replicas: 1
   readyReplicas: 1
@@ -11,6 +13,7 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: route
+  annotations:
+    step: "02"
 spec:
   host: myapp.mycompany.com
-  path: /mypath
