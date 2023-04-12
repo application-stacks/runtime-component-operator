@@ -16,8 +16,12 @@ COPY controllers/ controllers/
 COPY common/ common/
 COPY utils/ utils/
 
+ARG VERSION_LABEL=1.0.0
+ARG RELEASE_LABEL=XX
+ARG VCS_REF=0123456789012345678901234567890123456789
+
 # Build
-RUN CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -ldflags="-s -w" -a -o manager main.go
+RUN CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -ldflags="-s -w -X 'main.Version=$VERSION_LABEL' -X 'main.VCS_REF=$VCS_REF' -X 'main.BuildDate=$(date)'" -a -o manager main.go
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
