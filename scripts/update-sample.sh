@@ -20,6 +20,8 @@ echo "sha is $SHA"
 
 files=" 
 config/samples/rc.app.stacks_v1_runtimecomponent.yaml
+config/manager/manager.yaml
+deploy/kustomize/daily/base/runtime-component-operator.yaml
 "
 
 for file in $files 

@@ -189,7 +189,7 @@ metadata:
   name: runtime-component-subscription
   namespace: $NAMESPACE
 spec:
-  channel:  beta2
+  channel:  v1.2
   name: runtime-component
   source: runtime-component-operator-catalog
   sourceNamespace: $NAMESPACE

@@ -12,10 +12,9 @@ metadata:
           },
           "spec": {
             "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:9a6f6352bee814302fcf939dd640b7d3b3e02307330f82bc32b782e7a9feb8a3",
-            "expose": true,
-            "replicas": 1,
+            "manageTLS": true,
             "service": {
-              "port": 9080
+              "port": 9443
             }
           }
         },
@@ -66,14 +65,21 @@ metadata:
     capabilities: Auto Pilot
     categories: Application Runtime
     certified: "true"
-    containerImage: applicationstacks/operator:daily
-    createdAt: "2023-04-11T21:48:29Z"
+    containerImage: icr.io/appcafe/runtime-component-operator:daily
+    createdAt: "2023-04-11T11:57:04Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
+    olm.skipRange: '>=0.8.0 <1.2.0'
+    operators.openshift.io/infrastructure-features: '["disconnected"]'
     operators.operatorframework.io/builder: operator-sdk-v1.24.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
-  name: runtime-component.v1.0.0
+  labels:
+    operatorframework.io/arch.amd64: supported
+    operatorframework.io/arch.ppc64le: supported
+    operatorframework.io/arch.s390x: supported
+    operatorframework.io/os.linux: supported
+  name: runtime-component.v1.2.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -906,6 +912,17 @@ spec:
                 app.kubernetes.io/name: runtime-component-operator
                 control-plane: controller-manager
             spec:
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                    - matchExpressions:
+                      - key: kubernetes.io/arch
+                        operator: In
+                        values:
+                        - amd64
+                        - ppc64le
+                        - s390x
               containers:
               - args:
                 - --health-probe-bind-address=:8081
@@ -921,7 +938,9 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.annotations['olm.targetNamespaces']
-                image: applicationstacks/operator:daily
+                - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
+                  value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:9a6f6352bee814302fcf939dd640b7d3b3e02307330f82bc32b782e7a9feb8a3
+                image: icr.io/appcafe/runtime-component-operator:daily
                 imagePullPolicy: Always
                 livenessProbe:
                   failureThreshold: 3
@@ -946,11 +965,19 @@ spec:
                   timeoutSeconds: 10
                 resources:
                   limits:
-                    cpu: 200m
+                    cpu: 400m
                     memory: 512Mi
                   requests:
-                    cpu: 100m
-                    memory: 64Mi
+                    cpu: 200m
+                    memory: 128Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                    - ALL
+                  privileged: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
               serviceAccountName: rco-controller-manager
               terminationGracePeriodSeconds: 10
       permissions:
@@ -1180,4 +1207,7 @@ spec:
   maturity: beta
   provider:
     name: Community
-  version: 1.0.0
+  relatedImages:
+  - image: icr.io/appcafe/open-liberty/samples/getting-started@sha256:9a6f6352bee814302fcf939dd640b7d3b3e02307330f82bc32b782e7a9feb8a3
+    name: liberty-sample-app
+  version: 1.2.0

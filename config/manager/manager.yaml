@@ -62,13 +62,23 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.annotations['olm.targetNamespaces']
+          - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
+            value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:9a6f6352bee814302fcf939dd640b7d3b3e02307330f82bc32b782e7a9feb8a3
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
         resources:
           limits:
-            cpu: 200m
+            cpu: 400m
             memory: 512Mi
           requests:
-            cpu: 100m
-            memory: 64Mi
+            cpu: 200m
+            memory: 128Mi
       terminationGracePeriodSeconds: 10
       serviceAccountName: controller-manager
       affinity:

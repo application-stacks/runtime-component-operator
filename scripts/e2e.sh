@@ -2,7 +2,7 @@
 
 readonly usage="Usage: e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-namespace <namespace> --release <daily|release-tag> --test-tag <test-id>"
 readonly SERVICE_ACCOUNT="travis-tests"
-readonly OC_CLIENT_VERSION="4.6.0"
+readonly OC_CLIENT_VERSION="latest-4.10"
 readonly CONTROLLER_MANAGER_NAME="rco-controller-manager"
 
 # setup_env: Download oc cli, log into our persistent cluster, and create a test project
