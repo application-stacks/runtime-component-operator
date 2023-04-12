@@ -572,6 +572,9 @@ func (cr *RuntimeComponent) GetService() common.BaseComponentService {
 }
 
 func (cr *RuntimeComponent) GetNetworkPolicy() common.BaseComponentNetworkPolicy {
+	if cr.Spec.NetworkPolicy == nil {
+		return nil
+	}
 	return cr.Spec.NetworkPolicy
 }
 
@@ -782,21 +785,21 @@ func (s *RuntimeComponentService) GetBindable() *bool {
 }
 
 func (np *RuntimeComponentNetworkPolicy) GetNamespaceLabels() map[string]string {
-	if np == nil || np.NamespaceLabels == nil {
-		return nil
+	if np.NamespaceLabels != nil {
+		return *np.NamespaceLabels
 	}
-	return *np.NamespaceLabels
+	return nil
 }
 
 func (np *RuntimeComponentNetworkPolicy) GetFromLabels() map[string]string {
-	if np == nil || np.FromLabels == nil {
-		return nil
+	if np.FromLabels != nil {
+		return *np.FromLabels
 	}
-	return *np.FromLabels
+	return nil
 }
 
 func (np *RuntimeComponentNetworkPolicy) IsDisabled() bool {
-	return np != nil && np.Disable != nil && *np.Disable
+	return np.Disable != nil && *np.Disable
 }
 
 // GetLabels returns labels to be added on ServiceMonitor
