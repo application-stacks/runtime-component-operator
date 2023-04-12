@@ -6,19 +6,16 @@ clusterurl="$ip:6443"
 echo "in directory"
 pwd
 
-echo "running configure-ccluster.sh"
-GITHUB_ACCESS_TOKEN=$(get_env git-token)
-GITHUB_SCRIPT_URL="https://api.github.ibm.com/repos/websphere/operators/contents/scripts/configure-cluster/configure-cluster.sh"
-curl -H "Authorization: token $GITHUB_ACCESS_TOKEN" -H "Accept: application/vnd.github.v3+json" "$GITHUB_SCRIPT_URL" | jq -r ".content" | base64 --decode > configure-cluster.sh
-chmod +x configure-cluster.sh
-ls -l configure-cluster.sh
+echo "running configure-cluster.sh"
+git clone --single-branch --branch main https://$(get_env git-token)@github.ibm.com/websphere/operators.git
+ls -l operators/scripts/configure-cluster/configure-cluster.sh
 echo "**** issuing oc login"
 oc login --insecure-skip-tls-verify $clusterurl -u kubeadmin -p $token
 echo "Open Shift Console:"
 console=$(oc whoami --show-console)
 echo $console
 echo "*** after issuing oc login"
-./configure-cluster.sh -k $(get_env ibmcloud-api-key-staging) -A
+operators/scripts/configure-cluster/configure-cluster.sh -p $token -k $(get_env ibmcloud-api-key-staging) --arch $arch -A
 
 
 export GO_VERSION=$(get_env go-version)
