@@ -114,7 +114,7 @@ function request_ciorchestrator() {
             "apiRoot": "${GH_API_ROOT}",
             "org": "${GH_ORG}",
             "repo": "${GH_REPOSITORY}",
-            "branch": "${GH_BRANCH}",
+            "branch": "main",
             "filePath": "${CI_CONFIG_FILE}"
         }
     }
