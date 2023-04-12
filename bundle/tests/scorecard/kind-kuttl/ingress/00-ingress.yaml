@@ -1,10 +1,10 @@
-apiVersion: rc.app.stacks/v1beta2
+apiVersion: rc.app.stacks/v1
 kind: RuntimeComponent
 metadata:
   name: ingress
 spec:
   # Add fields here
-  applicationImage: k8s.gcr.io/pause:2.0
+  applicationImage: k8s.gcr.io/pause:3.2
   replicas: 1
   expose: true
   route:
