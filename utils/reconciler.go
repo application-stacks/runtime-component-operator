@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"time"
@@ -338,13 +339,31 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string,
 			r.ManageError(err, common.StatusConditionTypeReconciled, ba)
 			return "", "", "", "", err
 		}
-		v, ok := tlsSecret.Data["ca.crt"]
-		if ok {
-			ca = string(v)
-		}
-		v, ok = tlsSecret.Data["tls.crt"]
+
+		var extraCerts string
+		v, ok := tlsSecret.Data["tls.crt"]
 		if ok {
 			cert = string(v)
+			certBlock, nextCerts := pem.Decode(v)
+			if certBlock == nil {
+				return "", "", "", "", errors.New("failed to load route certificate")
+			}
+			cert = string(pem.EncodeToMemory(certBlock))
+			if len(nextCerts) > 0 {
+				//multiple certificates (chain)
+				extraCerts = string(nextCerts)
+			}
+		}
+		v, ok = tlsSecret.Data["ca.crt"]
+		if ok || extraCerts != "" {
+			ca = string(v)
+			if extraCerts != "" {
+				if ca != "" {
+					ca = ca + "\n" + extraCerts
+				} else {
+					ca = extraCerts
+				}
+			}
 		}
 		v, ok = tlsSecret.Data["tls.key"]
 		if ok {
