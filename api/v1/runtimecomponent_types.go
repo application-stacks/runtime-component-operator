@@ -234,13 +234,24 @@ type RuntimeComponentService struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=15,type=spec,displayName="Certificate Secret Reference",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
 
+	// Configure service certificate.
+	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec,displayName="Service Certificate"
+	Certificate *RuntimeComponentCertificate `json:"certificate,omitempty"`
+
 	// An array consisting of service ports.
-	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec
+	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec
 	Ports []corev1.ServicePort `json:"ports,omitempty"`
 
 	// Expose the application as a bindable service. Defaults to false.
-	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Bindable",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	// +operator-sdk:csv:customresourcedefinitions:order=18,type=spec,displayName="Bindable",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	Bindable *bool `json:"bindable,omitempty"`
+}
+
+// Configure service certificate.
+type RuntimeComponentCertificate struct {
+	// Annotations to be added to the service certificate.
+	// +operator-sdk:csv:customresourcedefinitions:order=13,type=spec,displayName="Annotations",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // Defines the network policy
@@ -757,6 +768,14 @@ func (s *RuntimeComponentService) GetCertificateSecretRef() *string {
 	return s.CertificateSecretRef
 }
 
+// GetCertificate returns a service certificate configuration
+func (s *RuntimeComponentService) GetCertificate() common.BaseComponentCertificate {
+	if s.Certificate == nil {
+		return nil
+	}
+	return s.Certificate
+}
+
 // GetBindable returns whether the application should be exposable as a service
 func (s *RuntimeComponentService) GetBindable() *bool {
 	return s.Bindable
@@ -1184,6 +1203,11 @@ func (s *RuntimeComponentStatus) SetStatusEndpoint(c common.StatusEndpoint) {
 	if !found {
 		s.Endpoints = append(s.Endpoints, *endpoint)
 	}
+}
+
+// GetAnnotations returns annotations to be added to certificate request
+func (c *RuntimeComponentCertificate) GetAnnotations() map[string]string {
+	return c.Annotations
 }
 
 func convertToCommonStatusEndpointScope(c StatusEndpointScope) common.StatusEndpointScope {

@@ -173,6 +173,11 @@ spec:
         path: service.annotations
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Annotations to be added to the service certificate.
+        displayName: Annotations
+        path: service.certificate.annotations
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: The port that the operator assigns to containers inside pods.
           Defaults to the value of spec.service.port.
         displayName: Target Port
@@ -192,19 +197,22 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:text
       - displayName: Route
         path: route
+      - description: Configure service certificate.
+        displayName: Service Certificate
+        path: service.certificate
+      - displayName: Monitoring
+        path: monitoring
       - description: An array consisting of service ports.
         displayName: Ports
         path: service.ports
-      - displayName: Monitoring
-        path: monitoring
+      - description: An array of environment variables for the application container.
+        displayName: Environment Variables
+        path: env
       - description: Expose the application as a bindable service. Defaults to false.
         displayName: Bindable
         path: service.bindable
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: An array of environment variables for the application container.
-        displayName: Environment Variables
-        path: env
       - description: List of sources to populate environment variables in the application
           container.
         displayName: Environment Variables from Sources

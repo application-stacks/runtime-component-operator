@@ -2436,6 +2436,15 @@ spec:
                   bindable:
                     description: Expose the application as a bindable service. Defaults to false.
                     type: boolean
+                  certificate:
+                    description: Certificate parameters for a certificate request.
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: Annotations to be added to the service.
+                        type: object
+                    type: object
                   certificateSecretRef:
                     description: 'A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod. The following keys are valid in the secret: ca.crt, tls.crt, and tls.key.'
                     type: string

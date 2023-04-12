@@ -122,7 +122,11 @@ type BaseComponentService interface {
 	GetPorts() []corev1.ServicePort
 	GetAnnotations() map[string]string
 	GetCertificateSecretRef() *string
+	GetCertificate() BaseComponentCertificate
 	GetBindable() *bool
+}
+type BaseComponentCertificate interface {
+	GetAnnotations() map[string]string
 }
 
 // BaseComponentNetworkPolicy represents a basic network policy configuration
