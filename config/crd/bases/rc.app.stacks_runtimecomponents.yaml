@@ -3659,12 +3659,12 @@ spec:
                       to false.
                     type: boolean
                   certificate:
-                    description: Certificate parameters for a certificate request.
+                    description: Configure service certificate.
                     properties:
                       annotations:
                         additionalProperties:
                           type: string
-                        description: Annotations to be added to the service.
+                        description: Annotations to be added to the service certificate.
                         type: object
                     type: object
                   certificateSecretRef:

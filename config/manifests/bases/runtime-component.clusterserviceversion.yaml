@@ -168,8 +168,8 @@ spec:
         path: service.annotations
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Annotations to be added to the service.
-        displayName: Service Annotations
+      - description: Annotations to be added to the service certificate.
+        displayName: Annotations
         path: service.certificate.annotations
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
@@ -192,8 +192,8 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:text
       - displayName: Route
         path: route
-      - description: Certificate parameters for a certificate request.
-        displayName: Service Certificate parameters
+      - description: Configure service certificate.
+        displayName: Service Certificate
         path: service.certificate
       - displayName: Monitoring
         path: monitoring

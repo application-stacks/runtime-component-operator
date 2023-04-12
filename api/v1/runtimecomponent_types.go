@@ -234,8 +234,8 @@ type RuntimeComponentService struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=15,type=spec,displayName="Certificate Secret Reference",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
 
-	// Certificate parameters for a certificate request.
-	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec,displayName="Service Certificate parameters"
+	// Configure service certificate.
+	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec,displayName="Service Certificate"
 	Certificate *RuntimeComponentCertificate `json:"certificate,omitempty"`
 
 	// An array consisting of service ports.
@@ -247,10 +247,10 @@ type RuntimeComponentService struct {
 	Bindable *bool `json:"bindable,omitempty"`
 }
 
-// Configures Certificate request parameters
+// Configure service certificate.
 type RuntimeComponentCertificate struct {
-	// Annotations to be added to the service.
-	// +operator-sdk:csv:customresourcedefinitions:order=13,type=spec,displayName="Service Annotations",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// Annotations to be added to the service certificate.
+	// +operator-sdk:csv:customresourcedefinitions:order=13,type=spec,displayName="Annotations",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
