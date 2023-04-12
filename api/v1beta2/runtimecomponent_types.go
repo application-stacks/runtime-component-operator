@@ -723,6 +723,11 @@ func (s *RuntimeComponentService) GetCertificateSecretRef() *string {
 	return s.CertificateSecretRef
 }
 
+// GetCertificate returns a service certificate configuration
+func (s *RuntimeComponentService) GetCertificate() common.BaseComponentCertificate {
+	return nil
+}
+
 // GetBindable returns whether the application should be exposable as a service
 func (s *RuntimeComponentService) GetBindable() *bool {
 	return s.Bindable
