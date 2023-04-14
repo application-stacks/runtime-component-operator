@@ -4,7 +4,7 @@ metadata:
   name: network-policy-frontend-rc
 spec:
   applicationName: network-policy-test
-  applicationImage: k8s.gcr.io/pause:3.2
+  applicationImage: registry.k8s.io/pause:3.2
   expose: true
   service:
     port: 9080
@@ -18,7 +18,7 @@ metadata:
   name: network-policy-backend-rc
 spec:
   applicationName: network-policy-test
-  applicationImage: k8s.gcr.io/pause:3.2
+  applicationImage: registry.k8s.io/pause:3.2
   service:
     port: 9080
     ports:

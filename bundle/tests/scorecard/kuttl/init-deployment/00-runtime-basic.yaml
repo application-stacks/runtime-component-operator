@@ -4,5 +4,5 @@ metadata:
   name: init-runtime-deployment
 spec:
   # Add fields here
-  applicationImage: k8s.gcr.io/pause:3.2
+  applicationImage: registry.k8s.io/pause:3.2
   replicas: 1

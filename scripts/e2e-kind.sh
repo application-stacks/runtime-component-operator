@@ -7,7 +7,7 @@ readonly BUILD_IMAGE="runtime-component-operator:latest"
 
 readonly RUNASUSER="\n  securityContext:\n    runAsUser: 1001"
 readonly APPIMAGE='applicationImage:\s'
-readonly IMAGE='k8s.gcr.io\/pause:3.2'
+readonly IMAGE='registry.k8s.io\/pause:3.2'
 
 main() {
     parse_args "$@"

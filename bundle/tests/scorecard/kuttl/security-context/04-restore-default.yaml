@@ -3,7 +3,7 @@ kind: RuntimeComponent
 metadata:
   name: security-context-rc
 spec:
-  applicationImage: k8s.gcr.io/pause:3.2
+  applicationImage: registry.k8s.io/pause:3.2
   replicas: 1
   securityContext:
     allowPrivilegeEscalation: null
