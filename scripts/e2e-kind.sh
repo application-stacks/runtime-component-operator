@@ -120,9 +120,9 @@ install_rco() {
     kubectl create -f bundle/manifests/rc.app.stacks_runtimeoperations.yaml
 
     sed -i "s|image: .*|image: ${LOCAL_REGISTRY}/${BUILD_IMAGE}|
-            s|namespace: .*|namespace: ${TEST_NAMESPACE}|" deploy/kustomize/daily/base/runtime-component-operator.yaml
+            s|namespace: .*|namespace: ${TEST_NAMESPACE}|" internal/deploy/kustomize/daily/base/runtime-component-operator.yaml
     
-    kubectl create -f deploy/kustomize/daily/base/runtime-component-operator.yaml -n ${TEST_NAMESPACE}
+    kubectl create -f internal/deploy/kustomize/daily/base/runtime-component-operator.yaml -n ${TEST_NAMESPACE}
 
     # Wait for operator deployment to be ready
     wait_for ${TEST_NAMESPACE} rco-controller-manager

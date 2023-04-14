@@ -2,4 +2,4 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: rco-controller-manager
-  namespace: rco-ns2
+  namespace: default

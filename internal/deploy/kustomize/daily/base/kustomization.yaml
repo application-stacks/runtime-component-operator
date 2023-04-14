@@ -6,4 +6,5 @@ namespace: default
 resources:
   - runtime-component-crd.yaml
   - runtime-component-operator.yaml
+  - runtime-component-roles.yaml
 
