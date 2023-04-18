@@ -122,7 +122,10 @@ install_rco() {
     sed -i "s|image: .*|image: ${LOCAL_REGISTRY}/${BUILD_IMAGE}|
             s|namespace: .*|namespace: ${TEST_NAMESPACE}|" internal/deploy/kustomize/daily/base/runtime-component-operator.yaml
     
+    sed -i "s|namespace: .*|namespace: ${TEST_NAMESPACE}|" internal/deploy/kustomize/daily/base/runtime-component-roles.yaml
+
     kubectl create -f internal/deploy/kustomize/daily/base/runtime-component-operator.yaml -n ${TEST_NAMESPACE}
+    kubectl create -f internal/deploy/kustomize/daily/base/runtime-component-roles.yaml -n ${TEST_NAMESPACE}
 
     # Wait for operator deployment to be ready
     wait_for ${TEST_NAMESPACE} rco-controller-manager
