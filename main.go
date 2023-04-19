@@ -122,7 +122,7 @@ func main() {
 	}
 	// +kubebuilder:scaffold:builder
 
-	utils.CreateConfigMap(controllers.OperatorName)
+	utils.CreateConfigMap(controllers.OperatorName, map[string]string{})
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")
