@@ -1,11 +1,194 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
+metadata:
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/instance: runtime-component-operator
+    app.kubernetes.io/managed-by: olm
+    app.kubernetes.io/name: runtime-component-operator
+  name: rco-watched-role
+  namespace: rco-watched-ns
+rules:
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - statefulsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments/finalizers
+  - statefulsets
+  verbs:
+  - update
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - cert-manager.io
+  resources:
+  - certificates
+  - issuers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - secrets
+  - serviceaccounts
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/exec
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - image.openshift.io
+  resources:
+  - imagestreams
+  - imagestreamtags
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  - networkpolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - rc.app.stacks
+  resources:
+  - runtimecomponents
+  - runtimecomponents/finalizers
+  - runtimecomponents/status
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - rc.app.stacks
+  resources:
+  - runtimeoperations
+  - runtimeoperations/finalizers
+  - runtimeoperations/status
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  - routes/custom-host
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - serving.knative.dev
+  resources:
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
 metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
     app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
-  name: rco-leader-election-cluster-role
+  name: rco-watched-rolebinding
+  namespace: rco-watched-ns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: rco-watched-role
+subjects:
+- kind: ServiceAccount
+  name: rco-controller-manager
+  namespace: rco-ns
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/instance: runtime-component-operator
+    app.kubernetes.io/managed-by: olm
+    app.kubernetes.io/name: runtime-component-operator
+  name: rco-leader-election-watched-role
+  namespace: rco-watched-ns
 rules:
 - apiGroups:
   - ""
@@ -48,142 +231,21 @@ rules:
   - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  creationTimestamp: null
-  labels:
-    app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
-    app.kubernetes.io/name: runtime-component-operator
-  name: rco-manager-cluster-role
-rules:
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  - statefulsets
-  verbs:
-  - '*'
-- apiGroups:
-  - apps
-  resources:
-  - deployments/finalizers
-  - statefulsets
-  verbs:
-  - update
-- apiGroups:
-  - autoscaling
-  resources:
-  - horizontalpodautoscalers
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - secrets
-  - serviceaccounts
-  - services
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - pods/exec
-  verbs:
-  - '*'
-- apiGroups:
-  - image.openshift.io
-  resources:
-  - imagestreams
-  - imagestreamtags
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - monitoring.coreos.com
-  resources:
-  - servicemonitors
-  verbs:
-  - '*'
-- apiGroups:
-  - networking.k8s.io
-  resources:
-  - ingresses
-  - networkpolicies
-  verbs:
-  - '*'
-- apiGroups:
-  - rc.app.stacks
-  resources:
-  - runtimecomponents
-  - runtimecomponents/finalizers
-  - runtimecomponents/status
-  verbs:
-  - '*'
-- apiGroups:
-  - rc.app.stacks
-  resources:
-  - runtimeoperations
-  - runtimeoperations/finalizers
-  - runtimeoperations/status
-  verbs:
-  - '*'
-- apiGroups:
-  - route.openshift.io
-  resources:
-  - routes
-  - routes/custom-host
-  verbs:
-  - '*'
-- apiGroups:
-  - serving.knative.dev
-  resources:
-  - services
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - list
-  - get
-  - watch
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
     app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
-  name: rco-leader-election-cluster-rolebinding
+  name: rco-leader-election-watched-rolebinding
+  namespace: rco-watched-ns
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: rco-leader-election-cluster-role
+  kind: Role
+  name: rco-leader-election-watched-role
 subjects:
 - kind: ServiceAccount
   name: rco-controller-manager
-  namespace: default
+  namespace: rco-ns
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
-    app.kubernetes.io/name: runtime-component-operator
-  name: rco-manager-cluster-rolebinding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: rco-manager-cluster-role
-subjects:
-- kind: ServiceAccount
-  name: rco-controller-manager
-  namespace: default
----
+

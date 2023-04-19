@@ -93,7 +93,7 @@ endif
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:crdVersions=v1,generateEmbeddedObjectMeta=true"
 
-# Produce files under deploy/kustomize/daily with default namespace
+# Produce files under internal/deploy/kustomize/daily with default namespace
 KUSTOMIZE_NAMESPACE = default
 KUSTOMIZE_IMG = cp.stg.icr.io/cp/runtime-component-operator:main
 
@@ -195,11 +195,14 @@ bundle: manifests setup kustomize ## Generate bundle manifests and metadata, the
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle $(BUNDLE_GEN_FLAGS)
 	./scripts/csv_description_update.sh update_csv
 
-	$(KUSTOMIZE) build config/kustomize/crd -o deploy/kustomize/daily/base/runtime-component-crd.yaml
+	$(KUSTOMIZE) build config/kustomize/crd -o internal/deploy/kustomize/daily/base/runtime-component-crd.yaml
 	cd config/kustomize/operator && $(KUSTOMIZE) edit set namespace $(KUSTOMIZE_NAMESPACE)
-	$(KUSTOMIZE) build config/kustomize/operator -o deploy/kustomize/daily/base/runtime-component-operator.yaml
+	$(KUSTOMIZE) build config/kustomize/operator -o internal/deploy/kustomize/daily/base/runtime-component-operator.yaml
+	sed -i.bak "s,${IMG},${KUSTOMIZE_IMG},g;s,serviceAccountName: controller-manager,serviceAccountName: rco-controller-manager,g" internal/deploy/kustomize/daily/base/runtime-component-operator.yaml
+	$(KUSTOMIZE) build config/kustomize/roles -o internal/deploy/kustomize/daily/base/runtime-component-roles.yaml
 
 	mv config/manifests/patches/csvAnnotations.yaml.bak config/manifests/patches/csvAnnotations.yaml
+	rm internal/deploy/kustomize/daily/base/runtime-component-operator.yaml.bak
 	operator-sdk bundle validate ./bundle
 
 .PHONY: fmt

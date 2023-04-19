@@ -9,14 +9,14 @@ which show how the installation can be customized.
 === base
 The simplest configuration will install the operator into the 'default' namespace, and the operator
 will watch for Runtime Component custom resource instances only in its own namespace. To install, run:
-`kubectl apply -k base`
+`kubectl create -k base`
 and to uninstall, run:
 `kubectl delete -k base`
 
 === examples/watch-own-namespace
 This example overlay demonstrates how to modify the base configuration to install/watch a
 namespace other than 'default'. The example installs the operator to a namespace called
-'rco-ns' which should already exist. To install, run `kubectl apply -k examples/watch-own-namespace`
+'rco-ns' which should already exist. To install, run `kubectl create -k examples/watch-own-namespace`
 
 == Install and watch another namespace
 
@@ -24,12 +24,12 @@ namespace other than 'default'. The example installs the operator to a namespace
 This overlay installs the operator into the namespace 'rco-ns', but configures it to
 watch for Runtime Component custom resource instances in a different namespace called 'rco-watched-ns'. As
 this overlay install resources into two different namespaces, the namespace must not be specified
-in the kustomize.yaml file. To install, run `kubectl apply -k overlays/watch-another-namespace`
+in the kustomize.yaml file. To install, run `kubectl create -k overlays/watch-another-namespace`
 
 === examples/watch-another-namespace
 This example overlay builds on the previous one, but demonstrates how to change the
 install and watched namespaces. In this case, the operator is installed into 'rco-ns2'
-and it will watch for resources in 'rco-watched-ns2'. To install run `kubectl apply -k
+and it will watch for resources in 'rco-watched-ns2'. To install run `kubectl create -k
 examples/watch-another-namespace`
 
 == Install and watch all namespaces
@@ -38,11 +38,11 @@ examples/watch-another-namespace`
 This overlay installs the operator into the default namespace, but configures it
 to watch for Runtime Component custom resource instances in any namespace. Compared to the base,
 this requires additional ClusterRoles and ClusterRoleBindings. To install run:
-`kubectl apply -k overlays/watch-all-namespaces`
+`kubectl create -k overlays/watch-all-namespaces`
 
 === examples/watch-all-namespaces
 This example overlay builds on the previous one, and demonstrates how to change
 which namespace the operator is installed into. In this example, the operator
 is installed into a namespace called 'rco-ns', and will still watch for
 Runtime Component custom resource instances in any namespace. To install, run:
-`kubectl apply -k examples/watch-all-namespaces`
+`kubectl create -k examples/watch-all-namespaces`

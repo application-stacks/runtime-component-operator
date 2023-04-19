@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- ../../manager
+- ../../rbac
 
 # Adds namespace to all resources.
 namespace: default
@@ -11,7 +11,3 @@ namePrefix: rco-
 commonLabels:
   app.kubernetes.io/instance: runtime-component-operator
   app.kubernetes.io/name: runtime-component-operator
-
-patchesStrategicMerge:
-- patches/delete-namespace.yaml
-- patches/watch-namespace.yaml
