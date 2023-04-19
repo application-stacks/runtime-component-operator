@@ -1539,7 +1539,12 @@ func CreateConfigMap(mapName string) {
 		return
 	}
 
-	newConfigMap := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: mapName, Namespace: operatorNs}}
+	newConfigMap := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      mapName,
+			Namespace: operatorNs,
+			Labels:    map[string]string{"app.kubernetes.io/instance": mapName, "app.kubernetes.io/managed-by": "user", "app.kubernetes.io/name": mapName},
+		}}
 	// The config map doesn't exist, so need to initialize the default config data, and then
 	// store it in a new map
 	common.Config = common.DefaultOpConfig()
