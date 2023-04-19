@@ -1512,7 +1512,7 @@ func addSecretResourceVersionAsEnvVar(pts *corev1.PodTemplateSpec, object metav1
 // This should only be called once from main.go on operator start
 // It checks for the presence of the operators config map and
 // creates it if it doesn't exist
-func CreateConfigMap(mapName string, labels map[string]string) {
+func CreateConfigMap(mapName string) {
 	utilsLog := ctrl.Log.WithName("utils-setup")
 	// This function is called from main, so the normal client isn't setup properly
 	client, clerr := client.New(clientcfg.GetConfigOrDie(), client.Options{})
@@ -1539,7 +1539,12 @@ func CreateConfigMap(mapName string, labels map[string]string) {
 		return
 	}
 
-	newConfigMap := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: mapName, Namespace: operatorNs, Labels: labels}}
+	newConfigMap := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      mapName,
+			Namespace: operatorNs,
+			Labels:    map[string]string{"app.kubernetes.io/instance": mapName, "app.kubernetes.io/managed-by": "user", "app.kubernetes.io/name": mapName},
+		}}
 	// The config map doesn't exist, so need to initialize the default config data, and then
 	// store it in a new map
 	common.Config = common.DefaultOpConfig()
