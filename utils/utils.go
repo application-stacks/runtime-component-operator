@@ -1523,12 +1523,14 @@ func CreateConfigMap(mapName string) {
 
 	operatorNs, _ := GetOperatorNamespace()
 	if operatorNs == "" {
-		// This should only happen when running locally in development
-		// Probably best to just return. The operator global config map is tried
-		// again in the reconcile loop, and don't want to duplicate logic to
-		// guess what the namespace should be
-		utilsLog.Info("Couldn't create operator config map as operator namespace was not found")
-		return
+		// This could happen if the operator is running locally, i.e. outside the cluster
+		watchNamespaces, err := GetWatchNamespaces()
+		if err != nil {
+			utilsLog.Error(err, "Error getting watch namespace")
+			return
+		}
+		// If the operator is running locally, use the first namespace in the `watchNamespaces`
+		operatorNs = watchNamespaces[0]
 	}
 	configMap := &corev1.ConfigMap{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: mapName, Namespace: operatorNs}, configMap)
