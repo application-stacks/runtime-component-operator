@@ -259,16 +259,17 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 
 		if isKnativeSupported {
+			reqLogger.Info("Knative is supported and Knative Service is enabled")
 			ksvc := &servingv1.Service{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(ksvc, instance, func() error {
 				appstacksutils.CustomizeKnativeService(ksvc, instance)
 				return nil
 			})
-
 			if err != nil {
 				reqLogger.Error(err, "Failed to reconcile Knative Service")
 				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 			}
+			reqLogger.Info("Reconcile RuntimeComponent - completed")
 			return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)
 		}
 		return r.ManageError(errors.New("failed to reconcile Knative service as operator could not find Knative CRDs"), common.StatusConditionTypeReconciled, instance)

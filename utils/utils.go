@@ -832,8 +832,10 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	// If `expose` is not set to `true`, make Knative route a private route by adding `serving.knative.dev/visibility: cluster-local`
 	// to the Knative service. If `serving.knative.dev/visibility: XYZ` is defined in cr.Labels, `expose` always wins.
 	if ba.GetExpose() != nil && *ba.GetExpose() {
+		delete(ksvc.Labels, "networking.knative.dev/visibility")
 		delete(ksvc.Labels, "serving.knative.dev/visibility")
 	} else {
+		ksvc.Labels["networking.knative.dev/visibility"] = "cluster-local"
 		ksvc.Labels["serving.knative.dev/visibility"] = "cluster-local"
 	}
 
@@ -866,6 +868,8 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	ksvc.Spec.Template.Spec.Containers[0].ImagePullPolicy = *ba.GetPullPolicy()
 	ksvc.Spec.Template.Spec.Containers[0].Env = ba.GetEnv()
 	ksvc.Spec.Template.Spec.Containers[0].EnvFrom = ba.GetEnvFrom()
+
+	ksvc.Spec.Template.Spec.Containers[0].SecurityContext = GetSecurityContext(ba)
 
 	ksvc.Spec.Template.Spec.Containers[0].VolumeMounts = ba.GetVolumeMounts()
 	ksvc.Spec.Template.Spec.Volumes = ba.GetVolumes()
