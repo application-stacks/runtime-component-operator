@@ -91,7 +91,7 @@ function request_ciorchestrator() {
     cat >ciorchestrator-submit.json <<EOL
     {
         "type": "PipelineTriggered",
-        "ecosystemRouting": "dev",
+        "ecosystemRouting": "prod",
         "pipelineId": "${pipelineId}",
         "pipelineName": "${pipelineName}",
         "triggerName": "${CI_TRIGGER}",
