@@ -772,9 +772,9 @@ spec:
   - RCO
   links:
   - name: Documentation
-    url: https://github.com/application-stacks/runtime-component-operator/tree/main/doc
+    url: https://ibm.biz/rco-docs
   - name: Repository
-    url: https://github.com/application-stacks/runtime-component-operator
+    url: https://ibm.biz/rco-repo
   maintainers:
   - email: arturdzm@ibm.com
     name: Artur Dzmitryieu
