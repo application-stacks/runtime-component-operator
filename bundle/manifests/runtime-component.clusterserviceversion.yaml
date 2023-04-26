@@ -68,7 +68,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2023-04-26T16:16:09Z"
+    createdAt: "2023-04-26T17:30:36Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     olm.skipRange: '>=0.8.0 <1.2.0'
     operators.openshift.io/infrastructure-features: '["disconnected"]'
@@ -1126,6 +1126,7 @@ spec:
           - delete
           - get
           - list
+          - patch
           - update
           - watch
         - apiGroups:
@@ -1171,6 +1172,7 @@ spec:
           - delete
           - get
           - list
+          - patch
           - update
           - watch
         - apiGroups:
@@ -1184,6 +1186,7 @@ spec:
           - delete
           - get
           - list
+          - patch
           - update
           - watch
         - apiGroups:

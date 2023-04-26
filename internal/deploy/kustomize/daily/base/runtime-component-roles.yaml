@@ -132,6 +132,7 @@ rules:
   - delete
   - get
   - list
+  - patch
   - update
   - watch
 - apiGroups:
@@ -177,6 +178,7 @@ rules:
   - delete
   - get
   - list
+  - patch
   - update
   - watch
 - apiGroups:
@@ -190,6 +192,7 @@ rules:
   - delete
   - get
   - list
+  - patch
   - update
   - watch
 - apiGroups:
