@@ -321,6 +321,7 @@ type RuntimeComponentRoute struct {
 	Path string `json:"path,omitempty"`
 
 	// Path type to be used for Ingress.
+	// +operator-sdk:csv:customresourcedefinitions:order=41,type=spec,displayName="Path Type",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:select:Exact", "urn:alm:descriptor:com.tectonic.ui:select:Prefix", "urn:alm:descriptor:com.tectonic.ui:select:ImplementationSpecific"}
 	PathType networkingv1.PathType `json:"pathType,omitempty"`
 
 	// A name of a secret that already contains TLS key, certificate and CA to be used in the route. Also can contain destination CA certificate.
@@ -328,11 +329,11 @@ type RuntimeComponentRoute struct {
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
 
 	// TLS termination policy. Can be one of edge, reencrypt and passthrough.
-	// +operator-sdk:csv:customresourcedefinitions:order=42,type=spec,displayName="Termination",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=42,type=spec,displayName="Termination",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:select:edge", "urn:alm:descriptor:com.tectonic.ui:select:reencrypt", "urn:alm:descriptor:com.tectonic.ui:select:passthrough"}
 	Termination *routev1.TLSTerminationType `json:"termination,omitempty"`
 
 	// HTTP traffic policy with TLS enabled. Can be one of Allow, Redirect and None.
-	// +operator-sdk:csv:customresourcedefinitions:order=43,type=spec,displayName="Insecure Edge Termination Policy",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=43,type=spec,displayName="Insecure Edge Termination Policy",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:select:Allow", "urn:alm:descriptor:com.tectonic.ui:select:Redirect", "urn:alm:descriptor:com.tectonic.ui:select:None"}
 	InsecureEdgeTerminationPolicy *routev1.InsecureEdgeTerminationPolicyType `json:"insecureEdgeTerminationPolicy,omitempty"`
 }
 

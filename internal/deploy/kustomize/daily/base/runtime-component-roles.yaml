@@ -205,6 +205,14 @@ rules:
   - update
   - watch
 - apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - restricted
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
+- apiGroups:
   - serving.knative.dev
   resources:
   - services

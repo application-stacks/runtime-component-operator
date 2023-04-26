@@ -70,7 +70,7 @@ type RuntimeComponentSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=8,type=spec,displayName="Manage TLS",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	ManageTLS *bool `json:"manageTLS,omitempty"`
 
-	// Number of pods to create. Not applicable when .spec.autoscaling or .spec.createKnativeService is specified.
+	// Number of pods to create. Defaults to 1. Not applicable when .spec.autoscaling or .spec.createKnativeService is specified.
 	// +operator-sdk:csv:customresourcedefinitions:order=9,type=spec,displayName="Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:podCount"
 	Replicas *int32 `json:"replicas,omitempty"`
 
@@ -95,6 +95,9 @@ type RuntimeComponentSpec struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec,displayName="Route"
 	Route *RuntimeComponentRoute `json:"route,omitempty"`
+
+	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec,displayName="Network Policy"
+	NetworkPolicy *RuntimeComponentNetworkPolicy `json:"networkPolicy,omitempty"`
 
 	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Monitoring"
 	Monitoring *RuntimeComponentMonitoring `json:"monitoring,omitempty"`
@@ -139,9 +142,6 @@ type RuntimeComponentSpec struct {
 	// Security context for the application container.
 	// +operator-sdk:csv:customresourcedefinitions:order=25,type=spec,displayName="Security Context"
 	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
-
-	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Network Policy"
-	NetworkPolicy *RuntimeComponentNetworkPolicy `json:"networkPolicy,omitempty"`
 }
 
 // Define health checks on application container to determine whether it is alive or ready to receive traffic
@@ -223,7 +223,7 @@ type RuntimeComponentService struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=13,type=spec,displayName="Service Annotations",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Annotations map[string]string `json:"annotations,omitempty"`
 
-	// The port that the operator assigns to containers inside pods. Defaults to the value of spec.service.port.
+	// The port that the operator assigns to containers inside pods. Defaults to the value of .spec.service.port.
 	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:validation:Minimum=1
 	// +operator-sdk:csv:customresourcedefinitions:order=14,type=spec,displayName="Target Port",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
@@ -346,6 +346,7 @@ type RuntimeComponentRoute struct {
 	Path string `json:"path,omitempty"`
 
 	// Path type to be used for Ingress.
+	// +operator-sdk:csv:customresourcedefinitions:order=41,type=spec,displayName="Path Type",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:select:Exact", "urn:alm:descriptor:com.tectonic.ui:select:Prefix", "urn:alm:descriptor:com.tectonic.ui:select:ImplementationSpecific"}
 	PathType networkingv1.PathType `json:"pathType,omitempty"`
 
 	// A name of a secret that already contains TLS key, certificate and CA to be used in the route. It can also contain destination CA certificate. The following keys are valid in the secret: ca.crt, destCA.crt, tls.crt, and tls.key.
@@ -353,11 +354,11 @@ type RuntimeComponentRoute struct {
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
 
 	// TLS termination policy. Can be one of edge, reencrypt and passthrough.
-	// +operator-sdk:csv:customresourcedefinitions:order=42,type=spec,displayName="Termination",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=42,type=spec,displayName="Termination",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:select:edge", "urn:alm:descriptor:com.tectonic.ui:select:reencrypt", "urn:alm:descriptor:com.tectonic.ui:select:passthrough"}
 	Termination *routev1.TLSTerminationType `json:"termination,omitempty"`
 
 	// HTTP traffic policy with TLS enabled. Can be one of Allow, Redirect and None.
-	// +operator-sdk:csv:customresourcedefinitions:order=43,type=spec,displayName="Insecure Edge Termination Policy",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=43,type=spec,displayName="Insecure Edge Termination Policy",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:select:Allow", "urn:alm:descriptor:com.tectonic.ui:select:Redirect", "urn:alm:descriptor:com.tectonic.ui:select:None"}
 	InsecureEdgeTerminationPolicy *routev1.InsecureEdgeTerminationPolicyType `json:"insecureEdgeTerminationPolicy,omitempty"`
 }
 
@@ -393,7 +394,9 @@ type StatusEndpoint struct {
 	Name  string              `json:"name,omitempty"`
 	Scope StatusEndpointScope `json:"scope,omitempty"`
 	Type  string              `json:"type,omitempty"`
-	URI   string              `json:"uri,omitempty"`
+	// Exposed URI of the application endpoint
+	// +operator-sdk:csv:customresourcedefinitions:order=60,type=status,displayName="Application",xDescriptors={"urn:alm:descriptor:org.w3:link"}
+	URI string `json:"uri,omitempty"`
 }
 
 // Defines the scope of endpoint information in status.
