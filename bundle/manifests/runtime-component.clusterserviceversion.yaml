@@ -68,7 +68,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2023-04-24T15:02:55Z"
+    createdAt: "2023-04-26T14:25:49Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     olm.skipRange: '>=0.8.0 <1.2.0'
     operators.openshift.io/infrastructure-features: '["disconnected"]'
@@ -197,8 +197,8 @@ spec:
         path: manageTLS
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: Number of pods to create. Not applicable when .spec.autoscaling
-          or .spec.createKnativeService is specified.
+      - description: Number of pods to create. Defaults to 1. Not applicable when
+          .spec.autoscaling or .spec.createKnativeService is specified.
         displayName: Replicas
         path: replicas
         x-descriptors:
@@ -244,7 +244,7 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: The port that the operator assigns to containers inside pods.
-          Defaults to the value of spec.service.port.
+          Defaults to the value of .spec.service.port.
         displayName: Target Port
         path: service.targetPort
         x-descriptors:
@@ -260,6 +260,8 @@ spec:
         path: service.certificateSecretRef
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - displayName: Network Policy
+        path: networkPolicy
       - displayName: Route
         path: route
       - description: Configure service certificate.
@@ -320,8 +322,6 @@ spec:
         path: statefulSet.storage.size
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - displayName: Network Policy
-        path: networkPolicy
       - description: A convenient field to request the storage class of the persisted
           storage. The name can not be specified or updated after the storage is created.
         displayName: Storage Class Name
@@ -398,17 +398,28 @@ spec:
         path: route.certificateSecretRef
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Path type to be used for Ingress.
+        displayName: Path Type
+        path: route.pathType
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:Exact
+        - urn:alm:descriptor:com.tectonic.ui:select:Prefix
+        - urn:alm:descriptor:com.tectonic.ui:select:ImplementationSpecific
       - description: TLS termination policy. Can be one of edge, reencrypt and passthrough.
         displayName: Termination
         path: route.termination
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
+        - urn:alm:descriptor:com.tectonic.ui:select:edge
+        - urn:alm:descriptor:com.tectonic.ui:select:reencrypt
+        - urn:alm:descriptor:com.tectonic.ui:select:passthrough
       - description: HTTP traffic policy with TLS enabled. Can be one of Allow, Redirect
           and None.
         displayName: Insecure Edge Termination Policy
         path: route.insecureEdgeTerminationPolicy
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
+        - urn:alm:descriptor:com.tectonic.ui:select:Allow
+        - urn:alm:descriptor:com.tectonic.ui:select:Redirect
+        - urn:alm:descriptor:com.tectonic.ui:select:None
       - description: Disable the creation of the network policy. Defaults to false.
         displayName: Disable
         path: networkPolicy.disable
@@ -498,6 +509,11 @@ spec:
       - displayName: SE Linux Options
         path: securityContext.seLinuxOptions
       statusDescriptors:
+      - description: Exposed URI of the application endpoint
+        displayName: Application
+        path: endpoints[0].uri
+        x-descriptors:
+        - urn:alm:descriptor:org.w3:link
       - displayName: Service Binding
         path: binding
       - displayName: Status Conditions
@@ -791,17 +807,28 @@ spec:
         path: route.certificateSecretRef
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Path type to be used for Ingress.
+        displayName: Path Type
+        path: route.pathType
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:Exact
+        - urn:alm:descriptor:com.tectonic.ui:select:Prefix
+        - urn:alm:descriptor:com.tectonic.ui:select:ImplementationSpecific
       - description: TLS termination policy. Can be one of edge, reencrypt and passthrough.
         displayName: Termination
         path: route.termination
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
+        - urn:alm:descriptor:com.tectonic.ui:select:edge
+        - urn:alm:descriptor:com.tectonic.ui:select:reencrypt
+        - urn:alm:descriptor:com.tectonic.ui:select:passthrough
       - description: HTTP traffic policy with TLS enabled. Can be one of Allow, Redirect
           and None.
         displayName: Insecure Edge Termination Policy
         path: route.insecureEdgeTerminationPolicy
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
+        - urn:alm:descriptor:com.tectonic.ui:select:Allow
+        - urn:alm:descriptor:com.tectonic.ui:select:Redirect
+        - urn:alm:descriptor:com.tectonic.ui:select:None
       statusDescriptors:
       - displayName: Service Binding
         path: binding
@@ -943,7 +970,6 @@ spec:
                 - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
                   value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:e22dd56a05e44618a10d275d3ff07a38eb364c0f04f86ffe9618d83dd5467860
                 image: icr.io/appcafe/runtime-component-operator:daily
-                imagePullPolicy: Always
                 livenessProbe:
                   failureThreshold: 3
                   httpGet:
@@ -980,6 +1006,8 @@ spec:
                   privileged: false
                   readOnlyRootFilesystem: true
                   runAsNonRoot: true
+              securityContext:
+                runAsNonRoot: true
               serviceAccountName: rco-controller-manager
               terminationGracePeriodSeconds: 10
       permissions:
@@ -1206,7 +1234,7 @@ spec:
     name: Artur Dzmitryieu
   - email: leojc@ca.ibm.com
     name: Leo Christy Jesuraj
-  maturity: beta
+  maturity: stable
   provider:
     name: Community
   relatedImages:

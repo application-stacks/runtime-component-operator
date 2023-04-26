@@ -495,6 +495,11 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		*out = new(RuntimeComponentRoute)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.NetworkPolicy != nil {
+		in, out := &in.NetworkPolicy, &out.NetworkPolicy
+		*out = new(RuntimeComponentNetworkPolicy)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Monitoring != nil {
 		in, out := &in.Monitoring, &out.Monitoring
 		*out = new(RuntimeComponentMonitoring)
@@ -550,11 +555,6 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 	if in.SecurityContext != nil {
 		in, out := &in.SecurityContext, &out.SecurityContext
 		*out = new(corev1.SecurityContext)
-		(*in).DeepCopyInto(*out)
-	}
-	if in.NetworkPolicy != nil {
-		in, out := &in.NetworkPolicy, &out.NetworkPolicy
-		*out = new(RuntimeComponentNetworkPolicy)
 		(*in).DeepCopyInto(*out)
 	}
 }
