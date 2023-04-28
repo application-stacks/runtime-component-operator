@@ -166,9 +166,17 @@ oc get comp my-app
 The short name for `runtimecomponent` is `comp`.
 
 === Operator configuration examples
-Browse the `RuntimeComponent` examples to learn how to use custom resource (CR) parameters to configure your operator. The complete component documentation can be found under link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#open-liberty-operator-documentation++[Open Liberty Operator's "Common Component Documentation"] section.
+Browse the `RuntimeComponent` examples to learn how to use custom resource (CR) parameters to configure your operator. The complete component documentation can be found under link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#open-liberty-operator-documentation++[Open Liberty Operator's "Common Component Documentation"] section. Any references to Open Liberty Operator-specific resources can be mapped over to Runtime Component Operator using the table below.
 
-NOTE: Any references to *Api Version* `apps.openliberty.io/v1beta2` must be replaced with `rc.app.stacks/v1`, *Kind* `OpenLibertyApplication` with `RuntimeComponent`, and *ClusterRole* `openlibertyapplications.apps.openliberty.io-v1beta2` with `runtimecomponents.rc.app.stacks-v1`.
+.Open Liberty Operator Name Mapping
+|===
+| *Data* | *Open Liberty Operator* | *Runtime Component Operator*
+| Api Version | `apps.openliberty.io/v1beta2` | `rc.app.stacks/v1`
+| Kind | `OpenLibertyApplication` | `RuntimeComponent`
+| ConfigMap | `open-liberty-operator` | `runtime-component-operator`
+| ClusterRole Prefix | `openlibertyapplications.apps.openliberty.io-v1beta2` | `runtimecomponents.rc.app.stacks-v1`
+| Resource  Prefix | `olo-*` | `rco-*`
+|===
 
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#reference-image-streams++[Reference image streams (`.spec.applicationImage`)]
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#create-a-service-account++[Create a service account (`.spec.serviceAccountName`)]
