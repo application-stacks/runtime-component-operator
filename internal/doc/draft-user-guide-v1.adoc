@@ -285,7 +285,12 @@ Browse the `RuntimeComponent` examples to learn how to use custom resource (CR) 
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#expose-applications-externally++[Expose applications externally (`.spec.expose`, `.spec.createKnativeService`, `.spec.route`)]
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#bind-applications-with-operator-managed-backing-services++[Bind applications with operator-managed backing services (`.status.binding.name` and `.spec.service.bindable`)]
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#limit-a-pod-to-run-on-specified-nodes++[Limit a pod to run on specified nodes (`.spec.affinity`)]
-* link:++https://github.com/openliberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#specifying-certificates-for-a-secret-route-and-service++[Specifying certificates for a secret Route and Service (`.spec.service.certificateSecretRef` and `.spec.route.certificateSecretRef`)] 
+
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#configuring-transport-layer-security-tls-certificates++[Configuring transport layer security (TLS) certificates]
+
+  - link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#generating-certificates-with-certificate-manager++[Generating certificates with certificate manager]
+  - link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#generating-certificates-with-red-hat-openshift-service-ca++[Generating certificates with Red Hat OpenShift service CA (`.spec.service.annotations`)]
+  - link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#specifying-certificates-for-a-secret-route-and-service++[Specifying certificates for a secret Route and Service (`.spec.service.certificateSecretRef` and `.spec.route.certificateSecretRef`)] 
 
 
 === Day-2 Operations
