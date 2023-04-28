@@ -46,7 +46,7 @@ spec:
 
 === Custom Resource Definition (CRD)
 
-The following table lists configurable fields of the `RuntimeComponent` CRD. For a complete OpenAPI v3 representation of these values, view the files under `/deploy/releases/_<operator-version>_/kubectl/runtime-component-crd.yaml`. For example,  the link:++../deploy/releases/0.8.2/kubectl/runtime-component-crd.yaml++[`RuntimeComponent` CRD] for release `0.8.2`.
+The following table lists configurable fields of the `RuntimeComponent` CRD. For complete OpenAPI v3 representation of these values, view the files under `/deploy/releases/_<operator-version>_/kubectl/runtime-component-crd.yaml`. For example,  the link:++../deploy/releases/0.8.2/kubectl/runtime-component-crd.yaml++[`RuntimeComponent` CRD] for release `0.8.2`.
 
 Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` field. Specifying other fields is optional.
 
