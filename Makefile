@@ -95,7 +95,7 @@ CRD_OPTIONS ?= "crd:crdVersions=v1,generateEmbeddedObjectMeta=true"
 
 # Produce files under internal/deploy/kustomize/daily with default namespace
 KUSTOMIZE_NAMESPACE = default
-KUSTOMIZE_IMG = cp.stg.icr.io/cp/runtime-component-operator:main
+KUSTOMIZE_IMG = icr.io/appcafe/runtime-component-operator:daily
 
 # Use docker if available. Otherwise default to podman. 
 # Override choice by setting CONTAINER_COMMAND

@@ -32,6 +32,7 @@ import (
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -831,8 +832,10 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	// If `expose` is not set to `true`, make Knative route a private route by adding `serving.knative.dev/visibility: cluster-local`
 	// to the Knative service. If `serving.knative.dev/visibility: XYZ` is defined in cr.Labels, `expose` always wins.
 	if ba.GetExpose() != nil && *ba.GetExpose() {
+		delete(ksvc.Labels, "networking.knative.dev/visibility")
 		delete(ksvc.Labels, "serving.knative.dev/visibility")
 	} else {
+		ksvc.Labels["networking.knative.dev/visibility"] = "cluster-local"
 		ksvc.Labels["serving.knative.dev/visibility"] = "cluster-local"
 	}
 
@@ -865,6 +868,8 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	ksvc.Spec.Template.Spec.Containers[0].ImagePullPolicy = *ba.GetPullPolicy()
 	ksvc.Spec.Template.Spec.Containers[0].Env = ba.GetEnv()
 	ksvc.Spec.Template.Spec.Containers[0].EnvFrom = ba.GetEnvFrom()
+
+	ksvc.Spec.Template.Spec.Containers[0].SecurityContext = GetSecurityContext(ba)
 
 	ksvc.Spec.Template.Spec.Containers[0].VolumeMounts = ba.GetVolumeMounts()
 	ksvc.Spec.Template.Spec.Volumes = ba.GetVolumes()
@@ -1523,17 +1528,22 @@ func CreateConfigMap(mapName string) {
 
 	operatorNs, _ := GetOperatorNamespace()
 	if operatorNs == "" {
-		// This should only happen when running locally in development
-		// Probably best to just return. The operator global config map is tried
-		// again in the reconcile loop, and don't want to duplicate logic to
-		// guess what the namespace should be
-		utilsLog.Info("Couldn't create operator config map as operator namespace was not found")
-		return
+		// This could happen if the operator is running locally, i.e. outside the cluster
+		watchNamespaces, err := GetWatchNamespaces()
+		if err != nil {
+			utilsLog.Error(err, "Error getting watch namespace")
+			return
+		}
+		// If the operator is running locally, use the first namespace in the `watchNamespaces`
+		operatorNs = watchNamespaces[0]
 	}
 	configMap := &corev1.ConfigMap{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: mapName, Namespace: operatorNs}, configMap)
-	if err != nil {
+	if err != nil && apierrors.IsNotFound(err) {
 		utilsLog.Error(err, "The operator config map was not found. Attempting to create it")
+	} else if err != nil {
+		utilsLog.Error(err, "Couldn't retrieve operator config map")
+		return
 	} else {
 		utilsLog.Info("Existing operator config map was found")
 		return
