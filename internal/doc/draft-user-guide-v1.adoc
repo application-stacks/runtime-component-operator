@@ -168,7 +168,7 @@ The short name for `runtimecomponent` is `comp`.
 === Operator configuration examples
 Browse the `RuntimeComponent` examples to learn how to use custom resource (CR) parameters to configure your operator. The complete component documentation can be found under link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#open-liberty-operator-documentation++[Open Liberty Operator's "Common Component Documentation"] section.
 
-NOTE: Any references to *Api Version* `apps.openliberty.io/v1beta2` must be replaced with `rc.app.stacks/v1`, *Kind* `OpenLibertyApplication` with `RuntimeComponent`, and *ClusterRole* `openlibertyapplications.apps.openliberty.io-v1beta2` with `runtimecomponents.rc.app.stacks-v1beta2`.
+NOTE: Any references to *Api Version* `apps.openliberty.io/v1beta2` must be replaced with `rc.app.stacks/v1`, *Kind* `OpenLibertyApplication` with `RuntimeComponent`, and *ClusterRole* `openlibertyapplications.apps.openliberty.io-v1beta2` with `runtimecomponents.rc.app.stacks-v1`.
 
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#reference-image-streams++[Reference image streams (`.spec.applicationImage`)]
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#create-a-service-account++[Create a service account (`.spec.serviceAccountName`)]
