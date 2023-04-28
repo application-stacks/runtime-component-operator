@@ -19,11 +19,16 @@ spec:
   replicas: 1
   template:
     metadata:
-      annotations:
-        kubectl.kubernetes.io/default-container: manager
       labels:
         control-plane: controller-manager
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
     spec:
+      hostIPC: false
+      hostPID: false
+      hostNetwork: false
+      securityContext:
+        runAsNonRoot: true
       containers:
       - command:
         - /manager
@@ -51,8 +56,7 @@ spec:
           initialDelaySeconds: 20
           periodSeconds: 30
           successThreshold: 1
-          timeoutSeconds: 10        
-        imagePullPolicy: Always
+          timeoutSeconds: 10
         env:
           - name: OPERATOR_NAMESPACE
             valueFrom:
@@ -63,7 +67,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.annotations['olm.targetNamespaces']
           - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
-            value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:9a6f6352bee814302fcf939dd640b7d3b3e02307330f82bc32b782e7a9feb8a3
+            value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:e22dd56a05e44618a10d275d3ff07a38eb364c0f04f86ffe9618d83dd5467860
         securityContext:
           allowPrivilegeEscalation: false
           privileged: false
@@ -79,8 +83,8 @@ spec:
           requests:
             cpu: 200m
             memory: 128Mi
-      terminationGracePeriodSeconds: 10
       serviceAccountName: controller-manager
+      terminationGracePeriodSeconds: 10
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -92,4 +96,3 @@ spec:
                 - amd64
                 - ppc64le
                 - s390x
-

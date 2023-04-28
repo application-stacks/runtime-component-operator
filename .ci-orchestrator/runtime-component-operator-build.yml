@@ -1,7 +1,7 @@
 type: pipeline_definition
 product: Liberty
 name: Runtime Componet Operator Docker Build
-description: A build to run the websphere-liberty operator docker container build
+description: A build to run the runtime-component operator docker container build
 triggers:
 - type: manual
   triggerName: "rcodocker"

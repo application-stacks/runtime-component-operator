@@ -58,11 +58,9 @@ for artifact_image in $(list_artifacts); do
   IMAGE_ARTIFACT=$(load_artifact $artifact_image name)
   DIGEST=$(load_artifact $artifact_image digest)
   TYPE=$(load_artifact $artifact_image type)
-  ARCH=$(load_artifact $artifact_image arch)
   NAME="$(echo "$artifact_image" | awk '{print $1}')"
 
   echo "image from load_artifact:" $IMAGE_ARTIFACT
-  echo "arch:" $ARCH
 
   echo  "cocoa inventory add"
   echo  "  --artifact=${IMAGE_ARTIFACT}"

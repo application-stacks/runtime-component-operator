@@ -25,7 +25,6 @@ import (
 	"github.com/application-stacks/runtime-component-operator/common"
 	"github.com/pkg/errors"
 
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -66,7 +65,8 @@ type RuntimeComponentReconciler struct {
 	watchNamespaces []string
 }
 
-// +kubebuilder:rbac:groups=rc.app.stacks,resources=runtimecomponents;runtimecomponents/status;runtimecomponents/finalizers,verbs=get;list;watch;create;update;delete,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=security.openshift.io,resources=securitycontextconstraints,resourceNames=restricted,verbs=use,namespace=runtime-component-operator
+// +kubebuilder:rbac:groups=rc.app.stacks,resources=runtimecomponents;runtimecomponents/status;runtimecomponents/finalizers,verbs=get;list;watch;create;update;patch;delete,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=apps,resources=deployments;statefulsets,verbs=get;list;watch;create;update;delete,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=apps,resources=deployments/finalizers;statefulsets,verbs=update,namespace=runtime-component-operator
 // +kubebuilder:rbac:groups=core,resources=services;secrets;serviceaccounts;configmaps,verbs=get;list;watch;create;update;delete,namespace=runtime-component-operator
@@ -104,20 +104,9 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	configMap, err := r.GetOpConfigMap(OperatorName, ns)
 	if err != nil {
 		reqLogger.Info("Failed to find runtime-component-operator config map")
-		common.Config = common.DefaultOpConfig()
-		configMap = &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: OperatorName, Namespace: ns}}
-		configMap.Data = common.Config
+		appstacksutils.CreateConfigMap(OperatorName)
 	} else {
 		common.Config.LoadFromConfigMap(configMap)
-	}
-
-	_, err = controllerutil.CreateOrUpdate(context.TODO(), r.GetClient(), configMap, func() error {
-		configMap.Data = common.Config
-		return nil
-	})
-
-	if err != nil {
-		reqLogger.Info("Failed to update runtime-component-operator config map")
 	}
 
 	// Fetch the RuntimeComponent instance
@@ -138,7 +127,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	isKnativeSupported, err := r.IsGroupVersionSupported(servingv1.SchemeGroupVersion.String(), "Service")
 	if err != nil {
 		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-	} else if !isKnativeSupported {
+	} else if !isKnativeSupported && instance.Spec.CreateKnativeService != nil && *instance.Spec.CreateKnativeService {
 		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported on the cluster", servingv1.SchemeGroupVersion.String()))
 	}
 
@@ -249,6 +238,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			&appsv1.Deployment{ObjectMeta: defaultMeta},
 			&appsv1.StatefulSet{ObjectMeta: defaultMeta},
 			&autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta},
+			&networkingv1.NetworkPolicy{ObjectMeta: defaultMeta},
 		}
 		err = r.DeleteResources(resources)
 		if err != nil {
@@ -270,16 +260,17 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 
 		if isKnativeSupported {
+			reqLogger.Info("Knative is supported and Knative Service is enabled")
 			ksvc := &servingv1.Service{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(ksvc, instance, func() error {
 				appstacksutils.CustomizeKnativeService(ksvc, instance)
 				return nil
 			})
-
 			if err != nil {
 				reqLogger.Error(err, "Failed to reconcile Knative Service")
 				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 			}
+			reqLogger.Info("Reconcile RuntimeComponent - completed")
 			return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)
 		}
 		return r.ManageError(errors.New("failed to reconcile Knative service as operator could not find Knative CRDs"), common.StatusConditionTypeReconciled, instance)

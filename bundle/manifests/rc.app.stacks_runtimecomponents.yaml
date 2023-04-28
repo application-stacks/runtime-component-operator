@@ -3428,8 +3428,8 @@ spec:
                   a global image pull secret.
                 type: string
               replicas:
-                description: Number of pods to create. Not applicable when .spec.autoscaling
-                  or .spec.createKnativeService is specified.
+                description: Number of pods to create. Defaults to 1. Not applicable
+                  when .spec.autoscaling or .spec.createKnativeService is specified.
                 format: int32
                 type: integer
               resources:
@@ -3752,7 +3752,7 @@ spec:
                     type: array
                   targetPort:
                     description: The port that the operator assigns to containers
-                      inside pods. Defaults to the value of spec.service.port.
+                      inside pods. Defaults to the value of .spec.service.port.
                     format: int32
                     maximum: 65535
                     minimum: 1
@@ -7004,6 +7004,7 @@ spec:
                     type:
                       type: string
                     uri:
+                      description: Exposed URI of the application endpoint
                       type: string
                   type: object
                 type: array

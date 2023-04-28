@@ -3,7 +3,6 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
   name: rco-leader-election-cluster-role
 rules:
@@ -53,7 +52,6 @@ metadata:
   creationTimestamp: null
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
   name: rco-manager-cluster-role
 rules:
@@ -199,6 +197,14 @@ rules:
   - update
   - watch
 - apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - restricted
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
+- apiGroups:
   - serving.knative.dev
   resources:
   - services
@@ -223,7 +229,6 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
   name: rco-leader-election-cluster-rolebinding
 roleRef:
@@ -240,7 +245,6 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
   name: rco-manager-cluster-rolebinding
 roleRef:

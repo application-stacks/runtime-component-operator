@@ -3,7 +3,6 @@
 BASE_DIR="$(cd $(dirname $0) && pwd)"
 
 function update_csv() {
-#    local FILE="$BASE_DIR/../bundle/manifests/ibm-websphere-liberty.clusterserviceversion.yaml"
     local FILE="$BASE_DIR/../bundle/manifests/runtime-component.clusterserviceversion.yaml"
 
     DESCRIPTION_FILE=/tmp/description.md
