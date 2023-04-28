@@ -165,6 +165,97 @@ oc get comp my-app
 
 The short name for `runtimecomponent` is `comp`.
 
+
+=== Viewing operator application status
+
+An application administrator can view the status of an application that is deployed in a container. To get information about the deployed custom resource (CR), use a CLI or the Red Hat OpenShift console.
+
+* link:#status-types-for-status-condition[Status types for `.status.condition`]
+* link:#viewing-status-with-the-cli[Viewing status with the CLI]
+* link:#viewing-status-with-the-red-hat-openshift-console[Viewing status with the Red Hat OpenShift console]
+
+==== Status types for `.status.condition` [[status-types-for-status-condition]]
+The status types for the `.status.condition` parameter in the `RuntimeComponent` CR are `Ready`, `ResourcesReady`, `Reconciled`.
+
+*Reconciled*
+
+  - Indicates whether the current version of the operator successfully processed the configurations in the CR.
+
+*ResourcesReady*
+
+  - Indicates whether the application resources created and managed by the operator are ready.
+
+*Ready*
+
+  - Indicates the overall status of the application. If true, the application configuration was reconciled and its resource are in ready state.
+
+==== Viewing status with the CLI [[viewing-status-with-the-cli]]
+
+To use the CLI to get information about a deployed CR, run a `kubectl get` or `oc get` command.
+
+To run kubectl commands, you need the Kubernetes command line tool or the Red Hat OpenShift command-line interface (CLI). To run oc commands, you need the Red Hat OpenShift CLI.
+
+In the following get commands, replace `my-app` with your CR name. Run any one of the commands. `comp` and `comps` are short names for `runtimecomponent` and `runtimecomponents`.
+
+* Run any of the following `kubectl get` commands.
+
+[source,bash]
+----
+kubectl get comp my-app
+kubectl get comps my-app
+kubectl get runtimecomponent my-app
+----
+
+* Run any of the following `oc get` commands.
+
+[source,bash]
+----
+oc get comp my-app
+oc get comps my-app
+oc get runtimecomponent my-app
+----
+
+The results of the command resemble the following.
+[source,bash]
+----
+NAME     IMAGE                       EXPOSED   RECONCILED   RESOURCESREADY   READY   AGE
+my-app   quay.io/my-repo/my-app:1.0            True         True             True    18m
+----
+
+The value in the `READY` column is `True` when the application is successfully installed. If the value in the `READY` column is not `True`, see link:++troubleshooting.adoc++[Troubleshooting Runtime Component operators].
+
+==== Viewing status with the Red Hat OpenShift console [[viewing-status-with-the-red-hat-openshift-console]]
+
+To use the Red Hat OpenShift console to get information about a deployed CR, view the deployed `RuntimeComponent` instance and inspect the `.status` section.
+
+[source,yaml]
+----
+status:
+  conditions:
+    - lastTransitionTime: '2022-05-10T15:59:04Z'
+      status: 'True'
+      type: Reconciled
+    - lastTransitionTime: '2022-05-10T15:59:16Z'
+      message: 'Deployment replicas ready: 3/3'
+      reason: MinimumReplicasAvailable
+      status: 'True'
+      type: ResourcesReady
+    - lastTransitionTime: '2022-05-10T15:59:16Z'
+      message: Application is reconciled and resources are ready.
+      status: 'True'
+      type: Ready
+  imageReference: 'quay.io/my-repo/my-app:1.0'
+  references:
+    svcCertSecretName: my-app-svc-tls-ocp
+  versions:
+    reconciled: 1.0.0
+----
+
+If the `.status.conditions.type` Ready type does not have a status of `True`, see link:++troubleshooting.adoc++[Troubleshooting Runtime Component operators].
+
+The value of the `.status.versions.reconciled` parameter is the version of the operand that is deployed into the cluster after the reconcile loop completes.
+
+
 === Operator configuration examples
 Browse the `RuntimeComponent` examples to learn how to use custom resource (CR) parameters to configure your operator. The complete component documentation can be found under link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#open-liberty-operator-documentation++[Open Liberty Operator's "Common Component Documentation"] section. Any references to Open Liberty Operator-specific resources can be mapped over to Runtime Component Operator using the table below.
 
