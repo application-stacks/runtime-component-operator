@@ -257,7 +257,7 @@ The value of the `.status.versions.reconciled` parameter is the version of the o
 
 
 === Operator configuration examples
-Browse the `RuntimeComponent` examples to learn how to use custom resource (CR) parameters to configure your operator. The complete component documentation can be found under link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#open-liberty-operator-documentation++[Open Liberty Operator's "Common Component Documentation"] section. Any references to Open Liberty Operator-specific resources can be mapped over to Runtime Component Operator using the table below.
+Browse the `RuntimeComponent` examples to learn how to use custom resource (CR) parameters to configure your operator. The complete component documentation can be found under link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1beta2.adoc#operator-configuration-examples++[Open Liberty Operator's "Common Component"] section. Any references to Open Liberty Operator-specific resources can be mapped over to Runtime Component Operator using the table below.
 
 .Open Liberty Operator Name Mapping
 |===
