@@ -1,7 +1,6 @@
-# Name
-Runtime Component Operator
-# Introduction
-The Runtime Component Operator allows you to deploy and manage any runtime components securely and easily on Red Hat OpenShift as well as other Kubernetes-based platforms in a consistent way. You can also perform Day-2 operations using the operator.
+Runtime Component Operator allows you to deploy and manage any runtime components securely and easily on Red Hat OpenShift as well as other Kubernetes-based platforms in a consistent way. You can also perform day-2 operations using the operator.
+## Documentation
+See our user guide [here](https://ibm.biz/rco-docs). If you are **upgrading from versions 0.8.x or below**, make sure to review the documentation, prior to the upgrade, on [behavioural changes](https://ibm.biz/rco-upgrade-v1) that could impact your applications.
 ## Supported platforms
 Kubernetes platform installed on one of the following platforms:
 - Linux&reg; x86_64 (amd64)
@@ -29,7 +28,7 @@ This Operator is capable of using a custom Kubernetes service account from the c
 ### Environment Configuration
 You can configure a variety of artifacts with your deployment, such as labels, annotations, and environment variables from a ConfigMap, a Secret, or a value.
 ### Routing
-Expose your application to external users via a single toggle to create a Route on OpenShift or an Ingress on other Kubernetes environments. Advanced configuration, such as TLS settings, are also easily enabled. Renewed certificates are automatically made available to the runtime component.
+Expose your application to external users via a single toggle to create a Route on OpenShift or an Ingress on other Kubernetes environments. Advanced configurations, such as for TLS, are also easily enabled. Renewed certificates are automatically made available to the runtime component.
 ### High Availability via Horizontal Pod Autoscaling
 Run multiple instances of your application for high availability. Either specify a static number of replicas or easily configure horizontal auto-scaling to create (and delete) instances based on resource consumption.
 ### Persistence and advanced storage
