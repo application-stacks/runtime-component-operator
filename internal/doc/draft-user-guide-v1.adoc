@@ -199,7 +199,7 @@ In the following get commands, replace `my-app` with your CR name. Run any one o
 
 * Run any of the following `kubectl get` commands.
 
-[source,bash]
+[source,sh]
 ----
 kubectl get comp my-app
 kubectl get comps my-app
@@ -208,7 +208,7 @@ kubectl get runtimecomponent my-app
 
 * Run any of the following `oc get` commands.
 
-[source,bash]
+[source,sh]
 ----
 oc get comp my-app
 oc get comps my-app
@@ -216,7 +216,7 @@ oc get runtimecomponent my-app
 ----
 
 The results of the command resemble the following.
-[source,bash]
+[source,sh]
 ----
 NAME     IMAGE                       EXPOSED   RECONCILED   RESOURCESREADY   READY   AGE
 my-app   quay.io/my-repo/my-app:1.0            True         True             True    18m
