@@ -22,7 +22,7 @@ Your runtime components can expose services by a simple toggle. We take care of 
 ### Integration with Knative (OpenShift Serverless)
 Deploy your serverless runtime component using a single toggle. The operator will convert all of its generated resources into [Knative](https://knative.dev) resources, allowing the application to automatically scale to 0 when it is idle.
 ### Application Lifecycle
-You can deploy your application container by either pointing to a container image, or an OpenShift ImageStream. When using an ImageStream the operator will watch for any updates and will automatically re-deploy the new image.
+You can deploy your application container by either pointing to a container image, or an OpenShift ImageStream. When using an ImageStream the operator will watch for any updates and will automatically deploy the new image.
 ### Custom RBAC
 This Operator is capable of using a custom Kubernetes service account from the caller, allowing it to follow RBAC restrictions. By default, it creates a service account if one is not specified, which can also be bound with specific roles.
 ### Environment Configuration
