@@ -11,11 +11,11 @@ Appropriate roles and bindings are required to watch another namespace or watch 
 
 ---
 
-. Install Custom Resource Definitions (CRDs) for `RuntimeComponent` and `RuntimeOperation` for day-2 operation. This needs to be done only ONCE per cluster:
+. Install Custom Resource Definition (CRD) resources for `RuntimeComponent` and `RuntimeOperation` for day-2 operation. This needs to be done only ONCE per cluster:
 +
 [source,sh]
 ----
-    kubectl apply -f https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/deploy/releases/0.8.2/kubectl/runtime-component-crd.yaml
+    kubectl apply -f https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/internal/deploy/kubectl/runtime-component-crd.yaml
 ----
 
 . Install the Runtime Component Operator:
@@ -39,7 +39,7 @@ NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY
 +
 [source,sh]
 ----
-    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/deploy/releases/0.8.2/kubectl/runtime-component-rbac-watch-all.yaml \
+    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/internal/deploy/kubectl/runtime-component-rbac-watch-all.yaml \
       | sed -e "s/RUNTIME_COMPONENT_OPERATOR_NAMESPACE/${OPERATOR_NAMESPACE}/" \
       | kubectl apply -f -
 ----
@@ -48,7 +48,7 @@ NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY
 +
 [source,sh]
 ----
-    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/deploy/releases/0.8.2/kubectl/runtime-component-rbac-watch-another.yaml \
+    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/internal/deploy/kubectl/runtime-component-rbac-watch-another.yaml \
       | sed -e "s/RUNTIME_COMPONENT_OPERATOR_NAMESPACE/${OPERATOR_NAMESPACE}/" \
       | sed -e "s/RUNTIME_COMPONENT_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" \
       | kubectl apply -f -
@@ -58,7 +58,7 @@ NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY
 +
 [source,sh]
 ----
-    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/deploy/releases/0.8.2/kubectl/runtime-component-operator.yaml \
+    curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/internal/deploy/kubectl/runtime-component-operator.yaml \
       | sed -e "s/RUNTIME_COMPONENT_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" \
       | kubectl apply -n ${OPERATOR_NAMESPACE} -f -
 ----
@@ -67,6 +67,4 @@ NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY
 
 To uninstall the operator, run commands from Step 2c first and then Step 2b (if applicable), but after replacing `kubectl apply` with `kubectl delete`.
 
-To delete the CRD, run command from Step 1, but after replacing `kubectl apply` with `kubectl delete`.
-
-_Deleting the CRD will also delete all instances of `RuntimeComponent` and `RuntimeOperation` in the cluster_
+Optionally you can delete the CRD resources, but note that deleting the CRD also deletes all instances of the RuntimeComponent and RuntimeOperation custom resources in the cluster. Skip this step if you are planning to install the Runtime Component Operator again and want the existing instances of these custom resources to be managed by the new instance of the Operator. To delete the CRD, run command from Step 1, but after replacing `kubectl apply` with `kubectl delete`.
