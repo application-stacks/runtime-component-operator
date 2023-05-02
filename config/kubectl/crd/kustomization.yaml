@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../crd
+
+# Adds namespace to all resources.
+namePrefix: rco-
+
+# Labels to add to all resources and selectors.
+commonLabels:
+  app.kubernetes.io/instance: runtime-component-operator
+  app.kubernetes.io/name: runtime-component-operator
+

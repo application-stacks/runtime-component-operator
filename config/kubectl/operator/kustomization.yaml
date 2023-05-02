@@ -1,0 +1,46 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../rbac
+- ../../manager
+
+namePrefix: rco-
+
+# Labels to add to all resources and selectors.
+commonLabels:
+  app.kubernetes.io/instance: runtime-component-operator
+  app.kubernetes.io/name: runtime-component-operator
+
+patches:
+- path: patches/delete-namespace.yaml
+  target:
+    kind: Namespace
+
+patchesJson6902:
+  - target:
+      namespace: system
+      name: .*
+    patch: |-
+      - op: remove
+        path: /metadata/namespace
+  - target:
+      namespace: runtime-component-operator
+      name: .*
+    patch: |-
+      - op: remove
+        path: /metadata/namespace
+  - target:
+      kind: RoleBinding
+      name: .*
+    patch: |-
+      - op: remove
+        path: /subjects/0/namespace
+  - target:
+      kind: Deployment
+      name: rco-controller-manager
+    patch: |-
+      - op: remove
+        path: /spec/template/spec/containers/0/env/1/valueFrom
+      - op: add
+        path: /spec/template/spec/containers/0/env/1/value
+        value: RUNTIME_COMPONENT_WATCH_NAMESPACE
