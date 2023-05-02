@@ -3,9 +3,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
-  name: rco-leader-election-cluster-role
+  name: rco-cluster-leader-election-role
 rules:
 - apiGroups:
   - ""
@@ -53,9 +52,8 @@ metadata:
   creationTimestamp: null
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
-  name: rco-manager-cluster-role
+  name: rco-cluster-manager-role
 rules:
 - apiGroups:
   - apps
@@ -63,7 +61,12 @@ rules:
   - deployments
   - statefulsets
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
   - apps
   resources:
@@ -76,7 +79,24 @@ rules:
   resources:
   - horizontalpodautoscalers
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - cert-manager.io
+  resources:
+  - certificates
+  - issuers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
   - ""
   resources:
@@ -85,14 +105,25 @@ rules:
   - serviceaccounts
   - services
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
   - ""
   resources:
   - pods
   - pods/exec
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - image.openshift.io
   resources:
@@ -107,13 +138,24 @@ rules:
   resources:
   - servicemonitors
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
   - networking.k8s.io
   resources:
   - ingresses
+  - networkpolicies
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
   - rc.app.stacks
   resources:
@@ -121,7 +163,13 @@ rules:
   - runtimecomponents/finalizers
   - runtimecomponents/status
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - rc.app.stacks
   resources:
@@ -129,27 +177,51 @@ rules:
   - runtimeoperations/finalizers
   - runtimeoperations/status
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - route.openshift.io
   resources:
   - routes
   - routes/custom-host
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - restricted
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
 - apiGroups:
   - serving.knative.dev
   resources:
   - services
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
   - ""
   resources:
   - namespaces
   verbs:
-  - list
   - get
+  - list
   - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -157,13 +229,12 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
-  name: rco-leader-election-cluster-rolebinding
+  name: rco-cluster-leader-election-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: rco-leader-election-cluster-role
+  name: rco-cluster-leader-election-role
 subjects:
 - kind: ServiceAccount
   name: rco-controller-manager
@@ -174,13 +245,12 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
-  name: rco-manager-cluster-rolebinding
+  name: rco-cluster-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: rco-manager-cluster-role
+  name: rco-cluster-manager-role
 subjects:
 - kind: ServiceAccount
   name: rco-controller-manager

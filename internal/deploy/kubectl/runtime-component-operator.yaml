@@ -1,10 +1,8 @@
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
   name: rco-controller-manager
 ---
@@ -13,7 +11,6 @@ kind: Role
 metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
   name: rco-leader-election-role
 rules:
@@ -63,166 +60,175 @@ metadata:
   creationTimestamp: null
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
   name: rco-manager-role
 rules:
 - apiGroups:
-    - apps
+  - apps
   resources:
-    - deployments
-    - statefulsets
+  - deployments
+  - statefulsets
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - update
-    - watch
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
-    - apps
+  - apps
   resources:
-    - deployments/finalizers
-    - statefulsets
+  - deployments/finalizers
+  - statefulsets
   verbs:
-    - update
+  - update
 - apiGroups:
-    - autoscaling
+  - autoscaling
   resources:
-    - horizontalpodautoscalers
+  - horizontalpodautoscalers
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - update
-    - watch
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
-    - cert-manager.io
+  - cert-manager.io
   resources:
-    - certificates
-    - issuers
+  - certificates
+  - issuers
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - update
-    - watch
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
-    - ""
+  - ""
   resources:
-    - configmaps
-    - secrets
-    - serviceaccounts
-    - services
+  - configmaps
+  - secrets
+  - serviceaccounts
+  - services
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - update
-    - watch
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
-    - ""
+  - ""
   resources:
-    - pods
-    - pods/exec
+  - pods
+  - pods/exec
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - update
-    - watch
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
-    - image.openshift.io
+  - image.openshift.io
   resources:
-    - imagestreams
-    - imagestreamtags
+  - imagestreams
+  - imagestreamtags
   verbs:
-    - get
-    - list
-    - watch
+  - get
+  - list
+  - watch
 - apiGroups:
-    - monitoring.coreos.com
+  - monitoring.coreos.com
   resources:
-    - servicemonitors
+  - servicemonitors
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - update
-    - watch
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
-    - networking.k8s.io
+  - networking.k8s.io
   resources:
-    - ingresses
-    - networkpolicies
+  - ingresses
+  - networkpolicies
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - update
-    - watch
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
-    - rc.app.stacks
+  - rc.app.stacks
   resources:
-    - runtimecomponents
-    - runtimecomponents/finalizers
-    - runtimecomponents/status
+  - runtimecomponents
+  - runtimecomponents/finalizers
+  - runtimecomponents/status
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - update
-    - watch
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
-    - rc.app.stacks
+  - rc.app.stacks
   resources:
-    - runtimeoperations
-    - runtimeoperations/finalizers
-    - runtimeoperations/status
+  - runtimeoperations
+  - runtimeoperations/finalizers
+  - runtimeoperations/status
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - update
-    - watch
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
-    - route.openshift.io
+  - route.openshift.io
   resources:
-    - routes
-    - routes/custom-host
+  - routes
+  - routes/custom-host
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - update
-    - watch
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
-    - serving.knative.dev
+  - security.openshift.io
+  resourceNames:
+  - restricted
   resources:
-    - services
+  - securitycontextconstraints
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - update
-    - watch
+  - use
+- apiGroups:
+  - serving.knative.dev
+  resources:
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
   name: rco-leader-election-rolebinding
 roleRef:
@@ -238,7 +244,6 @@ kind: RoleBinding
 metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
   name: rco-manager-rolebinding
 roleRef:
@@ -254,7 +259,6 @@ kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
     control-plane: controller-manager
   name: rco-controller-manager
@@ -263,19 +267,31 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/instance: runtime-component-operator
-      app.kubernetes.io/managed-by: olm
       app.kubernetes.io/name: runtime-component-operator
       control-plane: controller-manager
   template:
     metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
       labels:
         app.kubernetes.io/instance: runtime-component-operator
-        app.kubernetes.io/managed-by: olm
         app.kubernetes.io/name: runtime-component-operator
         control-plane: controller-manager
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - ppc64le
+                - s390x
       containers:
       - args:
+        - --health-probe-bind-address=:8081
         - --enable-leader-election
         command:
         - /manager
@@ -286,15 +302,49 @@ spec:
               fieldPath: metadata.namespace
         - name: WATCH_NAMESPACE
           value: RUNTIME_COMPONENT_WATCH_NAMESPACE
-        image: applicationstacks/operator:0.8.2
-        imagePullPolicy: Always
+        - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
+          value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:e22dd56a05e44618a10d275d3ff07a38eb364c0f04f86ffe9618d83dd5467860
+        image: icr.io/appcafe/runtime-component-operator:daily
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 8081
+            scheme: HTTP
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 10
         name: manager
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /readyz
+            port: 8081
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 10
         resources:
           limits:
-            cpu: 200m
+            cpu: 400m
             memory: 512Mi
           requests:
-            cpu: 100m
-            memory: 64Mi
+            cpu: 200m
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      securityContext:
+        runAsNonRoot: true
       serviceAccountName: rco-controller-manager
       terminationGracePeriodSeconds: 10

@@ -203,6 +203,12 @@ bundle: manifests setup kustomize ## Generate bundle manifests and metadata, the
 
 	mv config/manifests/patches/csvAnnotations.yaml.bak config/manifests/patches/csvAnnotations.yaml
 	rm internal/deploy/kustomize/daily/base/runtime-component-operator.yaml.bak
+	
+	$(KUSTOMIZE) build config/kubectl/crd -o internal/deploy/kubectl/runtime-component-crd.yaml
+	$(KUSTOMIZE) build config/kubectl/operator -o internal/deploy/kubectl/runtime-component-operator.yaml
+	$(KUSTOMIZE) build config/kubectl/rbac-watch-all -o internal/deploy/kubectl/runtime-component-rbac-watch-all.yaml
+	$(KUSTOMIZE) build config/kubectl/rbac-watch-another -o internal/deploy/kubectl/runtime-component-rbac-watch-another.yaml
+
 	operator-sdk bundle validate ./bundle
 
 .PHONY: fmt
