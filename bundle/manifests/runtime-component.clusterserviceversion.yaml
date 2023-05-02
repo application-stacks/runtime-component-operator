@@ -68,7 +68,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2023-04-26T17:30:36Z"
+    createdAt: "2023-05-01T09:45:40Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     olm.skipRange: '>=0.8.0 <1.2.0'
     operators.openshift.io/infrastructure-features: '["disconnected"]'
@@ -881,10 +881,9 @@ spec:
       version: v1beta2
   displayName: Runtime Component
   description: |
-    # Name
-    Runtime Component Operator
-    # Introduction
-    The Runtime Component Operator allows you to deploy and manage any runtime components securely and easily on Red Hat OpenShift as well as other Kubernetes-based platforms in a consistent way. You can also perform Day-2 operations using the operator.
+    Runtime Component Operator allows you to deploy and manage any runtime components securely and easily on Red Hat OpenShift as well as other Kubernetes-based platforms in a consistent way. You can also perform day-2 operations using the operator.
+    ## Documentation
+    See our user guide [here](https://ibm.biz/rco-docs). If you are **upgrading from versions 0.8.x or below**, make sure to review the documentation, prior to the upgrade, on [behavioural changes](https://ibm.biz/rco-upgrade-v1) that could impact your applications.
     ## Supported platforms
     Kubernetes platform installed on one of the following platforms:
     - Linux&reg; x86_64 (amd64)
@@ -906,13 +905,13 @@ spec:
     ### Integration with Knative (OpenShift Serverless)
     Deploy your serverless runtime component using a single toggle. The operator will convert all of its generated resources into [Knative](https://knative.dev) resources, allowing the application to automatically scale to 0 when it is idle.
     ### Application Lifecycle
-    You can deploy your application container by either pointing to a container image, or an OpenShift ImageStream. When using an ImageStream the operator will watch for any updates and will automatically re-deploy the new image.
+    You can deploy your application container by either pointing to a container image, or an OpenShift ImageStream. When using an ImageStream the operator will watch for any updates and will automatically deploy the new image.
     ### Custom RBAC
     This Operator is capable of using a custom Kubernetes service account from the caller, allowing it to follow RBAC restrictions. By default, it creates a service account if one is not specified, which can also be bound with specific roles.
     ### Environment Configuration
     You can configure a variety of artifacts with your deployment, such as labels, annotations, and environment variables from a ConfigMap, a Secret, or a value.
     ### Routing
-    Expose your application to external users via a single toggle to create a Route on OpenShift or an Ingress on other Kubernetes environments. Advanced configuration, such as TLS settings, are also easily enabled. Renewed certificates are automatically made available to the runtime component.
+    Expose your application to external users via a single toggle to create a Route on OpenShift or an Ingress on other Kubernetes environments. Advanced configurations, such as for TLS, are also easily enabled. Renewed certificates are automatically made available to the runtime component.
     ### High Availability via Horizontal Pod Autoscaling
     Run multiple instances of your application for high availability. Either specify a static number of replicas or easily configure horizontal auto-scaling to create (and delete) instances based on resource consumption.
     ### Persistence and advanced storage
