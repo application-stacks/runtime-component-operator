@@ -4,7 +4,7 @@ resources:
 - ../../rbac
 
 # Adds namespace to all resources.
-namespace: default
+namespace: runtime-component
 namePrefix: rco-
 
 # Labels to add to all resources and selectors.

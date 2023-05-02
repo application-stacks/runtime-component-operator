@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/instance: runtime-component-operator
     app.kubernetes.io/name: runtime-component-operator
   name: rco-controller-manager
-  namespace: default
+  namespace: runtime-component
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -14,7 +14,7 @@ metadata:
     app.kubernetes.io/instance: runtime-component-operator
     app.kubernetes.io/name: runtime-component-operator
   name: rco-leader-election-role
-  namespace: default
+  namespace: runtime-component
 rules:
 - apiGroups:
   - ""
@@ -64,7 +64,7 @@ metadata:
     app.kubernetes.io/instance: runtime-component-operator
     app.kubernetes.io/name: runtime-component-operator
   name: rco-manager-role
-  namespace: default
+  namespace: runtime-component
 rules:
 - apiGroups:
   - apps
@@ -234,7 +234,7 @@ metadata:
     app.kubernetes.io/instance: runtime-component-operator
     app.kubernetes.io/name: runtime-component-operator
   name: rco-leader-election-rolebinding
-  namespace: default
+  namespace: runtime-component
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -242,7 +242,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: rco-controller-manager
-  namespace: default
+  namespace: runtime-component
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -251,7 +251,7 @@ metadata:
     app.kubernetes.io/instance: runtime-component-operator
     app.kubernetes.io/name: runtime-component-operator
   name: rco-manager-rolebinding
-  namespace: default
+  namespace: runtime-component
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -259,4 +259,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: rco-controller-manager
-  namespace: default
+  namespace: runtime-component

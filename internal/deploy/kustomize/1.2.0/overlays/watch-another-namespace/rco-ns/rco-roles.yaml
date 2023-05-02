@@ -2,30 +2,30 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: rco-leader-election-role
-  namespace: default
+  namespace: runtime-component
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: rco-manager-role
-  namespace: default
+  namespace: runtime-component
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: rco-leader-election-rolebinding
-  namespace: default
+  namespace: runtime-component
 subjects:
 - kind: ServiceAccount
   name: rco-controller-manager
-  namespace: default
+  namespace: runtime-component
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: rco-manager-rolebinding
-  namespace: default
+  namespace: runtime-component
 subjects:
 - kind: ServiceAccount
   name: rco-controller-manager
-  namespace: default
+  namespace: runtime-component
