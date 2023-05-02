@@ -46,7 +46,7 @@ spec:
 
 === Custom Resource Definition (CRD)
 
-The following table lists configurable fields of the `RuntimeComponent` CRD. For complete OpenAPI v3 representation of these values please see link:++../deploy/crds/app.stacks_runtimecomponents_crd.yaml++[`RuntimeComponent` CRD].
+The following table lists configurable fields of the `RuntimeComponent` CRD. For complete OpenAPI v3 representation of these values, view the files under `/deploy/releases/_<operator-version>_/kubectl/runtime-component-crd.yaml`. For example,  the link:++../deploy/releases/0.8.2/kubectl/runtime-component-crd.yaml++[`RuntimeComponent` CRD] for release `0.8.2`.
 
 Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` field. Specifying other fields is optional.
 
@@ -54,69 +54,88 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 |===
 | Field | Description
 
-| `applicationVersion` | The current version of the application. Label `app.kubernetes.io/version` will be added to all resources when the version is defined.
-| `serviceAccountName` | The name of the OpenShift service account to be used during deployment.
-| `applicationImage` | The Docker image name to be deployed. On OpenShift, it can also be set to `<project name>/<image stream name>[:<tag>]` to reference an image from an image stream. If `<project name>` and `<tag>` values are not defined, they default to the namespace of the CR and the value of `latest`, respectively.
+| `affinity` | [[crd-spec-affinity]] Configures pods to run on specific nodes. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#limit-a-pod-to-run-on-specified-nodes++[Limit a pod to run on specified nodes].
+| `affinity.architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference.
+| `affinity.nodeAffinity` | A YAML object that represents a link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#nodeaffinity-v1-core++[NodeAffinity].
+| `affinity.nodeAffinityLabels` | A YAML object that contains set of required labels and their values.
+| `affinity.podAffinity` | A YAML object that represents a link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podaffinity-v1-core++[PodAffinity].
+| `affinity.podAntiAffinity` | A YAML object that represents a link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podantiaffinity-v1-core++[PodAntiAffinity].
+| `applicationImage` | The absolute name of the image to be deployed, containing the registry and the tag. On OpenShift, it can also be set to `<project name>/<image stream name>[:tag]` to reference an image from an image stream. If `<project name>` and `<tag>` values are not defined, they default to the namespace of the CR and the value of `latest`, respectively.
 | `applicationName` | The name of the application this resource is part of. If not specified, it defaults to the name of the CR.
-| `pullPolicy` | The policy used when pulling the image.  One of: `Always`, `Never`, and `IfNotPresent`. If not specified, the default is `IfNotPresent`.
-| `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials.
-| `initContainers` | The list of link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#container-v1-core++[Init Container] definitions.
-| `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`.
-| `service.bindable` | A boolean to toggle whether the operator expose the application as a bindable service. The default value for this field is `false`.
-| `service.port` | The port exposed by the container.
-| `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`.
-| `service.portName` | The name for the port exposed by the container.
-| `service.ports` | An array consisting of service ports.
-| `service.type` | The Kubernetes link:++https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types++[Service Type].
-| `service.nodePort` | Node proxies this port into your service. Please note once this port is set to a non-zero value it cannot be reset to zero.
-| `service.annotations` | Annotations to be added to the service.
-| `service.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod. The following keys are valid in the secret: `ca.crt`, `tls.crt`, and `tls.key`.
-| `networkPolicy.disable` | A boolean to toggle the creation of the network policies resources. Defaults to false.
-| `networkPolicy.namespaceLabels` | A set of labels that selects the namespace to allow incoming traffic from. Defaults to the same namespace that the application is deployed to.
-| `networkPolicy.fromLabels` | A set of labels that selects the pod(s) to allow incoming traffic from. Defaults to pod(s) belonging to the same application.
-| `createKnativeService`   | A boolean to toggle the creation of Knative resources and usage of Knative serving.
-| `manageTLS` | A boolean to toggle automatic certificate generation and mounting TLS secret into the pod. The default value for this field is `true`.
-| `expose`   | A boolean that toggles the external exposure of this deployment via a Route or a Knative Route resource.
-| `deployment.updateStrategy`   | A field to specify the update strategy of the deployment. For more information, see link:++https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy++[updateStrategy]
-| `deployment.updateStrategy.type`   | The type of update strategy of the deployment. The type can be set to `RollingUpdate` or `Recreate`, where `RollingUpdate` is the default update strategy.
-| `deployment.annotations`   | Annotations to be added only to the deployment and resources owned by the deployment.
-| `statefulSet.updateStrategy`   | A field to specify the update strategy of the StatefulSet. For more information, see link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies++[updateStrategy]
-| `statefulSet.updateStrategy.type`   | The type of update strategy of the StatefulSet. The type can be set to `RollingUpdate` or `OnDelete`, where `RollingUpdate` is the default update strategy.
-| `statefulSet.annotations`   | Annotations to be added only to the StatefulSet and resources owned by the StatefulSet.
-| `statefulSet.storage.size` | A convenient field to set the size of the persisted storage. Can be overridden by the `storage.volumeClaimTemplate` property.
-| `storage.className`| A convenient field to set the storage class of the persisted storage. Can be overridden by the `storage.volumeClaimTemplate` property.
-| `statefulSet.storage.mountPath` | The directory inside the container where this persisted storage will be bound to.
-| `statefulSet.storage.volumeClaimTemplate` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components++[volumeClaimTemplate] component of a `StatefulSet`.
-| `replicas` | The static number of desired replica pods that run simultaneously.
+| `applicationVersion` | The current version of the application. Label `app.kubernetes.io/version` will be added to all resources when the version is defined.
+| `autoscaling` | Configures the wanted resource consumption of pods. For examples, see link:#++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#configure-multiple-application-instances-for-high-availability++[Configure multiple application instances for high availability].
 | `autoscaling.maxReplicas` | Required field for autoscaling. Upper limit for the number of pods that can be set by the autoscaler. It cannot be lower than the minimum number of replicas.
 | `autoscaling.minReplicas`   | Lower limit for the number of pods that can be set by the autoscaler.
 | `autoscaling.targetCPUUtilizationPercentage`   | Target average CPU utilization (represented as a percentage of requested CPU) over all the pods.
-| `resources.requests.cpu` | The minimum required CPU core. Specify integers, fractions (e.g. 0.5), or millicore values(e.g. 100m, where 100m is equivalent to .1 core). Required field for autoscaling.
-| `resources.requests.memory` | The minimum memory in bytes. Specify integers with one of these suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.
-| `resources.limits.cpu` | The upper limit of CPU core. Specify integers, fractions (e.g. 0.5), or millicores values(e.g. 100m, where 100m is equivalent to .1 core).
-| `resources.limits.memory` | The memory upper limit in bytes. Specify integers with suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.
-| `env`   | An array of environment variables following the format of `{name, value}`, where value is a simple string. It may also follow the format of `{name, valueFrom}`, where valueFrom refers to a value in a `ConfigMap` or `Secret` resource. See link:++#environment-variables++[Environment variables] for more info.
-| `envFrom`   | An array of references to `ConfigMap` or `Secret` resources containing environment variables. Keys from `ConfigMap` or `Secret` resources become environment variable names in your container. See link:++#environment-variables++[Environment variables] for more info.
-| `probes.readiness`   | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes++[Kubernetes readiness probe] that controls when the pod is ready to receive traffic.
-| `probes.liveness` | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request++[Kubernetes liveness probe] that controls when Kubernetes needs to restart the pod.
-| `probes.startup` | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes++[Kubernetes startup probe] that controls when Kubernetes needs to startup the pod on its first initialization.
-| `volumes` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/storage/volumes++[pod volume].
-| `volumeMounts` | A YAML object that represents a link:++https://kubernetes.io/docs/concepts/storage/volumes/++[pod volumeMount].
-| `monitoring.labels` | Labels to set on link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#servicemonitor++[ServiceMonitor].
+| `createKnativeService`   | A Boolean to toggle the creation of Knative resources and use of Knative serving. To create a Knative service, set the parameter to true. For examples, see link:#++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#deploy-serverless-applications-with-knative++[Deploy serverless applications with Knative] and link:#++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#expose-applications-externally++[Expose applications externally].
+| `deployment`  | The wanted state and cycle of the deployment and resources owned by the deployment.
+| `deployment.annotations`   | Annotations to be added only to the deployment and resources owned by the deployment.
+| `deployment.updateStrategy`   | A field to specify the update strategy of the deployment. For examples, see link:++https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy++[updateStrategy]
+| `deployment.updateStrategy.type`   | The type of update strategy of the deployment. The type can be set to `RollingUpdate` or `Recreate`, where `RollingUpdate` is the default update strategy.
+| `env`   | [[crd-spec-env]] An array of environment variables following the format of `{name, value}`, where value is a simple string. It may also follow the format of `{name, valueFrom}`, where valueFrom refers to a value in a `ConfigMap` or `Secret` resource. For examples, see link:#++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#set-environment-variables-for-an-application-container++[Set environment variables for an application container] and link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#override-console-logging-environment-variable-default-values++[Override console logging environment variable default values].
+| `envFrom`   | An array of references to `ConfigMap` or `Secret` resources containing environment variables. Keys from `ConfigMap` or `Secret` resources become environment variable names in your container. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#set-environment-variables-for-an-application-container++[Set environment variables for an application container].
+| `expose`   | A boolean that toggles the external exposure of this deployment via a Route or a Knative Route resource.
+| `initContainers` | The list of link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core++[Init Container] definitions.
+| `manageTLS`   | A boolean to toggle automatic certificate generation and mounting TLS secret into the pod. The default value for this field is `true`.
+| `monitoring` | Specifies parameters for `Service Monitor`. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#monitor-resources++[Monitor resources] and link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#specify-multiple-service-ports++[Specify multiple service ports].
 | `monitoring.endpoints` | A YAML snippet representing an array of link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#endpoint++[Endpoint] component from ServiceMonitor.
-| `route.annotations` | Annotations to be added to the Route.
-| `route.host`   | Hostname to be used for the Route.
-| `route.path`   | Path to be used for Route.
+| `monitoring.labels` | Labels to set on link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#servicemonitor++[ServiceMonitor].
+| `probes` | Defines health checks on an application container to determine whether it is alive or ready to receive traffic. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#configure-probes++[Configure probes].
+| `probes.liveness` | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request++[Kubernetes liveness probe] that controls when Kubernetes needs to restart the pod.
+| `probes.readiness`   | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes++[Kubernetes readiness probe] that controls when the pod is ready to receive traffic.
+| `probes.startup` | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes++[Kubernetes startup probe] that controls when Kubernetes needs to startup the pod on its first initialization.
+| `pullPolicy` | The policy used when pulling the image.  One of: `Always`, `Never`, and `IfNotPresent`.
+| `pullSecret` | If using a registry that requires authentication, the name of the secret containing credentials.
+| `replicas` | The static number of desired replica pods that run simultaneously.
+| `resources.limits.cpu` | The upper limit of CPU core. Specify integers, fractions (e.g. `0.5`), or millicores values(e.g. `100m`, where `100m` is equivalent to `.1` core).
+| `resources.limits.memory` | The memory upper limit in bytes. Specify integers with suffixes: `E`, `P`, `T`, `G`, `M`, `K`, or power-of-two equivalents: `Ei`, `Pi`, `Ti`, `Gi`, `Mi`, `Ki`.
+| `resources.requests.cpu` | The minimum required CPU core. Specify integers, fractions (e.g. `0.5`), or millicore values(e.g. `100m`, where `100m` is equivalent to `.1` core). Required field for autoscaling.
+| `resources.requests.memory` | The minimum memory in bytes. Specify integers with one of these suffixes: `E`, `P`, `T`, `G`, `M`, `K`, or power-of-two equivalents: `Ei`, `Pi`, `Ti`, `Gi`, `Mi`, `Ki`.
+| `route.annotations` | Annotations to be added to the `Route`.
+| `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the `Route`. It can also contain destination CA certificate. The following keys are valid in the secret: `ca.crt`, `destCA.crt`, `tls.crt`, and `tls.key`.
+| `route.host`   | Hostname to be used for the `Route`.
+| `route.insecureEdgeTerminationPolicy`   | HTTP traffic policy with TLS enabled. Can be one of `Allow`, `Redirect` and `None`.
+| `route.path`   | Path to be used for the `Route`.
 | `route.pathType`   | Path type to be used. Required field for Ingress. See link:++https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types++[Ingress path types].
 | `route.termination`   | TLS termination policy. Can be one of `edge`, `reencrypt` and `passthrough`.
-| `route.insecureEdgeTerminationPolicy`   | HTTP traffic policy with TLS enabled. Can be one of `Allow`, `Redirect` and `None`.
-| `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the route. It can also contain destination CA certificate. The following keys are valid in the secret: `ca.crt`, `destCA.crt`, `tls.crt`, and `tls.key`.
-| `affinity.nodeAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#nodeaffinity-v1-core++[NodeAffinity].
-| `affinity.nodeAffinityLabels` | A YAML object that contains set of required labels and their values.
-| `affinity.podAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podaffinity-v1-core++[PodAffinity].
-| `affinity.podAntiAffinity` | A YAML object that represents a link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podantiaffinity-v1-core++[PodAntiAffinity].
-| `affinity.architecture` | An array of architectures to be considered for deployment. Their position in the array indicates preference.
-| `securityContext` | Security context to control privilege and permission settings for application container. See link:++https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container++[Security Context for a Container].
+| `securityContext`  | A security context to control privilege and permission settings for the application container. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#set-privileges-and-permissions-for-a-pod-or-container++[Set privileges and permissions for a pod or container]. If set, the fields of `SecurityContext` override the equivalent fields of `PodSecurityContext`. For examples, see link:++https://kubernetes.io/docs/tasks/configure-pod-container/security-context/++[Configure a Security Context for a Pod or Container].
+| `securityContext.allowPrivilegeEscalation` | A Boolean that controls whether a process can gain more privileges than its parent process. This Boolean controls whether the `no_new_privs` flag is set on the container process. `AllowPrivilegeEscalation` is `true` always when the container is run as `Privileged` and has `CAP_SYS_ADMIN`.
+| `securityContext.capabilities` | The capabilities to add or drop when containers are run. Defaults to the default set of capabilities that the container runtime grants.
+| `securityContext.capabilities.add` | An array of added capabilities of POSIX capabilities type.
+| `securityContext.capabilities.drop` | An array of removed capabilities of POSIX capabilities type.
+| `securityContext.privileged` | A Boolean to specify whether to run a container in privileged mode. Processes in privileged containers are equivalent to root on the host. The default is `false`.
+| `securityContext.procMount` | The type of proc mount to use for the containers. The default is `DefaultProcMount`, which uses the container runtime defaults for read-only paths and masked paths. To use `procMount`, the `ProcMountType` feature flag must be enabled.
+| `securityContext.readOnlyRootFilesystem` | A Boolean to specify whether this container has a read-only root file system. The default is `false`.
+| `securityContext.runAsGroup` | The GID to run the entrypoint of the container process. If unset, `runAsGroup` uses the runtime default. The value can be set in `PodSecurityContext`. If set in both `SecurityContext` and `PodSecurityContext`, the `SecurityContext` value takes precedence.
+| `securityContext.runAsNonRoot` | A Boolean that specifies whether the container must run as a nonroot user. If `true`, the kubelet validates the image at run time to ensure that it does not run as UID `0` (root), and fails to start the container if it does. If unset or `false`, the validation is not performed. The value can be set in `PodSecurityContext`. If set in both `SecurityContext` and `PodSecurityContext`, the `SecurityContext` value takes precedence.
+| `securityContext.runAsUser` | The UID to run the entrypoint of the container process. If unset, the default is the user that is specified in image metadata. The value can be set in `PodSecurityContext`. If set in both `SecurityContext` and `PodSecurityContext`, the `SecurityContext` value takes precedence.
+| `securityContext.seLinuxOptions` | The SELinux context to be applied to the container. Its properties include `level`, `role`, `type`, and `user`. If unspecified, the container runtime allocates a random SELinux context for each container. The value can be set in `PodSecurityContext`. If set in both `SecurityContext` and `PodSecurityContext`, the `SecurityContext` value takes precedence.
+| `securityContext.seccompProfile` | The `seccomp` options to use by this container. If `seccomp` options are set at both the pod and container level, the container options override the pod options.
+| `securityContext.seccompProfile.localhostProfile` | A profile that is defined in a file on the node. The profile must be preconfigured on the node to work. Specify a descending path, relative to the kubelet configured `seccomp` profile location. Only set `localhostProfile` if `type` is `Localhost`.
+| `securityContext.seccompProfile.type` | (Required) The kind of `seccomp` profile to use. Valid options are `Localhost` (use a profile that is defined in a file on the node), `RuntimeDefault` (use the container runtime default profile), and `Unconfined` (use no profile).
+| `securityContext.windowsOptions` | The Windows specific settings to apply to all containers. If unset, the options from the `PodSecurityContext` are used. If set in both `SecurityContext` and `PodSecurityContext`, the `SecurityContext` value takes precedence. The `windowsOptions` properties include `gmsaCredentialSpec`, `gmsaCredentialSpecName`, `hostProcess`, and `runAsUserName`.
+| `service` | Configures parameters for the network service of pods. For an example, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#specify-multiple-service-ports++[Specify multiple service ports].
+| `service.annotations` | Annotations to be added to the service.
+| `service.bindable` | [[crd-spec-service-bindable]] A boolean to toggle whether the operator expose the application as a bindable service. Defaults to `false`.  For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#bind-applications-with-operator-managed-backing-services++[Bind applications with operator-managed backing services].
+| `service.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod. The following keys are valid in the secret: `ca.crt`, `tls.crt`, and `tls.key`.
+| `service.nodePort` | Node proxies this port into your service. Please note once this port is set to a non-zero value it cannot be reset to zero.
+| `service.port` | The port exposed by the container.
+| `service.ports` | An array consisting of service ports.
+| `service.portName` | The name for the port exposed by the container.
+| `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`.
+| `service.type` | The Kubernetes link:++https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types++[Service Type].
+| `serviceAccountName` | The name of the Red Hat OpenShift service account to be used during deployment. If a service account name is not specified, a service account is automatically created. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#create-a-service-account++[Create a service account].
+| `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`. 
+| `statefulSet` | The wanted state and cycle of stateful applications. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#persist-resources++[Persist resources].
+| `statefulSet.annotations`   | Annotations to be added only to the StatefulSet and resources owned by the StatefulSet.
+| `statefulSet.storage.mountPath` | The directory inside the container where this persisted storage will be bound to.
+| `statefulSet.storage.size` | A convenient field to set the size of the persisted storage. Can be overridden by the `storage.volumeClaimTemplate` property. Operator will create a `StatefulSet` instead of a `Deployment` when `storage` is configured. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#persist-resources++[Persist resources].
+| `statefulSet.storage.volumeClaimTemplate` | A YAML object representing a link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components++[volumeClaimTemplate] component of a `StatefulSet`.
+| `statefulSet.updateStrategy`   | A field to specify the update strategy of the StatefulSet. For examples, see link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies++[updateStrategy]
+| `statefulSet.updateStrategy.type`   | The type of update strategy of the StatefulSet. The type can be set to `RollingUpdate` or `OnDelete`, where `RollingUpdate` is the default update strategy.
+| `volumeMounts` | A YAML object representing a link:++https://kubernetes.io/docs/concepts/storage/volumes/++[pod volumeMount]. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#persist-resources[Persist Resources].
+| `volumes` | A YAML object representing a link:++https://kubernetes.io/docs/concepts/storage/volumes++[pod volume].
+
 
 |===
 
@@ -147,915 +166,132 @@ oc get comp my-app
 The short name for `runtimecomponent` is `comp`.
 
 
-=== Image Streams
+=== Viewing operator application status
 
-To deploy an image from an image stream, use the following CR:
+An application administrator can view the status of an application that is deployed in a container. To get information about the deployed custom resource (CR), use a CLI or the Red Hat OpenShift console.
+
+* link:#status-types-for-status-condition[Status types for `.status.condition`]
+* link:#viewing-status-with-the-cli[Viewing status with the CLI]
+* link:#viewing-status-with-the-red-hat-openshift-console[Viewing status with the Red Hat OpenShift console]
+
+==== Status types for `.status.condition` [[status-types-for-status-condition]]
+The status types for the `.status.condition` parameter in the `RuntimeComponent` CR are `Ready`, `ResourcesReady`, `Reconciled`.
+
+*Reconciled*
+
+  - Indicates whether the current version of the operator successfully processed the configurations in the CR.
+
+*ResourcesReady*
+
+  - Indicates whether the application resources created and managed by the operator are ready.
+
+*Ready*
+
+  - Indicates the overall status of the application. If true, the application configuration was reconciled and its resource are in ready state.
+
+==== Viewing status with the CLI [[viewing-status-with-the-cli]]
+
+To use the CLI to get information about a deployed CR, run a `kubectl get` or `oc get` command.
+
+To run kubectl commands, you need the Kubernetes command line tool or the Red Hat OpenShift command-line interface (CLI). To run oc commands, you need the Red Hat OpenShift CLI.
+
+In the following get commands, replace `my-app` with your CR name. Run any one of the commands. `comp` and `comps` are short names for `runtimecomponent` and `runtimecomponents`.
+
+* Run any of the following `kubectl get` commands.
+
+[source,sh]
+----
+kubectl get comp my-app
+kubectl get comps my-app
+kubectl get runtimecomponent my-app
+----
+
+* Run any of the following `oc get` commands.
+
+[source,sh]
+----
+oc get comp my-app
+oc get comps my-app
+oc get runtimecomponent my-app
+----
+
+The results of the command resemble the following.
+[source,sh]
+----
+NAME     IMAGE                       EXPOSED   RECONCILED   RESOURCESREADY   READY   AGE
+my-app   quay.io/my-repo/my-app:1.0            True         True             True    18m
+----
+
+The value in the `READY` column is `True` when the application is successfully installed. If the value in the `READY` column is not `True`, see link:++troubleshooting.adoc++[Troubleshooting Runtime Component operators].
+
+==== Viewing status with the Red Hat OpenShift console [[viewing-status-with-the-red-hat-openshift-console]]
+
+To use the Red Hat OpenShift console to get information about a deployed CR, view the deployed `RuntimeComponent` instance and inspect the `.status` section.
 
 [source,yaml]
 ----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: my-namespace/my-image-stream:1.0
+status:
+  conditions:
+    - lastTransitionTime: '2022-05-10T15:59:04Z'
+      status: 'True'
+      type: Reconciled
+    - lastTransitionTime: '2022-05-10T15:59:16Z'
+      message: 'Deployment replicas ready: 3/3'
+      reason: MinimumReplicasAvailable
+      status: 'True'
+      type: ResourcesReady
+    - lastTransitionTime: '2022-05-10T15:59:16Z'
+      message: Application is reconciled and resources are ready.
+      status: 'True'
+      type: Ready
+  imageReference: 'quay.io/my-repo/my-app:1.0'
+  references:
+    svcCertSecretName: my-app-svc-tls-ocp
+  versions:
+    reconciled: 1.0.0
 ----
 
-The previous example looks up the `1.0` tag from the `my-image-stream` image stream in the `my-namespace` project and populates the CR `.status.imageReference` field with the exact referenced image similar to the following one: `image-registry.openshift-image-registry.svc:5000/my-namespace/my-image-stream@sha256:8a829d579b114a9115c0a7172d089413c5d5dd6120665406aae0600f338654d8`. The operator watches the specified image stream and deploys new images as new ones are available for the specified tag.
+If the `.status.conditions.type` Ready type does not have a status of `True`, see link:++troubleshooting.adoc++[Troubleshooting Runtime Component operators].
 
-To reference an image stream, the `.spec.applicationImage` field must follow the `<project name>/<image stream name>[:<tag>]` format. If `<project name>` or `<tag>` is not specified, the operator defaults the values to the namespace of the CR and the value of `latest`, respectively. For example, the `applicationImage: my-image-stream` configuration is the same as the `applicationImage: my-namespace/my-image-stream:latest` configuration.
+The value of the `.status.versions.reconciled` parameter is the version of the operand that is deployed into the cluster after the reconcile loop completes.
 
-The Operator tries to find an image stream name first with the `<project name>/<image stream name>[:<tag>]` format and falls back to the registry lookup if it is not able to find any image stream that matches the value.
 
-_This feature is only available if you are running on OKD or OpenShift._
+=== Operator configuration examples
+Browse the `RuntimeComponent` examples to learn how to use custom resource (CR) parameters to configure your operator. The complete component documentation can be found under link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#operator-configuration-examples++[Open Liberty Operator's "Common Component"] section. Any references to Open Liberty Operator-specific resources can be mapped over to Runtime Component Operator using the table below.
 
-NOTE: The operator requires `ClusterRole` permissions if the image stream resource is in another namespace.
-
-=== Service account
-
-The operator can create a `ServiceAccount` resource when deploying a `RuntimeComponent` custom resource (CR). If `.spec.serviceAccountName` is not specified in a CR, the operator creates a service account with the same name as the CR (e.g. `my-app`).
-
-Users can also specify `serviceAccountName` when they want to create a service account manually.
-
-If applications require specific permissions but still want the operator to create a `ServiceAccount`, users can still manually create a role binding to bind a role to the service account created by the operator. To learn more about Role-based access control (RBAC), see Kubernetes link:++https://kubernetes.io/docs/reference/access-authn-authz/rbac/++[documentation].
-
-=== Labels
-
-By default, the operator adds the following labels into all resources created
-for a `RuntimeComponent` CR:
-
-.Default Labels
+.Open Liberty Operator Name Mapping
 |===
-| Label                          | Default                        | Description
-
-| `app.kubernetes.io/instance`   | `metadata.name`                | A unique name or identifier for this component. This cannot be modified.
-| `app.kubernetes.io/name`       | `metadata.name`                | A name that represents this component.
-| `app.kubernetes.io/managed-by` | `runtime-component-operator`   | The tool being used to manage this component.
-| `app.kubernetes.io/component`  | `backend`                      | The type of component being created. See OpenShift link:++https://github.com/gorkem/app-labels/blob/master/labels-annotation-for-openshift.adoc#labels++[documentation] for full list.
-| `app.kubernetes.io/part-of`    | `applicationName`              | The name of the higher-level application this component is a part of. Configure this if the component is not a standalone application.
-| `app.kubernetes.io/version`    | `version`                      | The version of the component.
+| *Data* | *Open Liberty Operator* | *Runtime Component Operator*
+| Api Version | `apps.openliberty.io/v1beta2` | `rc.app.stacks/v1`
+| Kind | `OpenLibertyApplication` | `RuntimeComponent`
+| ConfigMap | `open-liberty-operator` | `runtime-component-operator`
+| ClusterRole Prefix | `openlibertyapplications.apps.openliberty.io-v1beta2` | `runtimecomponents.rc.app.stacks-v1`
+| Resource  Prefix | `olo-*` | `rco-*`
 |===
 
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#reference-image-streams++[Reference image streams (`.spec.applicationImage`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#create-a-service-account++[Create a service account (`.spec.serviceAccountName`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#add-or-change-labels++[Add or change labels (`.metadata.labels`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#add-annotations++[Add annotations (`.metadata.annotations`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#set-environment-variables-for-an-application-container++[Set environment variables for an application container (`.spec.env` or `.spec.envFrom`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#setting-up-basic-authentication-credentials-by-using-environment-variables++[Setting up basic authentication credentials by using environment variables (`.spec.envFrom[\].secretRef`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#configure-multiple-application-instances-for-high-availability++[Configure multiple application instances for high availability (`.spec.replicas` or `.spec.autoscaling`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#set-privileges-and-permissions-for-a-pod-or-container++[Set privileges and permissions for a pod or container (`.spec.securityContext`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#persist-resources++[Persist resources (`.spec.statefulSet` and `.spec.volumeMounts`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#monitor-resources++[Monitor resources (`.spec.monitoring`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#specify-multiple-service-ports++[Specify multiple service ports (`.spec.service.port*` and `.spec.monitoring.endpoints`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#configure-probes++[Configure probes (`.spec.probes`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#deploy-serverless-applications-with-knative++[Deploy serverless applications with Knative (`.spec.createKnativeService`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#expose-applications-externally++[Expose applications externally (`.spec.expose`, `.spec.createKnativeService`, `.spec.route`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#bind-applications-with-operator-managed-backing-services++[Bind applications with operator-managed backing services (`.status.binding.name` and `.spec.service.bindable`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#limit-a-pod-to-run-on-specified-nodes++[Limit a pod to run on specified nodes (`.spec.affinity`)]
+
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#configuring-transport-layer-security-tls-certificates++[Configuring transport layer security (TLS) certificates]
+
+  - link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#generating-certificates-with-certificate-manager++[Generating certificates with certificate manager]
+  - link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#generating-certificates-with-red-hat-openshift-service-ca++[Generating certificates with Red Hat OpenShift service CA (`.spec.service.annotations`)]
+  - link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#specifying-certificates-for-a-secret-route-and-service++[Specifying certificates for a secret Route and Service (`.spec.service.certificateSecretRef` and `.spec.route.certificateSecretRef`)] 
 
-You can set new labels in addition to the pre-existing ones or overwrite them,
-excluding the `app.kubernetes.io/instance` label. To set labels, specify them in
-your CR as key/value pairs.
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-  labels:
-    my-label-key: my-label-value
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-----
-
-_After the initial deployment of `RuntimeComponent`, any changes to its labels would be applied only when one of the fields from `spec` is updated._
-
-==== OpenShift Recommended Labels
-
-When running in OpenShift, there are additional labels and annotations that are
-standard on the platform. It is recommended that you overwrite our defaults
-where applicable and add any labels from the list that are not set by default using the above instructions. See link:++https://github.com/gorkem/app-labels/blob/master/labels-annotation-for-openshift.adoc#labels++[documentation] for a full list.
-
-=== Annotations
-
-To add new annotations into all resources created for a `RuntimeComponent`, specify them in your CR as key/value pairs. Annotations specified in CR would override any annotations specified on a resource, except for the annotations set on `Service` using `.spec.service.annotations`.
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-  annotations:
-    my-annotation-key: my-annotation-value
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-----
-
-_After the initial deployment of `RuntimeComponent`, any changes to its annotations would be applied only when one of the fields from `spec` is updated._
-
-==== OpenShift Recommended Annotations
-
-When running in OpenShift, there are additional annotations that are
-standard on the platform. It is recommended that you overwrite our defaults
-where applicable and add any annotations from the list that are not set by
-default using the above instructions. See link:++https://github.com/gorkem/app-labels/blob/master/labels-annotation-for-openshift.adoc#labels++[documentation] for a full list.
-
-=== Environment variables
-
-You can set environment variables for your application container. To set
-environment variables, specify `env` and/or `envFrom` fields in your CR. The
-environment variables can come directly from key/value pairs, `ConfigMap`s or
-`Secret`s. The environment variables set using the `env` or `envFrom` fields will
-override any environment variables specified in the container image.
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  env:
-    - name: DB_NAME
-      value: "database"
-    - name: DB_PORT
-      valueFrom:
-        configMapKeyRef:
-          name: db-config
-          key: db-port
-    - name: DB_USERNAME
-      valueFrom:
-        secretKeyRef:
-          name: db-credential
-          key: adminUsername
-    - name: DB_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: db-credential
-          key: adminPassword
-  envFrom:
-    - configMapRef:
-        name: env-configmap
-    - secretRef:
-        name: env-secrets
-----
-
-Use `envFrom` to define all data in a `ConfigMap` or a `Secret` as environment variables in a container. Keys from `ConfigMap` or `Secret` resources become environment variable name in your container.
-
-=== High availability
-
-Run multiple instances of your application for high availability using one of the following mechanisms:
-
-  - specify a static number of instances to run at all times using `.spec.replicas` field.
-
-__OR__
-
-  - configure auto-scaling to create (and delete) instances based on resource consumption using the `.spec.autoscaling` field.
-  - Fields `.spec.autoscaling.maxReplicas` and `.spec.resources.requests.cpu` MUST be specified for auto-scaling.
-
-=== Service ports
-
-Runtime Component Operator allows you to provide multiple service ports in addition to the primary service port. The primary port is exposed from the container running the application and it's values are used to configure the Route (or Ingress), Service binding and Knative service.
-The primary service port can be configured using `.spec.service.port`, `.spec.service.targetPort`, `.spec.service.portName`, and `.spec.service.nodePort` fields.
-
-You can also specify an alternative port for Service Monitor using the `.spec.monitoring.endpoints` field and specifying either the `port` or `targetPort` field, otherwise it defaults to the primary port.
-
-The primary port is specified using `.spec.service.port` field and the additional ports can be specified using `.spec.service.ports` field as shown below.
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  service:
-    type: NodePort
-    port: 9080
-    portName: http
-    targetPort: 9080
-    nodePort: 30008
-    ports:
-      - port: 9443
-        name: https
-  monitoring:
-    endpoints:
-      - basicAuth:
-          password:
-            key: password
-            name: metrics-secret
-          username:
-            key: username
-            name: metrics-secret
-        interval: 5s
-        port: https
-        scheme: HTTPS
-        tlsConfig:
-          insecureSkipVerify: true
-    labels:
-      app-monitoring: 'true'
-----
-
-=== Security Context
-
-A security context is used to control privilege and permission settings for a Pod or a Container. By default, the Runtime Component operator sets several security context parameters for application container as shown below.
-
-[source,yaml]
-----
-spec:
-  containers:
-    - name: app
-      securityContext:
-        capabilities:
-          drop:
-            - ALL
-        privileged: false
-        runAsNonRoot: true
-        readOnlyRootFilesystem: false
-        allowPrivilegeEscalation: false
-----
-
-The security context parameters are customizable under `.spec.securityContext` field in the `RuntimeComponent` CR. For example, you can override the default values or set additional parameters:
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  securityContext:
-    readOnlyRootFilesystem: true
-    runAsUser: 1001
-    seLinuxOptions:
-      level: "s0:c123,c456"
-----
-
-For more information on security context parameters, see link:++https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#securitycontext-v1-core++[SecurityContext].
-
-NOTE: If your Kubernetes cluster does not generate a user ID and `securityContext.runAsUser` is not specified, the user ID defaults to the value in the image metadata. If the image does not have a user ID specified either, you will have to assign a user ID through  `securityContext.runAsUser` to meet `securityContext.runAsNonRoot` requirement.
-
-=== Persistence
-
-Runtime Component Operator is capable of creating a `StatefulSet` and `PersistentVolumeClaim` for each pod if storage is specified in the `RuntimeComponent` CR. If storage is not specified, StatefulSet resource will be created without persistent storage.
-
-Users also can provide mount points for their application. There are 2 ways to enable storage.
-
-==== Without storage
-
-You can choose to create StatefulSet resources without storage, if you only require ordering and uniqueness of a set of pods.
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  statefulSet: {}
-----
-
-==== Basic storage
-
-With the `RuntimeComponent` CR definition below the operator will create `PersistentVolumeClaim` called `pvc` with the size of `1Gi`, `ReadWriteOnce` access mode and use the cluster's default storage class.
-
-The operator will also create a volume mount for the `StatefulSet` mounting to `/data` folder. You can use `volumeMounts` field instead of `statefulSet.storage.mountPath` if you require to persist more then one folder.
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  statefulSet:
-    storage:
-      size: 1Gi
-      mountPath: "/data"
-----
-
-==== Advanced storage
-
-Runtime Component Operator allows users to provide entire `volumeClaimTemplate` for full control over automatically created `PersistentVolumeClaim`.
-
-It is also possible to create multiple volume mount points for persistent volume using `volumeMounts` field as shown below. You can still use `statefulSet.storage.mountPath` if you require only a single mount point.
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  volumeMounts:
-  - name: pvc
-    mountPath: /data_1
-    subPath: data_1
-  - name: pvc
-    mountPath: /data_2
-    subPath: data_2
-  statefulSet:
-    storage:
-      volumeClaimTemplate:
-        metadata:
-          name: pvc
-        spec:
-          accessModes:
-          - "ReadWriteMany"
-          storageClassName: 'glusterfs'
-          resources:
-            requests:
-              storage: 1Gi
-----
-
-==== Limitation
-
-The persistent storage and PersistentVolumeClaim cannot be added or changed once StatefulSet is created.
-
-=== Service binding
-
-==== Service Binding Operator
-
-The link:++https://github.com/redhat-developer/service-binding-operator++[Service Binding Operator] enables application developers to bind applications together with operator-managed backing services. This can be achieved by creating a `ServiceBindingRequest` custom resource.
-
-_This feature is only available if you have Service Binding Operator installed on your cluster._
-
-==== Exposing `RuntimeComponent` applications as Provisioned Services
-
-A `RuntimeComponent` application can be configured to behave as a link:++https://github.com/k8s-service-bindings/spec#provisioned-service++[Provisioned Service] defined by the link:++https://github.com/k8s-service-bindings/spec++[Service Binding Specification].
-
-According to the specification, a Provisioned Service resource must define a `.status.binding.name` which is a reference to a Secret.
-To expose your application as a Provisioned Service, set the `.spec.service.bindable` field to a value of `true`. The Runtime Component Operator creates a *binding secret* named `<CR_NAME>-expose-binding` and adds the following entries to the secret: `host`, `port`, `protocol`, `basePath` and `uri`.
-
-To override the default values for the entries in the binding secret or to add new entries to the secret, create an *override secret* named `<CR_NAME>-expose-binding-override` and add any entries to the secret. The operator reads the content of the override secret and overrides the default values in the binding secret.
-
-Once a `RuntimeComponent` application is exposed as a Provisioned Service, a service binding request can refer to the application as a backing service.
-
-=== Monitoring
-
-Runtime Component Operator can create a `ServiceMonitor` resource to integrate with `Prometheus Operator`.
-
-_This feature does not support integration with Knative Service. Prometheus Operator is required to use ServiceMonitor._
-
-==== Basic monitoring specification
-
-At minimum, a label needs to be provided that Prometheus expects to be set on `ServiceMonitor` objects. In this case, it is `apps-prometheus`.
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  monitoring:
-    labels:
-       apps-prometheus: ''
-----
-
-==== Advanced monitoring specification
-
-For advanced scenarios, it is possible to set many `ServicerMonitor` settings such as authentication secret using link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#endpoint++[Prometheus Endpoint]
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  monitoring:
-    labels:
-       app-prometheus: ''
-    endpoints:
-    - interval: '30s'
-      basicAuth:
-        username:
-          key: username
-          name: metrics-secret
-        password:
-          key: password
-          name: metrics-secret
-      tlsConfig:
-        insecureSkipVerify: true
-----
-
-=== Knative support
-
-Runtime Component Operator can deploy serverless applications with link:++https://knative.dev/docs/++[Knative] on a Kubernetes cluster. To achieve this, the operator creates a link:++https://github.com/knative/serving/blob/main/docs/spec/spec.md#service++[Knative `Service`] resource which manages the whole life cycle of a workload.
-
-To create Knative service, set `createKnativeService` to `true`:
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  createKnativeService: true
-----
-
-By setting the `.spec.createKnativeService` field, the operator creates a Knative service in the cluster and populates the resource with applicable `RuntimeComponent` fields. Also, it ensures non-Knative resources including Kubernetes `Service`, `Route`, `Deployment` and etc. are deleted.
-
-The CRD fields which are used to populate the Knative service resource include `.spec.applicationImage`, `.spec.serviceAccountName`, `.spec.probes.liveness`, `.spec.probes.readiness`, `.spec.service.Port`, `.spec.volumes`, `.spec.volumeMounts`, `.spec.env`, `.spec.envFrom`, `.spec.pullSecret` and `.spec.pullPolicy`. Startup probe is not fully supported by Knative, hence `.spec.probes.startup` will not apply when Knative service is enabled.
-
-When using private registries with Knative / OpenShift Serverless  `.spec.pullSecret` must be specified. OpenShift global
-pull secret can not be used to provide registry credentials to Knative Services.
-
-For more details on how to configure Knative for tasks such as enabling HTTPS connections and setting up a custom domain, checkout link:++https://knative.dev/docs/serving/++[Knative Documentation].
-
-_Knative Serving sidecar container can only connect to the application's container over HTTP connection. Application must be listening on HTTP port to use Knative._
-
-_Autoscaling related fields in `RuntimeComponent` are not used to configure Knative Pod Autoscaler (KPA). To learn more about how to configure KPA, see link:++https://knative.dev/docs/serving/configuring-the-autoscaler/++[Configuring the Autoscaler]._
-
-_This feature is only available if you have Knative installed on your cluster._
-
-=== Probes
-
-Probes are not enabled in applications by default. They can be enabled using either using the default values defined by
-the operator or defining the probes yourself.
-
-==== Enabling the Default Probes
-
-A set of default probes can be enabled by setting the probe configuration to `{}`. For example, to use the defaults for
-the startup, liveness, and readiness probes, the following configuration can be used:
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  probes:
-    startup: {}
-    liveness: {}
-    readiness: {}
-----
-
-The default values for each probe depends on what the operator defines. For applications that support MicroProfile
-Health, the defaults are as follows:
-
-* Startup
-** URL: `/health/started`
-** Timeout (seconds): `2`
-** Period (seconds): `10`
-** Success threshold: `1`
-** Failure threshold: `20`
-* Liveness
-** URL: `/health/live`
-** Initial delay (seconds): `60`
-** Timeout (seconds): `2`
-** Period (seconds): `10`
-** Success threshold: `1`
-** Failure threshold: `3`
-* Readiness
-* URL: `/health/ready`
-** Initial delay (seconds): `10`
-** Timeout (seconds): `2`
-** Period (seconds): `10`
-** Success threshold: `1`
-** Failure threshold: `10`
-
-==== Overriding a Probe's Values
-
-Specific values of a probe can be overridden simply by specifying the value. For example, to override the initial delay
-of the liveness probe, you can use this config:
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  probes:
-    liveness:
-      initialDelaySeconds: 90
-----
-
-Note that there is a limitation when overriding the probe's initial delay: attempting to set the initial delay to `0`
-results in the default value for the probe to be used. To set a probe's initial delay to `0`, please define the probe
-instead of using the default probe, e.g.,
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  probes:
-    liveness:
-      httpGet:
-        path: "/health/live"
-        port: 9443
-      initialDelaySeconds: 0
-----
-
-=== Exposing service externally
-
-==== Non-Knative deployment (Route)
-
-To expose your application externally, set `expose` to `true`:
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  expose: true
-----
-
-By setting `.spec.expose` field, the operator creates an unsecured route based on your application service. Setting this field is the same as running `oc expose service <service-name>`.
-
-To create a secured HTTPS route, see the link:++#certificates++[Certificates / TLS] section.
-
-==== Non-Knative deployment (Ingress)
-
-Before you can use the Ingress resource to expose your cluster, you must install an ingress controller, such a Nginx or Traefik.
-
-_The Ingress resource is created only if the `Route` resource is not available on the cluster._
-
-To use the Ingress resource, set the `defaultHostName` variable in the _runtime-component-operator_ ConfigMap object to a host name such as _mycompany.com_
-
-
-===== Simple Ingress that uses `defaultHostName` and no `TLS`:
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-  namespace: backend
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  expose: true
-----
-
-With default hostname of _mycompany.com_, the application is available at the http://my-app-backend.mycompany.com URL.
-
-
-===== Enable TLS
-
-Generate your certificate and specify the secret containing the certificate using `.spec.route.certificateSecretRef` field: 
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-  namespace: backend
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  expose: true
-  route:
-    certificateSecretRef: mycompany-tls
-----
-
-===== Advanced Ingress configuration:
-
-Most of the Ingress configuration is achieved through annotations. Annotations such as Nginx, HAProxy, Traefik, and others are specific to the ingress controller implementation.
-
-You can provide an existing TLS secret and set a custom hostname.
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-  namespace: backend
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  expose: true
-  route:
-    annotations:
-      # You can use this annotation to specify the name of the ingress controller to use.
-      # You can install multiple ingress controllers to address different types of incoming traffic such as an external or internal DNS.
-      kubernetes.io/ingress.class: "nginx" 
-      
-      # The following nginx annotation enables a secure pod connection:
-      nginx.ingress.kubernetes.io/ssl-redirect: true
-      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-
-      # The following traefik annotation enables a secure pod connection:
-      traefik.ingress.kubernetes.io/service.serversscheme: https
-
-    # Use a custom hostname for the Ingress
-    host: app-v1.mycompany.com
-    # Reference a pre-existing TLS secret:
-    certificateSecretRef: mycompany-tls
-----
-
-==== Knative deployment
-
-To expose your application as a Knative service externally, set `expose` to `true`:
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  createKnativeService: true
-  expose: true
-----
-
-When `expose` is **not** set to `true`, the Knative service is labeled with `serving.knative.dev/visibility=cluster-local` which makes the Knative route to only be available on the cluster-local network (and not on the public Internet). However, if `expose` is set `true`, the Knative route would be accessible externally.
-
-To configure secure HTTPS connections for your Knative deployment, see link:++https://knative.dev/docs/serving/using-a-tls-cert/++[Configuring HTTPS with TLS certificates] for more information.
-
-=== Network Policies
-
-Network policies for an application are created by default to isolate incoming traffic. To disable creating network
-policies for an application, set `.spec.networkPolicy.disable` to `true`:
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  networkPolicy:
-    disable: true
-----
-
-==== Network Policy Prerequisites
-
-OpenShift provides support for network policies by default. Users deploying to other Kubernetes platforms will need to
-ensure that their network plugin supports network policies as described
-link:https://kubernetes.io/docs/concepts/services-networking/network-policies/#prerequisites[here].
-
-==== Default Network Polices
-
-* The default network policy created for applications that are not exposed limits incoming traffic to pods in the same
-namespace that are part of the same application. Traffic is limited to only the ports configured by the service.
-* For exposed applications on OpenShift, the network policy allows incoming traffic from the OpenShift ingress
-controller on the ports configured in the service.
-* For exposed applications on other Kubernetes platforms, incoming traffic is allowed from any pods in any namespace on the
-ports configured in the service.
-* On OpenShift, incoming traffic is also allowed from the OpenShift monitoring stack.
-
-==== Configuring the Network Policy
-
-The network policy can be configured to allow either certain namespaces and/or pods using
-`.spec.networkPolicy.namespaceLabels` and `.spec.networkPolicy.fromLabels`, respectively.
-
-By default, `.spec.networkPolicy.namespaceLabels` is set to the same namespace that the application is deployed to, and
-`.spec.networkPolicy.fromLabels` is set to select pods that belong to the same application specified by
-`.spec.applicationName`.
-
-Example of allowing incoming traffic from pods labeled with `role: frontend` and are in the same namespace:
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  networkPolicy:
-    fromLabels:
-      role: frontend
-----
-
-Example of allowing incoming traffic from pods belonging to the same application in the `example` namespace:
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  networkPolicy:
-    namespaceLabels:
-      kubernetes.io/metadata.name: example
-----
-
-Example of allowing incoming traffic from pods labeled with `role: frontend` in the `example` namespace:
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-spec:
-  networkPolicy:
-    namespaceLabels:
-      kubernetes.io/metadata.name: example
-    fromLabels:
-      role: frontend
-----
-
-=== Certificates / TLS
-
-==== Automatic certificate generation
-
-When `manageTLS` is `true` (default), the operator will attempt to generate certificates and mount
-them to the pod at `/etc/x509/certs`. If the `expose` is set to `true` the Route will be also configured
-automatically to enable TLS using `reencrypt` termination. This will ensure end-to-end encryption from
-external source all the way to application/pod level.
-
-===== Generating certificates using certificate manager
-
-Before using this feature, certificate manager must be installed on the Kubernetes cluster.
-
-The service certificate is generated using `cert-manager.io/v1` `Certificate` kind.
-
-Operator will create a certificate authority (CA) Issuer instance to be shared
-by applications within a single namespace. The issuer will be used to generate
-a service certificate for each application that will be mounted into the pod.
-`tls.crt`, `tls.key` and `ca.crt` files will be mounted to the pod and location
-is indicated by `TLS_DIR` environment variable.
-
-===== Generating certificate using Red Hat OpenShift service CA
-
-When running on Red Hat OpenShift Container Platform operator can automatically generate
-service certificates using OpenShift Service CA.
-
-This is a default and simplest way of generating certificates if the certificate manager operator
-is not installed on the cluster.
-
-`tls.crt`, `tls.key` files will be mounted to the pod and location
-is indicated by `TLS_DIR` environment variable. The OpenShift CA certificate
-is provided inside `/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt`
-file.
-
-If the certificate manager is installed on the cluster it will be used to generate
-service certificates unless otherwise specified by the application. To force use of
-OpenShift service CA an annotation can be added to application's YAML:
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-  namespace: test
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  manageTLS: true
-  expose: true
-  service:
-    annotations:
-      service.beta.openshift.io/serving-cert-secret-name: my-app-svc-tls-ocp
-    port: 9443
-----
-
-==== Bring your own Certificates
-Specify your own certificates for the Service and Route using fields `.spec.service.certificateSecretRef` and `.spec.route.certificateSecretRef`.
-
-Example of certificates specified for the Route:
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-  namespace: test
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  expose: true
-  route:
-    host: myapp.mycompany.com
-    termination: reencrypt
-    certificateSecretRef: my-app-rt-tls
-  service:
-    port: 9443
-----
-
-Example of the manually provided route secret
-
-[source, yaml]
-----
-kind: Secret
-apiVersion: v1
-metadata:
-  name: my-app-rt-tls
-data:
-  ca.crt: >-
-    Certificate Authority public certificate...(base64)
-  tls.crt: >-
-    Route public certificate...(base64)
-  tls.key: >-
-    Route private key...(base64)
-  destCA.crt: >-
-    Pod/Service certificate Certificate Authority (base64). Might be required when using reencrypt termination policy.
-type: kubernetes.io/tls
-----
-
-=== Affinity
-
-Using affinity you can constrain a Pod to only be able to run on particular Node(s), or to prefer to run on particular nodes.
-
-==== Node Affinity
-
-
-===== Basic node affinity
-
-Use `nodeAffinityLabels` field to set required labels for pod scheduling on specific nodes:
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-  namespace: test
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  affinity:
-    nodeAffinityLabels:
-      customNodeLabel: label1, label2
-      customNodeLabel2: label3
-----
-
-===== Advanced node affinity example:
-
-The following example requires a node type of _Large_ and preferences for two zones, which are named _zoneA_ and _zoneB_
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: my-app
-  namespace: test
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key:  node.kubernetes.io/instance-type
-            operator: In
-            values:
-            - large
-      preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 60
-        preference:
-          matchExpressions:
-          - key: failure-domain.beta.kubernetes.io/zone
-            operator: In
-            values:
-            - zoneA
-      - weight: 20
-        preference:
-          matchExpressions:
-          - key: failure-domain.beta.kubernetes.io/zone
-            operator: In
-            values:
-            - zoneB
-----
-
-==== Pod Affinity and Anti-Affinity
-
-Pod affinity and anti-affinity allow you to constrain which nodes your pod is eligible to be scheduled based on labels on pods that are already running on the node rather than based on labels on node.
-
-The following example shows that pod affinity is required and that the pods for _Service-A_ and _Service-B_ must be in the same zone. Through pod anti-affinity, it is preferred not to schedule _Service_B_ and _Service_C_ on the same host.
-
-[source,yaml]
-----
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: Service-B
-  namespace: test
-spec:
-  applicationImage: quay.io/my-repo/my-app:1.0
-  affinity:
-    podAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchExpressions:
-          - key: service
-            operator: In
-            values:
-            - Service-A
-        topologyKey: failure-domain.beta.kubernetes.io/zone
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 100
-        podAffinityTerm:
-          labelSelector:
-            matchExpressions:
-            - key: service
-              operator: In
-              values:
-              - Service-C
-          topologyKey: kubernetes.io/hostname
-----
-
-See link:++https://github.com/application-stacks/runtime-component-operator/blob/main/examples/affinity/README.adoc++[Affinity Example] for more details
 
 === Day-2 Operations
 
