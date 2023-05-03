@@ -107,7 +107,7 @@ Check the `status` section of the CR. If the application is successfully reconci
 ----
   $ oc get runtimecomponent my-app -o yaml
 
-  apiVersion: app.stacks/v1beta1
+  apiVersion: rc.app.stacks/v1
   kind: RuntimeComponent
   ...
   status:
