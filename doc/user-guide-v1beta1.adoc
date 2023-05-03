@@ -4,7 +4,7 @@ This generic Operator is capable of deploying any application image and can be i
 
 This documentation refers to the latest codebase.  For documentation and samples of older releases, please check out the link:++https://github.com/application-stacks/runtime-component-operator/releases++[main releases] page and navigate the corresponding tag.
 
-**Important**: This user guide only applies to operator versions **0.7.1 and below**. For operator versions **1.2.0 and above**, refer to this link:++user-guide-v1.adoc++[user guide]. For operator versions **0.8.x**, refer to this link:++user-guide-v1beta2.adoc++[user guide]. 
+**Important**: This user guide only applies to operator versions **0.7.1 and below**. For operator versions **1.2.0 and above**, refer to this link:++user-guide-v1.adoc++[user guide]. For operator versions **0.8.x**, refer to this link:++user-guide-v1beta2.adoc++[user guide].
 
 == Operator installation
 

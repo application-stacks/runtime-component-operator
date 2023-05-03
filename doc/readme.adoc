@@ -1,5 +1,7 @@
 = Documentation
 
-* See the link:++user-guide-v1beta2.adoc++[user guide], for information on how to use the Runtime Component Operator. This applies for operator versions **0.8.0 and above**.
-** For operator versions **0.7.1 and below**, refer to this link:++user-guide.adoc++[user guide].
+* See the user guides below for information on how to install and use the Runtime Component Operator:
+** For operator versions **1.2.0 and above**, refer to this link:++user-guide-v1.adoc++[user guide].
+** For operator versions **0.8.x**, refer to this link:++user-guide-v1beta2.adoc++[user guide]. Note that these versions **will not be supported in the near future**. You should plan to migrate to 1.2.0 or above.
+** For operator versions **0.7.1 and below**, refer to this link:++user-guide-v1beta2.adoc++[user guide]. Note that these versions are **no longer supported**. You should migrate to 1.2.0 or above.
 * See the link:++troubleshooting.adoc++[troubleshooting guide] for information on how to investigate and resolve deployment problems.
