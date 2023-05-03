@@ -1,10 +1,10 @@
-= Runtime Component Operator v0.8.0+
+= Runtime Component Operator v0.8.x
 
 This generic Operator is capable of deploying any application image and can be imported into any runtime-specific Operator as library of application capabilities.  This architecture ensures compatibility and consistency between all runtime Operators, allowing everyone to benefit from the functionality added in this project.
 
 This documentation refers to the latest codebase.  For documentation and samples of older releases, please check out the link:++https://github.com/application-stacks/runtime-component-operator/releases++[main releases] page and navigate the corresponding tag.
 
-**Important**: This user guide only applies to operator versions **0.8.0 and above**. For operator versions **0.7.1 and below**, refer to this link:++user-guide.adoc++[user guide].
+**Important**: This user guide only applies to operator versions **0.8.0, 0.8.1 and 0.8.2**. For operator versions **1.2.0 and above**, refer to this link:++user-guide-v1.adoc++[user guide]. For operator versions **0.7.1 and below**, refer to this link:++user-guide-v1beta1.adoc++[user guide].
 
 **Important**: If you are upgrading from Runtime Component Operator versions 0.7.1 and below, note that API version of the custom resources (CRs) `RuntimeComponent` and `RuntimeOperation` changed. Custom resources with `apiVersion: app.stacks/v1beta1` are not handled by Runtime Component Operator versions 0.8.0 and above. You must delete existing custom resources with `apiVersion: app.stacks/v1beta1` and create new custom resources with `apiVersion: rc.app.stacks/v1beta2`.
 

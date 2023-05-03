@@ -1,0 +1,32 @@
+= Runtime Component Operator v1.2.0
+
+== Supported Environments
+
+The Runtime Component Operator is available for the following CPU architectures:
+
+- Linux&reg; x86_64 (amd64)
+- Linux&reg; on IBM&reg; Z (s390x)
+- Linux&reg; on Power&reg; (ppc64le)
+
+Red Hat OpenShift 4.10 or higher is supported. The operator is also supported on any cluster that has Kubernetes v1.23 or higher.
+
+== Installation
+
+=== Option 1: Install using Operator Lifecycle Manager (OLM) on OpenShift
+
+Runtime Component Operator is available from Red Hat's Certified OpenShift Operators catalog. From the integrated OperatorHub in OpenShift, filter by selecting `Certified` checkbox under `Source`. Search for `Runtime Component`. Click on the tile with `Runtime Component` to install the operator. Select the channel `v1.2` to install version 1.2.0. Additional information is link:++https://catalog.redhat.com/software/operators/detail/5e98749c2989e6a90307acef#deploy-instructions/++[here].
+
+=== Option 2: Install using kubectl
+
+See the instructions link:++kubectl/++[here].
+
+=== Option 3: Install using kustomize
+
+See the instructions link:++kustomize/++[here].
+
+
+== Limitations
+
+* Knative support is limited. Values specified for `.spec.autoscaling`, `.spec.resources` and `.spec.replicas` fields would not apply for Knative when enabled using `.spec.createKnativeService` field.
+* Monitoring feature does not support integration with Knative Service. Prometheus Operator is required to use ServiceMonitor.
+* After the initial deployment of `RuntimeComponent`, any changes to its labels would be applied only when one of the fields from `.spec` is updated.
