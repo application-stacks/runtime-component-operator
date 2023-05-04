@@ -68,7 +68,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2023-05-01T09:45:40Z"
+    createdAt: "2023-05-04T04:10:28Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     olm.skipRange: '>=0.8.0 <1.2.0'
     operators.openshift.io/infrastructure-features: '["disconnected"]'
@@ -437,6 +437,352 @@ spec:
         path: networkPolicy.fromLabels
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: An array of architectures to be considered for deployment. Their
+          position in the array indicates preference.
+        displayName: Architecture
+        path: affinity.architecture
+      - description: Annotations to be added only to the Deployment and resources
+          owned by the Deployment.
+        displayName: Annotations
+        path: deployment.annotations
+      - description: Annotations to be added only to the StatefulSet and resources
+          owned by the StatefulSet.
+        displayName: Annotations
+        path: statefulSet.annotations
+      - displayName: Initial Delay Seconds
+        path: probes.liveness.initialDelaySeconds
+      - displayName: Failure Threshold
+        path: probes.liveness.failureThreshold
+      - displayName: Success Threshold
+        path: probes.liveness.successThreshold
+      - displayName: Termination Grace Period Seconds
+        path: probes.liveness.terminationGracePeriodSeconds
+      - displayName: Http Get
+        path: probes.liveness.httpGet
+      - displayName: Host
+        path: probes.liveness.httpGet.host
+      - displayName: Http Headers
+        path: probes.liveness.httpGet.httpHeaders
+      - displayName: Path
+        path: probes.liveness.httpGet.path
+      - displayName: Scheme
+        path: probes.liveness.httpGet.scheme
+      - displayName: GRPC
+        path: probes.liveness.grpc
+      - displayName: Port
+        path: probes.liveness.grpc.port
+      - displayName: Service
+        path: probes.liveness.grpc.service
+      - displayName: Period Seconds
+        path: probes.liveness.periodSeconds
+      - displayName: Timeout Seconds
+        path: probes.liveness.timeoutSeconds
+      - displayName: Initial Delay Seconds
+        path: probes.readiness.initialDelaySeconds
+      - displayName: Failure Threshold
+        path: probes.readiness.failureThreshold
+      - displayName: Success Threshold
+        path: probes.readiness.successThreshold
+      - displayName: Termination Grace Period Seconds
+        path: probes.readiness.terminationGracePeriodSeconds
+      - displayName: Http Get
+        path: probes.readiness.httpGet
+      - displayName: Host
+        path: probes.readiness.httpGet.host
+      - displayName: Http Headers
+        path: probes.readiness.httpGet.httpHeaders
+      - displayName: Path
+        path: probes.readiness.httpGet.path
+      - displayName: Scheme
+        path: probes.readiness.httpGet.scheme
+      - displayName: GRPC
+        path: probes.readiness.grpc
+      - displayName: Port
+        path: probes.readiness.grpc.port
+      - displayName: Service
+        path: probes.readiness.grpc.service
+      - displayName: Period Seconds
+        path: probes.readiness.periodSeconds
+      - displayName: Timeout Seconds
+        path: probes.readiness.timeoutSeconds
+      - displayName: Initial Delay Seconds
+        path: probes.startup.initialDelaySeconds
+      - displayName: Failure Threshold
+        path: probes.startup.failureThreshold
+      - displayName: Success Threshold
+        path: probes.startup.successThreshold
+      - displayName: Termination Grace Period Seconds
+        path: probes.startup.terminationGracePeriodSeconds
+      - displayName: Http Get
+        path: probes.startup.httpGet
+      - displayName: Host
+        path: probes.startup.httpGet.host
+      - displayName: Http Headers
+        path: probes.startup.httpGet.httpHeaders
+      - displayName: Path
+        path: probes.startup.httpGet.path
+      - displayName: Scheme
+        path: probes.startup.httpGet.scheme
+      - displayName: GRPC
+        path: probes.startup.grpc
+      - displayName: Port
+        path: probes.startup.grpc.port
+      - displayName: Service
+        path: probes.startup.grpc.service
+      - displayName: Period Seconds
+        path: probes.startup.periodSeconds
+      - displayName: Timeout Seconds
+        path: probes.startup.timeoutSeconds
+      - displayName: Rolling Update
+        path: statefulSet.updateStrategy.rollingUpdate
+      - displayName: Partition
+        path: statefulSet.updateStrategy.rollingUpdate.partition
+      - displayName: Type
+        path: statefulSet.updateStrategy.typekube
+      - displayName: API Version
+        path: statefulSet.storage.volumeClaimTemplate.apiVersion
+      - displayName: Kind
+        path: statefulSet.storage.volumeClaimTemplate.kind
+      - displayName: Metadate
+        path: statefulSet.storage.volumeClaimTemplate.metadata
+      - displayName: Spec
+        path: statefulSet.storage.volumeClaimTemplate.spec
+      - displayName: Status
+        path: statefulSet.storage.volumeClaimTemplate.status
+      - displayName: Port
+        path: service.ports[0].port
+      - displayName: App Protocol
+        path: service.ports[0].appProtocol
+      - displayName: Name
+        path: service.ports[0].name
+      - displayName: Node Port
+        path: service.ports[0].nodePort
+      - displayName: Protocol
+        path: service.ports[0].protocol
+      - displayName: Proxy URL
+        path: monitoring.endpoints[0].proxyUrl
+      - displayName: Port
+        path: monitoring.endpoints[0].port
+      - displayName: Path
+        path: monitoring.endpoints[0].path
+      - displayName: Interval
+        path: monitoring.endpoints[0].interval
+      - displayName: Scheme
+        path: monitoring.endpoints[0].scheme
+      - displayName: Follow Redirects
+        path: monitoring.endpoints[0].followRedirects
+      - displayName: Bearer Token File
+        path: monitoring.endpoints[0].bearerTokenFile
+      - displayName: Basic Auth
+        path: monitoring.endpoints[0].basicAuth
+      - displayName: Authorization
+        path: monitoring.endpoints[0].authorization
+      - displayName: OAuth2
+        path: monitoring.endpoints[0].oauth2
+      - displayName: TLS Config
+        path: monitoring.endpoints[0].tlsConfig
+      - displayName: Metric Relabeling
+        path: monitoring.endpoints[0].metricRelabelings
+      - displayName: Honor Timestamps
+        path: monitoring.endpoints[0].honorTimestamps
+      - displayName: Bearer Token Secret
+        path: monitoring.endpoints[0].bearerTokenSecret
+      - displayName: Honor Labels
+        path: monitoring.endpoints[0].honorLabels
+      - displayName: Scrape Timeout
+        path: monitoring.endpoints[0].scrapeTimeout
+      - displayName: Relabelings
+        path: monitoring.endpoints[0].relabelings
+      - displayName: Name
+        path: env[0].name
+      - displayName: Value
+        path: env[0].value
+      - displayName: Value From
+        path: env[0].valueFrom
+      - displayName: Config Map Ref
+        path: envFrom[0].configMapRef
+      - displayName: Prefix
+        path: envFrom[0].prefix
+      - displayName: Secret Ref
+        path: envFrom[0].secretRef
+      - displayName: Name
+        path: volumes[0].name
+      - displayName: Empty Dir
+        path: volumes[0].emptyDir
+      - displayName: Git Repo
+        path: volumes[0].gitRepo
+      - displayName: CephFS
+        path: volumes[0].cephfs
+      - displayName: Cinder
+        path: volumes[0].cinder
+      - displayName: GlusterFS
+        path: volumes[0].glusterfs
+      - displayName: Azure File
+        path: volumes[0].azureFile
+      - displayName: Persistent Volume Claim
+        path: volumes[0].persistentVolumeClaim
+      - displayName: Azure Disk
+        path: volumes[0].azureDisk
+      - displayName: AWS Elastic Block Store
+        path: volumes[0].awsElasticBlockStore
+      - displayName: Host Path
+        path: volumes[0].hostPath
+      - displayName: ISCSI
+        path: volumes[0].iscsi
+      - displayName: Photon Persistent Disk
+        path: volumes[0].photonPersistentDisk
+      - displayName: Secret
+        path: volumes[0].secret
+      - displayName: ScaleIO
+        path: volumes[0].scaleIO
+      - displayName: StorageOS
+        path: volumes[0].storageos
+      - displayName: Flex Volume
+        path: volumes[0].flexVolume
+      - displayName: Quobyte
+        path: volumes[0].quobyte
+      - displayName: Rados Block Device
+        path: volumes[0].rbd
+      - displayName: Projected
+        path: volumes[0].projected
+      - displayName: Container Storage Interface
+        path: volumes[0].csi
+      - displayName: Portworx Volume
+        path: volumes[0].portworxVolume
+      - displayName: Config Map
+        path: volumes[0].configMap
+      - displayName: NFS
+        path: volumes[0].nfs
+      - displayName: Downward API
+        path: volumes[0].downwardAPI
+      - displayName: GCE Persistent Disk
+        path: volumes[0].gcePersistentDisk
+      - displayName: Fibre Channel
+        path: volumes[0].fc
+      - displayName: vSphere Volume
+        path: volumes[0].vsphereVolume
+      - displayName: Ephemeral
+        path: volumes[0].ephemeral
+      - displayName: Flocker
+        path: volumes[0].flocker
+      - displayName: Mount Path
+        path: volumeMounts[0].mountPath
+      - displayName: Name
+        path: volumeMounts[0].name
+      - displayName: Mount Propagation
+        path: volumeMounts[0].mountPropagation
+      - displayName: Read Only
+        path: volumeMounts[0].readOnly
+      - displayName: Sub Path
+        path: volumeMounts[0].subPath
+      - displayName: Sub Path Expr
+        path: volumeMounts[0].subPathExpr
+      - displayName: Name
+        path: initContainers[0].name
+      - displayName: Volume Devices
+        path: initContainers[0].volumeDevices
+      - displayName: Readiness Probe
+        path: initContainers[0].readinessProbe
+      - displayName: Stdin
+        path: initContainers[0].stdin
+      - displayName: Termination Message Path
+        path: initContainers[0].terminationMessagePath
+      - displayName: Stdin Once
+        path: initContainers[0].stdinOnce
+      - displayName: Lifecycle
+        path: initContainers[0].lifecycle
+      - displayName: Command
+        path: initContainers[0].command
+      - displayName: Liveness Probe
+        path: initContainers[0].livenessProbe
+      - displayName: Environment
+        path: initContainers[0].env
+      - displayName: Security Context
+        path: initContainers[0].securityContext
+      - displayName: Ports
+        path: initContainers[0].ports
+      - displayName: Image Pull Policy
+        path: initContainers[0].imagePullPolicy
+      - displayName: Startup Probe
+        path: initContainers[0].startupProbe
+      - displayName: Volume Mounts
+        path: initContainers[0].volumeMounts
+      - displayName: Termination Message Policy
+        path: initContainers[0].terminationMessagePolicy
+      - displayName: Enviroment From
+        path: initContainers[0].envFrom
+      - displayName: TTY
+        path: initContainers[0].tty
+      - displayName: Image
+        path: initContainers[0].image
+      - displayName: Working Directory
+        path: initContainers[0].workingDir
+      - displayName: Arguments
+        path: initContainers[0].args
+      - displayName: Name
+        path: sidecarContainers[0].name
+      - displayName: Volume Devices
+        path: sidecarContainers[0].volumeDevices
+      - displayName: Readiness Probe
+        path: sidecarContainers[0].readinessProbe
+      - displayName: Stdin
+        path: sidecarContainers[0].stdin
+      - displayName: Termination Message Path
+        path: sidecarContainers[0].terminationMessagePath
+      - displayName: Stdin Once
+        path: sidecarContainers[0].stdinOnce
+      - displayName: Lifecycle
+        path: sidecarContainers[0].lifecycle
+      - displayName: Command
+        path: sidecarContainers[0].command
+      - displayName: Liveness Probe
+        path: sidecarContainers[0].livenessProbe
+      - displayName: Environment
+        path: sidecarContainers[0].env
+      - displayName: Security Context
+        path: sidecarContainers[0].securityContext
+      - displayName: Ports
+        path: sidecarContainers[0].ports
+      - displayName: Image Pull Policy
+        path: sidecarContainers[0].imagePullPolicy
+      - displayName: Startup Probe
+        path: sidecarContainers[0].startupProbe
+      - displayName: Volume Mounts
+        path: sidecarContainers[0].volumeMounts
+      - displayName: Termination Message Policy
+        path: sidecarContainers[0].terminationMessagePolicy
+      - displayName: Enviroment From
+        path: sidecarContainers[0].envFrom
+      - displayName: TTY
+        path: sidecarContainers[0].tty
+      - displayName: Image
+        path: sidecarContainers[0].image
+      - displayName: Working Directory
+        path: sidecarContainers[0].workingDir
+      - displayName: Arguments
+        path: sidecarContainers[0].args
+      - displayName: Seccomp Profile
+        path: securityContext.seccompProfile
+      - displayName: Windows Options
+        path: securityContext.windowsOptions
+      - displayName: Run As User Name
+        path: securityContext.windowsOptions.runAsUserName
+      - displayName: Level
+        path: securityContext.seLinuxOptions.level
+      - displayName: Role
+        path: securityContext.seLinuxOptions.role
+      - displayName: Type
+        path: securityContext.seLinuxOptions.type
+      - displayName: User
+        path: securityContext.seLinuxOptions.user
+      - displayName: Run As Group
+        path: securityContext.runAsGroup
+      - displayName: Proc Mount
+        path: securityContext.procMount
+      - displayName: Run As User
+        path: securityContext.runAsUser
+      - displayName: Capabilities
+        path: securityContext.capabilities
       - description: Hide liveness probe's Exec field
         displayName: Livness Probe's Exec
         path: probes.liveness.exec
@@ -506,7 +852,7 @@ spec:
         path: securityContext.windowsOptions.hostProcess
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - displayName: SE Linux Options
+      - displayName: SELinux Options
         path: securityContext.seLinuxOptions
       statusDescriptors:
       - description: Exposed URI of the application endpoint

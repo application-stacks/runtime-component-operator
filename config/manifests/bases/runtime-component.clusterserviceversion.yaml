@@ -374,6 +374,18 @@ spec:
         path: networkPolicy.fromLabels
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: An array of architectures to be considered for deployment. Their
+          position in the array indicates preference.
+        displayName: Architecture
+        path: affinity.architecture
+      - description: Annotations to be added only to the Deployment and resources
+          owned by the Deployment.
+        displayName: Annotations
+        path: deployment.annotations
+      - description: Annotations to be added only to the StatefulSet and resources
+          owned by the StatefulSet.
+        displayName: Annotations
+        path: statefulSet.annotations
       statusDescriptors:
       - description: Exposed URI of the application endpoint
         displayName: Application
