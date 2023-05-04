@@ -1,0 +1,848 @@
+# Liveness Probe Display Names
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Initial Delay Seconds
+    path: probes.liveness.initialDelaySeconds
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Failure Threshold
+    path: probes.liveness.failureThreshold
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Success Threshold
+    path: probes.liveness.successThreshold
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Termination Grace Period Seconds
+    path: probes.liveness.terminationGracePeriodSeconds
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Http Get
+    path: probes.liveness.httpGet
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Host
+    path: probes.liveness.httpGet.host
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Http Headers
+    path: probes.liveness.httpGet.httpHeaders
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Path
+    path: probes.liveness.httpGet.path
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Scheme
+    path: probes.liveness.httpGet.scheme
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: GRPC
+    path: probes.liveness.grpc
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Port
+    path: probes.liveness.grpc.port
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Service
+    path: probes.liveness.grpc.service
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Period Seconds
+    path: probes.liveness.periodSeconds
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Timeout Seconds
+    path: probes.liveness.timeoutSeconds
+# Readiness Probe Display Names
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Initial Delay Seconds
+    path: probes.readiness.initialDelaySeconds
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Failure Threshold
+    path: probes.readiness.failureThreshold
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Success Threshold
+    path: probes.readiness.successThreshold
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Termination Grace Period Seconds
+    path: probes.readiness.terminationGracePeriodSeconds
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Http Get
+    path: probes.readiness.httpGet
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Host
+    path: probes.readiness.httpGet.host
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Http Headers
+    path: probes.readiness.httpGet.httpHeaders
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Path
+    path: probes.readiness.httpGet.path
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Scheme
+    path: probes.readiness.httpGet.scheme
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: GRPC
+    path: probes.readiness.grpc
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Port
+    path: probes.readiness.grpc.port
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Service
+    path: probes.readiness.grpc.service
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Period Seconds
+    path: probes.readiness.periodSeconds
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Timeout Seconds
+    path: probes.readiness.timeoutSeconds
+# Startup Probe Display Names
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Initial Delay Seconds
+    path: probes.startup.initialDelaySeconds
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Failure Threshold
+    path: probes.startup.failureThreshold
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Success Threshold
+    path: probes.startup.successThreshold
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Termination Grace Period Seconds
+    path: probes.startup.terminationGracePeriodSeconds
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Http Get
+    path: probes.startup.httpGet
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Host
+    path: probes.startup.httpGet.host
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Http Headers
+    path: probes.startup.httpGet.httpHeaders
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Path
+    path: probes.startup.httpGet.path
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Scheme
+    path: probes.startup.httpGet.scheme
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: GRPC
+    path: probes.startup.grpc
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Port
+    path: probes.startup.grpc.port
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Service
+    path: probes.startup.grpc.service
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Period Seconds
+    path: probes.startup.periodSeconds
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Timeout Seconds
+    path: probes.startup.timeoutSeconds
+# StatefulSet Display Names
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Rolling Update
+    path: statefulSet.updateStrategy.rollingUpdate
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Partition
+    path: statefulSet.updateStrategy.rollingUpdate.partition
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Type
+    path: statefulSet.updateStrategy.typekube
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: API Version
+    path: statefulSet.storage.volumeClaimTemplate.apiVersion
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Kind
+    path: statefulSet.storage.volumeClaimTemplate.kind
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Metadate
+    path: statefulSet.storage.volumeClaimTemplate.metadata
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Spec
+    path: statefulSet.storage.volumeClaimTemplate.spec
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Status
+    path: statefulSet.storage.volumeClaimTemplate.status
+# Service Display Names
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Port
+    path: service.ports[0].port
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: App Protocol
+    path: service.ports[0].appProtocol
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Name
+    path: service.ports[0].name
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Node Port
+    path: service.ports[0].nodePort
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Protocol
+    path: service.ports[0].protocol
+# Monitoring Display Names
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Proxy URL
+    path: monitoring.endpoints[0].proxyUrl
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Port
+    path: monitoring.endpoints[0].port
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Path
+    path: monitoring.endpoints[0].path
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Interval
+    path: monitoring.endpoints[0].interval
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Scheme
+    path: monitoring.endpoints[0].scheme
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Follow Redirects
+    path: monitoring.endpoints[0].followRedirects
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Bearer Token File
+    path: monitoring.endpoints[0].bearerTokenFile
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Basic Auth
+    path: monitoring.endpoints[0].basicAuth
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Authorization
+    path: monitoring.endpoints[0].authorization
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: OAuth2
+    path: monitoring.endpoints[0].oauth2
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: TLS Config
+    path: monitoring.endpoints[0].tlsConfig
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Metric Relabeling
+    path: monitoring.endpoints[0].metricRelabelings
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Honor Timestamps
+    path: monitoring.endpoints[0].honorTimestamps
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Bearer Token Secret
+    path: monitoring.endpoints[0].bearerTokenSecret
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Honor Labels
+    path: monitoring.endpoints[0].honorLabels
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Scrape Timeout
+    path: monitoring.endpoints[0].scrapeTimeout
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Relabelings
+    path: monitoring.endpoints[0].relabelings
+# Environment Variables Display Names
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Name
+    path: env[0].name
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Value
+    path: env[0].value
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Value From
+    path: env[0].valueFrom
+# Environment Variables From Sources Display Names
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Config Map Ref
+    path: envFrom[0].configMapRef
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Prefix
+    path: envFrom[0].prefix
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Secret Ref
+    path: envFrom[0].secretRef
+# Volumes Display Names
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Name
+    path: volumes[0].name
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Empty Dir
+    path: volumes[0].emptyDir
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Git Repo
+    path: volumes[0].gitRepo
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: CephFS
+    path: volumes[0].cephfs
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Cinder
+    path: volumes[0].cinder
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: GlusterFS
+    path: volumes[0].glusterfs
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Azure File
+    path: volumes[0].azureFile
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Persistent Volume Claim
+    path: volumes[0].persistentVolumeClaim
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Azure Disk
+    path: volumes[0].azureDisk
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: AWS Elastic Block Store
+    path: volumes[0].awsElasticBlockStore
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Host Path
+    path: volumes[0].hostPath
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: ISCSI
+    path: volumes[0].iscsi
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Photon Persistent Disk
+    path: volumes[0].photonPersistentDisk
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Secret
+    path: volumes[0].secret
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: ScaleIO
+    path: volumes[0].scaleIO
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: StorageOS
+    path: volumes[0].storageos
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Flex Volume
+    path: volumes[0].flexVolume
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Quobyte
+    path: volumes[0].quobyte
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Rados Block Device
+    path: volumes[0].rbd
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Projected
+    path: volumes[0].projected
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Container Storage Interface
+    path: volumes[0].csi
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Portworx Volume
+    path: volumes[0].portworxVolume
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Config Map
+    path: volumes[0].configMap
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: NFS
+    path: volumes[0].nfs
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Downward API
+    path: volumes[0].downwardAPI
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: GCE Persistent Disk
+    path: volumes[0].gcePersistentDisk
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Fibre Channel
+    path: volumes[0].fc
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: vSphere Volume
+    path: volumes[0].vsphereVolume
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Ephemeral
+    path: volumes[0].ephemeral
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Flocker
+    path: volumes[0].flocker
+# Volume Mounts Display Names
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Mount Path
+    path: volumeMounts[0].mountPath
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Name
+    path: volumeMounts[0].name
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Mount Propagation
+    path: volumeMounts[0].mountPropagation
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Read Only
+    path: volumeMounts[0].readOnly
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Sub Path
+    path: volumeMounts[0].subPath
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Sub Path Expr
+    path: volumeMounts[0].subPathExpr
+# Init Containers Display Names
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Name
+    path: initContainers[0].name
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Volume Devices
+    path: initContainers[0].volumeDevices
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Readiness Probe
+    path: initContainers[0].readinessProbe
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Stdin
+    path: initContainers[0].stdin
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Termination Message Path
+    path: initContainers[0].terminationMessagePath
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Stdin Once
+    path: initContainers[0].stdinOnce
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Lifecycle
+    path: initContainers[0].lifecycle
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Command
+    path: initContainers[0].command
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Liveness Probe
+    path: initContainers[0].livenessProbe
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Environment
+    path: initContainers[0].env
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Security Context
+    path: initContainers[0].securityContext
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Ports
+    path: initContainers[0].ports
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Image Pull Policy
+    path: initContainers[0].imagePullPolicy
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Startup Probe
+    path: initContainers[0].startupProbe
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Volume Mounts
+    path: initContainers[0].volumeMounts
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Termination Message Policy
+    path: initContainers[0].terminationMessagePolicy
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Enviroment From
+    path: initContainers[0].envFrom
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: TTY
+    path: initContainers[0].tty
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Image
+    path: initContainers[0].image
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Working Directory
+    path: initContainers[0].workingDir
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Arguments
+    path: initContainers[0].args
+# Sidecar Containers
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Name
+    path: sidecarContainers[0].name
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Volume Devices
+    path: sidecarContainers[0].volumeDevices
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Readiness Probe
+    path: sidecarContainers[0].readinessProbe
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Stdin
+    path: sidecarContainers[0].stdin
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Termination Message Path
+    path: sidecarContainers[0].terminationMessagePath
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Stdin Once
+    path: sidecarContainers[0].stdinOnce
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Lifecycle
+    path: sidecarContainers[0].lifecycle
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Command
+    path: sidecarContainers[0].command
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Liveness Probe
+    path: sidecarContainers[0].livenessProbe
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Environment
+    path: sidecarContainers[0].env
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Security Context
+    path: sidecarContainers[0].securityContext
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Ports
+    path: sidecarContainers[0].ports
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Image Pull Policy
+    path: sidecarContainers[0].imagePullPolicy
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Startup Probe
+    path: sidecarContainers[0].startupProbe
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Volume Mounts
+    path: sidecarContainers[0].volumeMounts
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Termination Message Policy
+    path: sidecarContainers[0].terminationMessagePolicy
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Enviroment From
+    path: sidecarContainers[0].envFrom
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: TTY
+    path: sidecarContainers[0].tty
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Image
+    path: sidecarContainers[0].image
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Working Directory
+    path: sidecarContainers[0].workingDir
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Arguments
+    path: sidecarContainers[0].args
+# Security Context Display Names
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Seccomp Profile
+    path: securityContext.seccompProfile
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Windows Options
+    path: securityContext.windowsOptions
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Run As User Name
+    path: securityContext.windowsOptions.runAsUserName
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Level
+    path: securityContext.seLinuxOptions.level
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Role
+    path: securityContext.seLinuxOptions.role
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Type
+    path: securityContext.seLinuxOptions.type
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: User
+    path: securityContext.seLinuxOptions.user
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Run As Group
+    path: securityContext.runAsGroup
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Proc Mount
+    path: securityContext.procMount
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Run As User
+    path: securityContext.runAsUser
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
+  value:
+    displayName: Capabilities
+    path: securityContext.capabilities

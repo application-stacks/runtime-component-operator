@@ -179,6 +179,7 @@ type RuntimeComponentAffinity struct {
 
 	// An array of architectures to be considered for deployment. Their position in the array indicates preference.
 	// +listType=set
+	// +operator-sdk:csv:customresourcedefinitions:type=spec
 	Architecture []string `json:"architecture,omitempty"`
 }
 
@@ -277,6 +278,7 @@ type RuntimeComponentDeployment struct {
 	UpdateStrategy *appsv1.DeploymentStrategy `json:"updateStrategy,omitempty"`
 
 	// Annotations to be added only to the Deployment and resources owned by the Deployment.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
@@ -291,6 +293,7 @@ type RuntimeComponentStatefulSet struct {
 	Storage *RuntimeComponentStorage `json:"storage,omitempty"`
 
 	// Annotations to be added only to the StatefulSet and resources owned by the StatefulSet.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
