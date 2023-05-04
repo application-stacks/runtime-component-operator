@@ -84,6 +84,10 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `monitoring` | Specifies parameters for `Service Monitor`. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#monitor-resources++[Monitor resources] and link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#specify-multiple-service-ports++[Specify multiple service ports].
 | `monitoring.endpoints` | A YAML snippet representing an array of link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#endpoint++[Endpoint] component from ServiceMonitor.
 | `monitoring.labels` | Labels to set on link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#servicemonitor++[ServiceMonitor].
+| `networkPolicy` | Defines the network policy. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#allowing-or-limiting-incoming-traffic++[Allowing or limiting incoming traffic].
+| `networkPolicy.disable` | A Boolean to disable the creation of the network policy. The default value is `false`. By default, network policies for an application are created and limit incoming traffic.
+| `networkPolicy.fromLabels` | The labels of one or more pods from which incoming traffic is allowed.
+| `networkPolicy.namespaceLabels` | The labels of namespaces from which incoming traffic is allowed.
 | `probes` | Defines health checks on an application container to determine whether it is alive or ready to receive traffic. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#configure-probes++[Configure probes].
 | `probes.liveness` | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request++[Kubernetes liveness probe] that controls when Kubernetes needs to restart the pod.
 | `probes.readiness`   | A YAML object configuring the link:++https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes++[Kubernetes readiness probe] that controls when the pod is ready to receive traffic.
@@ -287,6 +291,7 @@ Browse the `RuntimeComponent` examples to learn how to use custom resource (CR) 
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#configure-probes++[Configure probes (`.spec.probes`)]
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#deploy-serverless-applications-with-knative++[Deploy serverless applications with Knative (`.spec.createKnativeService`)]
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#expose-applications-externally++[Expose applications externally (`.spec.expose`, `.spec.createKnativeService`, `.spec.route`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#allowing-or-limiting-incoming-traffic++[Allowing or limiting incoming traffic (`.spec.networkPolicy`)]
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#bind-applications-with-operator-managed-backing-services++[Bind applications with operator-managed backing services (`.status.binding.name` and `.spec.service.bindable`)]
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#limit-a-pod-to-run-on-specified-nodes++[Limit a pod to run on specified nodes (`.spec.affinity`)]
 
