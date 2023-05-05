@@ -4,6 +4,8 @@ apiVersion: rc.app.stacks/v1
 kind: RuntimeComponent
 metadata:
   name: storage-rc
+  annotations:
+    testStep: storage-03
 spec:
   # Add fields here
   applicationImage: registry.k8s.io/pause:3.2
