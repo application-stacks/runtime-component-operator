@@ -67,5 +67,5 @@
 - op: add
   path: /spec/customresourcedefinitions/owned/0/specDescriptors/-
   value:
-    displayName: SE Linux Options
+    displayName: SELinux Options
     path: securityContext.seLinuxOptions

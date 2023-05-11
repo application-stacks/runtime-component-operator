@@ -13,6 +13,11 @@ patches:
     kind: ClusterServiceVersion
     name: runtime-component.v0.0.0
     namespace: placeholder
+- path: displayNamePatch.yaml
+  target:
+    kind: ClusterServiceVersion
+    name: runtime-component.v0.0.0
+    namespace: placeholder
 - path: probesPatch.yaml
   target:
     kind: ClusterServiceVersion
