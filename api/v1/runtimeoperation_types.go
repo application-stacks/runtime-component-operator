@@ -41,6 +41,7 @@ type RuntimeOperationSpec struct {
 type RuntimeOperationStatus struct {
 	// +listType=atomic
 	Conditions []OperationStatusCondition `json:"conditions,omitempty"`
+	Versions   StatusVersions             `json:"versions,omitempty"`
 }
 
 // +kubebuilder:object:root=true

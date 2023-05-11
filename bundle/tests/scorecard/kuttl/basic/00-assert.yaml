@@ -10,3 +10,11 @@ status:
   replicas: 1
   readyReplicas: 1
   updatedReplicas: 1
+---
+apiVersion: rc.app.stacks/v1
+kind: RuntimeComponent
+metadata:
+  name: example-runtime-component
+status:
+  versions:
+    reconciled: 1.2.0

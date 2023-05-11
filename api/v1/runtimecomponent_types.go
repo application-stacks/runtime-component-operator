@@ -370,6 +370,7 @@ type RuntimeComponentStatus struct {
 	Conditions     []StatusCondition `json:"conditions,omitempty"`
 	Endpoints      []StatusEndpoint  `json:"endpoints,omitempty"`
 	ImageReference string            `json:"imageReference,omitempty"`
+	Versions       StatusVersions    `json:"versions,omitempty"`
 
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Service Binding"
 	Binding *corev1.LocalObjectReference `json:"binding,omitempty"`
@@ -412,6 +413,10 @@ const (
 	StatusEndpointScopeExternal StatusEndpointScope = "External"
 	StatusEndpointScopeInternal StatusEndpointScope = "Internal"
 )
+
+type StatusVersions struct {
+	Reconciled string `json:"reconciled,omitempty"`
+}
 
 // +kubebuilder:resource:path=runtimecomponents,scope=Namespaced,shortName=comp;comps
 // +kubebuilder:object:root=true
