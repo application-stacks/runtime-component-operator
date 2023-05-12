@@ -11,3 +11,5 @@ status:
        type: Started
      - status: 'True'
        type: Completed
+  versions:
+    reconciled: 1.2.0
