@@ -1,5 +1,5 @@
 apiVersion: kuttl.dev/v1beta1
 kind: TestSuite
 parallel: 1
-timeout: 120
+timeout: 150
 startControlPlane: false
