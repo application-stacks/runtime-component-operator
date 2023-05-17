@@ -23,9 +23,6 @@ spec:
           successThreshold: 1
           failureThreshold: 20
 status:
-# not checking readyReplicas or replicas while using icr.io/appcafe/websphere-liberty:full-java8-openj9-ubi 
-# as it uses different default ports. Replace with icr.io/appcafe/open-liberty/samples/getting-started 
-# when available
-#  readyReplicas: 1
-#  replicas: 1
+  readyReplicas: 1
+  replicas: 1
   updatedReplicas: 1
