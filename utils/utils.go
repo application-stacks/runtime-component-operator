@@ -121,6 +121,7 @@ func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, c
 		if host == "" && common.Config[common.OpConfigDefaultHostname] != "" {
 			host = obj.GetName() + "-" + obj.GetNamespace() + "." + common.Config[common.OpConfigDefaultHostname]
 		}
+		ba.GetStatus().SetReference(common.StatusReferenceRouteHost, host)
 		route.Spec.Host = host
 		route.Spec.Path = rt.GetPath()
 		if ba.GetRoute().GetTermination() != nil {
