@@ -23,7 +23,7 @@ setup:
       echo "${DIGEST}"
       echo "${APP}" | jq '.'
 
-      SAVED_DIGEST="$(skopeo inspect docker://$ARTIFACT | grep Digest | grep -o 'sha[^\"]*')"
+      SAVED_DIGEST="$(skopeo inspect docker://$ARTIFACT | jq '.Digest'| sed -e 's/"//g')"
       if [[ ${DIGEST} == ${SAVED_DIGEST} ]]; then
         echo "Image, $ARTIFACT, passes validation"
       else

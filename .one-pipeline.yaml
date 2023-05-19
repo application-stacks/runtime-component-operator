@@ -306,7 +306,7 @@ containerize:
       for i in "${tags[@]}"
       do
         IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE:$i
-        DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
+        DIGEST="$(skopeo inspect docker://$IMAGE | jq '.Digest'| sed -e 's/"//g')"
         { ARCH="$(echo $i | grep -o '\(amd64\|s390x\|ppc64le\)$')" && TYPE="image"; } || { TYPE="manifest"; }
         if [[ "$TYPE" == "manifest" ]]; then
           echo "Saving artifact operator-$i type=$TYPE name=$IMAGE digest=$DIGEST"
@@ -317,13 +317,13 @@ containerize:
         fi
       done
       IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE-bundle:${RELEASE_TARGET}
-      DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
+      DIGEST="$(skopeo inspect docker://$IMAGE | jq '.Digest'| sed -e 's/"//g')"
       echo "Saving artifact bundle-${RELEASE_TARGET} name=$IMAGE digest=$DIGEST"
       save_artifact bundle-${RELEASE_TARGET} type=image name="$IMAGE" "digest=$DIGEST"
       for i in "${tags[@]}"
       do
         IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE-catalog:$i
-        DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
+        DIGEST="$(skopeo inspect docker://$IMAGE | jq '.Digest'| sed -e 's/"//g')"
         { ARCH="$(echo $i | grep -o '\(amd64\|s390x\|ppc64le\)$')" && TYPE="image"; } || { ARCH="amd64" && TYPE="manifest"; }
         if [[ "$TYPE" == "manifest" ]]; then
           echo "Saving artifact catalog-$i type=$TYPE name=$IMAGE digest=$DIGEST"
@@ -340,7 +340,7 @@ containerize:
       
       ## Perform lint
       IMAGE="${PIPELINE_REGISTRY}/${PIPELINE_OPERATOR_IMAGE}-bundle:${RELEASE_TARGET}"
-      DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
+      DIGEST="$(skopeo inspect docker://$IMAGE | jq '.Digest'| sed -e 's/"//g')"
       BUNDLE_IMAGE_WITH_DIGEST="${IMAGE}@${DIGEST}"
       ./scripts/pipeline/static-linter-scan.sh --git-token $(get_env git-token) --bundle-image $BUNDLE_IMAGE_WITH_DIGEST --static-linter-version $(get_env static-linter-version)
 
