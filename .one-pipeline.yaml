@@ -5,7 +5,7 @@ setup:
   script: |
     #!/usr/bin/env bash
 
-    echo "setup"
+    echo $STAGE
 
     # Download Go
     GO_VERSION=$(get_env go-version)
@@ -78,6 +78,8 @@ test:
   script: |
     #!/usr/bin/env bash
 
+    echo $STAGE
+
     PERIODIC_SCAN=$(get_env periodic-rescan)
     PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
 
@@ -108,11 +110,21 @@ static-scan:
   script: |
     #!/usr/bin/env bash
 
+    echo $STAGE
+
     PERIODIC_SCAN=$(get_env periodic-rescan)
     PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
 
     if [[ ! -z "$PERIODIC_SCAN" && "$PERIODIC_SCAN" != "false" && "$PERIODIC_SCAN" != "no"  ]]; then
       echo "Skipping static-scan. This is a periodic run that is only meant to produce CVE information."
+      exit 0
+    fi
+
+    SKIP_SCANS=$(get_env SKIP_SCANS)
+    SKIP_SCANS="$(echo "$SKIP_SCANS" | tr '[:upper:]' '[:lower:]')"
+
+    if [[ ! -z "$SKIP_SCANS" && "$SKIP_SCANS" != "false" && "$SKIP_SCANS" != "no"  ]]; then
+      echo "Skipping static-scan. This is a test run only"
       exit 0
     fi
 
@@ -139,7 +151,52 @@ static-scan:
 
     ## Perform static lint
     ./scripts/pipeline/static-linter-scan.sh --git-token $(get_env git-token) --static-linter-version $(get_env static-linter-version)
+
+compliance-checks:
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.3
+  dind: true
+  abort_on_failure: false
+  image_pull_policy: IfNotPresent  
+  sources:
+  - repo: https://github.ibm.com/open-toolchain/compliance-commons.git
+    sha: 38149a3644798c0b5679e6d8cdf999ce7f6e5142
+    path: cra
+  - repo: https://github.ibm.com/open-toolchain/compliance-commons.git
+    sha: 56cb780f891167b93b95d6f477ad7dce79f3df16
+    path: doi
+  - repo: https://github.ibm.com/open-toolchain/compliance-commons.git
+    sha: 7815b2273f9721d6edbdaf9bddb18e44d070b238
+    path: detect-secrets
+  - repo: https://github.ibm.com/open-toolchain/compliance-commons.git
+    sha: 38149a3644798c0b5679e6d8cdf999ce7f6e5142
+    path: compliance-checks
+  - repo: https://github.ibm.com/open-toolchain/compliance-commons.git
+    sha: 3e927695cfdb4f1bb8b25697ae67a10983de9a8c
+    path: mend  
+  
+  script: |
+    #!/usr/bin/env bash
     
+    echo $STAGE
+    
+    PERIODIC_SCAN=$(get_env periodic-rescan)
+    PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
+
+    if [[ ! -z "$PERIODIC_SCAN" && "$PERIODIC_SCAN" != "false" && "$PERIODIC_SCAN" != "no"  ]]; then
+      echo "Skipping static-scan. This is a periodic run that is only meant to produce CVE information."
+      exit 0
+    fi
+
+    SKIP_SCANS=$(get_env SKIP_SCANS)
+    SKIP_SCANS="$(echo "$SKIP_SCANS" | tr '[:upper:]' '[:lower:]')"
+
+    if [[ ! -z "$SKIP_SCANS" && "$SKIP_SCANS" != "false" && "$SKIP_SCANS" != "no"  ]]; then
+      echo "Skipping static-scan. This is a test run only"
+      exit 0
+    fi
+
+    "${COMMONS_PATH}"/compliance-checks/run.sh
+
 containerize:
   dind: true
   abort_on_failure: true  
@@ -349,7 +406,8 @@ sign-artifact:
   image: icr.io/continuous-delivery/pipeline/image-signing:1.0.0@sha256:e9d8e354668ba3d40be2aaee08298d2aa7f0e1c8a1829cca4094ec93830e3e6a
   script: |
     #!/usr/bin/env bash
-    echo "sign-artifact"
+
+    echo $STAGE
 
     PERIODIC_SCAN=$(get_env periodic-rescan)
     PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
@@ -359,12 +417,21 @@ sign-artifact:
       exit 0
     fi
 
+    SKIP_SCANS=$(get_env SKIP_SCANS)
+    SKIP_SCANS="$(echo "$SKIP_SCANS" | tr '[:upper:]' '[:lower:]')"
+
+    if [[ ! -z "$SKIP_SCANS" && "$SKIP_SCANS" != "false" && "$SKIP_SCANS" != "no"  ]]; then
+      echo "Skipping static-scan. This is a test run only"
+      exit 0
+    fi
+
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
 
   script: |
     #!/usr/bin/env bash
 
+    echo $STAGE
 
     PERIODIC_SCAN=$(get_env periodic-rescan)
     PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
@@ -386,12 +453,22 @@ dynamic-scan:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
   script: |
     #!/usr/bin/env bash
-    echo "dynamic-scan"
+
+    echo $STAGE
+    
     PERIODIC_SCAN=$(get_env periodic-rescan)
     PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
 
     if [[ ! -z "$PERIODIC_SCAN" && "$PERIODIC_SCAN" != "false" && "$PERIODIC_SCAN" != "no"  ]]; then
       echo "Skipping dynamic-scan. This is a periodic run that is only meant to produce CVE information."
+      exit 0
+    fi
+
+    SKIP_SCANS=$(get_env SKIP_SCANS)
+    SKIP_SCANS="$(echo "$SKIP_SCANS" | tr '[:upper:]' '[:lower:]')"
+
+    if [[ ! -z "$SKIP_SCANS" && "$SKIP_SCANS" != "false" && "$SKIP_SCANS" != "no"  ]]; then
+      echo "Skipping static-scan. This is a test run only"
       exit 0
     fi
 
@@ -449,6 +526,16 @@ scan-artifact:
   script: |
     #!/usr/bin/env bash
     
+    echo $STAGE
+
+    SKIP_SCANS=$(get_env SKIP_SCANS)
+    SKIP_SCANS="$(echo "$SKIP_SCANS" | tr '[:upper:]' '[:lower:]')"
+
+    if [[ ! -z "$SKIP_SCANS" && "$SKIP_SCANS" != "false" && "$SKIP_SCANS" != "no"  ]]; then
+      echo "Skipping static-scan. This is a test run only"
+      exit 0
+    fi    
+    
     # ========== Security Scanner ==========
     ./scripts/pipeline/ci_to_secure_pipeline_scan.sh
 
@@ -457,11 +544,22 @@ release:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
   script: |
     #!/usr/bin/env bash
+
+    echo $STAGE
+
     PERIODIC_SCAN=$(get_env periodic-rescan)
     PERIODIC_SCAN="$(echo "$PERIODIC_SCAN" | tr '[:upper:]' '[:lower:]')"
 
     if [[ ! -z "$PERIODIC_SCAN" && "$PERIODIC_SCAN" != "false" && "$PERIODIC_SCAN" != "no"  ]]; then
       echo "Skipping release. This is a periodic run that is only meant to produce CVE information."
+      exit 0
+    fi
+
+    SKIP_SCANS=$(get_env SKIP_SCANS)
+    SKIP_SCANS="$(echo "$SKIP_SCANS" | tr '[:upper:]' '[:lower:]')"
+
+    if [[ ! -z "$SKIP_SCANS" && "$SKIP_SCANS" != "false" && "$SKIP_SCANS" != "no"  ]]; then
+      echo "Skipping static-scan. This is a test run only"
       exit 0
     fi
 
