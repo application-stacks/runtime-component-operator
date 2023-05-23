@@ -16,6 +16,10 @@ install_kind() {
 }
 
 install_dependencies() {
+  # Without this, pods may fail with 'too many open files'
+  # https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files
+  sysctl fs.inotify.max_user_watches=524288
+  sysctl fs.inotify.max_user_instances=512
   ## Install docker
   if ! command -v docker &> /dev/null; then
     echo "****** Installing Docker..."
