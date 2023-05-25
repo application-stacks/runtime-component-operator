@@ -1040,7 +1040,7 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComp
 	}
 	if ba.GetManageTLS() == nil || *ba.GetManageTLS() {
 		if len(ba.GetMonitoring().GetEndpoints()) == 0 || ba.GetMonitoring().GetEndpoints()[0].TLSConfig == nil {
-			sm.Spec.Endpoints[0].Scheme = "HTTPS"
+			sm.Spec.Endpoints[0].Scheme = "https"
 			if sm.Spec.Endpoints[0].TLSConfig == nil {
 				sm.Spec.Endpoints[0].TLSConfig = &prometheusv1.TLSConfig{}
 			}

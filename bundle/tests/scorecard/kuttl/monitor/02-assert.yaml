@@ -21,7 +21,7 @@ spec:
       app.kubernetes.io/instance: service-monitor-rc
   endpoints:
   - path: "/path"
-    scheme: "myScheme"
+    scheme: "https"
     port: 3000-tcp
     params:
       params:
