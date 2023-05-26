@@ -4,4 +4,3 @@ metadata:
   name: example-runtime-component
 spec:
   pullPolicy: "IfNotPresent"
-
