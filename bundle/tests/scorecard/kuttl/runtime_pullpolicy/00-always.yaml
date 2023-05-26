@@ -6,8 +6,8 @@ spec:
   applicationImage: icr.io/appcafe/open-liberty:full-java8-openj9-ubi
   replicas: 1
   pullPolicy: "Always"
-# Setting affinity to ensure the pods are created on the same node as on Z and P if not never may fail due to 
-# replication of image repository taking too long
+# Setting affinity to ensure the pods are created on the same node as on Z and P if not the "never" stage
+# may fail due to replication of image repository taking too long
   affinity:
     nodeAffinityLabels:
       kuttlTest: test1
