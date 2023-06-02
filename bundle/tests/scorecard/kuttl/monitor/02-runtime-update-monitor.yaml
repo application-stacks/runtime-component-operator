@@ -6,7 +6,7 @@ spec:
   monitoring:
     endpoints:
     - path: "/path"
-      scheme: "myScheme"
+      scheme: "https"
       params:
         params:
         - "param1"
