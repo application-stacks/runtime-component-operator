@@ -4,7 +4,7 @@ metadata:
   name: service-monitor-rc
 spec:
   # Add fields here
-  applicationImage: icr.io/appcafe/open-liberty
+  applicationImage: icr.io/appcafe/open-liberty:full-java8-openj9-ubi
   service:
     type: "ClusterIP"
     port: 3000

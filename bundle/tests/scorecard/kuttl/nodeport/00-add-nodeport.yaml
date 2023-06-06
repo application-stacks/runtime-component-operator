@@ -3,7 +3,7 @@ kind: RuntimeComponent
 metadata:
   name: nodeport-rc
 spec:
-  applicationImage: icr.io/appcafe/open-liberty
+  applicationImage: icr.io/appcafe/open-liberty:full-java8-openj9-ubi
   service:
     nodePort: 30000
     port: 3000
