@@ -1,7 +1,3 @@
-apiVersion: kuttl.dev/v1beta1
-kind: TestAssert
-timeout: 90
----
 apiVersion: image.openshift.io/v1
 kind: ImageStream
 metadata:

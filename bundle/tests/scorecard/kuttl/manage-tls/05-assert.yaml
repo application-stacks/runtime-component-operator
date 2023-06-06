@@ -1,7 +1,3 @@
-apiVersion: kuttl.dev/v1beta1
-kind: TestAssert
-timeout: 60
----
 # Verify the pod template spec defaults and that secretName uses *-ocp naming convention
 apiVersion: apps/v1
 kind: Deployment
