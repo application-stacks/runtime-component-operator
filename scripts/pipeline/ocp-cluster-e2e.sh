@@ -204,7 +204,7 @@ main() {
     echo "sleep for 3 minutes to wait for rook-cepth, knative and cert-manager to start installing, then start monitoring for completion"
     sleep 3m
     echo "monitoring knative"
-    ./wait.sh deployment knative-serving
+    scripts/pipeline/wait.sh deployment knative-serving
     rc_kn=$?
     echo "rc_kn=$rc_kn"
     if [[ "$rc_kn" == 0 ]]; then
@@ -212,7 +212,7 @@ main() {
     fi
     if [[ "${ARCHITECTURE}" == "X" ]]; then
       echo "monitoring rook-ceph if architecture is ${ARCHITECTURE}"
-      ./wait.sh deployment rook-ceph
+      scripts/pipeline/wait.sh deployment rook-ceph
       rc_rk=$?
       echo "rc_rk=$rc_rk"
       if [[ "$rc_rk" == 0 ]]; then
