@@ -12,4 +12,4 @@ status:
      - status: 'True'
        type: Completed
   versions:
-    reconciled: 1.2.0
+    reconciled: 1.2.1

@@ -68,9 +68,9 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2023-05-01T09:45:40Z"
+    createdAt: "2023-06-15T17:15:41Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
-    olm.skipRange: '>=0.8.0 <1.2.0'
+    olm.skipRange: '>=0.8.0 <1.2.1'
     operators.openshift.io/infrastructure-features: '["disconnected"]'
     operators.operatorframework.io/builder: operator-sdk-v1.24.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
@@ -81,7 +81,7 @@ metadata:
     operatorframework.io/arch.ppc64le: supported
     operatorframework.io/arch.s390x: supported
     operatorframework.io/os.linux: supported
-  name: runtime-component.v1.2.0
+  name: runtime-component.v1.2.1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -1259,4 +1259,4 @@ spec:
   relatedImages:
   - image: icr.io/appcafe/open-liberty/samples/getting-started@sha256:e22dd56a05e44618a10d275d3ff07a38eb364c0f04f86ffe9618d83dd5467860
     name: liberty-sample-app
-  version: 1.2.0
+  version: 1.2.1
