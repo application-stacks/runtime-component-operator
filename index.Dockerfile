@@ -1,4 +1,4 @@
-FROM registry.redhat.io/openshift4/ose-operator-registry:v4.10 AS builder
+FROM registry.redhat.io/openshift4/ose-operator-registry:v4.12 AS builder
 
 FROM registry.redhat.io/ubi8/ubi-minimal
 
