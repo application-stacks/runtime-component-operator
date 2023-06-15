@@ -11,7 +11,7 @@ metadata:
             "name": "runtimecomponent-sample"
           },
           "spec": {
-            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:e22dd56a05e44618a10d275d3ff07a38eb364c0f04f86ffe9618d83dd5467860",
+            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:b0d658e07e656a8cb3b02bf7194f788f4456c7ffe9d3361f96ac2807045dad80",
             "expose": true,
             "manageTLS": true,
             "replicas": 1,
@@ -41,7 +41,7 @@ metadata:
             "name": "runtimecomponent-sample"
           },
           "spec": {
-            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:e22dd56a05e44618a10d275d3ff07a38eb364c0f04f86ffe9618d83dd5467860",
+            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:b0d658e07e656a8cb3b02bf7194f788f4456c7ffe9d3361f96ac2807045dad80",
             "expose": true,
             "replicas": 1,
             "service": {
@@ -68,7 +68,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2023-06-15T17:15:41Z"
+    createdAt: "2023-06-15T17:18:00Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     olm.skipRange: '>=0.8.0 <1.2.1'
     operators.openshift.io/infrastructure-features: '["disconnected"]'
@@ -976,7 +976,7 @@ spec:
                     fieldRef:
                       fieldPath: metadata.annotations['olm.targetNamespaces']
                 - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
-                  value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:e22dd56a05e44618a10d275d3ff07a38eb364c0f04f86ffe9618d83dd5467860
+                  value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:b0d658e07e656a8cb3b02bf7194f788f4456c7ffe9d3361f96ac2807045dad80
                 image: icr.io/appcafe/runtime-component-operator:daily
                 livenessProbe:
                   failureThreshold: 3
@@ -1257,6 +1257,6 @@ spec:
   provider:
     name: Community
   relatedImages:
-  - image: icr.io/appcafe/open-liberty/samples/getting-started@sha256:e22dd56a05e44618a10d275d3ff07a38eb364c0f04f86ffe9618d83dd5467860
+  - image: icr.io/appcafe/open-liberty/samples/getting-started@sha256:b0d658e07e656a8cb3b02bf7194f788f4456c7ffe9d3361f96ac2807045dad80
     name: liberty-sample-app
   version: 1.2.1
