@@ -353,7 +353,8 @@ test-pipeline-e2e:
                      --registry-name "${PIPELINE_REGISTRY}" --registry-image "${PIPELINE_OPERATOR_IMAGE}" \
                      --registry-user "${PIPELINE_USERNAME}" --registry-password "${PIPELINE_PASSWORD}" \
                      --test-tag "${TRAVIS_BUILD_NUMBER}" --release "${RELEASE_TARGET}" --channel "${DEFAULT_CHANNEL}" \
-					 --install-mode "${INSTALL_MODE}" --architecture "${ARCHITECTURE}"
+					 --install-mode "${INSTALL_MODE}" --architecture "${ARCHITECTURE}" \
+					 --digest "${DIGEST}" --version "${VERSION}"
 
 bundle-build-podman:
 	podman build -f bundle.Dockerfile -t "${BUNDLE_IMG}"
