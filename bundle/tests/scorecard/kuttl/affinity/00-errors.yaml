@@ -1,7 +1,0 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: affinity-rc
-spec:
-status:
-  readyReplicas: 1

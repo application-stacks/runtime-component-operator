@@ -1,8 +1,0 @@
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: sidecar-runtime-deployment
-spec:
-  # Add fields here
-  sidecarContainers:
-

@@ -1,9 +1,0 @@
-# Test to see that the default affinity is overwritten if supplied with a user defined affinity
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: affinity-rc
-spec:
-  affinity:
-    nodeAffinityLabels:
-      kuttlTest: test1

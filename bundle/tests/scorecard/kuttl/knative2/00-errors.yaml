@@ -1,6 +1,0 @@
-# There shouldn't be a deployment if there is a knative service
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: knative2-rc
-

@@ -7,7 +7,7 @@ echo "in directory"
 pwd
 
 echo "running configure-cluster.sh"
-git clone --single-branch --branch main https://$(get_env git-token)@github.ibm.com/websphere/operators.git
+git clone --single-branch --branch cosolidate-tests https://$(get_env git-token)@github.ibm.com/websphere/operators.git
 ls -l operators/scripts/configure-cluster/configure-cluster.sh
 echo "**** issuing oc login"
 oc login --insecure-skip-tls-verify $clusterurl -u kubeadmin -p $token
@@ -51,10 +51,22 @@ DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
 
 export DIGEST
 echo "one-pipeline Digest Value: ${DIGEST}"
+echo "setting up tests from operators repo - runTest.sh"
+cp -rf operators/tests/common/* ../../bundle/tests/scorecard/kuttl
+
+cp -rf operators/tests/kind/* ../../bundle/tests/scorecard/kind-kuttl
+
+mkdir ../test
+cp -rf operators/scripts/test/* ../test
 
 cd ../..
 echo "directory before acceptance-test.sh"
 pwd
+echo "Getting the operator short name"
+export OP_SHORT_NAME=$(get_env operator-short-name)
+echo "Operator shortname is: ${OP_SHORT_NAME}"
+echo "Running modify-tests.sh script"
+scripts/test/modify-tests.sh --operator ${OP_SHORT_NAME}
 
 scripts/acceptance-test.sh
 rc=$?
@@ -91,5 +103,7 @@ fi
 echo "Cleaning up after tests have be completed"
 echo "switching back to scripts/pipeline directory"
 cd ..
+echo "Deleting test scripts ready for another run..."
+rm -rf ../../bundle/tests/scorecard/*
 oc logout
 export CLUSTER_URL=""

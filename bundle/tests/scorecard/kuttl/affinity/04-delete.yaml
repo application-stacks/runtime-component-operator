@@ -1,9 +1,0 @@
-apiVersion: kuttl.dev/v1beta1
-kind: TestStep
-delete:
-  - apiVersion: rc.app.stacks/v1
-    kind: RuntimeComponent
-    name: affinity-rc
-  - apiVersion: rc.app.stacks/v1
-    kind: RuntimeComponent
-    name: anti-affinity-rc

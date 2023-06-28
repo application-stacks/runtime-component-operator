@@ -1,6 +1,0 @@
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: service-monitor-rc
-spec:
-  monitoring:

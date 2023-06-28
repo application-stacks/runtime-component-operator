@@ -1,5 +1,0 @@
-# Verify removal of the Deployment
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: manage-tls-rc

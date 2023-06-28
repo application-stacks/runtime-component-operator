@@ -189,10 +189,10 @@ main() {
     echo "****** Setting up test environment..."
     setup_env
 
-    if [[ "${ARCHITECTURE}" != "X" ]]; then
-        echo "****** Setting up tests for ${ARCHITECTURE} architecture"
-        setup_tests
-    fi
+    #if [[ "${ARCHITECTURE}" != "X" ]]; then
+    #    echo "****** Setting up tests for ${ARCHITECTURE} architecture"
+    #    setup_tests
+    #fi
 
     if [[ -z "${DEBUG_FAILURE}" ]]; then
         trap trap_cleanup EXIT
