@@ -60,14 +60,16 @@ setup:
       echo "Skipping acceptance-test, SKIP_ACCEPTANCE_TEST=$SKIP_ACCEPTANCE_TEST"
       exit 0
     else
-        export arch=$(get_env architecture)
         git clone https://$(get_env git-token)@github.ibm.com/elastic-build-cloud/ebc-gateway-http.git
-        if [[ "$arch" == "X" ]]; then
-          ./scripts/pipeline/getCluster.sh "X"
-        else
+
+        export arch=$(get_env architecture)
+        export test_arch=$(get_env test-architecture)
+        if [[ "$test_arch" == "ZXP" && "$arch" == "ZXP" ]]; then
           ./scripts/pipeline/getCluster.sh "Z"
           ./scripts/pipeline/getCluster.sh "X" 
           ./scripts/pipeline/getCluster.sh "P"
+        else
+          ./scripts/pipeline/getCluster.sh "X"
         fi 
     fi
 
@@ -324,7 +326,7 @@ containerize:
       do
         IMAGE=$PIPELINE_REGISTRY/$PIPELINE_OPERATOR_IMAGE-catalog:$i
         DIGEST="$(skopeo inspect docker://$IMAGE | jq '.Digest'| sed -e 's/"//g')"
-        { ARCH="$(echo $i | grep -o '\(amd64\|s390x\|ppc64le\)$')" && TYPE="image"; } || { ARCH="amd64" && TYPE="manifest"; }
+        { ARCH="$(echo $i | grep -o '\(amd64\|s390x\|ppc64le\)$')" && TYPE="image"; } || { TYPE="manifest"; }
         if [[ "$TYPE" == "manifest" ]]; then
           echo "Saving artifact catalog-$i type=$TYPE name=$IMAGE digest=$DIGEST"
           save_artifact catalog-$i type=$TYPE name="$IMAGE" "digest=$DIGEST"
@@ -433,8 +435,9 @@ acceptance-test:
     git clone https://$(get_env git-token)@github.ibm.com/elastic-build-cloud/ebc-gateway-http.git
 
     export arch=$(get_env architecture)
+    export test_arch=$(get_env test-architecture)
     
-    if [[ "$arch" == "ZXP" ]]; then
+    if [[ "$test_arch" == "ZXP" && "$arch" == "ZXP" ]]; then
       source runTest.sh Z
       source runTest.sh X
       source runTest.sh P

@@ -39,6 +39,7 @@ export RELEASE_TARGET=$(get_env branch)
 export DEBUG_FAILURE=$(get_env debug-failure)
 
 # Kind test
+export SKIP_KIND_E2E_TEST=$(get_env SKIP_KIND_E2E_TEST)
 export FYRE_USER=$(get_env fyre-user)
 export FYRE_KEY=$(get_env fyre-key)
 export FYRE_PASS=$(get_env fyre-pass)
