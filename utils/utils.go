@@ -466,13 +466,13 @@ func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule,
 }
 
 // CustomizeAffinity ...
-func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
+func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent, isZoneTopologySupported bool) {
 	affinityConfig := ba.GetAffinity()
 	if isCustomAffinityDefined(affinityConfig) {
 		customizeAffinity(affinity, ba.GetAffinity())
 	} else {
 		obj := ba.(metav1.Object)
-		customizeDefaultAffinity(affinity, obj.GetName())
+		customizeDefaultAffinity(affinity, obj.GetName(), isZoneTopologySupported)
 	}
 	customizeAffinityArchitectures(affinity, affinityConfig)
 }
@@ -533,10 +533,11 @@ func customizeAffinity(affinity *corev1.Affinity, affinityConfig common.BaseComp
 	}
 }
 
-func customizeDefaultAffinity(affinity *corev1.Affinity, name string) {
+func customizeDefaultAffinity(affinity *corev1.Affinity, name string, isZoneTopologySupported bool) {
 	if affinity.PodAntiAffinity == nil {
 		affinity.PodAntiAffinity = &corev1.PodAntiAffinity{}
 	}
+
 	term := []corev1.WeightedPodAffinityTerm{
 		{
 			Weight: 50,
@@ -549,6 +550,9 @@ func customizeDefaultAffinity(affinity *corev1.Affinity, name string) {
 				},
 			},
 		},
+	}
+	if isZoneTopologySupported {
+		term[0].PodAffinityTerm.TopologyKey = "topology.kubernetes.io/zone"
 	}
 	affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = term
 }
@@ -605,7 +609,7 @@ func customizeAffinityArchitectures(affinity *corev1.Affinity, affinityConfig co
 }
 
 // CustomizePodSpec ...
-func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
+func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent, isZoneTopologySupported bool) {
 	obj := ba.(metav1.Object)
 	pts.Labels = ba.GetLabels()
 	pts.Annotations = MergeMaps(pts.Annotations, ba.GetAnnotations())

@@ -337,6 +337,18 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.ManageError(err, common.StatusConditionTypeReconciled, ba)
 	}
 
+	// Check nodes to see if it supports zone topology
+	nodes := &corev1.NodeList{}
+	isZoneTopologySupported := true
+	err = r.GetClient().List(context.TODO(), nodes)
+	if err != nil {
+		for _, node := range nodes.Items {
+			if _, found := node.Labels["topology.kubernetes.io/zone"]; !found {
+				isZoneTopologySupported = false
+			}
+		}
+	}
+
 	if instance.Spec.StatefulSet != nil {
 		// Delete Deployment if exists
 		deploy := &appsv1.Deployment{ObjectMeta: defaultMeta}
@@ -361,7 +373,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		statefulSet := &appsv1.StatefulSet{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(statefulSet, instance, func() error {
 			appstacksutils.CustomizeStatefulSet(statefulSet, instance)
-			appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, instance)
+			appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, instance, isZoneTopologySupported)
 			if err := appstacksutils.CustomizePodWithSVCCertificate(&statefulSet.Spec.Template, instance, r.GetClient()); err != nil {
 				return err
 			}
@@ -393,7 +405,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		deploy := &appsv1.Deployment{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(deploy, instance, func() error {
 			appstacksutils.CustomizeDeployment(deploy, instance)
-			appstacksutils.CustomizePodSpec(&deploy.Spec.Template, instance)
+			appstacksutils.CustomizePodSpec(&deploy.Spec.Template, instance, isZoneTopologySupported)
 			if err := appstacksutils.CustomizePodWithSVCCertificate(&deploy.Spec.Template, instance, r.GetClient()); err != nil {
 				return err
 			}
