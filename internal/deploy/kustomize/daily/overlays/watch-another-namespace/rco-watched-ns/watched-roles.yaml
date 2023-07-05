@@ -1,6 +1,55 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
+  labels:
+    app.kubernetes.io/instance: runtime-component-operator
+    app.kubernetes.io/name: runtime-component-operator
+  name: rco-leader-election-watched-role
+  namespace: rco-watched-ns
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - configmaps/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
   creationTimestamp: null
   labels:
     app.kubernetes.io/instance: runtime-component-operator
@@ -175,72 +224,6 @@ metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
     app.kubernetes.io/name: runtime-component-operator
-  name: rco-watched-rolebinding
-  namespace: rco-watched-ns
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: rco-watched-role
-subjects:
-- kind: ServiceAccount
-  name: rco-controller-manager
-  namespace: rco-ns
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  labels:
-    app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/name: runtime-component-operator
-  name: rco-leader-election-watched-role
-  namespace: rco-watched-ns
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - configmaps/status
-  verbs:
-  - get
-  - update
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
-- apiGroups:
-  - coordination.k8s.io
-  resources:
-  - leases
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  labels:
-    app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/name: runtime-component-operator
   name: rco-leader-election-watched-rolebinding
   namespace: rco-watched-ns
 roleRef:
@@ -252,4 +235,19 @@ subjects:
   name: rco-controller-manager
   namespace: rco-ns
 ---
-
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: runtime-component-operator
+    app.kubernetes.io/name: runtime-component-operator
+  name: rco-watched-rolebinding
+  namespace: rco-watched-ns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: rco-watched-role
+subjects:
+- kind: ServiceAccount
+  name: rco-controller-manager
+  namespace: rco-ns
