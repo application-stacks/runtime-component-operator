@@ -3,7 +3,7 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION ?= 1.2.0
+VERSION ?= 1.2.1
 OPERATOR_SDK_RELEASE_VERSION ?= v1.24.0
 
 # CHANNELS define the bundle channels used in the bundle.
@@ -356,7 +356,8 @@ test-pipeline-e2e:
                      --registry-name "${PIPELINE_REGISTRY}" --registry-image "${PIPELINE_OPERATOR_IMAGE}" \
                      --registry-user "${PIPELINE_USERNAME}" --registry-password "${PIPELINE_PASSWORD}" \
                      --test-tag "${TRAVIS_BUILD_NUMBER}" --release "${RELEASE_TARGET}" --channel "${DEFAULT_CHANNEL}" \
-					 --install-mode "${INSTALL_MODE}" --architecture "${ARCHITECTURE}"
+					 --install-mode "${INSTALL_MODE}" --architecture "${ARCHITECTURE}" \
+					 --digest "${DIGEST}" --version "${VERSION}"
 
 bundle-build-podman:
 	podman build -f bundle.Dockerfile -t "${BUNDLE_IMG}"

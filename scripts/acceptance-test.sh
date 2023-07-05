@@ -28,6 +28,7 @@ declare -A E2E_TESTS=(
 		--env DEBUG_FAILURE=${DEBUG_FAILURE} \
 		--env INSTALL_MODE=${INSTALL_MODE} \
 		--env ARCHITECTURE=${ARCHITECTURE} \
+		--env DIGEST=${DIGEST} \
 		e2e-runner:latest \
 		make test-pipeline-e2e
 		EOF

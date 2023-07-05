@@ -1,6 +1,6 @@
 #!/bin/bash
 
-readonly usage="Usage: ocp-cluster-e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-image <ns/image> --registry-user <user> --registry-password <password> --release <daily|release-tag> --test-tag <test-id> --catalog-image <catalog-image> --channel <channel>"
+readonly usage="Usage: ocp-cluster-e2e.sh -u <docker-username> -p <docker-password> --cluster-url <url> --cluster-token <token> --registry-name <name> --registry-image <ns/image> --registry-user <user> --registry-password <password> --release <daily|release-tag> --test-tag <test-id> --catalog-image <catalog-image> --channel <channel> --architecture <architecture> --digest <digest> --version <version>"
 readonly OC_CLIENT_VERSION="latest-4.10"
 readonly CONTROLLER_MANAGER_NAME="rco-controller-manager"
 
@@ -174,6 +174,18 @@ main() {
         exit 1
     fi
 
+    if [[ -z "${DIGEST}" ]]; then
+        echo "****** Missing digest, see usage"
+        echo "${usage}"
+        exit 1
+    fi
+
+    if [[ -z "${VERSION}" ]]; then
+        echo "****** Missing version, see usage"
+        echo "${usage}"
+        exit 1
+    fi
+
     echo "****** Setting up test environment..."
     setup_env
 
@@ -228,6 +240,19 @@ main() {
         echo "****** Waiting for ${CONTROLLER_MANAGER_NAME} to be ready..."
         sleep 10
     done
+
+    # Check correct version of the operator has been installed
+    img_digest="icr.io/appcafe/runtime-component-operator@${DIGEST}"
+    echo "Expect operator image version: ${img_digest}"
+    pod=$(oc get pods -n "${TEST_NAMESPACE}" | awk '{print $1}' | grep rco-controller-manager)
+    install_img="$(oc get pod -n "${TEST_NAMESPACE}" ${pod} -o jsonpath={.spec.containers..image})"
+    echo "Actual installed operation image version: ${install_img}"
+    if [[ "${install_img}" != "${img_digest}" ]]; then
+        echo "Install Operator image ${install_img} does not match correct image ${img_digest}"
+        exit 1
+    else
+        echo "Correct Operator image running"
+    fi
 
     echo "****** ${CONTROLLER_MANAGER_NAME} deployment is ready..."
 
@@ -285,7 +310,7 @@ spec:
 EOF
 fi
 
-    echo "****** Applying the subscription..."
+    echo "****** Applying the subscription for version: ${VERSION}"
     cat <<EOF | oc apply -f -
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -298,6 +323,7 @@ spec:
   source: runtime-component-catalog
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic
+  startingCSV: runtime-component.v${VERSION}
 EOF
 }
 
@@ -397,6 +423,14 @@ parse_args() {
     --architecture)
       shift
       readonly ARCHITECTURE="${1}"
+      ;;  
+    --digest)
+      shift
+      readonly DIGEST="${1}"
+      ;;
+    --version)
+      shift
+      readonly VERSION="${1}"
       ;;  
     *)
       echo "Error: Invalid argument - $1"

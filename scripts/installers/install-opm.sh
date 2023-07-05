@@ -9,7 +9,7 @@ main() {
     exit 0
   fi
 
-  readonly DEFAULT_RELEASE_VERSION=latest-4.10
+  readonly DEFAULT_RELEASE_VERSION=latest-4.12
   readonly RELEASE_VERSION=${1:-$DEFAULT_RELEASE_VERSION}
   readonly base_url="https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/${RELEASE_VERSION}"
 

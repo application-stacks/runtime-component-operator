@@ -44,6 +44,14 @@ export FYRE_KEY=$(get_env fyre-key)
 export FYRE_PASS=$(get_env fyre-pass)
 export FYRE_PRODUCT_GROUP_ID=$(get_env fyre-product-group-id)
 
+echo "${PIPELINE_PASSWORD}" | docker login "${PIPELINE_REGISTRY}" -u "${PIPELINE_USERNAME}" --password-stdin
+IMAGE="${PIPELINE_REGISTRY}/${PIPELINE_OPERATOR_IMAGE}:${RELEASE_TARGET}"
+echo "one-pipline Image value: ${IMAGE}"
+DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
+
+export DIGEST
+echo "one-pipeline Digest Value: ${DIGEST}"
+
 cd ../..
 echo "directory before acceptance-test.sh"
 pwd
