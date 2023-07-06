@@ -57,6 +57,7 @@ mkdir -p ../../bundle/tests/scorecard/kuttl
 mkdir -p ../../bundle/tests/scorecard/kind-kuttl
 
 # Copying all the relevent kuttl test and config file
+cp operators/tests/config.yaml ../../bundle/tests/scorecard/
 cp -rf operators/tests/common/* ../../bundle/tests/scorecard/kuttl
 cp -rf operators/tests/kind/* ../../bundle/tests/scorecard/kind-kuttl
 
