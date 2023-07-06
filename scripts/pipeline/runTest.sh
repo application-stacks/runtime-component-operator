@@ -52,10 +52,15 @@ DIGEST="$(skopeo inspect docker://$IMAGE | grep Digest | grep -o 'sha[^\"]*')"
 export DIGEST
 echo "one-pipeline Digest Value: ${DIGEST}"
 echo "setting up tests from operators repo - runTest.sh"
-cp -rf operators/tests/common/* ../../bundle/tests/scorecard/kuttl
 
+mkdir -p ../../bundle/tests/scorecard/kuttl
+mkdir -p ../../bundle/tests/scorecard/kind-kuttl
+
+# Copying all the relevent kuttl test and config file
+cp -rf operators/tests/common/* ../../bundle/tests/scorecard/kuttl
 cp -rf operators/tests/kind/* ../../bundle/tests/scorecard/kind-kuttl
 
+# Copying the common test scripts
 mkdir ../test
 cp -rf operators/scripts/test/* ../test
 
@@ -104,6 +109,7 @@ echo "Cleaning up after tests have be completed"
 echo "switching back to scripts/pipeline directory"
 cd ..
 echo "Deleting test scripts ready for another run..."
-rm -rf ../../bundle/tests/scorecard/*
+rm -rf ../../bundle/tests/scorecard/kuttl/*
+rm -rf ../../bundle/tests/scorecard/kind-kuttl/*
 oc logout
 export CLUSTER_URL=""
