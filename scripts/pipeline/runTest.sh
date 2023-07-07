@@ -72,7 +72,7 @@ echo "Getting the operator short name"
 export OP_SHORT_NAME=$(get_env operator-short-name)
 echo "Operator shortname is: ${OP_SHORT_NAME}"
 echo "Running modify-tests.sh script"
-scripts/test/modify-tests.sh --operator ${OP_SHORT_NAME}
+scripts/test/modify-tests.sh --operator ${OP_SHORT_NAME} --arch ${ARCHITECTURE}
 
 scripts/acceptance-test.sh
 rc=$?
