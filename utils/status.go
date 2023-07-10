@@ -185,9 +185,31 @@ func (r *ReconcilerBase) isKnativeReady(ba common.BaseComponent, c common.Status
 
 	msg, reason := "", ""
 
-	// Check if knative service exists
+	// Check if the Knative Service exists
 	if err := r.GetClient().Get(context.TODO(), namespacedName, knative); err != nil {
-		msg, reason = "Knative service is not ready.", "NotCreated"
+		msg, reason = "Knative Service is not ready.", "ServiceNotCreated"
+		return c.SetConditionFields(msg, reason, corev1.ConditionFalse)
+	}
+
+	// Check the Knative Service's status
+	knativeReadyStatusFound := false
+	for _, condition := range knative.Status.Conditions {
+		if condition.Type == "Ready" {
+			knativeReadyStatusFound = true
+			if condition.Status != "True" {
+				msg, reason = "Knative Service is not ready.", "ServiceNotReady"
+				if len(condition.Message) > 0 {
+					msg = "Knative Service is not ready; " + condition.Message
+				}
+				if len(condition.Reason) > 0 {
+					reason = condition.Reason
+				}
+				return c.SetConditionFields(msg, reason, corev1.ConditionFalse)
+			}
+		}
+	}
+	if !knativeReadyStatusFound {
+		msg, reason = "Knative Service is not ready; Waiting for the Service's status to appear.", "ServiceStatusNotFound"
 		return c.SetConditionFields(msg, reason, corev1.ConditionFalse)
 	}
 
