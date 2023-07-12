@@ -39,7 +39,6 @@ rules:
   - namespaces
   - pods
   - routes
-  - nodes
   verbs:
   - get
   - list

@@ -233,7 +233,7 @@ func partialTestCustomizeNodeAffinity(t *testing.T) {
 		Affinity:         &affinityConfig,
 	}
 	affinity, runtime := &corev1.Affinity{}, createRuntimeComponent(name, namespace, spec)
-	CustomizeAffinity(affinity, runtime, false)
+	CustomizeAffinity(affinity, runtime)
 
 	expectedMatchExpressions := []corev1.NodeSelectorRequirement{
 		rDSIDE.NodeSelectorTerms[0].MatchExpressions[0],
@@ -283,7 +283,7 @@ func partialTestCustomizePodAffinity(t *testing.T) {
 		Affinity:         &affinityConfig,
 	}
 	affinity, runtime := &corev1.Affinity{}, createRuntimeComponent(name, namespace, spec)
-	CustomizeAffinity(affinity, runtime, false)
+	CustomizeAffinity(affinity, runtime)
 
 	testCPA := []Test{
 		{"Pod Affinity - Required Affinity Term", rDSIDE,
@@ -319,7 +319,7 @@ func TestCustomizePodSpecAnnotations(t *testing.T) {
 
 	// No dep or set, annotation should be empty
 	pts1, runtime1 := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
-	CustomizePodSpec(pts1, runtime1, false)
+	CustomizePodSpec(pts1, runtime1)
 	annolen1 := len(pts1.Annotations)
 	testAnnotations1 := []Test{
 		{"Shouldn't be any annotations", 0, annolen1},
@@ -329,7 +329,7 @@ func TestCustomizePodSpecAnnotations(t *testing.T) {
 	// dep but not set, annotation should be dep annotations
 	spec.Deployment = deployment
 	pts2, runtime2 := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
-	CustomizePodSpec(pts2, runtime2, false)
+	CustomizePodSpec(pts2, runtime2)
 	annolen2 := len(pts2.Annotations)
 	anno2 := pts2.Annotations["depAnno"]
 	testAnnotations2 := []Test{
@@ -342,7 +342,7 @@ func TestCustomizePodSpecAnnotations(t *testing.T) {
 	spec.Deployment = nil
 	spec.StatefulSet = statefulSet
 	pts3, runtime3 := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
-	CustomizePodSpec(pts3, runtime3, false)
+	CustomizePodSpec(pts3, runtime3)
 	annolen3 := len(pts3.Annotations)
 	anno3 := pts3.Annotations["setAnno"]
 	testAnnotations3 := []Test{
@@ -354,7 +354,7 @@ func TestCustomizePodSpecAnnotations(t *testing.T) {
 	// dep and set, annotation should be set annotations
 	spec.Deployment = deployment
 	pts4, runtime4 := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
-	CustomizePodSpec(pts4, runtime4, false)
+	CustomizePodSpec(pts4, runtime4)
 	annolen4 := len(pts4.Annotations)
 	anno4 := pts4.Annotations["setAnno"]
 	testAnnotations4 := []Test{
@@ -382,7 +382,7 @@ func TestCustomizePodSpec(t *testing.T) {
 	}
 	pts, runtime := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
 	// else cond
-	CustomizePodSpec(pts, runtime, false)
+	CustomizePodSpec(pts, runtime)
 	noCont := len(pts.Spec.Containers)
 	noPorts := len(pts.Spec.Containers[0].Ports)
 	ptsSAN := pts.Spec.ServiceAccountName
@@ -408,7 +408,7 @@ func TestCustomizePodSpec(t *testing.T) {
 		Affinity:           &affinityConfig,
 	}
 	runtime = createRuntimeComponent(name, namespace, spec)
-	CustomizePodSpec(pts, runtime, false)
+	CustomizePodSpec(pts, runtime)
 	ptsCSAN := pts.Spec.ServiceAccountName
 
 	// affinity tests

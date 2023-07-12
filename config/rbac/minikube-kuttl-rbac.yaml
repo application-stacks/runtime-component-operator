@@ -40,7 +40,6 @@ rules:
   - pods
   - services
   - routes
-  - nodes
   verbs:
   - get
   - list
