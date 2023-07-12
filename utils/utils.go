@@ -540,7 +540,7 @@ func customizeDefaultAffinity(affinity *corev1.Affinity, name string) {
 
 	term := []corev1.WeightedPodAffinityTerm{
 		{
-			Weight: 50,
+			Weight: 25,
 			PodAffinityTerm: corev1.PodAffinityTerm{
 				TopologyKey: "topology.kubernetes.io/zone",
 				LabelSelector: &metav1.LabelSelector{
@@ -551,7 +551,7 @@ func customizeDefaultAffinity(affinity *corev1.Affinity, name string) {
 			},
 		},
 		{
-			Weight: 50,
+			Weight: 25,
 			PodAffinityTerm: corev1.PodAffinityTerm{
 				TopologyKey: "kubernetes.io/hostname",
 				LabelSelector: &metav1.LabelSelector{
