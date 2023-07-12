@@ -1229,6 +1229,7 @@ func GetCondition(conditionType appstacksv1.StatusConditionType, status *appstac
 }
 
 // SetCondition ...
+/*
 func SetCondition(condition appstacksv1.StatusCondition, status *appstacksv1.RuntimeComponentStatus) {
 	for i := range status.Conditions {
 		if status.Conditions[i].Type == condition.Type {
@@ -1239,6 +1240,19 @@ func SetCondition(condition appstacksv1.StatusCondition, status *appstacksv1.Run
 
 	status.Conditions = append(status.Conditions, condition)
 }
+*/
+
+/*
+func UnsetCondition(condition appstacksv1.StatusCondition, status *appstacksv1.RuntimeComponentStatus) {
+	for i := range status.Conditions {
+		if status.Conditions[i].Type == condition.Type {
+			//status.Conditions[i] = condition
+                        status.Conditions = append(status.Conditions[:i], status.Conditions[i+1])
+                        return
+		}
+	}
+}
+*/
 
 // GetWatchNamespaces returns a slice of namespaces the operator should watch based on WATCH_NAMESPSCE value
 // WATCH_NAMESPSCE value could be empty for watching the whole cluster or a comma-separated list of namespaces

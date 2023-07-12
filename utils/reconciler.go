@@ -175,6 +175,33 @@ func (r *ReconcilerBase) GetOpConfigMap(name string, ns string) (*corev1.ConfigM
 	return configMap, nil
 }
 
+func addStatusWarnings(ba common.BaseComponent) {
+
+	s := ba.GetStatus()
+
+	mtls := ba.GetManageTLS()
+	port := ba.GetService().GetPort()
+	if (mtls == nil || *mtls == true) && port == 9080 {
+		status := corev1.ConditionTrue
+		msg := "ManageTLS is true but port is set to 9080"
+		statusCondition := s.NewCondition(common.StatusConditionTypeWarning)
+		statusCondition.SetReason("")
+		statusCondition.SetMessage(msg)
+		statusCondition.SetStatus(status)
+		s.SetCondition(statusCondition)
+	} else {
+		//status := corev1.ConditionFalse
+		statusCondition := s.NewCondition(common.StatusConditionTypeWarning)
+		//statusCondition.SetReason("")
+		//statusCondition.SetMessage("Nothing to see")
+		//statusCondition.SetStatus(status)
+		//s.SetCondition(statusCondition)
+
+		s.UnsetCondition(statusCondition)
+	}
+
+}
+
 // ManageError ...
 func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
 	s := ba.GetStatus()
@@ -190,6 +217,8 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 	newCondition.SetMessage(issue.Error())
 	newCondition.SetStatus(corev1.ConditionFalse)
 	s.SetCondition(newCondition)
+
+	addStatusWarnings(ba)
 
 	if conditionType != common.StatusConditionTypeResourcesReady {
 		//Check Application status (reconciliation & resource status & endpoint status)
@@ -246,6 +275,8 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 	statusCondition.SetMessage("")
 	statusCondition.SetStatus(corev1.ConditionTrue)
 	s.SetCondition(statusCondition)
+
+	addStatusWarnings(ba)
 
 	//Check application status (reconciliation & resource status & endpoint status)
 	readyStatus := r.CheckApplicationStatus(ba)

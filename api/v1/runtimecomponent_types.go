@@ -437,6 +437,7 @@ const (
 	StatusConditionTypeReconciled     StatusConditionType = "Reconciled"
 	StatusConditionTypeResourcesReady StatusConditionType = "ResourcesReady"
 	StatusConditionTypeReady          StatusConditionType = "Ready"
+	StatusConditionTypeWarning        StatusConditionType = "Warning"
 
 	// Status Endpoint Scopes
 	StatusEndpointScopeExternal StatusEndpointScope = "External"
@@ -446,6 +447,8 @@ const (
 type StatusVersions struct {
 	Reconciled string `json:"reconciled,omitempty"`
 }
+
+// TODO Need to add annotations for Status condition warning I think!?
 
 // +kubebuilder:resource:path=runtimecomponents,scope=Namespaced,shortName=comp;comps
 // +kubebuilder:object:root=true
@@ -1140,6 +1143,22 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 	}
 }
 
+func (s *RuntimeComponentStatus) UnsetCondition(c common.StatusCondition) {
+	for i := range s.Conditions {
+		if s.Conditions[i].GetType() == c.GetType() {
+			//status.Conditions[i] = condition
+			if i+1 == len(s.Conditions) {
+				// this is the last element, just trim one off
+				s.Conditions = s.Conditions[:i]
+			} else {
+				// there are more elements
+				s.Conditions = append(s.Conditions[:i], s.Conditions[i+1])
+			}
+			return
+		}
+	}
+}
+
 func (s *RuntimeComponentStatus) GetReferences() common.StatusReferences {
 	if s.References == nil {
 		s.References = make(common.StatusReferences)
@@ -1166,6 +1185,8 @@ func convertToCommonStatusConditionType(c StatusConditionType) common.StatusCond
 		return common.StatusConditionTypeResourcesReady
 	case StatusConditionTypeReady:
 		return common.StatusConditionTypeReady
+	case StatusConditionTypeWarning:
+		return common.StatusConditionTypeWarning
 	default:
 		panic(c)
 	}
@@ -1179,6 +1200,8 @@ func convertFromCommonStatusConditionType(c common.StatusConditionType) StatusCo
 		return StatusConditionTypeResourcesReady
 	case common.StatusConditionTypeReady:
 		return StatusConditionTypeReady
+	case common.StatusConditionTypeWarning:
+		return StatusConditionTypeWarning
 	default:
 		panic(c)
 	}
