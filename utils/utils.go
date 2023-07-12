@@ -466,13 +466,13 @@ func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule,
 }
 
 // CustomizeAffinity ...
-func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent, isZoneTopologySupported bool) {
+func CustomizeAffinity(affinity *corev1.Affinity, ba common.BaseComponent) {
 	affinityConfig := ba.GetAffinity()
 	if isCustomAffinityDefined(affinityConfig) {
 		customizeAffinity(affinity, ba.GetAffinity())
 	} else {
 		obj := ba.(metav1.Object)
-		customizeDefaultAffinity(affinity, obj.GetName(), isZoneTopologySupported)
+		customizeDefaultAffinity(affinity, obj.GetName())
 	}
 	customizeAffinityArchitectures(affinity, affinityConfig)
 }
@@ -533,12 +533,23 @@ func customizeAffinity(affinity *corev1.Affinity, affinityConfig common.BaseComp
 	}
 }
 
-func customizeDefaultAffinity(affinity *corev1.Affinity, name string, isZoneTopologySupported bool) {
+func customizeDefaultAffinity(affinity *corev1.Affinity, name string) {
 	if affinity.PodAntiAffinity == nil {
 		affinity.PodAntiAffinity = &corev1.PodAntiAffinity{}
 	}
 
 	term := []corev1.WeightedPodAffinityTerm{
+		{
+			Weight: 50,
+			PodAffinityTerm: corev1.PodAffinityTerm{
+				TopologyKey: "topology.kubernetes.io/zone",
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app.kubernetes.io/instance": name,
+					},
+				},
+			},
+		},
 		{
 			Weight: 50,
 			PodAffinityTerm: corev1.PodAffinityTerm{
@@ -550,9 +561,6 @@ func customizeDefaultAffinity(affinity *corev1.Affinity, name string, isZoneTopo
 				},
 			},
 		},
-	}
-	if isZoneTopologySupported {
-		term[0].PodAffinityTerm.TopologyKey = "topology.kubernetes.io/zone"
 	}
 	affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = term
 }
@@ -609,7 +617,7 @@ func customizeAffinityArchitectures(affinity *corev1.Affinity, affinityConfig co
 }
 
 // CustomizePodSpec ...
-func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent, isZoneTopologySupported bool) {
+func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	pts.Labels = ba.GetLabels()
 	pts.Annotations = MergeMaps(pts.Annotations, ba.GetAnnotations())
