@@ -1,12 +1,12 @@
 package utils
 
 import (
+	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	"os"
 	"reflect"
 	"strconv"
 	"testing"
 
-	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 
 	routev1 "github.com/openshift/api/route/v1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
