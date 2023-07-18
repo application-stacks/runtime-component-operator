@@ -51,7 +51,7 @@ spec:
               fieldPath: metadata.namespace
         - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
           value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:d3c67c4a15c97b0fb82f9ef4a2ccf474232b878787e9eea39af75a3ac78469e3
-        image: icr.io/appcafe/runtime-component-operator:daily
+        image: icr.io/appcafe/runtime-component-operator:1.2.1
         livenessProbe:
           failureThreshold: 3
           httpGet:
