@@ -13,4 +13,3 @@ spec:
     annotations:
       key1: "value1"
       key2: "value2"
-    certificateSecretRef: service-tls-secret
