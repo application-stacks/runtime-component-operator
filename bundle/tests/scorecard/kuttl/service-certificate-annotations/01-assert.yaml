@@ -1,28 +1,9 @@
-# Check creation of CertManager certificates and secret
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  labels:
-    app.kubernetes.io/managed-by: runtime-component-operator
-spec:
-  commonName: Runtime Component Operator
-  isCA: true
----
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: service-with-cert-annotations-rc-svc-tls-cm
-  annotations:
-    key1: "value1"
 spec:
   secretName: service-with-cert-annotations-rc-svc-tls-cm
----
-apiVersion: v1
-kind: Secret
-metadata:
-  annotations:
-    cert-manager.io/certificate-name: service-with-cert-annotations-rc-svc-tls-cm
-  name: service-with-cert-annotations-rc-svc-tls-cm
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -49,4 +30,4 @@ spec:
       - name: svc-certificate
         secret:
           defaultMode: 420
-          secretName: service-tls-secret
+          secretName: service-with-cert-annotations-rc-svc-tls-cm

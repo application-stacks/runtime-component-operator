@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-with-cert-rc
+spec:
+  template:
+    spec:
+      volumes:
+      - name: svc-certificate
+        secret:
+          defaultMode: 420
+          secretName: service-with-cert-annotations-rc-svc-tls-cm
