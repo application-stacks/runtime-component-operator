@@ -2,6 +2,9 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: service-with-cert-annotations-rc-svc-tls-cm
+  annotations:
+    key1: "value1"
+    key2: "value2"
 spec:
   secretName: service-with-cert-annotations-rc-svc-tls-cm
 ---

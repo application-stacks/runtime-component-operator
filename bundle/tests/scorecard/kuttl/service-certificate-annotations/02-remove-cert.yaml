@@ -1,9 +1,0 @@
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: service-with-cert-annotations-rc
-spec:
-  # Add fields here
-  service:
-    certificate:
-
