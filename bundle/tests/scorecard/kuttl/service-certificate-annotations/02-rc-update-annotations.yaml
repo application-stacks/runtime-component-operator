@@ -2,6 +2,8 @@ apiVersion: rc.app.stacks/v1
 kind: RuntimeComponent
 metadata:
   name: service-with-cert-annotations-rc
+  annotations:
+    key3: value3
 spec:
   # Add fields here
   applicationImage: registry.k8s.io/pause:3.2
@@ -9,4 +11,5 @@ spec:
   service:
     certificate:
       annotations:
-        key1: value1
+        key1: "value1"
+        key2: "value2"

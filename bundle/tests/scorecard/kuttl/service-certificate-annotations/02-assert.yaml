@@ -5,6 +5,7 @@ metadata:
   annotations:
     key1: value1
     key2: value2
+    key3: value3
 spec:
   secretName: service-with-cert-annotations-rc-svc-tls-cm
 ---
