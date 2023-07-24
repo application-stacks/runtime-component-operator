@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: resource-conflict-rc
+  ownerReferences:
+  - apiVersion: rc.app.stacks/v1
+    kind: NotRuntimeComponent
+    name: not-resource-conflict-rc
+    uid: abcdefghijklmnopqrstuvwxyz
+spec:
+  template:
+    metadata:
+      labels:
+        test: kuttl
+    spec:
+      containers:
+      - name: app
+        image: registry.k8s.io/pause:3.2
+  selector:
+    matchLabels:
+      test: kuttl
+status:
+  replicas: 1
+  readyReplicas: 1
+  updatedReplicas: 1

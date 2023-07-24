@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: resource-conflict-rc
+  ownerReferences:
+  - apiVersion: rc.app.stacks/v1
+    kind: NotRuntimeComponent
+    name: not-resource-conflict-rc
+status:
+  replicas: 1
+  readyReplicas: 1
+  updatedReplicas: 1

@@ -1,0 +1,9 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: resource-conflict-rc
+  ownerReferences:
+  - apiVersion: rc.app.stacks/v1
+    kind: NotRuntimeComponent
+    name: not-resource-conflict-rc
+    uid: abcdefghijklmnopqrstuvwxyz
