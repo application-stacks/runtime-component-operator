@@ -3,4 +3,3 @@ kind: TestStep
 delete:
 - apiVersion: rc.app.stacks/v1
   kind: RuntimeComponent
-

@@ -4,4 +4,3 @@ delete:
 - apiVersion: cert-manager.io/v1
   kind: Certificate
   name: service-with-cert-annotations-rc-svc-tls-cm
-
