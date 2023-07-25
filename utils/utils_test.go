@@ -1,13 +1,14 @@
 package utils
 
 import (
-	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	"os"
 	"reflect"
 	"strconv"
 	"testing"
 
+	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	"github.com/application-stacks/runtime-component-operator/common"
+
 	routev1 "github.com/openshift/api/route/v1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -55,21 +56,21 @@ var (
 		TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"}}
 	storage        = appstacksv1.RuntimeComponentStorage{Size: "10Mi", MountPath: "/mnt/data", VolumeClaimTemplate: volumeCT}
 	arch           = []string{"ppc64le"}
-	readinessProbe = &corev1.Probe{
-		ProbeHandler: corev1.ProbeHandler{
-			HTTPGet:   &corev1.HTTPGetAction{},
+	readinessProbe = &common.BaseComponentProbe{
+		BaseComponentProbeHandler: common.BaseComponentProbeHandler{
+			HTTPGet:   &common.OptionalHTTPGetAction{},
 			TCPSocket: &corev1.TCPSocketAction{},
 		},
 	}
-	livenessProbe = &corev1.Probe{
-		ProbeHandler: corev1.ProbeHandler{
-			HTTPGet:   &corev1.HTTPGetAction{},
+	livenessProbe = &common.BaseComponentProbe{
+		BaseComponentProbeHandler: common.BaseComponentProbeHandler{
+			HTTPGet:   &common.OptionalHTTPGetAction{},
 			TCPSocket: &corev1.TCPSocketAction{},
 		},
 	}
-	startupProbe = &corev1.Probe{
-		ProbeHandler: corev1.ProbeHandler{
-			HTTPGet:   &corev1.HTTPGetAction{},
+	startupProbe = &common.BaseComponentProbe{
+		BaseComponentProbeHandler: common.BaseComponentProbeHandler{
+			HTTPGet:   &common.OptionalHTTPGetAction{},
 			TCPSocket: &corev1.TCPSocketAction{},
 		},
 	}

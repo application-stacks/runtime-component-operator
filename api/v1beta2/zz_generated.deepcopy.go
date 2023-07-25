@@ -22,6 +22,7 @@ limitations under the License.
 package v1beta2
 
 import (
+	"github.com/application-stacks/runtime-component-operator/common"
 	routev1 "github.com/openshift/api/route/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -236,17 +237,17 @@ func (in *RuntimeComponentProbes) DeepCopyInto(out *RuntimeComponentProbes) {
 	*out = *in
 	if in.Liveness != nil {
 		in, out := &in.Liveness, &out.Liveness
-		*out = new(v1.Probe)
+		*out = new(common.BaseComponentProbe)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Readiness != nil {
 		in, out := &in.Readiness, &out.Readiness
-		*out = new(v1.Probe)
+		*out = new(common.BaseComponentProbe)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Startup != nil {
 		in, out := &in.Startup, &out.Startup
-		*out = new(v1.Probe)
+		*out = new(common.BaseComponentProbe)
 		(*in).DeepCopyInto(*out)
 	}
 }

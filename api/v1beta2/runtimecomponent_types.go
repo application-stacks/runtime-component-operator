@@ -136,27 +136,27 @@ type RuntimeComponentSpec struct {
 type RuntimeComponentProbes struct {
 	// Periodic probe of container liveness. Container will be restarted if the probe fails.
 	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Liveness Probe"
-	Liveness *corev1.Probe `json:"liveness,omitempty"`
+	Liveness *common.BaseComponentProbe `json:"liveness,omitempty"`
 
 	// Periodic probe of container service readiness. Container will be removed from service endpoints if the probe fails.
 	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="Readiness Probe"
-	Readiness *corev1.Probe `json:"readiness,omitempty"`
+	Readiness *common.BaseComponentProbe `json:"readiness,omitempty"`
 
 	// Probe to determine successful initialization. If specified, other probes are not executed until this completes successfully.
 	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Startup Probe"
-	Startup *corev1.Probe `json:"startup,omitempty"`
+	Startup *common.BaseComponentProbe `json:"startup,omitempty"`
 }
 
-func (in *RuntimeComponentProbes) GetDefaultLivenessProbe(ba common.BaseComponent) *corev1.Probe {
+func (in *RuntimeComponentProbes) GetDefaultLivenessProbe(ba common.BaseComponent) *common.BaseComponentProbe {
 	return nil
 }
 
-func (in *RuntimeComponentProbes) GetDefaultReadinessProbe(ba common.BaseComponent) *corev1.Probe {
+func (in *RuntimeComponentProbes) GetDefaultReadinessProbe(ba common.BaseComponent) *common.BaseComponentProbe {
 	return nil
 
 }
 
-func (in *RuntimeComponentProbes) GetDefaultStartupProbe(ba common.BaseComponent) *corev1.Probe {
+func (in *RuntimeComponentProbes) GetDefaultStartupProbe(ba common.BaseComponent) *common.BaseComponentProbe {
 	return nil
 }
 
@@ -468,17 +468,17 @@ func (cr *RuntimeComponent) GetProbes() common.BaseComponentProbes {
 }
 
 // GetLivenessProbe returns liveness probe
-func (p *RuntimeComponentProbes) GetLivenessProbe() *corev1.Probe {
+func (p *RuntimeComponentProbes) GetLivenessProbe() *common.BaseComponentProbe {
 	return p.Liveness
 }
 
 // GetReadinessProbe returns readiness probe
-func (p *RuntimeComponentProbes) GetReadinessProbe() *corev1.Probe {
+func (p *RuntimeComponentProbes) GetReadinessProbe() *common.BaseComponentProbe {
 	return p.Readiness
 }
 
 // GetStartupProbe returns startup probe
-func (p *RuntimeComponentProbes) GetStartupProbe() *corev1.Probe {
+func (p *RuntimeComponentProbes) GetStartupProbe() *common.BaseComponentProbe {
 	return p.Startup
 }
 
