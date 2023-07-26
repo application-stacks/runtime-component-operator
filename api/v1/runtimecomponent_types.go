@@ -551,6 +551,21 @@ func (p *RuntimeComponentProbes) GetStartupProbe() *common.BaseComponentProbe {
 	return p.Startup
 }
 
+// PatchLivenessProbe updates values for and returns the liveness probe
+func (p *RuntimeComponentProbes) PatchLivenessProbe(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe {
+	return probe
+}
+
+// PatchReadinessProbe updates values for and returns the readiness probe
+func (p *RuntimeComponentProbes) PatchReadinessProbe(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe {
+	return probe
+}
+
+// PatchStartupProbe updates values for and returns the startup probe
+func (p *RuntimeComponentProbes) PatchStartupProbe(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe {
+	return probe
+}
+
 // GetDefaultLivenessProbe returns default values for liveness probe
 func (p *RuntimeComponentProbes) GetDefaultLivenessProbe(ba common.BaseComponent) *common.BaseComponentProbe {
 	return common.GetDefaultMicroProfileLivenessProbe(ba)
@@ -564,21 +579,6 @@ func (p *RuntimeComponentProbes) GetDefaultReadinessProbe(ba common.BaseComponen
 // GetDefaultStartupProbe returns default values for startup probe
 func (p *RuntimeComponentProbes) GetDefaultStartupProbe(ba common.BaseComponent) *common.BaseComponentProbe {
 	return common.GetDefaultMicroProfileStartupProbe(ba)
-}
-
-// OverrideDefaultLivenessProbe overrides default values for and returns the liveness probe
-func (p *RuntimeComponentProbes) OverrideDefaultLivenessProbe(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe {
-	return probe
-}
-
-// OverrideDefaultReadinessProbe overrides default values for and returns the readiness probe
-func (p *RuntimeComponentProbes) OverrideDefaultReadinessProbe(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe {
-	return probe
-}
-
-// OverrideDefaultStartupProbe overrides default values for and returns the startup probe
-func (p *RuntimeComponentProbes) OverrideDefaultStartupProbe(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe {
-	return probe
 }
 
 // GetVolumes returns volumes slice
