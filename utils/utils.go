@@ -331,7 +331,7 @@ func createHTTPGetActionFromOptionalHTTPGetAction(ba common.BaseComponent, optio
 			return nil
 		}
 
-		if optionalHTTPGetAction.Scheme == corev1.URISchemeHTTP || optionalHTTPGetAction.Scheme == corev1.URISchemeHTTPS {
+		if len(optionalHTTPGetAction.Scheme) > 0 {
 			httpGetAction.Scheme = optionalHTTPGetAction.Scheme
 		} else {
 			manageTLSEnabled := ba.GetManageTLS() != nil && *ba.GetManageTLS()
