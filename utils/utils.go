@@ -289,12 +289,12 @@ func CustomizeProbes(container *corev1.Container, ba common.BaseComponent) {
 		return
 	}
 
-	container.ReadinessProbe = customizeProbe(probesConfig.GetReadinessProbe(), probesConfig.GetDefaultReadinessProbe, probesConfig.OverrideDefaultReadinessProbe, ba)
-	container.LivenessProbe = customizeProbe(probesConfig.GetLivenessProbe(), probesConfig.GetDefaultLivenessProbe, probesConfig.OverrideDefaultLivenessProbe, ba)
-	container.StartupProbe = customizeProbe(probesConfig.GetStartupProbe(), probesConfig.GetDefaultStartupProbe, probesConfig.OverrideDefaultStartupProbe, ba)
+	container.ReadinessProbe = customizeProbe(probesConfig.GetReadinessProbe(), probesConfig.GetDefaultReadinessProbe, probesConfig.PatchReadinessProbe, ba)
+	container.LivenessProbe = customizeProbe(probesConfig.GetLivenessProbe(), probesConfig.GetDefaultLivenessProbe, probesConfig.PatchLivenessProbe, ba)
+	container.StartupProbe = customizeProbe(probesConfig.GetStartupProbe(), probesConfig.GetDefaultStartupProbe, probesConfig.PatchStartupProbe, ba)
 }
 
-func customizeProbe(config *common.BaseComponentProbe, getDefaultProbeCallback func(ba common.BaseComponent) *common.BaseComponentProbe, overrideProbeDefaultsCallback func(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe, ba common.BaseComponent) *corev1.Probe {
+func customizeProbe(config *common.BaseComponentProbe, getDefaultProbeCallback func(ba common.BaseComponent) *common.BaseComponentProbe, patchProbeCallback func(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe, ba common.BaseComponent) *corev1.Probe {
 	// Probe not defined -- set probe to nil
 	if config == nil {
 		return nil
@@ -302,11 +302,11 @@ func customizeProbe(config *common.BaseComponentProbe, getDefaultProbeCallback f
 
 	// Probe handler is defined in config so use probe as is
 	if config.BaseComponentProbeHandler != (common.BaseComponentProbeHandler{}) {
-		return ConvertToCoreProbe(ba, overrideProbeDefaultsCallback(ba, config))
+		return ConvertToCoreProbe(ba, patchProbeCallback(ba, config))
 	}
 
 	// Probe handler is not defined so use default values for the probe if values not set in probe config
-	return ConvertToCoreProbe(ba, overrideProbeDefaultsCallback(ba, customizeProbeDefaults(config, getDefaultProbeCallback(ba))))
+	return ConvertToCoreProbe(ba, patchProbeCallback(ba, customizeProbeDefaults(config, getDefaultProbeCallback(ba))))
 }
 
 func createHTTPGetActionFromOptionalHTTPGetAction(ba common.BaseComponent, optionalHTTPGetAction *common.OptionalHTTPGetAction) *corev1.HTTPGetAction {
