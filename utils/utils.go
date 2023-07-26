@@ -322,8 +322,8 @@ func createHTTPGetActionFromOptionalHTTPGetAction(ba common.BaseComponent, optio
 			httpGetAction.HTTPHeaders = optionalHTTPGetAction.HTTPHeaders
 		}
 
-		if len(optionalHTTPGetAction.Port.String()) > 0 {
-			httpGetAction.Port = optionalHTTPGetAction.Port
+		if optionalHTTPGetAction.Port != nil {
+			httpGetAction.Port = *optionalHTTPGetAction.Port
 		} else if ba.GetService().GetPort() > 0 {
 			httpGetAction.Port = intstr.FromInt(int(ba.GetService().GetPort()))
 		} else {

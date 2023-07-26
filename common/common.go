@@ -6,11 +6,12 @@ import (
 
 // GetDefaultMicroProfileStartupProbe returns the default values for MicroProfile Health-based startup probe.
 func GetDefaultMicroProfileStartupProbe(ba BaseComponent) *BaseComponentProbe {
+	port := intstr.FromInt(int(ba.GetService().GetPort()))
 	return &BaseComponentProbe{
 		BaseComponentProbeHandler: BaseComponentProbeHandler{
 			HTTPGet: &OptionalHTTPGetAction{
 				Path:   "/health/started",
-				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
+				Port:   &port,
 				Scheme: "HTTPS",
 			},
 		},
@@ -22,11 +23,12 @@ func GetDefaultMicroProfileStartupProbe(ba BaseComponent) *BaseComponentProbe {
 
 // GetDefaultMicroProfileReadinessProbe returns the default values for MicroProfile Health-based readiness probe.
 func GetDefaultMicroProfileReadinessProbe(ba BaseComponent) *BaseComponentProbe {
+	port := intstr.FromInt(int(ba.GetService().GetPort()))
 	return &BaseComponentProbe{
 		BaseComponentProbeHandler: BaseComponentProbeHandler{
 			HTTPGet: &OptionalHTTPGetAction{
 				Path:   "/health/ready",
-				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
+				Port:   &port,
 				Scheme: "HTTPS",
 			},
 		},
@@ -39,11 +41,12 @@ func GetDefaultMicroProfileReadinessProbe(ba BaseComponent) *BaseComponentProbe 
 
 // GetDefaultMicroProfileLivenessProbe returns the default values for MicroProfile Health-based liveness probe.
 func GetDefaultMicroProfileLivenessProbe(ba BaseComponent) *BaseComponentProbe {
+	port := intstr.FromInt(int(ba.GetService().GetPort()))
 	return &BaseComponentProbe{
 		BaseComponentProbeHandler: BaseComponentProbeHandler{
 			HTTPGet: &OptionalHTTPGetAction{
 				Path:   "/health/live",
-				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
+				Port:   &port,
 				Scheme: "HTTPS",
 			},
 		},

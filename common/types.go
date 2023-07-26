@@ -238,23 +238,23 @@ type BaseComponentProbeHandler struct {
 type OptionalHTTPGetAction struct {
 	// Path to access on the HTTP server.
 	// +optional
-	Path string `json:"path,omitempty" protobuf:"bytes,1,opt,name=path"`
+	Path string `json:"path,omitempty"`
 	// Name or number of the port to access on the container.
 	// Number must be in the range 1 to 65535.
 	// Name must be an IANA_SVC_NAME.
 	// +optional
-	Port intstr.IntOrString `json:"port" protobuf:"bytes,2,opt,name=port"`
+	Port *intstr.IntOrString `json:"port"`
 	// Host name to connect to, defaults to the pod IP. You probably want to set
 	// "Host" in httpHeaders instead.
 	// +optional
-	Host string `json:"host,omitempty" protobuf:"bytes,3,opt,name=host"`
+	Host string `json:"host,omitempty"`
 	// Scheme to use for connecting to the host.
 	// Defaults to HTTP.
 	// +optional
-	Scheme corev1.URIScheme `json:"scheme,omitempty" protobuf:"bytes,4,opt,name=scheme,casttype=URIScheme"`
+	Scheme corev1.URIScheme `json:"scheme,omitempty"`
 	// Custom headers to set in the request. HTTP allows repeated headers.
 	// +optional
-	HTTPHeaders []corev1.HTTPHeader `json:"httpHeaders,omitempty" protobuf:"bytes,5,rep,name=httpHeaders"`
+	HTTPHeaders []corev1.HTTPHeader `json:"httpHeaders,omitempty"`
 }
 
 // BaseComponentProbes describes the probes for application container
