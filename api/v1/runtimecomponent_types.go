@@ -566,6 +566,21 @@ func (p *RuntimeComponentProbes) GetDefaultStartupProbe(ba common.BaseComponent)
 	return common.GetDefaultMicroProfileStartupProbe(ba)
 }
 
+// OverrideDefaultLivenessProbe overrides default values for and returns the liveness probe
+func (p *RuntimeComponentProbes) OverrideDefaultLivenessProbe(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe {
+	return probe
+}
+
+// OverrideDefaultReadinessProbe overrides default values for and returns the readiness probe
+func (p *RuntimeComponentProbes) OverrideDefaultReadinessProbe(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe {
+	return probe
+}
+
+// OverrideDefaultStartupProbe overrides default values for and returns the startup probe
+func (p *RuntimeComponentProbes) OverrideDefaultStartupProbe(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe {
+	return probe
+}
+
 // GetVolumes returns volumes slice
 func (cr *RuntimeComponent) GetVolumes() []corev1.Volume {
 	return cr.Spec.Volumes
