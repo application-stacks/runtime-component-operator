@@ -322,21 +322,24 @@ func createHTTPGetActionFromOptionalHTTPGetAction(ba common.BaseComponent, optio
 			httpGetAction.HTTPHeaders = optionalHTTPGetAction.HTTPHeaders
 		}
 
-		manageTLSEnabled := ba.GetManageTLS() != nil && *ba.GetManageTLS()
-		if ba.GetService().GetPort() == 0 {
-			if manageTLSEnabled {
-				httpGetAction.Port = intstr.FromInt(9443)
-			} else {
-				httpGetAction.Port = intstr.FromInt(9080)
-			}
-		} else {
+		if len(optionalHTTPGetAction.Port.String()) > 0 {
+			httpGetAction.Port = optionalHTTPGetAction.Port
+		} else if ba.GetService().GetPort() > 0 {
 			httpGetAction.Port = intstr.FromInt(int(ba.GetService().GetPort()))
+		} else {
+			// Can't create HTTPGetAction without a port specified, so return nil.
+			return nil
 		}
 
-		if manageTLSEnabled {
-			httpGetAction.Scheme = corev1.URISchemeHTTPS
+		if optionalHTTPGetAction.Scheme == corev1.URISchemeHTTP || optionalHTTPGetAction.Scheme == corev1.URISchemeHTTPS {
+			httpGetAction.Scheme = optionalHTTPGetAction.Scheme
 		} else {
-			httpGetAction.Scheme = corev1.URISchemeHTTP
+			manageTLSEnabled := ba.GetManageTLS() != nil && *ba.GetManageTLS()
+			if manageTLSEnabled {
+				httpGetAction.Scheme = corev1.URISchemeHTTPS
+			} else {
+				httpGetAction.Scheme = corev1.URISchemeHTTP
+			}
 		}
 	}
 	return httpGetAction
