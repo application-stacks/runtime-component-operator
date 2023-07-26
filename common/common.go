@@ -7,6 +7,9 @@ import (
 // GetDefaultMicroProfileStartupProbe returns the default values for MicroProfile Health-based startup probe.
 func GetDefaultMicroProfileStartupProbe(ba BaseComponent) *BaseComponentProbe {
 	port := intstr.FromInt(int(ba.GetService().GetPort()))
+	periodSeconds := int32(10)
+	timeoutSeconds := int32(2)
+	failureThreshold := int32(20)
 	return &BaseComponentProbe{
 		BaseComponentProbeHandler: BaseComponentProbeHandler{
 			HTTPGet: &OptionalHTTPGetAction{
@@ -15,15 +18,19 @@ func GetDefaultMicroProfileStartupProbe(ba BaseComponent) *BaseComponentProbe {
 				Scheme: "HTTPS",
 			},
 		},
-		PeriodSeconds:    10,
-		TimeoutSeconds:   2,
-		FailureThreshold: 20,
+		PeriodSeconds:    &periodSeconds,
+		TimeoutSeconds:   &timeoutSeconds,
+		FailureThreshold: &failureThreshold,
 	}
 }
 
 // GetDefaultMicroProfileReadinessProbe returns the default values for MicroProfile Health-based readiness probe.
 func GetDefaultMicroProfileReadinessProbe(ba BaseComponent) *BaseComponentProbe {
 	port := intstr.FromInt(int(ba.GetService().GetPort()))
+	initialDelaySeconds := int32(10)
+	periodSeconds := int32(10)
+	timeoutSeconds := int32(2)
+	failureThreshold := int32(20)
 	return &BaseComponentProbe{
 		BaseComponentProbeHandler: BaseComponentProbeHandler{
 			HTTPGet: &OptionalHTTPGetAction{
@@ -32,16 +39,20 @@ func GetDefaultMicroProfileReadinessProbe(ba BaseComponent) *BaseComponentProbe 
 				Scheme: "HTTPS",
 			},
 		},
-		InitialDelaySeconds: 10,
-		PeriodSeconds:       10,
-		TimeoutSeconds:      2,
-		FailureThreshold:    10,
+		InitialDelaySeconds: &initialDelaySeconds,
+		PeriodSeconds:       &periodSeconds,
+		TimeoutSeconds:      &timeoutSeconds,
+		FailureThreshold:    &failureThreshold,
 	}
 }
 
 // GetDefaultMicroProfileLivenessProbe returns the default values for MicroProfile Health-based liveness probe.
 func GetDefaultMicroProfileLivenessProbe(ba BaseComponent) *BaseComponentProbe {
 	port := intstr.FromInt(int(ba.GetService().GetPort()))
+	initialDelaySeconds := int32(60)
+	periodSeconds := int32(10)
+	timeoutSeconds := int32(2)
+	failureThreshold := int32(3)
 	return &BaseComponentProbe{
 		BaseComponentProbeHandler: BaseComponentProbeHandler{
 			HTTPGet: &OptionalHTTPGetAction{
@@ -50,10 +61,10 @@ func GetDefaultMicroProfileLivenessProbe(ba BaseComponent) *BaseComponentProbe {
 				Scheme: "HTTPS",
 			},
 		},
-		InitialDelaySeconds: 60,
-		PeriodSeconds:       10,
-		TimeoutSeconds:      2,
-		FailureThreshold:    3,
+		InitialDelaySeconds: &initialDelaySeconds,
+		PeriodSeconds:       &periodSeconds,
+		TimeoutSeconds:      &timeoutSeconds,
+		FailureThreshold:    &failureThreshold,
 	}
 }
 
