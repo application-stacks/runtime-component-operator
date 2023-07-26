@@ -147,6 +147,21 @@ type RuntimeComponentProbes struct {
 	Startup *common.BaseComponentProbe `json:"startup,omitempty"`
 }
 
+// OverrideDefaultLivenessProbe overrides default values for and returns the liveness probe
+func (p *RuntimeComponentProbes) OverrideDefaultLivenessProbe(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe {
+	return probe
+}
+
+// OverrideDefaultReadinessProbe overrides default values for and returns the readiness probe
+func (p *RuntimeComponentProbes) OverrideDefaultReadinessProbe(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe {
+	return probe
+}
+
+// OverrideDefaultStartupProbe overrides default values for and returns the startup probe
+func (p *RuntimeComponentProbes) OverrideDefaultStartupProbe(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe {
+	return probe
+}
+
 func (in *RuntimeComponentProbes) GetDefaultLivenessProbe(ba common.BaseComponent) *common.BaseComponentProbe {
 	return nil
 }
