@@ -22,15 +22,16 @@ function print_usage() {
     echo "Kick off of CI Orchestrator job"
     echo ""
     echo "Options:"
-    echo "   -u, --user       string  IntranetId to use to authenticate to CI Orchestrator"
-    echo "   --password       string  Intranet Password to use to authenticate to CI Orchestrator"
-    echo "   -b, --branch     string  Github Repository branch"
-    echo "   -r, --repository string  GitHub Repository to use"
-    echo "   --org            string  Github Organisation containing repository"
-    echo "   --trigger        string  Name of trigger within CI Orchestrator config file"
-    echo "   --configFile     string  Location of CI Orchestrator config file"
-    echo "   --command        string  Command to execute on remote machine"
-    echo "   -h, --help               Print usage information"
+    echo "   -u, --user                 string  IntranetId to use to authenticate to CI Orchestrator"
+    echo "   --password                 string  Intranet Password to use to authenticate to CI Orchestrator"
+    echo "   -b, --branch               string  Github Repository branch"
+    echo "   -r, --repository           string  GitHub Repository to use"
+    echo "   --org                      string  Github Organisation containing repository"
+    echo "   --commonOperatorsBranch    string  websphere/operators Repository branch"
+    echo "   --trigger                  string  Name of trigger within CI Orchestrator config file"
+    echo "   --configFile               string  Location of CI Orchestrator config file"
+    echo "   --command                  string  Command to execute on remote machine"
+    echo "   -h, --help                         Print usage information"
     echo ""
 }
 
@@ -63,6 +64,10 @@ function parse_arguments() {
         --org)
             shift
             GH_ORG=$1
+            ;;
+        --commonOperatorsBranch)
+            shift
+            COMMON_OPERATORS_BRANCH=$1
             ;;
         --trigger)
             shift
@@ -107,6 +112,7 @@ function request_ciorchestrator() {
             "REDHAT_BASE_IMAGE": "${REDHAT_BASE_IMAGE}",
             "REDHAT_REGISTRY": "${REDHAT_REGISTRY}",
             "PIPELINE_REGISTRY": "${PIPELINE_REGISTRY}",
+            "COMMON_OPERATORS_BRANCH": "${COMMON_OPERATORS_BRANCH}",
             "scriptOrg": "${GH_ORG}",
             "command": "${COMMAND}"
         },

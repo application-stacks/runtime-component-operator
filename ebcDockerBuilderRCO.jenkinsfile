@@ -17,7 +17,8 @@ properties([
       string(name: 'REDHAT_REGISTRY', defaultValue: "registry.redhat.io", description: 'RH registry used for docker login'),
       string(name: 'PIPELINE_REGISTRY', defaultValue: "cp.stg.icr.io", description: 'staging registry to push images to'),
       string(name: 'ARTIFACTORY_REPO_URL', defaultValue: "hyc-taas-onepipeline-team-docker-local.artifactory.swg-devops.com", description: 'artifactory repo url [only used if disable artifactory is false]]'),
-      string(name: 'DISABLE_ARTIFACTORY', defaultValue: "false", description: 'whether to back up container images to artifactorys')
+      string(name: 'DISABLE_ARTIFACTORY', defaultValue: "false", description: 'whether to back up container images to artifactorys'),
+      string(name: 'COMMON_OPERATORS_BRANCH', defaultValue: "main", description: 'branch to use for websphere/operators repository')
    ])
 ])
 timestamps {
@@ -89,6 +90,7 @@ def gitCloneAndStash() {
   }
   dir('operators') {
       git branch: "main", url: "git@github.ibm.com:websphere/operators.git"
+      sh "git checkout ${COMMON_OPERATORS_BRANCH}"
   }
   sh "cp -rf operators/scripts/build runtime-component-operator/scripts/"
   dir('runtime-component-operator') {
