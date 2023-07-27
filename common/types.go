@@ -175,7 +175,7 @@ type BaseComponentStatefulSet interface {
 	GetAnnotations() map[string]string
 }
 
-// This struct is taken from the Probe implementation in https://github.com/kubernetes/api/blob/v0.24.2/core/v1/types.go
+// This struct is taken from the Probe specification in https://github.com/kubernetes/api/blob/v0.24.2/core/v1/types.go
 // +kubebuilder:object:generate=true
 type BaseComponentProbe struct {
 	// The action taken to determine the health of a container
@@ -215,7 +215,7 @@ type BaseComponentProbe struct {
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 }
 
-// This struct is taken from the ProbeHandler implementation in https://github.com/kubernetes/api/blob/v0.24.2/core/v1/types.go
+// This struct is taken from the ProbeHandler specification in https://github.com/kubernetes/api/blob/v0.24.2/core/v1/types.go
 // +kubebuilder:object:generate=true
 type BaseComponentProbeHandler struct {
 	// Exec specifies the action to take.
@@ -235,7 +235,7 @@ type BaseComponentProbeHandler struct {
 	GRPC *corev1.GRPCAction `json:"grpc,omitempty"`
 }
 
-// This struct is based upon the HTTPGetAction implementation in https://github.com/kubernetes/api/blob/v0.24.2/core/v1/types.go
+// This struct is based upon the HTTPGetAction specification in https://github.com/kubernetes/api/blob/v0.24.2/core/v1/types.go
 // +kubebuilder:object:generate=true
 type OptionalHTTPGetAction struct {
 	// Path to access on the HTTP server.
