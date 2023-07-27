@@ -162,15 +162,18 @@ func (p *RuntimeComponentProbes) PatchStartupProbe(ba common.BaseComponent, prob
 	return probe
 }
 
+// GetDefaultLivenessProbe returns default values for liveness probe
 func (in *RuntimeComponentProbes) GetDefaultLivenessProbe(ba common.BaseComponent) *common.BaseComponentProbe {
 	return nil
 }
 
+// GetDefaultReadinessProbe returns default values for readiness probe
 func (in *RuntimeComponentProbes) GetDefaultReadinessProbe(ba common.BaseComponent) *common.BaseComponentProbe {
 	return nil
 
 }
 
+// GetDefaultStartupProbe returns default values for startup probe
 func (in *RuntimeComponentProbes) GetDefaultStartupProbe(ba common.BaseComponent) *common.BaseComponentProbe {
 	return nil
 }
