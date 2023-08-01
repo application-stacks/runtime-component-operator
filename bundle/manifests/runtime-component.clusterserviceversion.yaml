@@ -68,7 +68,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2023-08-01T06:51:41Z"
+    createdAt: "2023-08-01T13:24:02Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     olm.skipRange: '>=0.8.0 <1.2.2'
     operators.openshift.io/infrastructure-features: '["disconnected"]'
@@ -977,6 +977,8 @@ spec:
                       fieldPath: metadata.annotations['olm.targetNamespaces']
                 - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
                   value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:e32f0eb0feff73c6bc8416fe2f7aa0cb74cbaa325cae5fad636325ee0ac4a105
+                - name: RELATED_IMAGE_RUNTIME_COMPONENT_OPERATOR
+                  value: icr.io/appcafe/runtime-component-operator:daily
                 image: icr.io/appcafe/runtime-component-operator:daily
                 livenessProbe:
                   failureThreshold: 3
@@ -1259,4 +1261,6 @@ spec:
   relatedImages:
   - image: icr.io/appcafe/open-liberty/samples/getting-started@sha256:e32f0eb0feff73c6bc8416fe2f7aa0cb74cbaa325cae5fad636325ee0ac4a105
     name: liberty-sample-app
+  - image: icr.io/appcafe/runtime-component-operator:daily
+    name: runtime-component-operator
   version: 1.2.2
