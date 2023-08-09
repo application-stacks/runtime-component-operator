@@ -217,5 +217,6 @@ type BaseComponent interface {
 	GetRoute() BaseComponentRoute
 	GetAffinity() BaseComponentAffinity
 	GetSecurityContext() *corev1.SecurityContext
+	GetPodSecurityContext() *corev1.PodSecurityContext
 	GetManageTLS() *bool
 }

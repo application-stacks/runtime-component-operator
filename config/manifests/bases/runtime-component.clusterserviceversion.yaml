@@ -259,6 +259,9 @@ spec:
         path: statefulSet.storage.size
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Security context for the application pod.
+        displayName: Pod Security Context
+        path: podSecurityContext
       - description: A convenient field to request the storage class of the persisted
           storage. The name can not be specified or updated after the storage is created.
         displayName: Storage Class Name

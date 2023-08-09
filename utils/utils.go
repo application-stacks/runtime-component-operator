@@ -625,6 +625,8 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		}
 	}
 
+	pts.Spec.SecurityContext = ba.GetPodSecurityContext()
+
 	var appContainer corev1.Container
 	if len(pts.Spec.Containers) == 0 {
 		appContainer = corev1.Container{}

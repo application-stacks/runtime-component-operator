@@ -142,6 +142,10 @@ type RuntimeComponentSpec struct {
 	// Security context for the application container.
 	// +operator-sdk:csv:customresourcedefinitions:order=25,type=spec,displayName="Security Context"
 	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
+
+	// Security context for the application pod.
+	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Pod Security Context"
+	PodSecurityContext *corev1.PodSecurityContext `json:"podSecurityContext,omitempty"`
 }
 
 // Define health checks on application container to determine whether it is alive or ready to receive traffic
@@ -883,6 +887,11 @@ func (a *RuntimeComponentAffinity) GetNodeAffinityLabels() map[string]string {
 // GetSecurityContext returns container security context
 func (cr *RuntimeComponent) GetSecurityContext() *corev1.SecurityContext {
 	return cr.Spec.SecurityContext
+}
+
+// GetPodSecurityContext returns pod security context
+func (cr *RuntimeComponent) GetPodSecurityContext() *corev1.PodSecurityContext {
+	return cr.Spec.PodSecurityContext
 }
 
 // Initialize the RuntimeComponent instance
