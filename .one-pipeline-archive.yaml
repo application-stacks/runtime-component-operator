@@ -31,6 +31,16 @@ setup:
       echo "${REPO} has been archived successfully to ${ARCHIVE_DESTINATION_REPO}"
     fi
     
+detect-secrets:
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
+  abort_on_failure: false
+  image_pull_policy: IfNotPresent
+  skip: true
+  script: |
+    #!/usr/bin/env bash
+    echo "Skip detect-secrets"
+    exit 0
+    
 test:
   dind: true
   abort_on_failure: false
