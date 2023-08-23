@@ -70,6 +70,16 @@ setup:
           ./scripts/pipeline/getCluster.sh "P"
         fi 
     fi
+    
+detect-secrets:
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
+  abort_on_failure: false
+  image_pull_policy: IfNotPresent
+  skip: true
+  script: |
+    #!/usr/bin/env bash
+    echo "Skipping detect-secrets as it's already run as part of code-compliance-checks"
+    exit 0
 
 test:
   dind: true
