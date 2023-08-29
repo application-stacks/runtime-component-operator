@@ -1,0 +1,70 @@
+
+== Installation
+
+The Runtime Component Operator 1.2.2 can be installed to:
+
+* watch own namespace
+* watch another namespace
+* watch all namespaces in the cluster
+
+Appropriate roles and bindings are required to watch another namespace or watch all namespaces.
+
+---
+
+. Install Custom Resource Definition (CRD) resources for `RuntimeComponent` and `RuntimeOperation` for day-2 operation. This needs to be done only ONCE per cluster:
++
+[source,sh]
+----
+kubectl create -f https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/deploy/releases/1.2.2/kubectl/runtime-component-crd.yaml
+----
+
+. Install the Runtime Component Operator:
+
+.. Set operator namespace and the namespace to watch:
++
+NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY_WATCH_NAMESPACE_HERE>` with proper values. The namespaces must already exist. The commands below will not create the namespaces.
++
+    * To watch all namespaces in the cluster, set `WATCH_NAMESPACE='""'`
++
+
+[source,sh]
+----
+    OPERATOR_NAMESPACE=<SPECIFY_OPERATOR_NAMESPACE_HERE>
+    WATCH_NAMESPACE=<SPECIFY_WATCH_NAMESPACE_HERE>
+----
+
+.. _Optional_: Install roles and bindings to watch another namespace or all namespaces.  This step can be skipped if the operator is only watching own namespace.
+
+... To watch all namespaces, install cluster-level role-based access:
++
+[source,sh]
+----
+curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/deploy/releases/1.2.2/kubectl/runtime-component-rbac-watch-all.yaml \
+      | sed -e "s/RUNTIME_COMPONENT_OPERATOR_NAMESPACE/${OPERATOR_NAMESPACE}/" \
+      | kubectl apply -f -
+----
+
+... To watch another namespace, install role with access to another namespace:
++
+[source,sh]
+----
+curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/deploy/releases/1.2.2/kubectl/runtime-component-rbac-watch-another.yaml \
+      | sed -e "s/RUNTIME_COMPONENT_OPERATOR_NAMESPACE/${OPERATOR_NAMESPACE}/" \
+      | sed -e "s/RUNTIME_COMPONENT_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" \
+      | kubectl apply -f -
+----
+
+.. Install the operator:
++
+[source,sh]
+----
+curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/deploy/releases/1.2.2/kubectl/runtime-component-operator.yaml \
+      | sed -e "s/RUNTIME_COMPONENT_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" \
+      | kubectl apply -n ${OPERATOR_NAMESPACE} -f -
+----
+
+== Uninstallation
+
+To uninstall the operator, run commands from Step 2c first and then Step 2b (if applicable), but after replacing `kubectl apply` with `kubectl delete`.
+
+Optionally you can delete the CRD resources, but note that deleting the CRD also deletes all instances of the RuntimeComponent and RuntimeOperation custom resources in the cluster. Skip this step if you are planning to install the Runtime Component Operator again and want the existing instances of these custom resources to be managed by the new instance of the Operator. To delete the CRD, run command from Step 1, but after replacing `kubectl create` with `kubectl delete`.
