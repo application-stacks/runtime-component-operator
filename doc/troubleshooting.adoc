@@ -136,13 +136,3 @@ Check the `status` section of the CR. If the application is successfully reconci
 +
 
 
-== Known Issues
-
-Operator versions < 0.5.0 might crash on startup when optional CRDs API group (eg. serving.knative.dev/v1alpha1) is
-available, but actual CRD (Knative Service) is not present.
-
-Version 0.5.0 of operator can crash when creating Ingress with `spec.expose` is set to `true` and `spec.route` is not provided or set (nil). 
-Possible fixes are to set `spec.route` to `{}` or disable Ingress if not used by setting `spec.expose` to `false`.
-
-Knative Serving / OpenShift Serverless sidecar container can only connect to the application's container over HTTP connection. Application
-must be listening on HTTP port to use Knative.
