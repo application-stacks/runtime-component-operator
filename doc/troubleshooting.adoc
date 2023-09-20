@@ -133,6 +133,7 @@ Check the `status` section of the CR. If the application is successfully reconci
 ----
   $ oc describe runtimecomponent <app_name>
 ----
-+
 
 
+=== TLS Connections
+If `expose=true` is set in the CR, then `manageTLS=true` and `.spec.route.termination=reencyrpt` are set by default. With these setting, the application _must_ have TLS enabled on the port configured in `.spec.service.port`. Otherwise, the application will not recieve any requests.
