@@ -136,7 +136,7 @@ Check the `status` section of the CR. If the application is successfully reconci
 
 
 === TLS Connections
-If `.spec.expose=true` is set in the CR, then `.spec.manageTLS=true` and `.spec.route.termination=reencyrpt` are set by default. With these settings, the application _must_ have TLS enabled on the port configured in `.spec.service.port`. Otherwise, the application will not recieve any requests. The application must also use the TLS certificates mounted by the operator in the application pods. If this configuration is not possible, some alternatives are listed below. Other configurations are possible, but are beyond the scope of this document.
+If `.spec.expose=true` is set in the CR, then `.spec.manageTLS=true` and `.spec.route.termination=reencyrpt` are set by default. With these settings, the application _must_ have TLS enabled on the port configured in `.spec.service.port`. Otherwise, the application will not receive any requests. The application must also use the TLS certificates mounted by the operator in the application pods. If this configuration is not possible, some alternatives are listed below. Other configurations are possible, but are beyond the scope of this document.
 
 ==== Application uses its own certificates
 [source,sh]
