@@ -9,3 +9,5 @@ spec:
   replicas: 1
   service:
     port: 9443
+  serviceAccount:
+    mountToken: true
