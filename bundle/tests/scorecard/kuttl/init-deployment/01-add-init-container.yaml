@@ -5,7 +5,7 @@ metadata:
 spec:
   # Add fields here
   initContainers:
-  - image: alpine:3.14
+  - image: registry.redhat.io/ubi9-micro:9.2-15
     command: ["echo"]
     args: ["Hello world"]
     name: init1
