@@ -1,0 +1,11 @@
+overrides:
+    - reason: "This operator uses 1 to 1 and not fan out"
+      rule: CRDDefinesVersionProperty
+      severity: WARNING
+      message: '(openAPIV3Schema.properties.spec.required|openAPIV3Schema.properties.spec.properties.version)'
+      filenames:
+        - bundle/manifests/rc.app.stacks_runtimecomponents.yaml
+        - bundle/manifests/rc.app.stacks_runtimeoperations.yaml
+    - reason: "This is only needed for products storing their container images in IBM Entitled Registry, which the Runtime Component Operator does not"
+      rule: ServiceAccountHasPullSecret
+  
