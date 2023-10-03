@@ -96,6 +96,7 @@ rules:
   - services
   verbs:
   - get
+  - create
 - apiGroups:
   - rc.app.stacks
   resources:
