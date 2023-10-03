@@ -195,6 +195,52 @@ type BaseComponentTopologySpreadConstraints interface {
 	GetDisableOperatorDefaults() *bool
 }
 
+// Define PodSecurityContext without overlapping fields in SecurityContext
+type IsolatedPodSecurityContext struct {
+	// A list of groups applied to the first process run in each container, in addition
+	// to the container's primary GID.  If unspecified, no groups will be added to
+	// any container.
+	// Note that this field cannot be set when spec.os.name is windows.
+	// +optional
+	SupplementalGroups []int64 `json:"supplementalGroups,omitempty"`
+	// A special supplemental group that applies to all containers in a pod.
+	// Some volume types allow the Kubelet to change the ownership of that volume
+	// to be owned by the pod:
+	//
+	// 1. The owning GID will be the FSGroup
+	// 2. The setgid bit is set (new files created in the volume will be owned by FSGroup)
+	// 3. The permission bits are OR'd with rw-rw----
+	//
+	// If unset, the Kubelet will not modify the ownership and permissions of any volume.
+	// Note that this field cannot be set when spec.os.name is windows.
+	// +optional
+	FSGroup *int64 `json:"fsGroup,omitempty"`
+	// Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
+	// sysctls (by the container runtime) might fail to launch.
+	// Note that this field cannot be set when spec.os.name is windows.
+	// +optional
+	Sysctls []corev1.Sysctl `json:"sysctls,omitempty"`
+	// fsGroupChangePolicy defines behavior of changing ownership and permission of the volume
+	// before being exposed inside Pod. This field will only apply to
+	// volume types which support fsGroup based ownership(and permissions).
+	// It will have no effect on ephemeral volume types such as: secret, configmaps
+	// and emptydir.
+	// Valid values are "OnRootMismatch" and "Always". If not specified, "Always" is used.
+	// Note that this field cannot be set when spec.os.name is windows.
+	// +optional
+	FSGroupChangePolicy *corev1.PodFSGroupChangePolicy `json:"fsGroupChangePolicy,omitempty"`
+}
+
+type AppSecurityContext struct {
+	IsolatedPodSecurityContext `json:",omitempty"`
+	corev1.SecurityContext     `json:",omitempty"`
+}
+
+type BaseComponentSecurityContext interface {
+	GetContainerSecurityContext() *corev1.SecurityContext
+	GetPodSecurityContext() *corev1.PodSecurityContext
+}
+
 // BaseComponent represents basic kubernetes application
 type BaseComponent interface {
 	GetApplicationImage() string
@@ -228,6 +274,6 @@ type BaseComponent interface {
 	GetRoute() BaseComponentRoute
 	GetAffinity() BaseComponentAffinity
 	GetTopologySpreadConstraints() BaseComponentTopologySpreadConstraints
-	GetSecurityContext() *corev1.SecurityContext
+	GetSecurityContext() BaseComponentSecurityContext
 	GetManageTLS() *bool
 }
