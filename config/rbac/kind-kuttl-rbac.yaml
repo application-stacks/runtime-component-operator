@@ -97,6 +97,7 @@ rules:
   verbs:
   - get
   - create
+  - delete
 - apiGroups:
   - rc.app.stacks
   resources:
