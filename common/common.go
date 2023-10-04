@@ -86,16 +86,3 @@ func GetPodSecurityContext(asc *AppSecurityContext) *corev1.PodSecurityContext {
 	}
 	return podSecurityContext
 }
-
-func (in *AppSecurityContext) DeepCopy() *AppSecurityContext {
-	if in == nil {
-		return nil
-	}
-	out := new(AppSecurityContext)
-	in.DeepCopyInto(out)
-	return out
-}
-
-func (in *AppSecurityContext) DeepCopyInto(out *AppSecurityContext) {
-	*out = *in
-}

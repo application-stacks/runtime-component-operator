@@ -196,6 +196,7 @@ type BaseComponentTopologySpreadConstraints interface {
 }
 
 // Define PodSecurityContext without overlapping fields in SecurityContext
+// +kubebuilder:object:generate=true
 type IsolatedPodSecurityContext struct {
 	// A list of groups applied to the first process run in each container, in addition
 	// to the container's primary GID.  If unspecified, no groups will be added to
@@ -231,6 +232,7 @@ type IsolatedPodSecurityContext struct {
 	FSGroupChangePolicy *corev1.PodFSGroupChangePolicy `json:"fsGroupChangePolicy,omitempty"`
 }
 
+// +kubebuilder:object:generate=true
 type AppSecurityContext struct {
 	IsolatedPodSecurityContext `json:",omitempty"`
 	corev1.SecurityContext     `json:",omitempty"`
