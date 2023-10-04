@@ -125,6 +125,7 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `service` | Configures parameters for the network service of pods. For an example, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#specify-multiple-service-ports++[Specify multiple service ports].
 | `service.annotations` | Annotations to be added to the service.
 | `service.bindable` | [[crd-spec-service-bindable]] A boolean to toggle whether the operator expose the application as a bindable service. Defaults to `false`.  For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#bind-applications-with-operator-managed-backing-services++[Bind applications with operator-managed backing services].
+| `service.certificate` | Configure the TLS certificates for the service. The `annotations` property is available for this parameter. Set annotations on the `.spec.service.certificate.annotations` parameter to add them to the certificate. 
 | `service.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod. The following keys are valid in the secret: `ca.crt`, `tls.crt`, and `tls.key`.
 | `service.nodePort` | Node proxies this port into your service. Please note once this port is set to a non-zero value it cannot be reset to zero.
 | `service.port` | The port exposed by the container.
