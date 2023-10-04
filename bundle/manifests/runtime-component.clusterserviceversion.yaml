@@ -11,7 +11,7 @@ metadata:
             "name": "runtimecomponent-sample"
           },
           "spec": {
-            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:d3c67c4a15c97b0fb82f9ef4a2ccf474232b878787e9eea39af75a3ac78469e3",
+            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:6bf52d536e94d6aa6eaa3ca9639e0fe9f5e71dbd891c50362939dd6aca519d02",
             "expose": true,
             "manageTLS": true,
             "replicas": 1,
@@ -41,7 +41,7 @@ metadata:
             "name": "runtimecomponent-sample"
           },
           "spec": {
-            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:d3c67c4a15c97b0fb82f9ef4a2ccf474232b878787e9eea39af75a3ac78469e3",
+            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:6bf52d536e94d6aa6eaa3ca9639e0fe9f5e71dbd891c50362939dd6aca519d02",
             "expose": true,
             "replicas": 1,
             "service": {
@@ -68,9 +68,9 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2023-06-29T16:02:23Z"
+    createdAt: "2023-08-22T16:46:50Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
-    olm.skipRange: '>=0.8.0 <1.2.1'
+    olm.skipRange: '>=0.8.0 <1.2.2'
     operators.openshift.io/infrastructure-features: '["disconnected"]'
     operators.operatorframework.io/builder: operator-sdk-v1.24.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
@@ -81,7 +81,7 @@ metadata:
     operatorframework.io/arch.ppc64le: supported
     operatorframework.io/arch.s390x: supported
     operatorframework.io/os.linux: supported
-  name: runtime-component.v1.2.1
+  name: runtime-component.v1.2.2
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -976,7 +976,9 @@ spec:
                     fieldRef:
                       fieldPath: metadata.annotations['olm.targetNamespaces']
                 - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
-                  value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:d3c67c4a15c97b0fb82f9ef4a2ccf474232b878787e9eea39af75a3ac78469e3
+                  value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:6bf52d536e94d6aa6eaa3ca9639e0fe9f5e71dbd891c50362939dd6aca519d02
+                - name: RELATED_IMAGE_RUNTIME_COMPONENT_OPERATOR
+                  value: icr.io/appcafe/runtime-component-operator:daily
                 image: icr.io/appcafe/runtime-component-operator:daily
                 livenessProbe:
                   failureThreshold: 3
@@ -1257,6 +1259,8 @@ spec:
   provider:
     name: Community
   relatedImages:
-  - image: icr.io/appcafe/open-liberty/samples/getting-started@sha256:d3c67c4a15c97b0fb82f9ef4a2ccf474232b878787e9eea39af75a3ac78469e3
+  - image: icr.io/appcafe/open-liberty/samples/getting-started@sha256:6bf52d536e94d6aa6eaa3ca9639e0fe9f5e71dbd891c50362939dd6aca519d02
     name: liberty-sample-app
-  version: 1.2.1
+  - image: icr.io/appcafe/runtime-component-operator:daily
+    name: runtime-component-operator
+  version: 1.2.2

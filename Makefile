@@ -3,7 +3,7 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION ?= 1.2.1
+VERSION ?= 1.2.2
 OPERATOR_SDK_RELEASE_VERSION ?= v1.24.0
 
 # CHANNELS define the bundle channels used in the bundle.
@@ -189,6 +189,8 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 .PHONY: bundle
 bundle: manifests setup kustomize ## Generate bundle manifests and metadata, then validate generated files.
 	scripts/update-sample.sh
+
+	sed -i.bak "s,OPERATOR_IMAGE,${IMG},g" config/manager/manager.yaml
 	sed -i.bak "s,IMAGE,${IMG},g;s,CREATEDAT,${CREATEDAT},g" config/manifests/patches/csvAnnotations.yaml
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
@@ -200,9 +202,6 @@ bundle: manifests setup kustomize ## Generate bundle manifests and metadata, the
 	$(KUSTOMIZE) build config/kustomize/operator -o internal/deploy/kustomize/daily/base/runtime-component-operator.yaml
 	sed -i.bak "s,${IMG},${KUSTOMIZE_IMG},g;s,serviceAccountName: controller-manager,serviceAccountName: rco-controller-manager,g" internal/deploy/kustomize/daily/base/runtime-component-operator.yaml
 	$(KUSTOMIZE) build config/kustomize/roles -o internal/deploy/kustomize/daily/base/runtime-component-roles.yaml
-
-	mv config/manifests/patches/csvAnnotations.yaml.bak config/manifests/patches/csvAnnotations.yaml
-	rm internal/deploy/kustomize/daily/base/runtime-component-operator.yaml.bak
 	
 	$(KUSTOMIZE) build config/kubectl/crd -o internal/deploy/kubectl/runtime-component-crd.yaml
 	$(KUSTOMIZE) build config/kubectl/operator -o internal/deploy/kubectl/runtime-component-operator.yaml
@@ -211,6 +210,10 @@ bundle: manifests setup kustomize ## Generate bundle manifests and metadata, the
 
 	$(KUSTOMIZE) build config/kustomize/watch-all -o internal/deploy/kustomize/daily/overlays/watch-all-namespaces/cluster-roles.yaml
 	$(KUSTOMIZE) build config/kustomize/watch-another -o internal/deploy/kustomize/daily/overlays/watch-another-namespace/rco-watched-ns/watched-roles.yaml
+
+	mv config/manager/manager.yaml.bak config/manager/manager.yaml
+	mv config/manifests/patches/csvAnnotations.yaml.bak config/manifests/patches/csvAnnotations.yaml
+	rm internal/deploy/kustomize/daily/base/runtime-component-operator.yaml.bak
 
 	operator-sdk bundle validate ./bundle
 

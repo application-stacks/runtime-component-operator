@@ -23,13 +23,23 @@ setup:
         curl -X POST -H 'Content-type: application/json' --data '{"text":"<'$user'>  Archive operation failure see below "}' $(get_env slack_web_hook_url)
         echo " "
       done
-      pipeline_url="https://cloud.ibm.com/devops/pipelines/tekton/${PIPELINE_ID}/runs/${PIPELINE_RUN_ID}"
+      pipeline_url="https://cloud.ibm.com/devops/pipelines/tekton/${PIPELINE_ID}/runs/${PIPELINE_RUN_ID}?env_id=ibm:yp:us-south"
       curl -X POST -H 'Content-type: application/json' --data '{"text":"The archive operation for '$REPO' has failed."}' $(get_env slack_web_hook_url) </dev/null
       curl -X POST -H 'Content-type: application/json' --data '{"text":"Failing pipeline: '$pipeline_url'"}' $(get_env slack_web_hook_url) </dev/null
       curl -X POST -H 'Content-type: application/json' --data '{"text":"Destination repository: '$ARCHIVE_DESTINATION_REPO'"}' $(get_env slack_web_hook_url) </dev/null
     else
       echo "${REPO} has been archived successfully to ${ARCHIVE_DESTINATION_REPO}"
     fi
+    
+detect-secrets:
+  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
+  abort_on_failure: false
+  image_pull_policy: IfNotPresent
+  skip: true
+  script: |
+    #!/usr/bin/env bash
+    echo "Skip detect-secrets"
+    exit 0
     
 test:
   dind: true

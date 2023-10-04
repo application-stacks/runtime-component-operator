@@ -42,7 +42,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const RCOOperandVersion = "1.2.1"
+const RCOOperandVersion = "1.2.2"
 
 var APIVersionNotFoundError = errors.New("APIVersion is not available")
 
@@ -133,30 +133,18 @@ func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, c
 				route.Spec.TLS.CACertificate = ca
 				route.Spec.TLS.Key = key
 				route.Spec.TLS.DestinationCACertificate = destCACert
-				if rt.GetInsecureEdgeTerminationPolicy() != nil {
-					route.Spec.TLS.InsecureEdgeTerminationPolicy = *rt.GetInsecureEdgeTerminationPolicy()
-				}
 			} else if route.Spec.TLS.Termination == routev1.TLSTerminationPassthrough {
 				route.Spec.TLS.Certificate = ""
 				route.Spec.TLS.CACertificate = ""
 				route.Spec.TLS.Key = ""
 				route.Spec.TLS.DestinationCACertificate = ""
-				if rt.GetInsecureEdgeTerminationPolicy() != nil {
-					route.Spec.TLS.InsecureEdgeTerminationPolicy = *rt.GetInsecureEdgeTerminationPolicy()
-				}
 			} else if route.Spec.TLS.Termination == routev1.TLSTerminationEdge {
 				route.Spec.TLS.Certificate = crt
 				route.Spec.TLS.CACertificate = ca
 				route.Spec.TLS.Key = key
 				route.Spec.TLS.DestinationCACertificate = ""
-				if rt.GetInsecureEdgeTerminationPolicy() != nil {
-					route.Spec.TLS.InsecureEdgeTerminationPolicy = *rt.GetInsecureEdgeTerminationPolicy()
-				}
 			}
 		}
-	}
-	if ba.GetRoute() == nil {
-		route.Spec.Path = ""
 	}
 	if ba.GetRoute() == nil || ba.GetRoute().GetTermination() == nil {
 		route.Spec.TLS = nil
@@ -172,6 +160,18 @@ func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, c
 		}
 	}
 
+	// insecureEdgeTerminationPolicy can be set independently of the other TLS config
+	// so route.Spec.TLS may be nil at this point.
+	if rt := ba.GetRoute(); rt != nil && rt.GetInsecureEdgeTerminationPolicy() != nil {
+		if route.Spec.TLS == nil {
+			route.Spec.TLS = &routev1.TLSConfig{}
+		}
+		route.Spec.TLS.InsecureEdgeTerminationPolicy = *rt.GetInsecureEdgeTerminationPolicy()
+	}
+
+	if ba.GetRoute() == nil {
+		route.Spec.Path = ""
+	}
 	route.Spec.To.Kind = "Service"
 	route.Spec.To.Name = obj.GetName()
 	weight := int32(100)
