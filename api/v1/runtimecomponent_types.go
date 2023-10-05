@@ -55,11 +55,10 @@ type RuntimeComponentSpec struct {
 	PullSecret *string `json:"pullSecret,omitempty"`
 
 	// Deprecated. .spec.serviceAccount.name should be used instead. If both are specified, .spec.serviceAccount.name will override this.
-	// Name of the service account to use for deploying the application. A service account is automatically created if it's not specified.
-	// +operator-sdk:csv:customresourcedefinitions:order=6,type=spec,displayName="Service Account Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=6,type=spec,displayName="Service Account Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:hidden"
 	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
 
-	// The service account to use for deploying the application. A service account is automatically created if this is not specifed
+	// The service account to use for deploying the application. A service account is automatically created if this is not specifed.
 	// +operator-sdk:csv:customresourcedefinitions:order=6,type=spec,displayName="Service Account"
 	ServiceAccount *RuntimeComponentServiceAccount `json:"serviceAccount,omitempty"`
 
@@ -151,8 +150,8 @@ type RuntimeComponentSpec struct {
 
 // Defines the service account
 type RuntimeComponentServiceAccount struct {
-	// Whether the Service Account token should be mounted into the application pods. Default true
-	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Auto mount Service Account Token",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	// Whether the Service Account token should be mounted into the application pods. Defaults to true
+	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Mount Service Account Token",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	MountToken *bool `json:"mountToken,omitempty"`
 
 	// Name of the service account to use for deploying the application. A service account is automatically created if it's not specified.
