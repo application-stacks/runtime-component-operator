@@ -357,25 +357,12 @@ func ConvertToCoreProbe(ba common.BaseComponent, baseProbe *common.BaseComponent
 		if baseProbe.BaseComponentProbeHandler.GRPC != nil {
 			probe.ProbeHandler.GRPC = baseProbe.BaseComponentProbeHandler.GRPC
 		}
-
-		if baseProbe.InitialDelaySeconds != nil && *baseProbe.InitialDelaySeconds != 0 {
-			probe.InitialDelaySeconds = *baseProbe.InitialDelaySeconds
-		}
-		if baseProbe.TimeoutSeconds != nil && *baseProbe.TimeoutSeconds != 0 {
-			probe.TimeoutSeconds = *baseProbe.TimeoutSeconds
-		}
-		if baseProbe.PeriodSeconds != nil && *baseProbe.PeriodSeconds != 0 {
-			probe.PeriodSeconds = *baseProbe.PeriodSeconds
-		}
-		if baseProbe.SuccessThreshold != nil && *baseProbe.SuccessThreshold != 0 {
-			probe.SuccessThreshold = *baseProbe.SuccessThreshold
-		}
-		if baseProbe.FailureThreshold != nil && *baseProbe.FailureThreshold != 0 {
-			probe.FailureThreshold = *baseProbe.FailureThreshold
-		}
-		if baseProbe.TerminationGracePeriodSeconds != nil && *baseProbe.TerminationGracePeriodSeconds != 0 {
-			probe.TerminationGracePeriodSeconds = baseProbe.TerminationGracePeriodSeconds
-		}
+		probe.InitialDelaySeconds = baseProbe.InitialDelaySeconds
+		probe.TimeoutSeconds = baseProbe.TimeoutSeconds
+		probe.PeriodSeconds = baseProbe.PeriodSeconds
+		probe.SuccessThreshold = baseProbe.SuccessThreshold
+		probe.FailureThreshold = baseProbe.FailureThreshold
+		probe.TerminationGracePeriodSeconds = baseProbe.TerminationGracePeriodSeconds
 	}
 	return probe
 }
@@ -395,21 +382,11 @@ func customizeProbeDefaults(config *common.BaseComponentProbe, defaultProbe *com
 		if config.BaseComponentProbeHandler.GRPC != nil {
 			probe.BaseComponentProbeHandler.GRPC = config.BaseComponentProbeHandler.GRPC
 		}
-		if config.InitialDelaySeconds != nil && *config.InitialDelaySeconds != 0 {
-			probe.InitialDelaySeconds = config.InitialDelaySeconds
-		}
-		if config.TimeoutSeconds != nil && *config.TimeoutSeconds != 0 {
-			probe.TimeoutSeconds = config.TimeoutSeconds
-		}
-		if config.PeriodSeconds != nil && *config.PeriodSeconds != 0 {
-			probe.PeriodSeconds = config.PeriodSeconds
-		}
-		if config.SuccessThreshold != nil && *config.SuccessThreshold != 0 {
-			probe.SuccessThreshold = config.SuccessThreshold
-		}
-		if config.FailureThreshold != nil && *config.FailureThreshold != 0 {
-			probe.FailureThreshold = config.FailureThreshold
-		}
+		probe.InitialDelaySeconds = config.InitialDelaySeconds
+		probe.TimeoutSeconds = config.TimeoutSeconds
+		probe.PeriodSeconds = config.PeriodSeconds
+		probe.SuccessThreshold = config.SuccessThreshold
+		probe.FailureThreshold = config.FailureThreshold
 	}
 	return probe
 }

@@ -184,24 +184,24 @@ type BaseComponentProbe struct {
 	// Number of seconds after the container has started before liveness probes are initiated.
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
 	// +optional
-	InitialDelaySeconds *int32 `json:"initialDelaySeconds,omitempty"`
+	InitialDelaySeconds int32 `json:"initialDelaySeconds,omitempty"`
 	// Number of seconds after which the probe times out.
-	// Defaults to nil.
+	// Defaults to 1 second. Minimum value is 1.
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
 	// +optional
-	TimeoutSeconds *int32 `json:"timeoutSeconds,omitempty"`
+	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty"`
 	// How often (in seconds) to perform the probe.
-	// Defaults to nil.
+	// Default to 10 seconds. Minimum value is 1.
 	// +optional
-	PeriodSeconds *int32 `json:"periodSeconds,omitempty"`
+	PeriodSeconds int32 `json:"periodSeconds,omitempty"`
 	// Minimum consecutive successes for the probe to be considered successful after having failed.
-	// Defaults to nil.
+	// Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
 	// +optional
-	SuccessThreshold *int32 `json:"successThreshold,omitempty"`
+	SuccessThreshold int32 `json:"successThreshold,omitempty"`
 	// Minimum consecutive failures for the probe to be considered failed after having succeeded.
-	// Defaults to nil.
+	// Defaults to 3. Minimum value is 1.
 	// +optional
-	FailureThreshold *int32 `json:"failureThreshold,omitempty"`
+	FailureThreshold int32 `json:"failureThreshold,omitempty"`
 	// Optional duration in seconds the pod needs to terminate gracefully upon probe failure.
 	// The grace period is the duration in seconds after the processes running in the pod are sent
 	// a termination signal and the time when the processes are forcibly halted with a kill signal.
@@ -211,7 +211,7 @@ type BaseComponentProbe struct {
 	// Value must be non-negative integer. The value zero indicates stop immediately via
 	// the kill signal (no opportunity to shut down).
 	// This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate.
-	// Defaults to nil
+	// Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
 	// +optional
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 }
@@ -246,7 +246,7 @@ type OptionalHTTPGetAction struct {
 	// Number must be in the range 1 to 65535.
 	// Name must be an IANA_SVC_NAME.
 	// +optional
-	Port *intstr.IntOrString `json:"port"`
+	Port *intstr.IntOrString `json:"port,omitempty"`
 	// Host name to connect to, defaults to the pod IP. You probably want to set
 	// "Host" in httpHeaders instead.
 	// +optional
