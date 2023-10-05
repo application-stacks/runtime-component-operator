@@ -30,31 +30,6 @@ import (
 func (in *BaseComponentProbe) DeepCopyInto(out *BaseComponentProbe) {
 	*out = *in
 	in.BaseComponentProbeHandler.DeepCopyInto(&out.BaseComponentProbeHandler)
-	if in.InitialDelaySeconds != nil {
-		in, out := &in.InitialDelaySeconds, &out.InitialDelaySeconds
-		*out = new(int32)
-		**out = **in
-	}
-	if in.TimeoutSeconds != nil {
-		in, out := &in.TimeoutSeconds, &out.TimeoutSeconds
-		*out = new(int32)
-		**out = **in
-	}
-	if in.PeriodSeconds != nil {
-		in, out := &in.PeriodSeconds, &out.PeriodSeconds
-		*out = new(int32)
-		**out = **in
-	}
-	if in.SuccessThreshold != nil {
-		in, out := &in.SuccessThreshold, &out.SuccessThreshold
-		*out = new(int32)
-		**out = **in
-	}
-	if in.FailureThreshold != nil {
-		in, out := &in.FailureThreshold, &out.FailureThreshold
-		*out = new(int32)
-		**out = **in
-	}
 	if in.TerminationGracePeriodSeconds != nil {
 		in, out := &in.TerminationGracePeriodSeconds, &out.TerminationGracePeriodSeconds
 		*out = new(int64)
