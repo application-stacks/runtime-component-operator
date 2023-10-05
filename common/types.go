@@ -196,6 +196,7 @@ type BaseComponentTopologySpreadConstraints interface {
 }
 
 // Define PodSecurityContext without overlapping fields in SecurityContext
+// This struct is based upon the PodSecurityContext specification in https://github.com/kubernetes/api/blob/v0.24.2/core/v1/types.go
 // +kubebuilder:object:generate=true
 type IsolatedPodSecurityContext struct {
 	// A list of groups applied to the first process run in each container, in addition
