@@ -1,8 +1,0 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ingress
-status:
-  replicas: 1
-  readyReplicas: 1
-  updatedReplicas: 1

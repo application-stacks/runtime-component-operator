@@ -1,8 +1,0 @@
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: autoscaling1-rc
-spec:
-  # Add fields here
-  applicationImage: registry.k8s.io/pause:3.2
-  replicas: 1

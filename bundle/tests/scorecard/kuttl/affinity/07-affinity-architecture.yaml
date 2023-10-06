@@ -1,9 +1,0 @@
-# Check that if there is a matching node affinity lab a pod is created
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: affinity-rc
-spec:
-  affinity:
-    architecture:
-      - amd64

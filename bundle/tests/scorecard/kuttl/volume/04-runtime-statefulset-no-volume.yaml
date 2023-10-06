@@ -1,8 +1,0 @@
-# Removing volumes field should remove statefulset's volume
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: volume-rc
-spec:
-  volumeMounts:
-  volumes:

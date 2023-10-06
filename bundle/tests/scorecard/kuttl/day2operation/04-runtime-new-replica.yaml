@@ -1,8 +1,0 @@
-# Once a new replica is running the day2 Operation should complete
-apiVersion: rc.app.stacks/v1
-kind: RuntimeComponent
-metadata:
-  name: day2-operation-rc
-spec:
-  # Add fields here
-  replicas: 1

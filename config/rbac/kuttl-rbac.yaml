@@ -38,11 +38,18 @@ rules:
   resources:
   - namespaces
   - pods
-  - services
   - routes
   verbs:
   - get
   - list
+- apiGroups:
+    - ""
+  resources:
+    - services
+  verbs:
+    - get
+    - list
+    - patch
 - apiGroups:
   - apps
   resources:
@@ -126,3 +133,4 @@ rules:
   verbs:
   - get
   - list
+  - delete

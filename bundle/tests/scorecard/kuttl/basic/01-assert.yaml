@@ -1,8 +1,0 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: example-runtime-component
-status:
-  replicas: 2
-  readyReplicas: 2
-  updatedReplicas: 2
