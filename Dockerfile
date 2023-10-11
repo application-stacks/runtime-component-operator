@@ -1,9 +1,9 @@
 # Build the manager binary
-FROM registry.access.redhat.com/ubi8 as builder
+FROM registry.access.redhat.com/ubi8-minimal:latest as builder
 ARG GO_PLATFORM=amd64
 env PATH=$PATH:/usr/local/go/bin
-RUN yum install -y wget
-RUN wget --no-verbose --header "Accept: application/octet-stream" "https://golang.org/dl/go1.20.10.linux-${GO_PLATFORM}.tar.gz" -O - | tar -xz -C /usr/local/
+RUN microdnf install tar gzip
+RUN curl -L --output - "https://golang.org/dl/go1.20.10.linux-${GO_PLATFORM}.tar.gz" | tar -xz -C /usr/local/
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -58,3 +58,4 @@ COPY --from=builder /workspace/manager .
 USER ${USER_ID}:${GROUP_ID}
 
 ENTRYPOINT ["/manager"]
+
