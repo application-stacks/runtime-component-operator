@@ -3,7 +3,7 @@ FROM registry.access.redhat.com/ubi8 as builder
 ARG GO_PLATFORM=amd64
 env PATH=$PATH:/usr/local/go/bin
 RUN yum install -y wget
-RUN wget --no-verbose --header "Accept: application/octet-stream" "https://golang.org/dl/go1.20.linux-${GO_PLATFORM}.tar.gz" -O - | tar -xz -C /usr/local/
+RUN wget --no-verbose --header "Accept: application/octet-stream" "https://golang.org/dl/go1.20.10.linux-${GO_PLATFORM}.tar.gz" -O - | tar -xz -C /usr/local/
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
