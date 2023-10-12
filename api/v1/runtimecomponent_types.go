@@ -150,7 +150,7 @@ type RuntimeComponentSpec struct {
 
 // Defines the service account
 type RuntimeComponentServiceAccount struct {
-	// Whether the Service Account token should be mounted into the application pods. Defaults to true
+	// Whether the Service Account token should be mounted into the application pods. Defaults to true.
 	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Mount Service Account Token",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	MountToken *bool `json:"mountToken,omitempty"`
 
