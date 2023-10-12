@@ -3761,10 +3761,24 @@ spec:
                       a service
                     type: string
                 type: object
+              serviceAccount:
+                description: The service account to use for deploying the application.
+                  A service account is automatically created if this is not specifed.
+                properties:
+                  mountToken:
+                    description: Whether the Service Account token should be mounted
+                      into the application pods. Defaults to true.
+                    type: boolean
+                  name:
+                    description: Name of the service account to use for deploying
+                      the application. A service account is automatically created
+                      if it's not specified.
+                    type: string
+                type: object
               serviceAccountName:
-                description: Name of the service account to use for deploying the
-                  application. A service account is automatically created if it's
-                  not specified.
+                description: Deprecated. .spec.serviceAccount.name should be used
+                  instead. If both are specified, .spec.serviceAccount.name will override
+                  this.
                 type: string
               sidecarContainers:
                 description: List of sidecar containers. These are additional containers
