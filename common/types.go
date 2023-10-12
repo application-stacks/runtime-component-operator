@@ -185,12 +185,18 @@ type BaseComponentProbes interface {
 	GetDefaultStartupProbe(ba BaseComponent) *corev1.Probe
 }
 
+type BaseComponentServiceAccount interface {
+	GetMountToken() *bool
+	GetName() *string
+}
+
 // BaseComponent represents basic kubernetes application
 type BaseComponent interface {
 	GetApplicationImage() string
 	GetPullPolicy() *corev1.PullPolicy
 	GetPullSecret() *string
 	GetServiceAccountName() *string
+	GetServiceAccount() BaseComponentServiceAccount
 	GetReplicas() *int32
 	GetProbes() BaseComponentProbes
 	GetVolumes() []corev1.Volume

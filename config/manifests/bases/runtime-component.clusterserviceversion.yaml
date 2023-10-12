@@ -70,6 +70,12 @@ spec:
           probes are not executed until this completes successfully.
         displayName: Startup Probe
         path: probes.startup
+      - description: Whether the Service Account token should be mounted into the
+          application pods. Defaults to true.
+        displayName: Mount Service Account Token
+        path: serviceAccount.mountToken
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Name of the application. Defaults to the name of this custom
           resource.
         displayName: Application Name
@@ -85,6 +91,12 @@ spec:
           be removed from service endpoints if the probe fails.
         displayName: Readiness Probe
         path: probes.readiness
+      - description: Name of the service account to use for deploying the application.
+          A service account is automatically created if it's not specified.
+        displayName: Service Account Name
+        path: serviceAccount.name
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: Version of the application.
         displayName: Application Version
         path: applicationVersion
@@ -112,12 +124,16 @@ spec:
         path: pullSecret
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes:Secret
-      - description: Name of the service account to use for deploying the application.
-          A service account is automatically created if it's not specified.
+      - description: The service account to use for deploying the application. A service
+          account is automatically created if this is not specifed.
+        displayName: Service Account
+        path: serviceAccount
+      - description: Deprecated. .spec.serviceAccount.name should be used instead.
+          If both are specified, .spec.serviceAccount.name will override this.
         displayName: Service Account Name
         path: serviceAccountName
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
+        - urn:alm:descriptor:com.tectonic.ui:hidden
       - description: Create Knative resources and use Knative serving.
         displayName: Create Knative Service
         path: createKnativeService

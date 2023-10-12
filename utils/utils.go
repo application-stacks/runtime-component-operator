@@ -695,8 +695,8 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 
 	pts.Spec.Containers = append([]corev1.Container{appContainer}, ba.GetSidecarContainers()...)
 
-	if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
-		pts.Spec.ServiceAccountName = *ba.GetServiceAccountName()
+	if name := GetServiceAccountName(ba); name != "" {
+		pts.Spec.ServiceAccountName = name
 	} else {
 		pts.Spec.ServiceAccountName = obj.GetName()
 	}
@@ -705,6 +705,16 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 
 	pts.Spec.Affinity = &corev1.Affinity{}
 	CustomizeAffinity(pts.Spec.Affinity, ba)
+
+	mount := true
+	basa := ba.GetServiceAccount()
+	if basa != nil {
+		if basa.GetMountToken() != nil && !*basa.GetMountToken() {
+			// not nil and set to false
+			mount = false
+		}
+	}
+	pts.Spec.AutomountServiceAccountToken = &mount
 }
 
 // CustomizePersistence ...
@@ -809,6 +819,7 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent,
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -876,8 +887,8 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	ksvc.Spec.Template.Spec.Containers[0].VolumeMounts = ba.GetVolumeMounts()
 	ksvc.Spec.Template.Spec.Volumes = ba.GetVolumes()
 
-	if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
-		ksvc.Spec.Template.Spec.ServiceAccountName = *ba.GetServiceAccountName()
+	if name := GetServiceAccountName(ba); name != "" {
+		ksvc.Spec.Template.Spec.ServiceAccountName = name
 	} else {
 		ksvc.Spec.Template.Spec.ServiceAccountName = obj.GetName()
 	}
@@ -1381,8 +1392,8 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 	obj := ba.(metav1.Object)
 	ns := obj.GetNamespace()
 	saName := obj.GetName()
-	if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
-		saName = *ba.GetServiceAccountName()
+	if name := GetServiceAccountName(ba); name != "" {
+		saName = name
 	}
 
 	sa := &corev1.ServiceAccount{}
@@ -1636,4 +1647,23 @@ func CheckForNameConflicts(operator string, name string, namespace string, clien
 		}
 	}
 	return nil
+}
+
+// Get the service account name to use or "" if not specified
+// in the CR. .spec.ServiceAccountName is deprecated, so
+// .spec.ServiceAccount.Name is prefered and should be used if it
+// exists. Otherwise, check and fall back to .spec.ServiceAccountName
+func GetServiceAccountName(ba common.BaseComponent) string {
+	name := ""
+	if basa := ba.GetServiceAccount(); basa != nil {
+		// There is a .spec.ServiceAccount struct. Use the name from here if it exists
+		// Even if the name doesn't exist, ignore the .spec.ServiceAccountName field?
+		if baName := basa.GetName(); baName != nil && *baName != "" {
+			name = *baName
+		}
+	} else if ba.GetServiceAccountName() != nil && *ba.GetServiceAccountName() != "" {
+		name = *ba.GetServiceAccountName()
+	}
+
+	return name
 }
