@@ -16,7 +16,7 @@ steps:
   workType: Jenkins
   projectName: ebcDockerBuilderRCO
   timeoutInMinutes: 1440
-  # Need properties for Makefile or build script for WLO
+  # Need properties for Makefile or build script for RCO
   properties:  
     ebcPlan: svl-dockerJenkins-ubuntu20_s390x.yml
     
@@ -25,6 +25,14 @@ steps:
   workType: Jenkins
   projectName: ebcDockerBuilderRCO
   timeoutInMinutes: 1440
-  # Need properties for Makefile or build script for WLO
+  # Need properties for Makefile or build script for RCO
   properties:  
     ebcPlan: svl-dockerJenkins-ubuntu20_ppcle.yml
+
+- stepName: ARM Build
+  workType: Jenkins
+  projectName: ebcDockerBuilderRCO
+  timeoutInMinutes: 1440
+  # Need properties for Makefile or build script for RCO
+  properties:  
+    ebcPlan: managed-pool-jenkins-macosx_arm.yml
