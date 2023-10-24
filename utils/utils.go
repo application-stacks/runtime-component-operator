@@ -840,7 +840,7 @@ func removePullSecret(sa *corev1.ServiceAccount, pullSecretName string) {
 func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	ksvc.Labels = ba.GetLabels()
-	ksvc.Annotations = MergeMaps(ksvc.Annotations, ba.GetAnnotations())
+	ksvc.Annotations = filterMerge("autoscaling.knative.dev/", ksvc.Annotations, ba.GetAnnotations())
 
 	// If `expose` is not set to `true`, make Knative route a private route by adding `serving.knative.dev/visibility: cluster-local`
 	// to the Knative service. If `serving.knative.dev/visibility: XYZ` is defined in cr.Labels, `expose` always wins.
@@ -1206,6 +1206,22 @@ func MergeMaps(maps ...map[string]string) map[string]string {
 		}
 	}
 
+	return dest
+}
+
+// filterMerge merges maps as per MergeMaps, but will filter out any keys which
+// match keyFilterPrefix
+func filterMerge(keyFilterPrefix string, maps ...map[string]string) map[string]string {
+	dest := make(map[string]string)
+
+	for i := range maps {
+		for key, value := range maps[i] {
+			if strings.HasPrefix(key, keyFilterPrefix) {
+				continue
+			}
+			dest[key] = value
+		}
+	}
 	return dest
 }
 
