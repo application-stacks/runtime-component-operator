@@ -485,6 +485,10 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	} else if ok {
 		if instance.Spec.Monitoring != nil && (instance.Spec.CreateKnativeService == nil || !*instance.Spec.CreateKnativeService) {
+			// Validate the monitoring endpoints' configuration before creating/updating the ServiceMonitor
+			if err := appstacksutils.ValidatePrometheusMonitoringEndpoints(instance, r.GetClient(), instance.GetNamespace()); err != nil {
+				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+			}
 			sm := &prometheusv1.ServiceMonitor{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(sm, instance, func() error {
 				appstacksutils.CustomizeServiceMonitor(sm, instance)
