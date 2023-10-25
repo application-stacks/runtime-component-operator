@@ -1,10 +1,23 @@
 # Build the manager binary
-FROM golang:1.20 as builder
+FROM registry.access.redhat.com/ubi8-minimal:latest as builder
+ARG GO_PLATFORM=amd64
+ARG GO_VERSION_ARG
+ENV PATH=$PATH:/usr/local/go/bin
+RUN microdnf install tar gzip
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
 COPY go.mod go.mod
 COPY go.sum go.sum
+
+RUN if [ -z "${GO_VERSION_ARG}" ]; then \
+      GO_VERSION=$(grep '^go [0-9]\+.[0-9]\+' go.mod | cut -d ' ' -f 2); \
+    else \
+      GO_VERSION=${GO_VERSION_ARG}; \
+    fi; \
+    rm -rf /usr/local/go; \
+    curl -L --output - "https://golang.org/dl/go${GO_VERSION}.linux-${GO_PLATFORM}.tar.gz" | tar -xz -C /usr/local/
+
 # cache deps before building and copying source so that we don't need to re-download as much
 # and so that source changes don't invalidate our downloaded layer
 RUN go mod download
@@ -54,3 +67,4 @@ COPY --from=builder /workspace/manager .
 USER ${USER_ID}:${GROUP_ID}
 
 ENTRYPOINT ["/manager"]
+

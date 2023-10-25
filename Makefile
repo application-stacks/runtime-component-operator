@@ -282,7 +282,7 @@ docker-login:
 
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
-	$(CONTAINER_COMMAND) build -t ${IMG} .
+	ARCH=$(shell go env GOARCH) && $(CONTAINER_COMMAND) build -t ${IMG} . --build-arg GO_PLATFORM=$${ARCH}
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
