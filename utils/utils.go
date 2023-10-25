@@ -852,7 +852,7 @@ func removePullSecret(sa *corev1.ServiceAccount, pullSecretName string) {
 func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	ksvc.Labels = ba.GetLabels()
-	ksvc.Annotations = MergeMaps(ksvc.Annotations, ba.GetAnnotations())
+	ksvc.Annotations = filterMerge("autoscaling.knative.dev/", ksvc.Annotations, ba.GetAnnotations())
 
 	// If `expose` is not set to `true`, make Knative route a private route by adding `serving.knative.dev/visibility: cluster-local`
 	// to the Knative service. If `serving.knative.dev/visibility: XYZ` is defined in cr.Labels, `expose` always wins.
@@ -969,6 +969,95 @@ func Validate(ba common.BaseComponent) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func Contains(list []string, s string) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
+
+func appendNameIfUnique(names []string, name string) []string {
+	if len(name) > 0 && !Contains(names, name) {
+		return append(names, name)
+	}
+	return names
+}
+
+// Returns true if the ConfigMap is not specified as optional, otherwise return false.
+func configMapShouldExist(configMapKeySelector corev1.ConfigMapKeySelector) bool {
+	return configMapKeySelector.Optional == nil || !*configMapKeySelector.Optional
+}
+
+// Returns true if the Secret is not specified as optional, otherwise return false.
+func secretShouldExist(secretKeySelector corev1.SecretKeySelector) bool {
+	return secretKeySelector.Optional == nil || !*secretKeySelector.Optional
+}
+
+// Returns an error if any user specified non-optional Secret or ConfigMap for Prometheus monitoring does not exist, otherwise return nil.
+func ValidatePrometheusMonitoringEndpoints(ba common.BaseComponent, client client.Client, namespace string) error {
+	var basicAuth *prometheusv1.BasicAuth
+	var oauth2 *prometheusv1.OAuth2
+	var bearerTokenSecret corev1.SecretKeySelector
+	var authorization *prometheusv1.SafeAuthorization
+	monitoring := ba.GetMonitoring()
+	if monitoring != nil {
+		for _, endpoint := range monitoring.GetEndpoints() {
+			var secretNames []string
+			var configMapNames []string
+			// BasicAuth
+			basicAuth = endpoint.BasicAuth
+			if basicAuth != nil {
+				if secretShouldExist(basicAuth.Username) {
+					secretNames = appendNameIfUnique(secretNames, basicAuth.Username.Name)
+				}
+				if secretShouldExist(basicAuth.Password) {
+					secretNames = appendNameIfUnique(secretNames, basicAuth.Password.Name)
+				}
+			}
+			// OAuth2
+			oauth2 = endpoint.OAuth2
+			if oauth2 != nil {
+				if oauth2.ClientID.Secret != nil && secretShouldExist(*oauth2.ClientID.Secret) {
+					secretNames = appendNameIfUnique(secretNames, oauth2.ClientID.Secret.Name)
+				}
+				if oauth2.ClientID.ConfigMap != nil && configMapShouldExist(*oauth2.ClientID.ConfigMap) {
+					configMapNames = appendNameIfUnique(configMapNames, oauth2.ClientID.ConfigMap.Name)
+				}
+				if secretShouldExist(oauth2.ClientSecret) {
+					secretNames = appendNameIfUnique(secretNames, oauth2.ClientSecret.Name)
+				}
+			}
+			// BearerTokenSecret
+			bearerTokenSecret = endpoint.BearerTokenSecret
+			if secretShouldExist(bearerTokenSecret) {
+				secretNames = appendNameIfUnique(secretNames, bearerTokenSecret.Name)
+			}
+			// Authorization
+			authorization = endpoint.Authorization
+			if authorization != nil && authorization.Credentials != nil && secretShouldExist(*authorization.Credentials) {
+				secretNames = appendNameIfUnique(secretNames, authorization.Credentials.Name)
+			}
+			// Error if any Secret is specified but does not exist
+			for _, secretName := range secretNames {
+				if err := client.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: namespace}, &corev1.Secret{}); err != nil {
+					errorMessage := fmt.Sprintf("Could not find Secret '%s' in this namespace.", secretName)
+					return errors.New(errorMessage)
+				}
+			}
+			// Error if any ConfigMap is specified but does not exist
+			for _, configMapName := range configMapNames {
+				if err := client.Get(context.TODO(), types.NamespacedName{Name: configMapName, Namespace: namespace}, &corev1.ConfigMap{}); err != nil {
+					errorMessage := fmt.Sprintf("Could not find ConfigMap '%s' in this namespace.", configMapName)
+					return errors.New(errorMessage)
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func createValidationError(msg string) error {
@@ -1129,6 +1218,22 @@ func MergeMaps(maps ...map[string]string) map[string]string {
 		}
 	}
 
+	return dest
+}
+
+// filterMerge merges maps as per MergeMaps, but will filter out any keys which
+// match keyFilterPrefix
+func filterMerge(keyFilterPrefix string, maps ...map[string]string) map[string]string {
+	dest := make(map[string]string)
+
+	for i := range maps {
+		for key, value := range maps[i] {
+			if strings.HasPrefix(key, keyFilterPrefix) {
+				continue
+			}
+			dest[key] = value
+		}
+	}
 	return dest
 }
 
