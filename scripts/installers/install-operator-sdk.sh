@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 
 main() {
-  DEFAULT_RELEASE_VERSION=v1.24.0
+  DEFAULT_RELEASE_VERSION=v1.27.0
   RELEASE_VERSION=${1:-$DEFAULT_RELEASE_VERSION}
 
   if [[ -x "$(command -v operator-sdk)" ]]; then
