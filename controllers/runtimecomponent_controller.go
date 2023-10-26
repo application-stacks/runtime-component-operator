@@ -205,7 +205,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	if instance.Spec.ServiceAccountName == nil || *instance.Spec.ServiceAccountName == "" {
+	if appstacksutils.GetServiceAccountName(instance) == "" {
 		serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(serviceAccount, instance, func() error {
 			return appstacksutils.CustomizeServiceAccount(serviceAccount, instance, r.GetClient())
@@ -215,6 +215,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		}
 	} else {
+		// delete our SA, as one has been specified
 		serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
 		err = r.DeleteResource(serviceAccount)
 		if err != nil {
