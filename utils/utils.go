@@ -537,7 +537,19 @@ func customizeDefaultAffinity(affinity *corev1.Affinity, name string) {
 	if affinity.PodAntiAffinity == nil {
 		affinity.PodAntiAffinity = &corev1.PodAntiAffinity{}
 	}
+
 	term := []corev1.WeightedPodAffinityTerm{
+		{
+			Weight: 50,
+			PodAffinityTerm: corev1.PodAffinityTerm{
+				TopologyKey: "topology.kubernetes.io/zone",
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app.kubernetes.io/instance": name,
+					},
+				},
+			},
+		},
 		{
 			Weight: 50,
 			PodAffinityTerm: corev1.PodAffinityTerm{
