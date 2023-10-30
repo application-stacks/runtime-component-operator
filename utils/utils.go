@@ -196,8 +196,8 @@ func ErrorIsNoMatchesForKind(err error, kind string, version string) bool {
 func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	svc.Labels = ba.GetLabels()
-	svc.Annotations = MergeMaps(svc.Annotations, ba.GetAnnotations())
 	CustomizeServiceAnnotations(svc)
+	svc.Annotations = MergeMaps(svc.Annotations, ba.GetAnnotations())
 
 	if len(svc.Spec.Ports) == 0 {
 		svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{})
