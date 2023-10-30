@@ -146,6 +146,10 @@ type RuntimeComponentSpec struct {
 	// Security context for the application container.
 	// +operator-sdk:csv:customresourcedefinitions:order=25,type=spec,displayName="Security Context"
 	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
+
+	// Topology spread constraints for the application pod.
+	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Topology Spread Constraints"
+	TopologySpreadConstraints []corev1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 }
 
 // Defines the service account
@@ -915,6 +919,11 @@ func (a *RuntimeComponentAffinity) GetNodeAffinityLabels() map[string]string {
 // GetSecurityContext returns container security context
 func (cr *RuntimeComponent) GetSecurityContext() *corev1.SecurityContext {
 	return cr.Spec.SecurityContext
+}
+
+// GetTopologySpreadConstraints returns the pod topology spread constraints
+func (cr *RuntimeComponent) GetTopologySpreadConstraints() []corev1.TopologySpreadConstraint {
+	return cr.Spec.TopologySpreadConstraints
 }
 
 // Initialize the RuntimeComponent instance

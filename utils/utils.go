@@ -723,6 +723,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	}
 	pts.Spec.RestartPolicy = corev1.RestartPolicyAlways
 	pts.Spec.DNSPolicy = corev1.DNSClusterFirst
+	CustomizeTopologySpreadConstraints(pts, ba)
 
 	pts.Spec.Affinity = &corev1.Affinity{}
 	CustomizeAffinity(pts.Spec.Affinity, ba)
@@ -736,6 +737,10 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		}
 	}
 	pts.Spec.AutomountServiceAccountToken = &mount
+}
+
+func CustomizeTopologySpreadConstraints(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
+	pts.Spec.TopologySpreadConstraints = ba.GetTopologySpreadConstraints()
 }
 
 // CustomizePersistence ...
