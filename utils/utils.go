@@ -740,7 +740,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	pts.Spec.AutomountServiceAccountToken = &mount
 }
 
-// Initialize an empty TopologySpreadConstraints list and optioanlly prefer scheduling across zones for pods with zoneDomainMatchLabels
+// Initialize an empty TopologySpreadConstraints list and optionally prefers scheduling across zones for pods with zoneDomainMatchLabels
 func CustomizeTopologySpreadConstraints(pts *corev1.PodTemplateSpec, zoneDomainMatchLabels map[string]string) {
 	pts.Spec.TopologySpreadConstraints = make([]corev1.TopologySpreadConstraint, 0)
 	if len(zoneDomainMatchLabels) > 0 {
