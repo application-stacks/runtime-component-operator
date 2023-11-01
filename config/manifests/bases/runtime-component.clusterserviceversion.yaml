@@ -290,8 +290,7 @@ spec:
         path: statefulSet.storage.className
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Topology spread constraints for the application pod.
-        displayName: Topology Spread Constraints
+      - displayName: Topology Spread Constraints
         path: topologySpreadConstraints
       - description: The directory inside the container where this persisted storage
           will be bound to.
