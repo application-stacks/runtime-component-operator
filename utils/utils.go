@@ -724,6 +724,15 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	pts.Spec.RestartPolicy = corev1.RestartPolicyAlways
 	pts.Spec.DNSPolicy = corev1.DNSClusterFirst
 
+	pts.Spec.TopologySpreadConstraints = make([]corev1.TopologySpreadConstraint, 0)
+	topologySpreadConstraintsConfig := ba.GetTopologySpreadConstraints()
+	if topologySpreadConstraintsConfig == nil || topologySpreadConstraintsConfig.GetDisableOperatorDefaults() == nil || !*topologySpreadConstraintsConfig.GetDisableOperatorDefaults() {
+		CustomizeTopologySpreadConstraints(pts, map[string]string{"app.kubernetes.io/instance": obj.GetName()})
+	}
+	if topologySpreadConstraintsConfig != nil && topologySpreadConstraintsConfig.GetConstraints() != nil {
+		pts.Spec.TopologySpreadConstraints = MergeTopologySpreadConstraints(pts.Spec.TopologySpreadConstraints, *topologySpreadConstraintsConfig.GetConstraints())
+	}
+
 	pts.Spec.Affinity = &corev1.Affinity{}
 	CustomizeAffinity(pts.Spec.Affinity, ba)
 
@@ -736,6 +745,28 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		}
 	}
 	pts.Spec.AutomountServiceAccountToken = &mount
+}
+
+// Initialize an empty TopologySpreadConstraints list and optionally prefers scheduling across zones/hosts for pods with podMatchLabels
+func CustomizeTopologySpreadConstraints(pts *corev1.PodTemplateSpec, podMatchLabels map[string]string) {
+	if len(podMatchLabels) > 0 {
+		pts.Spec.TopologySpreadConstraints = append(pts.Spec.TopologySpreadConstraints, corev1.TopologySpreadConstraint{
+			MaxSkew:           1,
+			TopologyKey:       "topology.kubernetes.io/zone",
+			WhenUnsatisfiable: corev1.ScheduleAnyway,
+			LabelSelector: &metav1.LabelSelector{
+				MatchLabels: podMatchLabels,
+			},
+		})
+		pts.Spec.TopologySpreadConstraints = append(pts.Spec.TopologySpreadConstraints, corev1.TopologySpreadConstraint{
+			MaxSkew:           1,
+			TopologyKey:       "kubernetes.io/hostname",
+			WhenUnsatisfiable: corev1.ScheduleAnyway,
+			LabelSelector: &metav1.LabelSelector{
+				MatchLabels: podMatchLabels,
+			},
+		})
+	}
 }
 
 // CustomizePersistence ...
@@ -1213,6 +1244,25 @@ func GetWatchNamespaces() ([]string, error) {
 	}
 
 	return watchNamespaces, nil
+}
+
+// MergeTopologySpreadConstraints returns the union of all TopologySpreadConstraint lists. The order of lists passed into the
+// func, defines the importance.
+func MergeTopologySpreadConstraints(constraints ...[]corev1.TopologySpreadConstraint) []corev1.TopologySpreadConstraint {
+	dest := make([]corev1.TopologySpreadConstraint, 0)
+	destTopologyKeyMemo := make(map[string]int)
+
+	for i := range constraints {
+		for j, constraint := range constraints[i] {
+			if t, found := destTopologyKeyMemo[constraint.TopologyKey]; found {
+				dest[t] = constraint
+			} else {
+				dest = append(dest, constraint)
+				destTopologyKeyMemo[constraint.TopologyKey] = j
+			}
+		}
+	}
+	return dest
 }
 
 // MergeMaps returns a map containing the union of al the key-value pairs from the input maps. The order of the maps passed into the

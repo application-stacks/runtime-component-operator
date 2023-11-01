@@ -146,6 +146,20 @@ type RuntimeComponentSpec struct {
 	// Security context for the application container.
 	// +operator-sdk:csv:customresourcedefinitions:order=25,type=spec,displayName="Security Context"
 	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
+
+	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Topology Spread Constraints"
+	TopologySpreadConstraints *RuntimeComponentTopologySpreadConstraints `json:"topologySpreadConstraints,omitempty"`
+}
+
+// Defines the topology spread constraints
+type RuntimeComponentTopologySpreadConstraints struct {
+	// The list of TopologySpreadConstraints for the application pod.
+	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Constraints"
+	Constraints *[]corev1.TopologySpreadConstraint `json:"constraints,omitempty"`
+
+	// Whether the operator should disable its default set of TopologySpreadConstraints. Defaults to false.
+	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Disable Operator Defaults",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	DisableOperatorDefaults *bool `json:"disableOperatorDefaults,omitempty"`
 }
 
 // Defines the service account
@@ -915,6 +929,25 @@ func (a *RuntimeComponentAffinity) GetNodeAffinityLabels() map[string]string {
 // GetSecurityContext returns container security context
 func (cr *RuntimeComponent) GetSecurityContext() *corev1.SecurityContext {
 	return cr.Spec.SecurityContext
+}
+
+// GetTopologySpreadConstraints returns the pod topology spread constraints configuration
+func (cr *RuntimeComponent) GetTopologySpreadConstraints() common.BaseComponentTopologySpreadConstraints {
+	if cr.Spec.TopologySpreadConstraints == nil {
+		return nil
+	}
+	return cr.Spec.TopologySpreadConstraints
+}
+
+func (cr *RuntimeComponentTopologySpreadConstraints) GetConstraints() *[]corev1.TopologySpreadConstraint {
+	if cr.Constraints == nil {
+		return nil
+	}
+	return cr.Constraints
+}
+
+func (cr *RuntimeComponentTopologySpreadConstraints) GetDisableOperatorDefaults() *bool {
+	return cr.DisableOperatorDefaults
 }
 
 // Initialize the RuntimeComponent instance

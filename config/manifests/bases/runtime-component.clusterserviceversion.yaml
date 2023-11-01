@@ -76,6 +76,15 @@ spec:
         path: serviceAccount.mountToken
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: The list of TopologySpreadConstraints for the application pod.
+        displayName: Constraints
+        path: topologySpreadConstraints.constraints
+      - description: Whether the operator should disable its default set of TopologySpreadConstraints.
+          Defaults to false.
+        displayName: Disable Operator Defaults
+        path: topologySpreadConstraints.disableOperatorDefaults
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Name of the application. Defaults to the name of this custom
           resource.
         displayName: Application Name
@@ -281,6 +290,8 @@ spec:
         path: statefulSet.storage.className
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - displayName: Topology Spread Constraints
+        path: topologySpreadConstraints
       - description: The directory inside the container where this persisted storage
           will be bound to.
         displayName: Storage Mount Path
