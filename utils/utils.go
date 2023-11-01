@@ -723,8 +723,15 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	}
 	pts.Spec.RestartPolicy = corev1.RestartPolicyAlways
 	pts.Spec.DNSPolicy = corev1.DNSClusterFirst
-	CustomizeTopologySpreadConstraints(pts, map[string]string{"app.kubernetes.io/instance": obj.GetName()})
-	pts.Spec.TopologySpreadConstraints = MergeTopologySpreadConstraints(pts.Spec.TopologySpreadConstraints, ba.GetTopologySpreadConstraints())
+
+	pts.Spec.TopologySpreadConstraints = make([]corev1.TopologySpreadConstraint, 0)
+	topologySpreadConstraintsConfig := ba.GetTopologySpreadConstraints()
+	if topologySpreadConstraintsConfig == nil || topologySpreadConstraintsConfig.GetDisableOperatorDefaults() == nil || !*topologySpreadConstraintsConfig.GetDisableOperatorDefaults() {
+		CustomizeTopologySpreadConstraints(pts, map[string]string{"app.kubernetes.io/instance": obj.GetName()})
+	}
+	if topologySpreadConstraintsConfig != nil && topologySpreadConstraintsConfig.GetConstraints() != nil {
+		pts.Spec.TopologySpreadConstraints = MergeTopologySpreadConstraints(pts.Spec.TopologySpreadConstraints, *topologySpreadConstraintsConfig.GetConstraints())
+	}
 
 	pts.Spec.Affinity = &corev1.Affinity{}
 	CustomizeAffinity(pts.Spec.Affinity, ba)
@@ -740,16 +747,23 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	pts.Spec.AutomountServiceAccountToken = &mount
 }
 
-// Initialize an empty TopologySpreadConstraints list and optionally prefers scheduling across zones for pods with zoneDomainMatchLabels
-func CustomizeTopologySpreadConstraints(pts *corev1.PodTemplateSpec, zoneDomainMatchLabels map[string]string) {
-	pts.Spec.TopologySpreadConstraints = make([]corev1.TopologySpreadConstraint, 0)
-	if len(zoneDomainMatchLabels) > 0 {
+// Initialize an empty TopologySpreadConstraints list and optionally prefers scheduling across zones/hosts for pods with podMatchLabels
+func CustomizeTopologySpreadConstraints(pts *corev1.PodTemplateSpec, podMatchLabels map[string]string) {
+	if len(podMatchLabels) > 0 {
 		pts.Spec.TopologySpreadConstraints = append(pts.Spec.TopologySpreadConstraints, corev1.TopologySpreadConstraint{
 			MaxSkew:           1,
 			TopologyKey:       "topology.kubernetes.io/zone",
 			WhenUnsatisfiable: corev1.ScheduleAnyway,
 			LabelSelector: &metav1.LabelSelector{
-				MatchLabels: zoneDomainMatchLabels,
+				MatchLabels: podMatchLabels,
+			},
+		})
+		pts.Spec.TopologySpreadConstraints = append(pts.Spec.TopologySpreadConstraints, corev1.TopologySpreadConstraint{
+			MaxSkew:           1,
+			TopologyKey:       "kubernetes.io/hostname",
+			WhenUnsatisfiable: corev1.ScheduleAnyway,
+			LabelSelector: &metav1.LabelSelector{
+				MatchLabels: podMatchLabels,
 			},
 		})
 	}

@@ -190,6 +190,11 @@ type BaseComponentServiceAccount interface {
 	GetName() *string
 }
 
+type BaseComponentTopologySpreadConstraints interface {
+	GetConstraints() *[]corev1.TopologySpreadConstraint
+	GetDisableOperatorDefaults() *bool
+}
+
 // BaseComponent represents basic kubernetes application
 type BaseComponent interface {
 	GetApplicationImage() string
@@ -222,7 +227,7 @@ type BaseComponent interface {
 	GetGroupName() string
 	GetRoute() BaseComponentRoute
 	GetAffinity() BaseComponentAffinity
-	GetTopologySpreadConstraints() []corev1.TopologySpreadConstraint
+	GetTopologySpreadConstraints() BaseComponentTopologySpreadConstraints
 	GetSecurityContext() *corev1.SecurityContext
 	GetManageTLS() *bool
 }
