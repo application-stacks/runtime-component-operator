@@ -20,9 +20,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -43,8 +44,11 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme    = k8sruntime.NewScheme()
+	setupLog  = ctrl.Log.WithName("setup")
+	Version   = "1.0.0"
+	BuildDate = ""
+	VCS_REF   = "0123456789012345678901234567890123456789"
 )
 
 func init() {
@@ -77,6 +81,8 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
+	setupLog.Info("Version Info", "Version", Version, "Runtime", runtime.Version(),
+		"Platform", runtime.GOOS+"/"+runtime.GOARCH, "VCS_REF", VCS_REF, "BuildDate", BuildDate)
 	// see https://github.com/operator-framework/operator-sdk/issues/1813
 	leaseDuration := 30 * time.Second
 	renewDeadline := 20 * time.Second
