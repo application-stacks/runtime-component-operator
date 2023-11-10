@@ -264,7 +264,7 @@ func TestGetOpConfigMap(t *testing.T) {
 	objs, s := []runtime.Object{runtimecomponent}, scheme.Scheme
 	s.AddKnownTypes(appstacksv1.GroupVersion, runtimecomponent)
 	cl := fakeclient.NewFakeClient(objs...)
-	rcl := fakeclient.NewFakeClient(objs...)
+	rcl := cl
 
 	r := NewReconcilerBase(rcl, cl, s, &rest.Config{}, record.NewFakeRecorder(10))
 
