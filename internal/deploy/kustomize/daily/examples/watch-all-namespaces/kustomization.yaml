@@ -3,8 +3,9 @@ kind: Kustomization
 
 namespace: rco-ns
 
-bases:
-- ../../overlays/watch-all-namespaces
 
-patchesStrategicMerge:
-- rco-ns.yaml
+resources:
+- ../../overlays/watch-all-namespaces
+patches:
+- path: role1.yaml
+- path: role2.yaml
