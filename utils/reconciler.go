@@ -168,7 +168,7 @@ func (r *ReconcilerBase) DeleteResources(resources []client.Object) error {
 // GetOpConfigMap ...
 func (r *ReconcilerBase) GetOpConfigMap(name string, ns string) (*corev1.ConfigMap, error) {
 	configMap := &corev1.ConfigMap{}
-	err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: name, Namespace: ns}, configMap)
+	err := r.GetAPIReader().Get(context.TODO(), types.NamespacedName{Name: name, Namespace: ns}, configMap)
 	if err != nil {
 		return nil, err
 	}
