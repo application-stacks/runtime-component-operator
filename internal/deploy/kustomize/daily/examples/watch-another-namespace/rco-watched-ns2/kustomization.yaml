@@ -6,7 +6,7 @@ namespace: rco-watched-ns2
 resources:
 - ../../../overlays/watch-another-namespace/rco-watched-ns
 patches:
-- path: role1.yaml
-- path: role2.yaml
-- path: role3.yaml
-- path: role4.yaml
+- path: rco-watched-role.yaml
+- path: rco-watched-rolebinding.yaml
+- path: rco-leader-election-watched-role.yaml
+- path: rco-leader-election-watched-rolebinding.yaml

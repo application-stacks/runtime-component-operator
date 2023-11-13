@@ -7,8 +7,8 @@ resources:
 - ../../../overlays/watch-another-namespace/rco-ns
 patches:
 - path: rco-deployment.yaml
-- path: role1.yaml
-- path: role2.yaml
-- path: role3.yaml
-- path: role4.yaml
+- path: rco-leader-election-role.yaml
+- path: rco-manager-role.yaml
+- path: rco-leader-election-rolebinding.yaml
+- path: rco-manager-rolebinding.yaml
 - path: rco-sa.yaml

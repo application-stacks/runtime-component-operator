@@ -7,5 +7,5 @@ namespace: rco-ns
 resources:
 - ../../overlays/watch-all-namespaces
 patches:
-- path: role1.yaml
-- path: role2.yaml
+- path: rco-leader-election-cluster-rolebinding.yaml
+- path: rco-manager-cluster-rolebinding.yaml
