@@ -149,6 +149,9 @@ type RuntimeComponentSpec struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Topology Spread Constraints"
 	TopologySpreadConstraints *RuntimeComponentTopologySpreadConstraints `json:"topologySpreadConstraints,omitempty"`
+
+	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="Enable Service Links",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
 }
 
 // Defines the topology spread constraints
@@ -1036,6 +1039,11 @@ func (cr *RuntimeComponent) GetAnnotations() map[string]string {
 	}
 	delete(annotations, "kubectl.kubernetes.io/last-applied-configuration")
 	return annotations
+}
+
+// GetEnableServiceLinks returns whether service links should be enabled in the pod spec
+func (cr *RuntimeComponent) GetEnableServiceLinks() *bool {
+	return cr.Spec.EnableServiceLinks
 }
 
 // GetType returns status condition type

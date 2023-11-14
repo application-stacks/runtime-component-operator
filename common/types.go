@@ -233,4 +233,5 @@ type BaseComponent interface {
 	GetTopologySpreadConstraints() BaseComponentTopologySpreadConstraints
 	GetSecurityContext() *corev1.SecurityContext
 	GetManageTLS() *bool
+	GetEnableServiceLinks() *bool
 }

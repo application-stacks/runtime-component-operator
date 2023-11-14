@@ -1043,6 +1043,8 @@ spec:
                         type: string
                     type: object
                 type: object
+              enableServiceLinks:
+                type: boolean
               env:
                 description: An array of environment variables for the application
                   container.

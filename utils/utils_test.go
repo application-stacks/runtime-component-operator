@@ -434,6 +434,47 @@ func TestCustomizePodSpec(t *testing.T) {
 	verifyTests(testCA, t)
 }
 
+func TestCustomizePodSpecServiceLinks(t *testing.T) {
+	logger := zap.New()
+	logf.SetLogger(logger)
+
+	tv := true
+	fv := false
+
+	spec := appstacksv1.RuntimeComponentSpec{
+		ApplicationImage: appImage,
+		Service:          service,
+		Resources:        resourceContraints,
+		Probes:           probes,
+		VolumeMounts:     []corev1.VolumeMount{volumeMount},
+		PullPolicy:       &pullPolicy,
+		Env:              env,
+		EnvFrom:          envFrom,
+		Volumes:          []corev1.Volume{volume},
+	}
+
+	pts, runtime := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	defaultLinks := *pts.Spec.EnableServiceLinks
+
+	spec.EnableServiceLinks = &tv
+	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	enableLinks := *pts.Spec.EnableServiceLinks
+
+	spec.EnableServiceLinks = &fv
+	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	disableLinks := *pts.Spec.EnableServiceLinks
+
+	testCPS := []Test{
+		{"Default service links", true, defaultLinks},
+		{"Enable service links", true, enableLinks},
+		{"Disable service links", false, disableLinks},
+	}
+	verifyTests(testCPS, t)
+}
+
 func TestCustomizePersistence(t *testing.T) {
 	logger := zap.New()
 	logf.SetLogger(logger)
