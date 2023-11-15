@@ -2,8 +2,11 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: rco-watched-ns2
 
-bases:
-- ../../../overlays/watch-another-namespace/rco-watched-ns
 
-patchesStrategicMerge:
-- watched-roles.yaml
+resources:
+- ../../../overlays/watch-another-namespace/rco-watched-ns
+patches:
+- path: rco-watched-role.yaml
+- path: rco-watched-rolebinding.yaml
+- path: rco-leader-election-watched-role.yaml
+- path: rco-leader-election-watched-rolebinding.yaml

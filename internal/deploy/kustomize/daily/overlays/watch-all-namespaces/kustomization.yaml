@@ -3,11 +3,10 @@ kind: Kustomization
 
 namespace: runtime-component
 
-bases:
-- ../../base
 
 resources:
 - cluster-roles.yaml
+- ../../base
 
-patchesStrategicMerge:
-- rco-all-namespaces.yaml
+patches:
+- path: rco-all-namespaces.yaml

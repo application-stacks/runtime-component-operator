@@ -2,10 +2,13 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: rco-ns2
 
-bases:
-- ../../../overlays/watch-another-namespace/rco-ns
 
-patchesStrategicMerge:
-- rco-deployment.yaml
-- rco-roles.yaml
-- rco-sa.yaml
+resources:
+- ../../../overlays/watch-another-namespace/rco-ns
+patches:
+- path: rco-deployment.yaml
+- path: rco-leader-election-role.yaml
+- path: rco-manager-role.yaml
+- path: rco-leader-election-rolebinding.yaml
+- path: rco-manager-rolebinding.yaml
+- path: rco-sa.yaml
