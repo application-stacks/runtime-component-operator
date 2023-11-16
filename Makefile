@@ -169,23 +169,11 @@ $(ENVTEST): $(LOCALBIN)
 
 .PHONY: setup
 setup: ## Ensure Operator SDK is installed.
-	./scripts/installers/install-operator-sdk.sh ${OPERATOR_SDK_RELEASE_VERSION}
+	./operators/scripts/installers/install-operator-sdk.sh ${OPERATOR_SDK_RELEASE_VERSION}
 
 .PHONY: setup-go
 setup-go: ## Ensure Go is installed.
-	./scripts/installers/install-go.sh ${GO_RELEASE_VERSION}
-
-.PHONY: setup-manifest
-setup-manifest: ## Install manifest tool.
-	./scripts/installers/install-manifest-tool.sh
-
-# Install Podman.
-install-podman:
-	./scripts/installers/install-podman.sh
-
-# Install OPM.
-install-opm:
-	./scripts/installers/install-opm.sh
+	./operators/scripts/installers/install-go.sh ${GO_RELEASE_VERSION}
 
 ##@ Development
 
@@ -339,29 +327,25 @@ catalog-build: opm ## Build a catalog image.
 	$(OPM) index add $(SKIP_TLS_VERIFY) --container-tool $(CONTAINER_COMMAND)  --mode semver --tag $(CATALOG_IMG) --bundles $(BUNDLE_IMGS) $(FROM_INDEX_OPT) --permissive
 
 kind-e2e-test:
-	./scripts/test/e2e-kind.sh --test-tag "${TRAVIS_BUILD_NUMBER}"
+	./operators/scripts/test/e2e-kind.sh --test-tag "${TRAVIS_BUILD_NUMBER}"
 
 build-manifest: setup-manifest
-	./scripts/build/build-manifest.sh --registry "${PUBLISH_REGISTRY}" --image "${OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
+	./operators/scripts/build/build-manifest.sh --registry "${PUBLISH_REGISTRY}" --image "${OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
 
 build-operator-pipeline:
-	./scripts/build/build-operator.sh --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
+	./operators/scripts/build/build-operator.sh --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
 
 build-manifest-pipeline:
-	./scripts/build/build-manifest.sh --registry "${REGISTRY}" --image "${IMAGE}" --tag "${RELEASE_TARGET}"
+	./operators/scripts/build/build-manifest.sh --registry "${REGISTRY}" --image "${IMAGE}" --tag "${RELEASE_TARGET}"
 
 build-bundle-pipeline:
-	./scripts/build/build-bundle.sh --prod-image "${PIPELINE_PRODUCTION_IMAGE}" --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
+	./operators/scripts/build/build-bundle.sh --prod-image "${PIPELINE_PRODUCTION_IMAGE}" --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
 
 build-catalog-pipeline: opm ## Build a catalog image.
-	./scripts/build/build-catalog.sh -n "v${OPM_VERSION}" -b "${REDHAT_BASE_IMAGE}" -o "${OPM}" --container-tool "docker" -r "${REGISTRY}" -i "${PIPELINE_OPERATOR_IMAGE}-bundle:${RELEASE_TARGET}" -p "${PIPELINE_PRODUCTION_IMAGE}-bundle" -a "${PIPELINE_OPERATOR_IMAGE}-catalog:${RELEASE_TARGET}" -t "${PWD}/operator-build" -v "${VERSION}"
-
-test-e2e:
-	./scripts/e2e-release.sh --registry-name default-route --registry-namespace openshift-image-registry \
-                     --test-tag "${TRAVIS_BUILD_NUMBER}" --target "${RELEASE_TARGET}"
+	./operators/scripts/build/build-catalog.sh -n "v${OPM_VERSION}" -b "${REDHAT_BASE_IMAGE}" -o "${OPM}" --container-tool "docker" -r "${REGISTRY}" -i "${PIPELINE_OPERATOR_IMAGE}-bundle:${RELEASE_TARGET}" -p "${PIPELINE_PRODUCTION_IMAGE}-bundle" -a "${PIPELINE_OPERATOR_IMAGE}-catalog:${RELEASE_TARGET}" -t "${PWD}/operator-build" -v "${VERSION}"
 
 test-pipeline-e2e:
-	./scripts/test/e2e-ocp.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" \
+	./operators/scripts/test/e2e-ocp.sh -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" \
                      --cluster-url "${CLUSTER_URL}" --cluster-user "${CLUSTER_USER}" --cluster-token "${CLUSTER_TOKEN}" \
                      --registry-name "${PIPELINE_REGISTRY}" --registry-image "${PIPELINE_OPERATOR_IMAGE}" \
                      --registry-user "${PIPELINE_USERNAME}" --registry-password "${PIPELINE_PASSWORD}" \

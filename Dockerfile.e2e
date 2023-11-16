@@ -12,6 +12,6 @@ RUN wget --no-verbose --header "Accept: application/octet-stream" "https://golan
 
 COPY . .
 
-RUN scripts/installers/install-operator-sdk.sh
+RUN operators/scripts/installers/install-operator-sdk.sh
 
 CMD [ "bash" ]
