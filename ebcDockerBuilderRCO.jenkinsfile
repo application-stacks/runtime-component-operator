@@ -92,7 +92,7 @@ def gitCloneAndStash() {
       git branch: "main", url: "git@github.ibm.com:websphere/operators.git"
       sh "git checkout ${COMMON_OPERATORS_BRANCH}"
   }
-  sh "cp -rf operators/scripts/build runtime-component-operator/scripts/"
+  sh "cp -rf operators runtime-component-operator/"
   dir('runtime-component-operator') {
       stash(name: 'runtime-component-operator')
    }
@@ -105,7 +105,7 @@ def void doWork(){
    
    // Unstash the git repo
    unstash(name: 'runtime-component-operator')
-   sh "./scripts/build/build-initialize.sh"
+   sh "./operators/scripts/build/build-initialize.sh"
    sh "${command}"
 }
 

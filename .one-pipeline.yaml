@@ -8,12 +8,7 @@ setup:
 
     git clone --single-branch --branch $(get_env common-operators-branch) https://$(get_env git-token)@github.ibm.com/websphere/operators.git
     
-    cp operators/scripts/pipeline/* ./scripts/pipeline/
-    cp -rf operators/scripts/build ./scripts/
-    cp -rf operators/scripts/configure-cluster ./scripts
-    cp -rf operators/scripts/test ./scripts/
-    
-    ./scripts/pipeline/code-setup-stage.sh
+    ./operators/scripts/pipeline/code-setup-stage.sh
     
 detect-secrets:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
@@ -35,7 +30,7 @@ test:
     #!/usr/bin/env bash
     echo $STAGE
 
-    ./scripts/pipeline/unit-test-stage.sh
+    ./operators/scripts/pipeline/unit-test-stage.sh
 
 static-scan:
   dind: true
@@ -45,7 +40,7 @@ static-scan:
     #!/usr/bin/env bash
     echo $STAGE
 
-    ./scripts/pipeline/static-scan-stage.sh
+    ./operators/scripts/pipeline/static-scan-stage.sh
 
 compliance-checks:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.3
@@ -73,7 +68,7 @@ compliance-checks:
     #!/usr/bin/env bash
     echo $STAGE
 
-    ./scripts/pipeline/compliance-checks-stage.sh
+    ./operators/scripts/pipeline/compliance-checks-stage.sh
 
 containerize:
   dind: true
@@ -86,7 +81,7 @@ containerize:
     # instruct bash to exit if any command fails
     set -e
     
-    ./scripts/pipeline/containerize-stage.sh
+    ./operators/scripts/pipeline/containerize-stage.sh
 
 sign-artifact:
   abort_on_failure: false
@@ -95,7 +90,7 @@ sign-artifact:
     #!/usr/bin/env bash
     echo $STAGE
     
-    ./scripts/pipeline/sign-artifact-stage.sh
+    ./operators/scripts/pipeline/sign-artifact-stage.sh
 
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.12
@@ -113,7 +108,7 @@ dynamic-scan:
     #!/usr/bin/env bash
     echo $STAGE
 
-    ./scripts/pipeline/dynamic-scan-stage.sh
+    ./operators/scripts/pipeline/dynamic-scan-stage.sh
 
 acceptance-test:
   dind: true
@@ -124,7 +119,7 @@ acceptance-test:
 
     echo $STAGE
 
-    ./scripts/pipeline/acceptance-test-stage.sh
+    ./operators/scripts/pipeline/acceptance-test-stage.sh
 
 scan-artifact:
   abort_on_failure: false
@@ -133,7 +128,7 @@ scan-artifact:
     #!/usr/bin/env bash
     echo $STAGE
 
-    ./scripts/pipeline/scan-artifact-stage.sh
+    ./operators/scripts/pipeline/scan-artifact-stage.sh
 
 release:
   abort_on_failure: false
@@ -142,4 +137,4 @@ release:
     #!/usr/bin/env bash
     echo $STAGE
 
-    ./scripts/pipeline/release-stage.sh
+    ./operators/scripts/pipeline/release-stage.sh

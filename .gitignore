@@ -5,6 +5,7 @@ build/_test
 bin/controller-gen
 bin/kustomize
 bundle/tests/scorecard/kuttl/kubeconfig
+operators
 vendor
 # Created by https://www.gitignore.io/api/go,vim,emacs,visualstudiocode
 ### Emacs ###
