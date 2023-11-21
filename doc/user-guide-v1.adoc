@@ -134,7 +134,7 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`.
 | `service.type` | The Kubernetes link:++https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types++[Service Type].
 | `serviceAccountName` | Deprecated. Use link:#crd-spec-serviceAccount-name[`serviceAccount.name`] instead.
-| `serviceAccount`| [[crd-spec-serviceAccount-name]] The service account to use for application deployment. If a service account name is not specified, a service account is automatically created. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#create-a-service-account++[Create a service account].
+| `serviceAccount`| [[crd-spec-serviceAccount-name]] The service account to use for application deployment. If a service account name is not specified, a service account is automatically created. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#create-a-service-account++[Configure a service account].
 | `serviceAccount.name` | Name of the service account to use for deploying the application.
 | `serviceAccount.mountToken` | A Boolean to toggle whether the service account's token should be mounted in the application pods. If unset or `true`, the token will be mounted.
 | `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`. 
@@ -282,7 +282,7 @@ Browse the `RuntimeComponent` examples to learn how to use custom resource (CR) 
 |===
 
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#reference-image-streams++[Reference image streams (`.spec.applicationImage`)]
-* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#create-a-service-account++[Create a service account (`.spec.serviceAccount`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#create-a-service-account++[Configure a service account (`.spec.serviceAccount`)]
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#add-or-change-labels++[Add or change labels (`.metadata.labels`)]
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#add-annotations++[Add annotations (`.metadata.annotations`)]
 * link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#set-environment-variables-for-an-application-container++[Set environment variables for an application container (`.spec.env` or `.spec.envFrom`)]
