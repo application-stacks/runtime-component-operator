@@ -23,6 +23,11 @@ setup:
       echo "${DIGEST}"
       echo "${APP}" | jq '.'
 
+      if [[ "${ARTIFACT}" == *"icr.io/appcafe/open-liberty/samples/"* ]];then
+        echo "Exclude samples from digest validation: ${ARTIFACT}"
+        continue
+      fi
+
       SAVED_DIGEST="$(skopeo inspect docker://$ARTIFACT | jq '.Digest'| sed -e 's/"//g')"
       if [[ ${DIGEST} == ${SAVED_DIGEST} ]]; then
         echo "Image, $ARTIFACT, passes validation"
@@ -64,12 +69,19 @@ deploy:
     for INVENTORY_ENTRY in $(echo "${INVENTORY_ENTRIES}" | jq -r '.[] '); do
       APP=$(cat "${INVENTORY_PATH}/${INVENTORY_ENTRY}")
       ARTIFACT=$(echo "${APP}" | jq -r '.artifact')
+      echo "${ARTIFACT}"
+
+      if [[ "${ARTIFACT}" == *"icr.io/appcafe/open-liberty/samples/"* ]];then
+        echo "Exclude samples from publishing: ${ARTIFACT}"
+        continue
+      fi
+
       NAME=$(echo "${APP}" | jq -r '.name')
       DIGEST=$(echo "${APP}" | jq -r '.sha256' )
       TYPE=$(echo "${APP}" | jq -r '.type' )
       REPO=$(echo "${APP}" | jq -r '.repository_url' ).git
       COMMIT=$(echo "${APP}" | jq -r '.commit_sha' )
-      echo "${ARTIFACT}"
+
       #echo "${ARTIFACT##*/}"
       IMAGE_NAME="${ARTIFACT##*/}"
       echo "Image name: $IMAGE_NAME"
