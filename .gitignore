@@ -4,7 +4,7 @@ build/_output
 build/_test
 bin/controller-gen
 bin/kustomize
-bundle/tests/scorecard/kuttl/kubeconfig
+bundle/tests
 operators
 vendor
 # Created by https://www.gitignore.io/api/go,vim,emacs,visualstudiocode
