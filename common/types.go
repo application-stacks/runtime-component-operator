@@ -133,6 +133,7 @@ type BaseComponentCertificate interface {
 type BaseComponentNetworkPolicy interface {
 	GetNamespaceLabels() map[string]string
 	GetFromLabels() map[string]string
+	IsDisabled() bool
 }
 
 // BaseComponentMonitoring represents basic service monitoring configuration
