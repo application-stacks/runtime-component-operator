@@ -14,7 +14,7 @@ Red Hat OpenShift 4.12 or higher is supported. The operator is also supported on
 
 === Option 1: Install using Operator Lifecycle Manager (OLM) on OpenShift
 
-Runtime Component Operator is available from Red Hat's Certified OpenShift Operators catalog. From the integrated OperatorHub in OpenShift, filter by selecting `Certified` checkbox under `Source`. Search for `Runtime Component`. Click on the tile with `Runtime Component` to install the operator. Select the channel `v1.2` to install version 1.2.2. Additional information is link:++https://catalog.redhat.com/software/operators/detail/5e98749c2989e6a90307acef#deploy-instructions/++[here].
+Runtime Component Operator is available from Red Hat's Certified OpenShift Operators catalog. From the integrated OperatorHub in OpenShift, filter by selecting `Certified` checkbox under `Source`. Search for `Runtime Component`. Click on the tile with `Runtime Component` to install the operator. Select the channel `v1.3` and install.
 
 === Option 2: Install using kubectl
 
