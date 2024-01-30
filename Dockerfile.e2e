@@ -6,7 +6,7 @@ env PATH=$PATH:/usr/local/go/bin
 
 WORKDIR /workspace
 
-RUN apt update -y && apt install -y curl sudo gpg make build-essential wget
+RUN apt update -y && apt install -y curl sudo make wget
 
 RUN wget --no-verbose --header "Accept: application/octet-stream" "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz" -O - | tar -xz -C /usr/local/
 
