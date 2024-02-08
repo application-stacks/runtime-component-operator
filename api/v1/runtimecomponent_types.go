@@ -938,11 +938,11 @@ func (sc *RuntimeComponentSecurityContext) GetContainerSecurityContext() *corev1
 	return common.GetSecurityContext(&sc.AppSecurityContext)
 }
 
-func (sc *RuntimeComponentSecurityContext) GetPodSecurityContext() *corev1.PodSecurityContext {
+func (sc *RuntimeComponentSecurityContext) PatchPodSecurityContext(podSecurityContext *corev1.PodSecurityContext) *corev1.PodSecurityContext {
 	if sc == nil {
-		return nil
+		return podSecurityContext
 	}
-	return common.GetPodSecurityContext(&sc.AppSecurityContext)
+	return common.PatchPodSecurityContext(&sc.AppSecurityContext, podSecurityContext)
 }
 
 // GetSecurityContext returns container security context

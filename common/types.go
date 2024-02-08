@@ -241,7 +241,7 @@ type AppSecurityContext struct {
 
 type BaseComponentSecurityContext interface {
 	GetContainerSecurityContext() *corev1.SecurityContext
-	GetPodSecurityContext() *corev1.PodSecurityContext
+	PatchPodSecurityContext(*corev1.PodSecurityContext) *corev1.PodSecurityContext
 }
 
 // BaseComponent represents basic kubernetes application

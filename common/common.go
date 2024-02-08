@@ -70,17 +70,23 @@ func GetSecurityContext(asc *AppSecurityContext) *corev1.SecurityContext {
 	return securityContext
 }
 
-func GetPodSecurityContext(asc *AppSecurityContext) *corev1.PodSecurityContext {
+func PatchPodSecurityContext(asc *AppSecurityContext, podSecurityContext *corev1.PodSecurityContext) *corev1.PodSecurityContext {
 	if asc == nil {
-		return nil
+		return podSecurityContext
+	}
+	if podSecurityContext == nil {
+		podSecurityContext = &corev1.PodSecurityContext{}
 	}
 	sc := asc.IsolatedPodSecurityContext
-	podSecurityContext := &corev1.PodSecurityContext{}
-	podSecurityContext.SupplementalGroups = sc.SupplementalGroups
+	if len(sc.SupplementalGroups) > 0 {
+		podSecurityContext.SupplementalGroups = sc.SupplementalGroups
+	}
 	if sc.FSGroup != nil {
 		podSecurityContext.FSGroup = sc.FSGroup
 	}
-	podSecurityContext.Sysctls = sc.Sysctls
+	if len(sc.Sysctls) > 0 {
+		podSecurityContext.Sysctls = sc.Sysctls
+	}
 	if sc.FSGroupChangePolicy != nil {
 		podSecurityContext.FSGroupChangePolicy = sc.FSGroupChangePolicy
 	}
