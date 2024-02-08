@@ -276,7 +276,7 @@ spec:
         path: affinity
       - displayName: Storage
         path: statefulSet.storage
-      - description: Security context for the application container.
+      - description: Security context for the application pod and container.
         displayName: Security Context
         path: securityContext
       - description: A convenient field to set the size of the persisted storage.
