@@ -3,10 +3,11 @@ package utils
 import (
 	"context"
 	"fmt"
-	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	"reflect"
 	"strings"
 	"testing"
+
+	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 
 	"github.com/application-stacks/runtime-component-operator/common"
 
@@ -22,7 +23,7 @@ import (
 	"k8s.io/client-go/rest"
 	coretesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
-	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -463,7 +464,7 @@ func createFakeDiscoveryClient() discovery.DiscoveryInterface {
 			},
 		},
 		{
-			GroupVersion: servingv1alpha1.SchemeGroupVersion.String(),
+			GroupVersion: servingv1.SchemeGroupVersion.String(),
 			APIResources: []metav1.APIResource{
 				{Name: "services", Namespaced: true, Kind: "Service", SingularName: "service"},
 			},
