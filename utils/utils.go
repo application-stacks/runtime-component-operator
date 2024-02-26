@@ -288,44 +288,105 @@ func CustomizeProbes(container *corev1.Container, ba common.BaseComponent) {
 		return
 	}
 
-	container.ReadinessProbe = customizeProbe(probesConfig.GetReadinessProbe(), probesConfig.GetDefaultReadinessProbe, ba)
-	container.LivenessProbe = customizeProbe(probesConfig.GetLivenessProbe(), probesConfig.GetDefaultLivenessProbe, ba)
-	container.StartupProbe = customizeProbe(probesConfig.GetStartupProbe(), probesConfig.GetDefaultStartupProbe, ba)
+	container.ReadinessProbe = customizeProbe(probesConfig.GetReadinessProbe(), probesConfig.GetDefaultReadinessProbe, probesConfig.PatchReadinessProbe, ba)
+	container.LivenessProbe = customizeProbe(probesConfig.GetLivenessProbe(), probesConfig.GetDefaultLivenessProbe, probesConfig.PatchLivenessProbe, ba)
+	container.StartupProbe = customizeProbe(probesConfig.GetStartupProbe(), probesConfig.GetDefaultStartupProbe, probesConfig.PatchStartupProbe, ba)
 }
 
-func customizeProbe(config *corev1.Probe, defaultProbeCallback func(ba common.BaseComponent) *corev1.Probe, ba common.BaseComponent) *corev1.Probe {
+func customizeProbe(config *common.BaseComponentProbe, getDefaultProbeCallback func(ba common.BaseComponent) *common.BaseComponentProbe, patchProbeCallback func(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe, ba common.BaseComponent) *corev1.Probe {
 	// Probe not defined -- set probe to nil
 	if config == nil {
 		return nil
 	}
 
 	// Probe handler is defined in config so use probe as is
-	if config.ProbeHandler != (corev1.ProbeHandler{}) {
-		return config
+	if config.BaseComponentProbeHandler != (common.BaseComponentProbeHandler{}) {
+		return ConvertToCoreProbe(ba, patchProbeCallback(ba, config))
 	}
 
 	// Probe handler is not defined so use default values for the probe if values not set in probe config
-	return customizeProbeDefaults(config, defaultProbeCallback(ba))
+	return ConvertToCoreProbe(ba, patchProbeCallback(ba, customizeProbeDefaults(config, getDefaultProbeCallback(ba))))
 }
 
-func customizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *corev1.Probe {
+func createHTTPGetActionFromOptionalHTTPGetAction(ba common.BaseComponent, optionalHTTPGetAction *common.OptionalHTTPGetAction) *corev1.HTTPGetAction {
+	httpGetAction := &corev1.HTTPGetAction{}
+	if optionalHTTPGetAction != nil {
+		if len(optionalHTTPGetAction.Host) > 0 {
+			httpGetAction.Host = optionalHTTPGetAction.Host
+		}
+		if len(optionalHTTPGetAction.Path) > 0 {
+			httpGetAction.Path = optionalHTTPGetAction.Path
+		}
+		if len(optionalHTTPGetAction.HTTPHeaders) > 0 {
+			httpGetAction.HTTPHeaders = optionalHTTPGetAction.HTTPHeaders
+		}
+
+		if optionalHTTPGetAction.Port != nil {
+			httpGetAction.Port = *optionalHTTPGetAction.Port
+		} else if ba.GetService().GetPort() > 0 {
+			httpGetAction.Port = intstr.FromInt(int(ba.GetService().GetPort()))
+		} else {
+			// Can't create HTTPGetAction without a port specified, so return nil.
+			return nil
+		}
+
+		if optionalHTTPGetAction.Scheme != corev1.URISchemeHTTP {
+			httpGetAction.Scheme = optionalHTTPGetAction.Scheme
+		} else {
+			if ba.GetManageTLS() != nil && *ba.GetManageTLS() {
+				httpGetAction.Scheme = corev1.URISchemeHTTPS
+			} else {
+				httpGetAction.Scheme = corev1.URISchemeHTTP
+			}
+		}
+	}
+	return httpGetAction
+}
+
+func ConvertToCoreProbe(ba common.BaseComponent, baseProbe *common.BaseComponentProbe) *corev1.Probe {
+	probe := &corev1.Probe{}
+	if baseProbe != nil {
+		if baseProbe.BaseComponentProbeHandler.Exec != nil {
+			probe.ProbeHandler.Exec = baseProbe.BaseComponentProbeHandler.Exec
+		}
+		probe.ProbeHandler.HTTPGet = createHTTPGetActionFromOptionalHTTPGetAction(ba, baseProbe.BaseComponentProbeHandler.HTTPGet)
+		if baseProbe.BaseComponentProbeHandler.TCPSocket != nil {
+			probe.ProbeHandler.TCPSocket = baseProbe.BaseComponentProbeHandler.TCPSocket
+		}
+		if baseProbe.BaseComponentProbeHandler.GRPC != nil {
+			probe.ProbeHandler.GRPC = baseProbe.BaseComponentProbeHandler.GRPC
+		}
+		probe.InitialDelaySeconds = baseProbe.InitialDelaySeconds
+		probe.TimeoutSeconds = baseProbe.TimeoutSeconds
+		probe.PeriodSeconds = baseProbe.PeriodSeconds
+		probe.SuccessThreshold = baseProbe.SuccessThreshold
+		probe.FailureThreshold = baseProbe.FailureThreshold
+		probe.TerminationGracePeriodSeconds = baseProbe.TerminationGracePeriodSeconds
+	}
+	return probe
+}
+
+func customizeProbeDefaults(config *common.BaseComponentProbe, defaultProbe *common.BaseComponentProbe) *common.BaseComponentProbe {
 	probe := defaultProbe
-	if config.InitialDelaySeconds != 0 {
+	if config != nil {
+		if config.BaseComponentProbeHandler.Exec != nil {
+			probe.BaseComponentProbeHandler.Exec = config.BaseComponentProbeHandler.Exec
+		}
+		if config.BaseComponentProbeHandler.HTTPGet != nil {
+			probe.BaseComponentProbeHandler.HTTPGet = config.BaseComponentProbeHandler.HTTPGet
+		}
+		if config.BaseComponentProbeHandler.TCPSocket != nil {
+			probe.BaseComponentProbeHandler.TCPSocket = config.BaseComponentProbeHandler.TCPSocket
+		}
+		if config.BaseComponentProbeHandler.GRPC != nil {
+			probe.BaseComponentProbeHandler.GRPC = config.BaseComponentProbeHandler.GRPC
+		}
 		probe.InitialDelaySeconds = config.InitialDelaySeconds
-	}
-	if config.TimeoutSeconds != 0 {
 		probe.TimeoutSeconds = config.TimeoutSeconds
-	}
-	if config.PeriodSeconds != 0 {
 		probe.PeriodSeconds = config.PeriodSeconds
-	}
-	if config.SuccessThreshold != 0 {
 		probe.SuccessThreshold = config.SuccessThreshold
-	}
-	if config.FailureThreshold != 0 {
 		probe.FailureThreshold = config.FailureThreshold
 	}
-
 	return probe
 }
 
