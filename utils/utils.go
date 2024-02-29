@@ -448,9 +448,13 @@ func createNetworkPolicyPeer(appName string, namespace string, networkPolicy com
 
 func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule, ba common.BaseComponent) {
 	var ports []int32
-	ports = append(ports, ba.GetService().GetPort())
+	primaryTargetPort := ba.GetService().GetPort()
+	if ba.GetService().GetTargetPort() != nil {
+		primaryTargetPort = *ba.GetService().GetTargetPort()
+	}
+	ports = append(ports, primaryTargetPort)
 	for _, port := range ba.GetService().GetPorts() {
-		ports = append(ports, port.Port)
+		ports = append(ports, int32(port.TargetPort.IntValue()))
 	}
 
 	currentLen := len(ingress.Ports)
