@@ -732,6 +732,15 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	}
 	pts.Spec.RestartPolicy = corev1.RestartPolicyAlways
 	pts.Spec.DNSPolicy = corev1.DNSClusterFirst
+	badns := ba.GetDNS()
+	if badns != nil {
+		if badns.GetPolicy() != nil {
+			pts.Spec.DNSPolicy = *badns.GetPolicy()
+		}
+		if badns.GetConfig() != nil {
+			pts.Spec.DNSConfig = badns.GetConfig()
+		}
+	}
 
 	pts.Spec.TopologySpreadConstraints = make([]corev1.TopologySpreadConstraint, 0)
 	topologySpreadConstraintsConfig := ba.GetTopologySpreadConstraints()

@@ -138,6 +138,9 @@ spec:
         path: autoscaling.maxReplicas
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
+      - description: The DNS Policy for the application pod.
+        displayName: DNS Policy
+        path: dns.policy
       - description: Probe to determine successful initialization. If specified, other
           probes are not executed until this completes successfully.
         displayName: Startup Probe
@@ -151,12 +154,6 @@ spec:
       - description: The list of TopologySpreadConstraints for the application pod.
         displayName: Constraints
         path: topologySpreadConstraints.constraints
-      - description: Whether the operator should disable its default set of TopologySpreadConstraints.
-          Defaults to false.
-        displayName: Disable Operator Defaults
-        path: topologySpreadConstraints.disableOperatorDefaults
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Name of the application. Defaults to the name of this custom
           resource.
         displayName: Application Name
@@ -168,6 +165,9 @@ spec:
         path: autoscaling.minReplicas
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
+      - description: The DNS Config for the application pod.
+        displayName: DNS Config
+        path: dns.config
       - description: Periodic probe of container service readiness. Container will
           be removed from service endpoints if the probe fails.
         displayName: Readiness Probe
@@ -178,6 +178,12 @@ spec:
         path: serviceAccount.name
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Whether the operator should disable its default set of TopologySpreadConstraints.
+          Defaults to false.
+        displayName: Disable Operator Defaults
+        path: topologySpreadConstraints.disableOperatorDefaults
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Version of the application.
         displayName: Application Version
         path: applicationVersion
@@ -370,6 +376,9 @@ spec:
         path: disableServiceLinks
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: DNS settings for the pod.
+        displayName: DNS
+        path: dns
       - description: The directory inside the container where this persisted storage
           will be bound to.
         displayName: Storage Mount Path
