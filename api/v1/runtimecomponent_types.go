@@ -149,6 +149,21 @@ type RuntimeComponentSpec struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Topology Spread Constraints"
 	TopologySpreadConstraints *RuntimeComponentTopologySpreadConstraints `json:"topologySpreadConstraints,omitempty"`
+
+	// DNS settings for the pod.
+	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="DNS"
+	DNS *RuntimeComponentDNS `json:"dns,omitempty"`
+}
+
+// Defines the DNS
+type RuntimeComponentDNS struct {
+	// The DNS Policy for the application pod.
+	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="DNS Policy"
+	DNSPolicy *corev1.DNSPolicy `json:"policy,omitempty"`
+
+	// The DNS Config for the application pod.
+	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="DNS Config"
+	PodDNSConfig *corev1.PodDNSConfig `json:"config,omitempty"`
 }
 
 // Defines the topology spread constraints
@@ -158,7 +173,7 @@ type RuntimeComponentTopologySpreadConstraints struct {
 	Constraints *[]corev1.TopologySpreadConstraint `json:"constraints,omitempty"`
 
 	// Whether the operator should disable its default set of TopologySpreadConstraints. Defaults to false.
-	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Disable Operator Defaults",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="Disable Operator Defaults",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	DisableOperatorDefaults *bool `json:"disableOperatorDefaults,omitempty"`
 }
 
@@ -937,6 +952,21 @@ func (cr *RuntimeComponent) GetTopologySpreadConstraints() common.BaseComponentT
 		return nil
 	}
 	return cr.Spec.TopologySpreadConstraints
+}
+
+func (cr *RuntimeComponent) GetDNS() common.BaseComponentDNS {
+	if cr.Spec.DNS == nil {
+		return nil
+	}
+	return cr.Spec.DNS
+}
+
+func (d *RuntimeComponentDNS) GetPolicy() *corev1.DNSPolicy {
+	return d.DNSPolicy
+}
+
+func (d *RuntimeComponentDNS) GetConfig() *corev1.PodDNSConfig {
+	return d.PodDNSConfig
 }
 
 func (cr *RuntimeComponentTopologySpreadConstraints) GetConstraints() *[]corev1.TopologySpreadConstraint {

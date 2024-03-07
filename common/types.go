@@ -195,6 +195,11 @@ type BaseComponentTopologySpreadConstraints interface {
 	GetDisableOperatorDefaults() *bool
 }
 
+type BaseComponentDNS interface {
+	GetPolicy() *corev1.DNSPolicy
+	GetConfig() *corev1.PodDNSConfig
+}
+
 // BaseComponent represents basic kubernetes application
 type BaseComponent interface {
 	GetApplicationImage() string
@@ -230,4 +235,5 @@ type BaseComponent interface {
 	GetTopologySpreadConstraints() BaseComponentTopologySpreadConstraints
 	GetSecurityContext() *corev1.SecurityContext
 	GetManageTLS() *bool
+	GetDNS() BaseComponentDNS
 }
