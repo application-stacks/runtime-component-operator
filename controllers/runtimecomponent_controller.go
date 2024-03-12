@@ -432,27 +432,24 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	} else if ok {
 		if instance.Spec.Expose != nil && *instance.Spec.Expose {
-			if ba.GetRoute() == nil || ba.GetRoute().GetHost() == "" {
-				reqLogger.Info("Host is not set, need to think about deleting the route")
-				// The host in the route is not set or the route is not set
-				// If the host was previously set to a value, delete the existing
-				// route so that a new route will be created with the default host
-				rh := ba.GetStatus().GetReferences()[common.StatusReferenceRouteHost]
-				if rh != "" {
-					reqLogger.Info("The host reference was set to " + rh + " so need to delete route")
-					// Should we check for the existence of a route before deleting?
-					// The DeleteResource method swallows a 'not found' error, so maybe not
+
+			// If a custome hostname was previously set, but is now not set, any previous
+			// route needs to be deleted, as the host in a route cannot be unset
+			// and the default generated hostman is difficult to manually recreate
+			rh := ba.GetStatus().GetReferences()[common.StatusReferenceRouteHost]
+			if rh != "" {
+				// The host was previously set.
+				// If the host is now empty, delete the old route
+				rt := ba.GetRoute()
+				if rt == nil || (rt.GetHost() == "" && common.Config[common.OpConfigDefaultHostname] == "") {
+					reqLogger.Info("Custom hostname has been removed from route, deleting and recreating the route")
 					route := &routev1.Route{ObjectMeta: defaultMeta}
 					err = r.DeleteResource(route)
 					if err != nil {
 						reqLogger.Error(err, "Failed to delete Route")
 						return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 					}
-				} else {
-					reqLogger.Info("The host reference was not set, dont delete route")
 				}
-			} else {
-				reqLogger.Info("Host is set, leave any existing route object as is")
 			}
 
 			route := &routev1.Route{ObjectMeta: defaultMeta}
