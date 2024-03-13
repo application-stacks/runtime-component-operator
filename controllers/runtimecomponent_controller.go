@@ -644,7 +644,7 @@ func getMonitoringEnabledLabelName(ba common.BaseComponent) string {
 
 // If a custome hostname was previously set, but is now not set, any previous
 // route needs to be deleted, as the host in a route cannot be unset
-// and the default generated hostman is difficult to manually recreate
+// and the default generated hostname is difficult to manually recreate
 func shouldDeleteRoute(ba common.BaseComponent) bool {
 	rh := ba.GetStatus().GetReferences()[common.StatusReferenceRouteHost]
 	if rh != "" {
