@@ -515,6 +515,21 @@ func TestCustomizeKnativeService(t *testing.T) {
 	ksvcSPPort := ksvc.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet.Port
 	ksvcSPTCP := ksvc.Spec.Template.Spec.Containers[0].StartupProbe.TCPSocket.Port
 	ksvcLabelNoExpose := ksvc.Labels["serving.knative.dev/visibility"]
+	ksvcMount := ksvc.Spec.Template.Spec.AutomountServiceAccountToken
+
+	mt := false
+	rcsa := appstacksv1.RuntimeComponentServiceAccount{MountToken: &mt}
+	spec.ServiceAccount = &rcsa
+	ksvc, runtime = &servingv1.Service{}, createRuntimeComponent(name, namespace, spec)
+	CustomizeKnativeService(ksvc, runtime)
+	ksvcNoMount := ksvc.Spec.Template.Spec.AutomountServiceAccountToken
+
+	mt = true
+	rcsa.MountToken = &mt 
+	ksvc, runtime = &servingv1.Service{}, createRuntimeComponent(name, namespace, spec)
+	CustomizeKnativeService(ksvc, runtime)
+	ksvcTrueMount := ksvc.Spec.Template.Spec.AutomountServiceAccountToken
+
 
 	spec = appstacksv1.RuntimeComponentSpec{
 		ApplicationImage:   appImage,
@@ -536,6 +551,7 @@ func TestCustomizeKnativeService(t *testing.T) {
 	CustomizeKnativeService(ksvc, runtime)
 	ksvcLabelFalseExpose := ksvc.Labels["serving.knative.dev/visibility"]
 
+	var bnil *bool = nil
 	testCKS := []Test{
 		{"ksvc container ports", 1, ksvcNumPorts},
 		{"ksvc ServiceAccountName is nil", name, ksvcSAN},
@@ -549,6 +565,9 @@ func TestCustomizeKnativeService(t *testing.T) {
 		{"expose not set", "cluster-local", ksvcLabelNoExpose},
 		{"expose set to true", "", ksvcLabelTrueExpose},
 		{"expose set to false", "cluster-local", ksvcLabelFalseExpose},
+		{"mountToken should be nil", bnil, ksvcMount},
+		{"mountToken should be false", false, *ksvcNoMount},
+		{"mountToken should be nil", bnil, ksvcTrueMount},
 	}
 	verifyTests(testCKS, t)
 }

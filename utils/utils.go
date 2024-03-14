@@ -972,6 +972,15 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 			ksvc.Spec.Template.Spec.Containers[0].StartupProbe.TCPSocket.Port = intstr.IntOrString{}
 		}
 	}
+
+	basa := ba.GetServiceAccount()
+	if basa != nil && basa.GetMountToken() != nil && !*basa.GetMountToken() {
+		// not nil and set to false
+		mount := false
+		ksvc.Spec.Template.Spec.AutomountServiceAccountToken = &mount
+	} else {
+		ksvc.Spec.Template.Spec.AutomountServiceAccountToken = nil
+	}
 }
 
 // CustomizeHPA ...
