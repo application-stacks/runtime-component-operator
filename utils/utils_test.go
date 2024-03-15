@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/application-stacks/runtime-component-operator/common"
 	routev1 "github.com/openshift/api/route/v1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -525,11 +526,10 @@ func TestCustomizeKnativeService(t *testing.T) {
 	ksvcNoMount := ksvc.Spec.Template.Spec.AutomountServiceAccountToken
 
 	mt = true
-	rcsa.MountToken = &mt 
+	rcsa.MountToken = &mt
 	ksvc, runtime = &servingv1.Service{}, createRuntimeComponent(name, namespace, spec)
 	CustomizeKnativeService(ksvc, runtime)
 	ksvcTrueMount := ksvc.Spec.Template.Spec.AutomountServiceAccountToken
-
 
 	spec = appstacksv1.RuntimeComponentSpec{
 		ApplicationImage:   appImage,
@@ -745,6 +745,62 @@ func TestGetWatchNamespaces(t *testing.T) {
 		{"error", nil, err},
 	}
 	verifyTests(configMapConstTests, t)
+}
+
+func TestShouldDeleteRoute(t *testing.T) {
+	logger := zap.New()
+	logf.SetLogger(logger)
+	spec := appstacksv1.RuntimeComponentSpec{}
+	runtime := createRuntimeComponent(name, namespace, spec)
+	defaultCase := ShouldDeleteRoute(runtime)
+
+	// Host exists in spec, no previous host
+	runtime.Spec.Route = &appstacksv1.RuntimeComponentRoute{
+		Host: "new.host",
+	}
+	noPrevious := ShouldDeleteRoute(runtime)
+
+	// There was previously a hostname, there still is
+	runtime.GetStatus().SetReference(common.StatusReferenceRouteHost, "old.host")
+	runtime.Spec.Route = &appstacksv1.RuntimeComponentRoute{
+		Host: "new.host",
+	}
+	dontDeleteHost := ShouldDeleteRoute(runtime)
+
+	// There was previously a hostname, now there is not
+	runtime.Spec.Route = nil
+	previousHostExisted := ShouldDeleteRoute(runtime)
+
+	// When there is a defaultHost in config.
+	// This should be ignored as the route is nil
+	common.Config[common.OpConfigDefaultHostname] = "default.host"
+	noPreviousWithDefault := ShouldDeleteRoute(runtime)
+
+	// If the route object exists with no host,
+	// default host is set in config
+	// a previous host existed
+	// we shouldn't delete
+	runtime.Spec.Route = &appstacksv1.RuntimeComponentRoute{
+		Path: "dummy/path",
+	}
+	previousWasDefault := ShouldDeleteRoute(runtime)
+
+	// No previous, but default set
+	// No previous so shouldn't delete regardless
+	runtime.GetStatus().SetReferences(nil)
+	noPreviousWithDefaultAndRoute := ShouldDeleteRoute(runtime)
+
+	testCR := []Test{
+		{test: "default case", expected: false, actual: defaultCase},
+		{test: "host is set in spec, no previous host", expected: false, actual: noPrevious},
+		{test: "host is set in spec", expected: false, actual: dontDeleteHost},
+		{test: "previous host existed", expected: true, actual: previousHostExisted},
+		{test: "previous host existed, only default host set", expected: true, actual: noPreviousWithDefault},
+		{test: "previous host existed, default host set and route set", expected: false, actual: previousWasDefault},
+		{test: "no previous, default host set and route set", expected: false, actual: noPreviousWithDefaultAndRoute},
+	}
+
+	verifyTests(testCR, t)
 }
 
 // Helper Functions
