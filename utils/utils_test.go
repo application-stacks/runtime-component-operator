@@ -692,7 +692,6 @@ func TestGetCondition(t *testing.T) {
 	verifyTests(testGC, t)
 }
 
-/*
 func TestSetCondition(t *testing.T) {
 	logger := zap.New()
 	logf.SetLogger(logger)
@@ -709,7 +708,6 @@ func TestSetCondition(t *testing.T) {
 	testSC := []Test{{"Set status condition", condition.Status, status.Conditions[0].Status}}
 	verifyTests(testSC, t)
 }
-*/
 
 func TestGetWatchNamespaces(t *testing.T) {
 	// Set the logger to development mode for verbose logs

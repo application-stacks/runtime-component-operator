@@ -190,13 +190,7 @@ func addStatusWarnings(ba common.BaseComponent) {
 		statusCondition.SetStatus(status)
 		s.SetCondition(statusCondition)
 	} else {
-		//status := corev1.ConditionFalse
 		statusCondition := s.NewCondition(common.StatusConditionTypeWarning)
-		//statusCondition.SetReason("")
-		//statusCondition.SetMessage("Nothing to see")
-		//statusCondition.SetStatus(status)
-		//s.SetCondition(statusCondition)
-
 		s.UnsetCondition(statusCondition)
 	}
 
