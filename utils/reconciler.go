@@ -180,15 +180,16 @@ func addStatusWarnings(ba common.BaseComponent) {
 	s := ba.GetStatus()
 
 	mtls := ba.GetManageTLS()
-	port := ba.GetService().GetPort()
-	if (mtls == nil || *mtls == true) && port == 9080 {
-		status := corev1.ConditionTrue
-		msg := "ManageTLS is true but port is set to 9080"
-		statusCondition := s.NewCondition(common.StatusConditionTypeWarning)
-		statusCondition.SetReason("")
-		statusCondition.SetMessage(msg)
-		statusCondition.SetStatus(status)
-		s.SetCondition(statusCondition)
+	if mtls == nil || *mtls == true {
+		if svc := ba.GetService(); svc != nil && svc.GetPort() == 9080 {
+			status := corev1.ConditionTrue
+			msg := "ManageTLS is true but port is set to 9080"
+			statusCondition := s.NewCondition(common.StatusConditionTypeWarning)
+			statusCondition.SetReason("")
+			statusCondition.SetMessage(msg)
+			statusCondition.SetStatus(status)
+			s.SetCondition(statusCondition)
+		}
 	} else {
 		statusCondition := s.NewCondition(common.StatusConditionTypeWarning)
 		s.UnsetCondition(statusCondition)
