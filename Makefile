@@ -346,7 +346,7 @@ build-catalog-pipeline: opm ## Build a catalog image.
 
 test-pipeline-e2e:
 	./operators/scripts/test/e2e-ocp.sh --cluster-url "${CLUSTER_URL}" --cluster-user "${CLUSTER_USER}" --cluster-token "${CLUSTER_TOKEN}" \
-                                            --test-tag "${BUILD_NUMBER}" --install-mode "${INSTALL_MODE}" \
+                                            --test-tag "${BUILD_NUMBER}" --install-mode "${INSTALL_MODE}" --channel "${DEFAULT_CHANNEL}" \
                                             --architecture "${ARCHITECTURE}" --digest "${DIGEST}" --version "${VERSION}"
 
 bundle-build-podman:
