@@ -808,6 +808,7 @@ spec:
   - email: leojc@ca.ibm.com
     name: Leo Christy Jesuraj
   maturity: stable
+  minKubeVersion: 1.21.0
   provider:
     name: Community
   version: 0.0.0

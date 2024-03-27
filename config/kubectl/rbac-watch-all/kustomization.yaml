@@ -14,59 +14,59 @@ patches:
 - path: patches/delete-service-account.yaml
   target:
     kind: ServiceAccount
+- target:
+    namespace: runtime-component-operator
+    name: .*
+  patch: |-
+    - op: remove
+      path: /metadata/namespace
+- target:
+    kind: Role
+    name: .*
+  patch: |-
+    - op: replace
+      path: /kind
+      value: ClusterRole
+- target:
+    kind: RoleBinding
+    name: .*
+  patch: |-
+    - op: replace
+      path: /kind
+      value: ClusterRoleBinding
+- target:
+    kind: ClusterRoleBinding
+    name: .*
+  patch: |-
+    - op: replace
+      path: /subjects/0/name
+      value: rco-controller-manager
+    - op: replace
+      path: /subjects/0/namespace
+      value: RUNTIME_COMPONENT_OPERATOR_NAMESPACE
+    - op: replace
+      path: /roleRef/kind
+      value: ClusterRole
+- target:
+    kind: ClusterRoleBinding
+    name: rco-cluster-leader-election-rolebinding
+  patch: |-
+    - op: replace
+      path: /roleRef/name
+      value: rco-cluster-leader-election-role
+- target:
+    kind: ClusterRoleBinding
+    name: rco-cluster-manager-rolebinding
+  patch: |-
+    - op: replace
+      path: /roleRef/name
+      value: rco-cluster-manager-role
 
 patchesJson6902:
-  - target:
-      namespace: runtime-component-operator
-      name: .*
-    patch: |-
-      - op: remove
-        path: /metadata/namespace
-  - target:
-      kind: Role
-      name: .*
-    patch: |-
-      - op: replace
-        path: /kind
-        value: ClusterRole
-  - target:
-      kind: RoleBinding
-      name: .*
-    patch: |-
-      - op: replace
-        path: /kind
-        value: ClusterRoleBinding
-  - target:
-      kind: ClusterRoleBinding
-      name: .*
-    patch: |-
-      - op: replace
-        path: /subjects/0/name
-        value: rco-controller-manager
-      - op: replace
-        path: /subjects/0/namespace
-        value: RUNTIME_COMPONENT_OPERATOR_NAMESPACE
-      - op: replace
-        path: /roleRef/kind
-        value: ClusterRole
-  - target:
-      kind: ClusterRoleBinding
-      name: rco-cluster-leader-election-rolebinding
-    patch: |-
-      - op: replace
-        path: /roleRef/name
-        value: rco-cluster-leader-election-role
-  - target:
-      kind: ClusterRoleBinding
-      name: rco-cluster-manager-rolebinding
-    patch: |-
-      - op: replace
-        path: /roleRef/name
-        value: rco-cluster-manager-role
-  - target:
-      kind: ClusterRole
-      name: rco-cluster-manager-role
-    patch: |-
-      - op: add
-        path: /rules/-
-        value: {"apiGroups":[""],"resources":["namespaces"],"verbs":["get","list","watch"]}
+- target:
+    kind: ClusterRole
+    name: rco-cluster-manager-role
+  patch: |-
+    - op: add
+      path: /rules/-
+      value: {"apiGroups":[""],"resources":["namespaces"],"verbs":["get","list","watch"]}

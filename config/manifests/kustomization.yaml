@@ -5,9 +5,8 @@ resources:
 - ../default
 - ../samples
 - ../scorecard
-patchesStrategicMerge:
-- patches/csvAnnotations.yaml
 patches:
+- path: patches/csvAnnotations.yaml
 - path: serviceBindingPatch.yaml
   target:
     kind: ClusterServiceVersion
@@ -27,7 +26,7 @@ patches:
 # [WEBHOOK] To enable webhooks, uncomment all the sections with [WEBHOOK] prefix.
 # Do NOT uncomment sections with prefix [CERTMANAGER], as OLM does not support cert-manager.
 # These patches remove the unnecessary "cert" volume and its manager container volumeMount.
-#patchesJson6902:
+#patches:
 #- target:
 #    group: apps
 #    version: v1

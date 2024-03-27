@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
-	"github.com/application-stacks/runtime-component-operator/controllers"
+	"github.com/application-stacks/runtime-component-operator/internal/controller"
 	"github.com/application-stacks/runtime-component-operator/utils"
 	certmanagerv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	imagev1 "github.com/openshift/api/image/v1"

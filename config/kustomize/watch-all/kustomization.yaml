@@ -12,82 +12,80 @@ patches:
 - path: patches/delete-service-account.yaml
   target:
     kind: ServiceAccount
-
-patchesJson6902:
-  - target:
-      namespace: runtime-component-operator
-      name: .*
-    patch: |-
-      - op: remove
-        path: /metadata/namespace
-  - target:
-      kind: Role
-      name: .*
-    patch: |-
-      - op: replace
-        path: /kind
-        value: ClusterRole
-  - target:
-      kind: RoleBinding
-      name: .*
-    patch: |-
-      - op: replace
-        path: /kind
-        value: ClusterRoleBinding
-  - target:
-      kind: ClusterRoleBinding
-      name: .*
-    patch: |-
-      - op: replace
-        path: /subjects/0/name
-        value: rco-controller-manager
-      - op: replace
-        path: /subjects/0/namespace
-        value: RUNTIME_COMPONENT_OPERATOR_NAMESPACE
-      - op: replace
-        path: /roleRef/kind
-        value: ClusterRole
-  - target:
-      kind: ClusterRoleBinding
-      name: leader-election-rolebinding
-    patch: |-
-      - op: replace
-        path: /roleRef/name
-        value: rco-leader-election-cluster-role
-      - op: replace
-        path: /metadata/name
-        value: rco-leader-election-cluster-rolebinding
-  - target:
-      kind: ClusterRoleBinding
-      name: manager-rolebinding
-    patch: |-
-      - op: replace
-        path: /metadata/name
-        value: rco-manager-cluster-rolebinding
-      - op: replace
-        path: /roleRef/name
-        value: rco-manager-cluster-role
-  - target:
-      kind: ClusterRole
-      name: manager-role
-    patch: |-
-      - op: replace
-        path: /metadata/name
-        value: rco-manager-cluster-role
-      - op: add
-        path: /rules/-
-        value: {"apiGroups":[""],"resources":["namespaces"],"verbs":["get","list","watch"]}
-  - target:
-      kind: ClusterRoleBinding
-      name: .*
-    patch: |-
-      - op: replace
-        path: /subjects/0/namespace
-        value: runtime-component
-  - target:
-      kind: ClusterRole
-      name: leader-election-role
-    patch: |-
-      - op: replace
-        path: /metadata/name
-        value: rco-leader-election-cluster-role
+- target:
+    namespace: runtime-component-operator
+    name: .*
+  patch: |-
+    - op: remove
+      path: /metadata/namespace
+- target:
+    kind: Role
+    name: .*
+  patch: |-
+    - op: replace
+      path: /kind
+      value: ClusterRole
+- target:
+    kind: RoleBinding
+    name: .*
+  patch: |-
+    - op: replace
+      path: /kind
+      value: ClusterRoleBinding
+- target:
+    kind: ClusterRoleBinding
+    name: .*
+  patch: |-
+    - op: replace
+      path: /subjects/0/name
+      value: rco-controller-manager
+    - op: replace
+      path: /subjects/0/namespace
+      value: RUNTIME_COMPONENT_OPERATOR_NAMESPACE
+    - op: replace
+      path: /roleRef/kind
+      value: ClusterRole
+- target:
+    kind: ClusterRoleBinding
+    name: leader-election-rolebinding
+  patch: |-
+    - op: replace
+      path: /roleRef/name
+      value: rco-leader-election-cluster-role
+    - op: replace
+      path: /metadata/name
+      value: rco-leader-election-cluster-rolebinding
+- target:
+    kind: ClusterRoleBinding
+    name: manager-rolebinding
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: rco-manager-cluster-rolebinding
+    - op: replace
+      path: /roleRef/name
+      value: rco-manager-cluster-role
+- target:
+    kind: ClusterRole
+    name: manager-role
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: rco-manager-cluster-role
+    - op: add
+      path: /rules/-
+      value: {"apiGroups":[""],"resources":["namespaces"],"verbs":["get","list","watch"]}
+- target:
+    kind: ClusterRoleBinding
+    name: .*
+  patch: |-
+    - op: replace
+      path: /subjects/0/namespace
+      value: runtime-component
+- target:
+    kind: ClusterRole
+    name: leader-election-role
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: rco-leader-election-cluster-role
