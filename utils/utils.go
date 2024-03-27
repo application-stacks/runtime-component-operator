@@ -29,7 +29,7 @@ import (
 	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -328,6 +328,15 @@ func customizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 	}
 
 	return probe
+}
+
+// IsAutoscalingV2Supported returns true if the cluster supports autoscaling/v2
+func (r *ReconcilerBase) IsAutoscalingV2Supported() bool {
+	isSupported, err := r.IsGroupVersionSupported(autoscalingv2.SchemeGroupVersion.String(), "HorizontalPodAutoscaler")
+	if err != nil {
+		return false
+	}
+	return isSupported
 }
 
 // CustomizeNetworkPolicy configures the network policy.
@@ -983,8 +992,55 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	}
 }
 
-// CustomizeHPA ...
-func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseComponent) {
+// CustomizeHPA for autoscaling/v2
+func CustomizeHPA(hpa *autoscalingv2.HorizontalPodAutoscaler, ba common.BaseComponent) {
+	obj := ba.(metav1.Object)
+	hpa.Labels = ba.GetLabels()
+	hpa.Annotations = MergeMaps(hpa.Annotations, ba.GetAnnotations())
+
+	hpa.Spec.MaxReplicas = ba.GetAutoscaling().GetMaxReplicas()
+	hpa.Spec.MinReplicas = ba.GetAutoscaling().GetMinReplicas()
+	hpa.Spec.Behavior = ba.GetAutoscaling().GetHorizontalPodAutoscalerBehavior()
+
+	metricsList := ba.GetAutoscaling().GetMetrics()
+
+	cpuPer := ba.GetAutoscaling().GetTargetCPUUtilizationPercentage()
+	if cpuPer != nil {
+		metricSpec := autoscalingv2.MetricSpec{
+			Type: autoscalingv2.ResourceMetricSourceType,
+			Resource: &autoscalingv2.ResourceMetricSource{
+				Name:   corev1.ResourceCPU,
+				Target: autoscalingv2.MetricTarget{Type: autoscalingv2.UtilizationMetricType, AverageUtilization: cpuPer},
+			},
+		}
+		metricsList = append(metricsList, metricSpec)
+	}
+
+	memPer := ba.GetAutoscaling().GetTargetMemoryUtilizationPercentage()
+	if memPer != nil {
+		metricSpec := autoscalingv2.MetricSpec{
+			Type: autoscalingv2.ResourceMetricSourceType,
+			Resource: &autoscalingv2.ResourceMetricSource{
+				Name:   corev1.ResourceMemory,
+				Target: autoscalingv2.MetricTarget{Type: autoscalingv2.UtilizationMetricType, AverageUtilization: memPer},
+			},
+		}
+		metricsList = append(metricsList, metricSpec)
+	}
+
+	hpa.Spec.Metrics = metricsList
+	hpa.Spec.ScaleTargetRef.Name = obj.GetName()
+	hpa.Spec.ScaleTargetRef.APIVersion = "apps/v1"
+
+	if ba.GetStatefulSet() != nil {
+		hpa.Spec.ScaleTargetRef.Kind = "StatefulSet"
+	} else {
+		hpa.Spec.ScaleTargetRef.Kind = "Deployment"
+	}
+}
+
+// CustomizeHPAv1 for autoscaling/v1
+func CustomizeHPAv1(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	hpa.Labels = ba.GetLabels()
 	hpa.Annotations = MergeMaps(hpa.Annotations, ba.GetAnnotations())

@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/application-stacks/runtime-component-operator/common"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	routev1 "github.com/openshift/api/route/v1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -225,6 +226,16 @@ type RuntimeComponentAutoScaling struct {
 	// Target average CPU utilization, represented as a percentage of requested CPU, over all the pods.
 	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Target CPU Utilization Percentage",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
 	TargetCPUUtilizationPercentage *int32 `json:"targetCPUUtilizationPercentage,omitempty"`
+
+	// Target average Memory utilization, represented as a percentage of requested memory, over all the pods.
+	// +operator-sdk:csv:customresourcedefinitions:order=4,type=spec,displayName="Target Memory Utilization Percentage",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
+	TargetMemoryUtilizationPercentage *int32 `json:"targetMemoryUtilizationPercentage,omitempty"`
+
+	// Specifications used for replica count calculation
+	Metrics []autoscalingv2.MetricSpec `json:"metrics,omitempty"`
+
+	// Scaling behavior of the target. If not set, the default HPAScalingRules for scale up and scale down are used.
+	Behavior *autoscalingv2.HorizontalPodAutoscalerBehavior `json:"behavior,omitempty"`
 }
 
 // Configures parameters for the network service of pods.
@@ -760,6 +771,21 @@ func (a *RuntimeComponentAutoScaling) GetMaxReplicas() int32 {
 // GetTargetCPUUtilizationPercentage returns target cpu usage
 func (a *RuntimeComponentAutoScaling) GetTargetCPUUtilizationPercentage() *int32 {
 	return a.TargetCPUUtilizationPercentage
+}
+
+// GetTargetMemoryUtilizationPercentage returns target memory usage
+func (a *RuntimeComponentAutoScaling) GetTargetMemoryUtilizationPercentage() *int32 {
+	return a.TargetMemoryUtilizationPercentage
+}
+
+// GetMetrics returns metrics for resource utilization
+func (a *RuntimeComponentAutoScaling) GetMetrics() []autoscalingv2.MetricSpec {
+	return a.Metrics
+}
+
+// GetHorizontalPodAutoscalerBehavior returns behavior configures the scaling behavior of the target
+func (a *RuntimeComponentAutoScaling) GetHorizontalPodAutoscalerBehavior() *autoscalingv2.HorizontalPodAutoscalerBehavior {
+	return a.Behavior
 }
 
 // GetSize returns persistent volume size
