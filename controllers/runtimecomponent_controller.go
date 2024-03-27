@@ -636,8 +636,8 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	} else {
 		b = b.Owns(&autoscalingv1.HorizontalPodAutoscaler{}, builder.WithPredicates(predSubResource))
 	}
-	
-	ok, _ := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route")
+
+	ok, _ = r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route")
 	if ok {
 		b = b.Owns(&routev1.Route{}, builder.WithPredicates(predSubResource))
 	}

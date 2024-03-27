@@ -1,17 +1,18 @@
 package utils
 
 import (
-	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	"os"
 	"reflect"
 	"strconv"
 	"testing"
 
+	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
+
 	"github.com/application-stacks/runtime-component-operator/common"
 	routev1 "github.com/openshift/api/route/v1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv2 "k8s.io/api/autoscaling/v2"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -25,16 +26,15 @@ import (
 )
 
 var (
-	name               = "my-app"
-	namespace          = "runtime"
-	stack              = "java-microprofile"
-	appImage           = "my-image"
-	replicas     int32 = 2
-	expose             = true
-	createKNS          = true
-	targetCPUPer int32 = 30
-	targetPort   int32 = 3333
-	nodePort     int32 = 3011
+	name                  = "my-app"
+	namespace             = "runtime"
+	stack                 = "java-microprofile"
+	appImage              = "my-image"
+	replicas        int32 = 2
+	expose                = true
+	createKNS             = true
+	targetPort      int32 = 3333
+	nodePort        int32 = 3011
 	targetCPUPer    int32 = 30
 	targetMemoryPer int32 = 20
 	targetValue           = &resource.Quantity{Format: "1k"}
@@ -592,7 +592,6 @@ func TestCustomizeHPA(t *testing.T) {
 	spec := appstacksv1.RuntimeComponentSpec{Autoscaling: autoscaling}
 	hpav1, runtime := &autoscalingv1.HorizontalPodAutoscaler{}, createRuntimeComponent(name, namespace, spec)
 	CustomizeHPAv1(hpav1, runtime)
-	nilSTRKind := hpa.Spec.ScaleTargetRef.Kind
 
 	runtimeStatefulSet := &appstacksv1.RuntimeComponentStatefulSet{Storage: &storage}
 	hpav2 := &autoscalingv2.HorizontalPodAutoscaler{}
