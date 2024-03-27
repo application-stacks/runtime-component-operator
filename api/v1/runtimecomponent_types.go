@@ -1146,12 +1146,12 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 func (s *RuntimeComponentStatus) UnsetCondition(c common.StatusCondition) {
 	for i := range s.Conditions {
 		if s.Conditions[i].GetType() == c.GetType() {
-			//status.Conditions[i] = condition
+			// Found the condition to remove
 			if i+1 == len(s.Conditions) {
-				// this is the last element, just trim one off
+				// the match is the last element, can just shorten by one
 				s.Conditions = s.Conditions[:i]
 			} else {
-				// there are more elements
+				// there are more elements after the match.
 				s.Conditions = append(s.Conditions[:i], s.Conditions[i+1])
 			}
 			return

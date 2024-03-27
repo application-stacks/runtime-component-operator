@@ -180,17 +180,18 @@ func addStatusWarnings(ba common.BaseComponent) {
 	s := ba.GetStatus()
 
 	mtls := ba.GetManageTLS()
-	if mtls == nil || *mtls == true {
-		if svc := ba.GetService(); svc != nil && svc.GetPort() == 9080 {
-			status := corev1.ConditionTrue
-			msg := "ManageTLS is true but port is set to 9080"
-			statusCondition := s.NewCondition(common.StatusConditionTypeWarning)
-			statusCondition.SetReason("")
-			statusCondition.SetMessage(msg)
-			statusCondition.SetStatus(status)
-			s.SetCondition(statusCondition)
-		}
+	svc := ba.GetService()
+	if (mtls == nil || *mtls == true) && svc != nil && svc.GetPort() == 9080 {
+		status := corev1.ConditionTrue
+		msg := "ManageTLS is true but port is set to 9080"
+		statusCondition := s.NewCondition(common.StatusConditionTypeWarning)
+		statusCondition.SetReason("")
+		statusCondition.SetMessage(msg)
+		statusCondition.SetStatus(status)
+		s.SetCondition(statusCondition)
 	} else {
+		// The warning condition may previously have been set, but is now not needed.
+		// Removing the warning is clearer than have a warning condition set to 'false'
 		statusCondition := s.NewCondition(common.StatusConditionTypeWarning)
 		s.UnsetCondition(statusCondition)
 	}

@@ -946,7 +946,7 @@ func (s *RuntimeComponentStatus) GetCondition(t common.StatusConditionType) comm
 	return nil
 }
 func (s *RuntimeComponentStatus) UnsetCondition(c common.StatusCondition) {
-	// TODO dummy
+	// Intentional dummy
 	return
 }
 
