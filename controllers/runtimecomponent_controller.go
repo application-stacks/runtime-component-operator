@@ -45,6 +45,7 @@ import (
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -238,9 +239,16 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			&corev1.Service{ObjectMeta: metav1.ObjectMeta{Name: instance.Name + "-headless", Namespace: instance.Namespace}},
 			&appsv1.Deployment{ObjectMeta: defaultMeta},
 			&appsv1.StatefulSet{ObjectMeta: defaultMeta},
-			&autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta},
+			&autoscalingv2.HorizontalPodAutoscaler{ObjectMeta: defaultMeta},
 			&networkingv1.NetworkPolicy{ObjectMeta: defaultMeta},
 		}
+
+		if r.IsAutoscalingV2Supported() {
+			resources = append(resources, &autoscalingv2.HorizontalPodAutoscaler{ObjectMeta: defaultMeta})
+		} else {
+			resources = append(resources, &autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta})
+		}
+
 		err = r.DeleteResources(resources)
 		if err != nil {
 			reqLogger.Error(err, "Failed to clean up non-Knative resources")
@@ -408,19 +416,32 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	if instance.Spec.Autoscaling != nil {
-		hpa := &autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta}
-		err = r.CreateOrUpdate(hpa, instance, func() error {
-			appstacksutils.CustomizeHPA(hpa, instance)
-			return nil
-		})
+		if r.IsAutoscalingV2Supported() {
+			hpa := &autoscalingv2.HorizontalPodAutoscaler{ObjectMeta: defaultMeta}
+			err = r.CreateOrUpdate(hpa, instance, func() error {
+				appstacksutils.CustomizeHPA(hpa, instance)
+				return nil
+			})
+		} else {
+			hpa := &autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta}
+			err = r.CreateOrUpdate(hpa, instance, func() error {
+				appstacksutils.CustomizeHPAv1(hpa, instance)
+				return nil
+			})
+		}
 
 		if err != nil {
 			reqLogger.Error(err, "Failed to reconcile HorizontalPodAutoscaler")
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		}
 	} else {
-		hpa := &autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta}
-		err = r.DeleteResource(hpa)
+		if r.IsAutoscalingV2Supported() {
+			hpa := &autoscalingv2.HorizontalPodAutoscaler{ObjectMeta: defaultMeta}
+			err = r.DeleteResource(hpa)
+		} else {
+			hpa := &autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta}
+			err = r.DeleteResource(hpa)
+		}
 		if err != nil {
 			reqLogger.Error(err, "Failed to delete HorizontalPodAutoscaler")
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
@@ -607,10 +628,16 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.Service{}, builder.WithPredicates(predSubResource)).
 		Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource)).
 		Owns(&appsv1.Deployment{}, builder.WithPredicates(predSubResWithGenCheck)).
-		Owns(&appsv1.StatefulSet{}, builder.WithPredicates(predSubResWithGenCheck)).
-		Owns(&autoscalingv1.HorizontalPodAutoscaler{}, builder.WithPredicates(predSubResource))
+		Owns(&appsv1.StatefulSet{}, builder.WithPredicates(predSubResWithGenCheck))
 
-	ok, _ := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route")
+	ok, _ := r.IsGroupVersionSupported(autoscalingv2.SchemeGroupVersion.String(), "HorizontalPodAutoscaler")
+	if ok {
+		b = b.Owns(&autoscalingv2.HorizontalPodAutoscaler{}, builder.WithPredicates(predSubResource))
+	} else {
+		b = b.Owns(&autoscalingv1.HorizontalPodAutoscaler{}, builder.WithPredicates(predSubResource))
+	}
+
+	ok, _ = r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route")
 	if ok {
 		b = b.Owns(&routev1.Route{}, builder.WithPredicates(predSubResource))
 	}
