@@ -432,6 +432,16 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	} else if ok {
 		if instance.Spec.Expose != nil && *instance.Spec.Expose {
+			if appstacksutils.ShouldDeleteRoute(ba) {
+				reqLogger.Info("Custom hostname has been removed from route, deleting and recreating the route")
+				route := &routev1.Route{ObjectMeta: defaultMeta}
+				err = r.DeleteResource(route)
+				if err != nil {
+					reqLogger.Error(err, "Failed to delete Route")
+					return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+				}
+			}
+
 			route := &routev1.Route{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(route, instance, func() error {
 				key, cert, caCert, destCACert, err := r.GetRouteTLSValues(ba)

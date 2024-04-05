@@ -121,6 +121,7 @@ func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, c
 		if host == "" && common.Config[common.OpConfigDefaultHostname] != "" {
 			host = obj.GetName() + "-" + obj.GetNamespace() + "." + common.Config[common.OpConfigDefaultHostname]
 		}
+		ba.GetStatus().SetReference(common.StatusReferenceRouteHost, host)
 		route.Spec.Host = host
 		route.Spec.Path = rt.GetPath()
 		if ba.GetRoute().GetTermination() != nil {
@@ -972,6 +973,15 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 		if ksvc.Spec.Template.Spec.Containers[0].StartupProbe.TCPSocket != nil {
 			ksvc.Spec.Template.Spec.Containers[0].StartupProbe.TCPSocket.Port = intstr.IntOrString{}
 		}
+	}
+
+	basa := ba.GetServiceAccount()
+	if basa != nil && basa.GetMountToken() != nil && !*basa.GetMountToken() {
+		// not nil and set to false
+		mount := false
+		ksvc.Spec.Template.Spec.AutomountServiceAccountToken = &mount
+	} else {
+		ksvc.Spec.Template.Spec.AutomountServiceAccountToken = nil
 	}
 }
 
@@ -1849,4 +1859,20 @@ func GetServiceAccountName(ba common.BaseComponent) string {
 	}
 
 	return name
+}
+
+// If a custome hostname was previously set, but is now not set, any previous
+// route needs to be deleted, as the host in a route cannot be unset
+// and the default generated hostname is difficult to manually recreate
+func ShouldDeleteRoute(ba common.BaseComponent) bool {
+	rh := ba.GetStatus().GetReferences()[common.StatusReferenceRouteHost]
+	if rh != "" {
+		// The host was previously set.
+		// If the host is now empty, delete the old route
+		rt := ba.GetRoute()
+		if rt == nil || (rt.GetHost() == "" && common.Config[common.OpConfigDefaultHostname] == "") {
+			return true
+		}
+	}
+	return false
 }

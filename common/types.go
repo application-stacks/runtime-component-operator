@@ -21,6 +21,7 @@ const (
 	StatusReferenceCertSecretName    = "svcCertSecretName"
 	StatusReferencePullSecretName    = "saPullSecretName"
 	StatusReferenceSAResourceVersion = "saResourceVersion"
+	StatusReferenceRouteHost         = "routeHost"
 )
 
 // StatusCondition ...
