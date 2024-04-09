@@ -5,8 +5,8 @@ go 1.21
 require (
 	github.com/cert-manager/cert-manager v1.11.5
 	github.com/go-logr/logr v1.2.4
-	github.com/openshift/api v0.0.0-20230426193520-54a14470e5dc
-	github.com/openshift/library-go v0.0.0-20230426201116-932ba7924923
+	github.com/openshift/api v0.0.0-20230928134114-673ed0cfc7f1
+	github.com/openshift/library-go v0.0.0-20231002074440-3f69f773d102
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.64.1
 	k8s.io/api v0.26.10
