@@ -1625,6 +1625,9 @@ func GetSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
 		Privileged:             &valFalse,
 		ReadOnlyRootFilesystem: &valFalse,
 		RunAsNonRoot:           &valTrue,
+		SeccompProfile: &corev1.SeccompProfile{
+			Type: corev1.SeccompProfileTypeRuntimeDefault,
+		},
 	}
 
 	// Customize security context
@@ -1643,6 +1646,9 @@ func GetSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
 		}
 		if baSecurityContext.RunAsNonRoot == nil {
 			baSecurityContext.RunAsNonRoot = secContext.RunAsNonRoot
+		}
+		if baSecurityContext.SeccompProfile == nil {
+			baSecurityContext.SeccompProfile = secContext.SeccompProfile
 		}
 		return baSecurityContext
 	}
