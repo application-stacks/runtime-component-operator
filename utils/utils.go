@@ -457,6 +457,12 @@ func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule,
 	currentLen := len(ingress.Ports)
 	desiredLen := len(ba.GetService().GetPorts()) + 1 // Add one for normal port
 
+	if ba.GetCreateKnativeService() != nil && *ba.GetCreateKnativeService() {
+		knativeports := []int32{8012, 8013, 8112, 8022, 9090, 9091}
+		ports = append(ports, knativeports...)
+		desiredLen += len(knativeports)
+	}
+
 	// Shrink if needed
 	if currentLen > desiredLen {
 		ingress.Ports = ingress.Ports[:desiredLen]
