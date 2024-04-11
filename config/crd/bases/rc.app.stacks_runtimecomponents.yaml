@@ -1030,7 +1030,7 @@ spec:
                         type: string
                     type: object
                 type: object
-              enableServiceLinks:
+              disableServiceLinks:
                 type: boolean
               env:
                 description: An array of environment variables for the application

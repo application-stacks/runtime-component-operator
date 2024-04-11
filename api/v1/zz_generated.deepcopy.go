@@ -592,8 +592,8 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		*out = new(RuntimeComponentTopologySpreadConstraints)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.EnableServiceLinks != nil {
-		in, out := &in.EnableServiceLinks, &out.EnableServiceLinks
+	if in.DisableServiceLinks != nil {
+		in, out := &in.DisableServiceLinks, &out.DisableServiceLinks
 		*out = new(bool)
 		**out = **in
 	}

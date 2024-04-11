@@ -292,6 +292,10 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:text
       - displayName: Topology Spread Constraints
         path: topologySpreadConstraints
+      - displayName: Disable Service Links
+        path: disableServiceLinks
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: The directory inside the container where this persisted storage
           will be bound to.
         displayName: Storage Mount Path
