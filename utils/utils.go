@@ -746,11 +746,12 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	}
 	pts.Spec.AutomountServiceAccountToken = &mount
 
-	if ba.GetEnableServiceLinks() != nil {
-		pts.Spec.EnableServiceLinks = ba.GetEnableServiceLinks()
+	if ba.GetDisableServiceLinks() != nil && *ba.GetDisableServiceLinks() == true {
+		//pts.Spec.EnableServiceLinks = ba.GetEnableServiceLinks()
+		fv := false
+		pts.Spec.EnableServiceLinks = &fv
 	} else {
-		tv := true
-		pts.Spec.EnableServiceLinks = &tv
+		pts.Spec.EnableServiceLinks = nil
 	}
 }
 

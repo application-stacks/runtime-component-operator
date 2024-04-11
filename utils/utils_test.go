@@ -440,6 +440,8 @@ func TestCustomizePodSpecServiceLinks(t *testing.T) {
 
 	tv := true
 	fv := false
+	nb := &tv
+	nb = nil
 
 	spec := appstacksv1.RuntimeComponentSpec{
 		ApplicationImage: appImage,
@@ -455,22 +457,22 @@ func TestCustomizePodSpecServiceLinks(t *testing.T) {
 
 	pts, runtime := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
 	CustomizePodSpec(pts, runtime)
-	defaultLinks := *pts.Spec.EnableServiceLinks
+	defaultLinks := pts.Spec.EnableServiceLinks
 
-	spec.EnableServiceLinks = &tv
-	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
-	CustomizePodSpec(pts, runtime)
-	enableLinks := *pts.Spec.EnableServiceLinks
-
-	spec.EnableServiceLinks = &fv
+	spec.DisableServiceLinks = &tv
 	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
 	CustomizePodSpec(pts, runtime)
 	disableLinks := *pts.Spec.EnableServiceLinks
 
+	spec.DisableServiceLinks = &fv
+	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	enableLinks := pts.Spec.EnableServiceLinks
+
 	testCPS := []Test{
-		{"Default service links", true, defaultLinks},
-		{"Enable service links", true, enableLinks},
+		{"Default service links", nb, defaultLinks},
 		{"Disable service links", false, disableLinks},
+		{"Enable service links", nb, enableLinks},
 	}
 	verifyTests(testCPS, t)
 }

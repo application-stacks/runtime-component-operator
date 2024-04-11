@@ -150,8 +150,8 @@ type RuntimeComponentSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Topology Spread Constraints"
 	TopologySpreadConstraints *RuntimeComponentTopologySpreadConstraints `json:"topologySpreadConstraints,omitempty"`
 
-	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="Enable Service Links",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
-	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
+	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="Disable Service Links",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	DisableServiceLinks *bool `json:"disableServiceLinks,omitempty"`
 }
 
 // Defines the topology spread constraints
@@ -1041,9 +1041,9 @@ func (cr *RuntimeComponent) GetAnnotations() map[string]string {
 	return annotations
 }
 
-// GetEnableServiceLinks returns whether service links should be enabled in the pod spec
-func (cr *RuntimeComponent) GetEnableServiceLinks() *bool {
-	return cr.Spec.EnableServiceLinks
+// GetDisableServiceLinks returns whether service links should be disabled in the pod spec
+func (cr *RuntimeComponent) GetDisableServiceLinks() *bool {
+	return cr.Spec.DisableServiceLinks
 }
 
 // GetType returns status condition type
