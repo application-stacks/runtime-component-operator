@@ -1440,7 +1440,9 @@ spec:
                                       to be used in HTTP probes
                                     properties:
                                       name:
-                                        description: The header field name
+                                        description: The header field name. This will
+                                          be canonicalized upon output, so case-variant
+                                          names will be understood as the same header.
                                         type: string
                                       value:
                                         description: The header field value
@@ -1536,7 +1538,9 @@ spec:
                                       to be used in HTTP probes
                                     properties:
                                       name:
-                                        description: The header field name
+                                        description: The header field name. This will
+                                          be canonicalized upon output, so case-variant
+                                          names will be understood as the same header.
                                         type: string
                                       value:
                                         description: The header field value
@@ -1649,7 +1653,9 @@ spec:
                                   to be used in HTTP probes
                                 properties:
                                   name:
-                                    description: The header field name
+                                    description: The header field name. This will
+                                      be canonicalized upon output, so case-variant
+                                      names will be understood as the same header.
                                     type: string
                                   value:
                                     description: The header field value
@@ -1851,7 +1857,9 @@ spec:
                                   to be used in HTTP probes
                                 properties:
                                   name:
-                                    description: The header field name
+                                    description: The header field name. This will
+                                      be canonicalized upon output, so case-variant
+                                      names will be understood as the same header.
                                     type: string
                                   value:
                                     description: The header field value
@@ -1944,6 +1952,28 @@ spec:
                       description: 'Compute Resources required by this container.
                         Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                       properties:
+                        claims:
+                          description: "Claims lists the names of resources, defined
+                            in spec.resourceClaims, that are used by this container.
+                            \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                            feature gate. \n This field is immutable. It can only
+                            be set for containers."
+                          items:
+                            description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                            properties:
+                              name:
+                                description: Name must match the name of one entry
+                                  in pod.spec.resourceClaims of the Pod where this
+                                  field is used. It makes that resource available
+                                  inside a container.
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         limits:
                           additionalProperties:
                             anyOf:
@@ -2211,7 +2241,9 @@ spec:
                                   to be used in HTTP probes
                                 properties:
                                   name:
-                                    description: The header field name
+                                    description: The header field name. This will
+                                      be canonicalized upon output, so case-variant
+                                      names will be understood as the same header.
                                     type: string
                                   value:
                                     description: The header field value
@@ -2586,6 +2618,10 @@ spec:
                                 - Lowercase
                                 - uppercase
                                 - Uppercase
+                                - keepequal
+                                - KeepEqual
+                                - dropequal
+                                - DropEqual
                                 type: string
                               modulus:
                                 description: Modulus to take of the hash of the source
@@ -2772,6 +2808,10 @@ spec:
                                 - Lowercase
                                 - uppercase
                                 - Uppercase
+                                - keepequal
+                                - KeepEqual
+                                - dropequal
+                                - DropEqual
                                 type: string
                               modulus:
                                 description: Modulus to take of the hash of the source
@@ -3063,7 +3103,9 @@ spec:
                                 be used in HTTP probes
                               properties:
                                 name:
-                                  description: The header field name
+                                  description: The header field name. This will be
+                                    canonicalized upon output, so case-variant names
+                                    will be understood as the same header.
                                   type: string
                                 value:
                                   description: The header field value
@@ -3212,7 +3254,9 @@ spec:
                                 be used in HTTP probes
                               properties:
                                 name:
-                                  description: The header field name
+                                  description: The header field name. This will be
+                                    canonicalized upon output, so case-variant names
+                                    will be understood as the same header.
                                   type: string
                                 value:
                                   description: The header field value
@@ -3362,7 +3406,9 @@ spec:
                                 be used in HTTP probes
                               properties:
                                 name:
-                                  description: The header field name
+                                  description: The header field name. This will be
+                                    canonicalized upon output, so case-variant names
+                                    will be understood as the same header.
                                   type: string
                                 value:
                                   description: The header field value
@@ -3467,6 +3513,27 @@ spec:
               resources:
                 description: Resource requests and limits for the application container.
                 properties:
+                  claims:
+                    description: "Claims lists the names of resources, defined in
+                      spec.resourceClaims, that are used by this container. \n This
+                      is an alpha field and requires enabling the DynamicResourceAllocation
+                      feature gate. \n This field is immutable. It can only be set
+                      for containers."
+                    items:
+                      description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                      properties:
+                        name:
+                          description: Name must match the name of one entry in pod.spec.resourceClaims
+                            of the Pod where this field is used. It makes that resource
+                            available inside a container.
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - name
+                    x-kubernetes-list-type: map
                   limits:
                     additionalProperties:
                       anyOf:
@@ -4066,7 +4133,9 @@ spec:
                                       to be used in HTTP probes
                                     properties:
                                       name:
-                                        description: The header field name
+                                        description: The header field name. This will
+                                          be canonicalized upon output, so case-variant
+                                          names will be understood as the same header.
                                         type: string
                                       value:
                                         description: The header field value
@@ -4162,7 +4231,9 @@ spec:
                                       to be used in HTTP probes
                                     properties:
                                       name:
-                                        description: The header field name
+                                        description: The header field name. This will
+                                          be canonicalized upon output, so case-variant
+                                          names will be understood as the same header.
                                         type: string
                                       value:
                                         description: The header field value
@@ -4275,7 +4346,9 @@ spec:
                                   to be used in HTTP probes
                                 properties:
                                   name:
-                                    description: The header field name
+                                    description: The header field name. This will
+                                      be canonicalized upon output, so case-variant
+                                      names will be understood as the same header.
                                     type: string
                                   value:
                                     description: The header field value
@@ -4477,7 +4550,9 @@ spec:
                                   to be used in HTTP probes
                                 properties:
                                   name:
-                                    description: The header field name
+                                    description: The header field name. This will
+                                      be canonicalized upon output, so case-variant
+                                      names will be understood as the same header.
                                     type: string
                                   value:
                                     description: The header field value
@@ -4570,6 +4645,28 @@ spec:
                       description: 'Compute Resources required by this container.
                         Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                       properties:
+                        claims:
+                          description: "Claims lists the names of resources, defined
+                            in spec.resourceClaims, that are used by this container.
+                            \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                            feature gate. \n This field is immutable. It can only
+                            be set for containers."
+                          items:
+                            description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                            properties:
+                              name:
+                                description: Name must match the name of one entry
+                                  in pod.spec.resourceClaims of the Pod where this
+                                  field is used. It makes that resource available
+                                  inside a container.
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         limits:
                           additionalProperties:
                             anyOf:
@@ -4837,7 +4934,9 @@ spec:
                                   to be used in HTTP probes
                                 properties:
                                   name:
-                                    description: The header field name
+                                    description: The header field name. This will
+                                      be canonicalized upon output, so case-variant
+                                      names will be understood as the same header.
                                     type: string
                                   value:
                                     description: The header field value
@@ -5121,9 +5220,12 @@ spec:
                                   provisioner or an external controller can support
                                   the specified data source, it will create a new
                                   volume based on the contents of the specified data
-                                  source. If the AnyVolumeDataSource feature gate
-                                  is enabled, this field will always have the same
-                                  contents as the DataSourceRef field.'
+                                  source. When the AnyVolumeDataSource feature gate
+                                  is enabled, dataSource contents will be copied to
+                                  dataSourceRef, and dataSourceRef contents will be
+                                  copied to dataSource when dataSourceRef.namespace
+                                  is not specified. If the namespace is specified,
+                                  then dataSourceRef will not be copied to dataSource.'
                                 properties:
                                   apiGroup:
                                     description: APIGroup is the group for the resource
@@ -5148,27 +5250,33 @@ spec:
                               dataSourceRef:
                                 description: 'dataSourceRef specifies the object from
                                   which to populate the volume with data, if a non-empty
-                                  volume is desired. This may be any local object
-                                  from a non-empty API group (non core object) or
-                                  a PersistentVolumeClaim object. When this field
-                                  is specified, volume binding will only succeed if
-                                  the type of the specified object matches some installed
-                                  volume populator or dynamic provisioner. This field
-                                  will replace the functionality of the DataSource
-                                  field and as such if both fields are non-empty,
-                                  they must have the same value. For backwards compatibility,
-                                  both fields (DataSource and DataSourceRef) will
-                                  be set to the same value automatically if one of
-                                  them is empty and the other is non-empty. There
-                                  are two important differences between DataSource
-                                  and DataSourceRef: * While DataSource only allows
-                                  two specific types of objects, DataSourceRef allows
+                                  volume is desired. This may be any object from a
+                                  non-empty API group (non core object) or a PersistentVolumeClaim
+                                  object. When this field is specified, volume binding
+                                  will only succeed if the type of the specified object
+                                  matches some installed volume populator or dynamic
+                                  provisioner. This field will replace the functionality
+                                  of the dataSource field and as such if both fields
+                                  are non-empty, they must have the same value. For
+                                  backwards compatibility, when namespace isn''t specified
+                                  in dataSourceRef, both fields (dataSource and dataSourceRef)
+                                  will be set to the same value automatically if one
+                                  of them is empty and the other is non-empty. When
+                                  namespace is specified in dataSourceRef, dataSource
+                                  isn''t set to the same value and must be empty.
+                                  There are three important differences between dataSource
+                                  and dataSourceRef: * While dataSource only allows
+                                  two specific types of objects, dataSourceRef allows
                                   any non-core object, as well as PersistentVolumeClaim
-                                  objects. * While DataSource ignores disallowed values
-                                  (dropping them), DataSourceRef preserves all values,
+                                  objects. * While dataSource ignores disallowed values
+                                  (dropping them), dataSourceRef preserves all values,
                                   and generates an error if a disallowed value is
-                                  specified. (Beta) Using this field requires the
-                                  AnyVolumeDataSource feature gate to be enabled.'
+                                  specified. * While dataSource only allows local
+                                  objects, dataSourceRef allows objects in any namespaces.
+                                  (Beta) Using this field requires the AnyVolumeDataSource
+                                  feature gate to be enabled. (Alpha) Using the namespace
+                                  field of dataSourceRef requires the CrossNamespaceVolumeDataSource
+                                  feature gate to be enabled.'
                                 properties:
                                   apiGroup:
                                     description: APIGroup is the group for the resource
@@ -5185,11 +5293,21 @@ spec:
                                     description: Name is the name of resource being
                                       referenced
                                     type: string
+                                  namespace:
+                                    description: Namespace is the namespace of resource
+                                      being referenced Note that when a namespace
+                                      is specified, a gateway.networking.k8s.io/ReferenceGrant
+                                      object is required in the referent namespace
+                                      to allow that namespace's owner to accept the
+                                      reference. See the ReferenceGrant documentation
+                                      for details. (Alpha) This field requires the
+                                      CrossNamespaceVolumeDataSource feature gate
+                                      to be enabled.
+                                    type: string
                                 required:
                                 - kind
                                 - name
                                 type: object
-                                x-kubernetes-map-type: atomic
                               resources:
                                 description: 'resources represents the minimum resources
                                   the volume should have. If RecoverVolumeExpansionFailure
@@ -5198,6 +5316,30 @@ spec:
                                   value but must still be higher than capacity recorded
                                   in the status field of the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
                                 properties:
+                                  claims:
+                                    description: "Claims lists the names of resources,
+                                      defined in spec.resourceClaims, that are used
+                                      by this container. \n This is an alpha field
+                                      and requires enabling the DynamicResourceAllocation
+                                      feature gate. \n This field is immutable. It
+                                      can only be set for containers."
+                                    items:
+                                      description: ResourceClaim references one entry
+                                        in PodSpec.ResourceClaims.
+                                      properties:
+                                        name:
+                                          description: Name must match the name of
+                                            one entry in pod.spec.resourceClaims of
+                                            the Pod where this field is used. It makes
+                                            that resource available inside a container.
+                                          type: string
+                                      required:
+                                      - name
+                                      type: object
+                                    type: array
+                                    x-kubernetes-list-map-keys:
+                                    - name
+                                    x-kubernetes-list-type: map
                                   limits:
                                     additionalProperties:
                                       anyOf:
@@ -5554,7 +5696,7 @@ spec:
                             - Ignore: nodeAffinity/nodeSelector are ignored. All nodes
                             are included in the calculations. \n If this value is
                             nil, the behavior is equivalent to the Honor policy. This
-                            is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread
+                            is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread
                             feature flag."
                           type: string
                         nodeTaintsPolicy:
@@ -5564,8 +5706,8 @@ spec:
                             tainted nodes for which the incoming pod has a toleration,
                             are included. - Ignore: node taints are ignored. All nodes
                             are included. \n If this value is nil, the behavior is
-                            equivalent to the Ignore policy. This is a alpha-level
-                            feature enabled by the NodeInclusionPolicyInPodTopologySpread
+                            equivalent to the Ignore policy. This is a beta-level
+                            feature default enabled by the NodeInclusionPolicyInPodTopologySpread
                             feature flag."
                           type: string
                         topologyKey:
@@ -6125,9 +6267,12 @@ spec:
                                     provisioner or an external controller can support
                                     the specified data source, it will create a new
                                     volume based on the contents of the specified
-                                    data source. If the AnyVolumeDataSource feature
-                                    gate is enabled, this field will always have the
-                                    same contents as the DataSourceRef field.'
+                                    data source. When the AnyVolumeDataSource feature
+                                    gate is enabled, dataSource contents will be copied
+                                    to dataSourceRef, and dataSourceRef contents will
+                                    be copied to dataSource when dataSourceRef.namespace
+                                    is not specified. If the namespace is specified,
+                                    then dataSourceRef will not be copied to dataSource.'
                                   properties:
                                     apiGroup:
                                       description: APIGroup is the group for the resource
@@ -6153,27 +6298,35 @@ spec:
                                   description: 'dataSourceRef specifies the object
                                     from which to populate the volume with data, if
                                     a non-empty volume is desired. This may be any
-                                    local object from a non-empty API group (non core
-                                    object) or a PersistentVolumeClaim object. When
-                                    this field is specified, volume binding will only
-                                    succeed if the type of the specified object matches
-                                    some installed volume populator or dynamic provisioner.
+                                    object from a non-empty API group (non core object)
+                                    or a PersistentVolumeClaim object. When this field
+                                    is specified, volume binding will only succeed
+                                    if the type of the specified object matches some
+                                    installed volume populator or dynamic provisioner.
                                     This field will replace the functionality of the
-                                    DataSource field and as such if both fields are
+                                    dataSource field and as such if both fields are
                                     non-empty, they must have the same value. For
-                                    backwards compatibility, both fields (DataSource
-                                    and DataSourceRef) will be set to the same value
+                                    backwards compatibility, when namespace isn''t
+                                    specified in dataSourceRef, both fields (dataSource
+                                    and dataSourceRef) will be set to the same value
                                     automatically if one of them is empty and the
-                                    other is non-empty. There are two important differences
-                                    between DataSource and DataSourceRef: * While
-                                    DataSource only allows two specific types of objects,
-                                    DataSourceRef allows any non-core object, as well
-                                    as PersistentVolumeClaim objects. * While DataSource
-                                    ignores disallowed values (dropping them), DataSourceRef
-                                    preserves all values, and generates an error if
-                                    a disallowed value is specified. (Beta) Using
-                                    this field requires the AnyVolumeDataSource feature
-                                    gate to be enabled.'
+                                    other is non-empty. When namespace is specified
+                                    in dataSourceRef, dataSource isn''t set to the
+                                    same value and must be empty. There are three
+                                    important differences between dataSource and dataSourceRef:
+                                    * While dataSource only allows two specific types
+                                    of objects, dataSourceRef allows any non-core
+                                    object, as well as PersistentVolumeClaim objects.
+                                    * While dataSource ignores disallowed values (dropping
+                                    them), dataSourceRef preserves all values, and
+                                    generates an error if a disallowed value is specified.
+                                    * While dataSource only allows local objects,
+                                    dataSourceRef allows objects in any namespaces.
+                                    (Beta) Using this field requires the AnyVolumeDataSource
+                                    feature gate to be enabled. (Alpha) Using the
+                                    namespace field of dataSourceRef requires the
+                                    CrossNamespaceVolumeDataSource feature gate to
+                                    be enabled.'
                                   properties:
                                     apiGroup:
                                       description: APIGroup is the group for the resource
@@ -6190,11 +6343,21 @@ spec:
                                       description: Name is the name of resource being
                                         referenced
                                       type: string
+                                    namespace:
+                                      description: Namespace is the namespace of resource
+                                        being referenced Note that when a namespace
+                                        is specified, a gateway.networking.k8s.io/ReferenceGrant
+                                        object is required in the referent namespace
+                                        to allow that namespace's owner to accept
+                                        the reference. See the ReferenceGrant documentation
+                                        for details. (Alpha) This field requires the
+                                        CrossNamespaceVolumeDataSource feature gate
+                                        to be enabled.
+                                      type: string
                                   required:
                                   - kind
                                   - name
                                   type: object
-                                  x-kubernetes-map-type: atomic
                                 resources:
                                   description: 'resources represents the minimum resources
                                     the volume should have. If RecoverVolumeExpansionFailure
@@ -6203,6 +6366,31 @@ spec:
                                     value but must still be higher than capacity recorded
                                     in the status field of the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
                                   properties:
+                                    claims:
+                                      description: "Claims lists the names of resources,
+                                        defined in spec.resourceClaims, that are used
+                                        by this container. \n This is an alpha field
+                                        and requires enabling the DynamicResourceAllocation
+                                        feature gate. \n This field is immutable.
+                                        It can only be set for containers."
+                                      items:
+                                        description: ResourceClaim references one
+                                          entry in PodSpec.ResourceClaims.
+                                        properties:
+                                          name:
+                                            description: Name must match the name
+                                              of one entry in pod.spec.resourceClaims
+                                              of the Pod where this field is used.
+                                              It makes that resource available inside
+                                              a container.
+                                            type: string
+                                        required:
+                                        - name
+                                        type: object
+                                      type: array
+                                      x-kubernetes-list-map-keys:
+                                      - name
+                                      x-kubernetes-list-type: map
                                     limits:
                                       additionalProperties:
                                         anyOf:
@@ -8645,7 +8833,9 @@ spec:
                                       to be used in HTTP probes
                                     properties:
                                       name:
-                                        description: The header field name
+                                        description: The header field name. This will
+                                          be canonicalized upon output, so case-variant
+                                          names will be understood as the same header.
                                         type: string
                                       value:
                                         description: The header field value
@@ -8741,7 +8931,9 @@ spec:
                                       to be used in HTTP probes
                                     properties:
                                       name:
-                                        description: The header field name
+                                        description: The header field name. This will
+                                          be canonicalized upon output, so case-variant
+                                          names will be understood as the same header.
                                         type: string
                                       value:
                                         description: The header field value
@@ -8854,7 +9046,9 @@ spec:
                                   to be used in HTTP probes
                                 properties:
                                   name:
-                                    description: The header field name
+                                    description: The header field name. This will
+                                      be canonicalized upon output, so case-variant
+                                      names will be understood as the same header.
                                     type: string
                                   value:
                                     description: The header field value
@@ -9056,7 +9250,9 @@ spec:
                                   to be used in HTTP probes
                                 properties:
                                   name:
-                                    description: The header field name
+                                    description: The header field name. This will
+                                      be canonicalized upon output, so case-variant
+                                      names will be understood as the same header.
                                     type: string
                                   value:
                                     description: The header field value
@@ -9149,6 +9345,28 @@ spec:
                       description: 'Compute Resources required by this container.
                         Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                       properties:
+                        claims:
+                          description: "Claims lists the names of resources, defined
+                            in spec.resourceClaims, that are used by this container.
+                            \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                            feature gate. \n This field is immutable. It can only
+                            be set for containers."
+                          items:
+                            description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                            properties:
+                              name:
+                                description: Name must match the name of one entry
+                                  in pod.spec.resourceClaims of the Pod where this
+                                  field is used. It makes that resource available
+                                  inside a container.
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         limits:
                           additionalProperties:
                             anyOf:
@@ -9416,7 +9634,9 @@ spec:
                                   to be used in HTTP probes
                                 properties:
                                   name:
-                                    description: The header field name
+                                    description: The header field name. This will
+                                      be canonicalized upon output, so case-variant
+                                      names will be understood as the same header.
                                     type: string
                                   value:
                                     description: The header field value
@@ -9788,6 +10008,10 @@ spec:
                                 - Lowercase
                                 - uppercase
                                 - Uppercase
+                                - keepequal
+                                - KeepEqual
+                                - dropequal
+                                - DropEqual
                                 type: string
                               modulus:
                                 description: Modulus to take of the hash of the source
@@ -9974,6 +10198,10 @@ spec:
                                 - Lowercase
                                 - uppercase
                                 - Uppercase
+                                - keepequal
+                                - KeepEqual
+                                - dropequal
+                                - DropEqual
                                 type: string
                               modulus:
                                 description: Modulus to take of the hash of the source
@@ -10245,7 +10473,9 @@ spec:
                                 be used in HTTP probes
                               properties:
                                 name:
-                                  description: The header field name
+                                  description: The header field name. This will be
+                                    canonicalized upon output, so case-variant names
+                                    will be understood as the same header.
                                   type: string
                                 value:
                                   description: The header field value
@@ -10394,7 +10624,9 @@ spec:
                                 be used in HTTP probes
                               properties:
                                 name:
-                                  description: The header field name
+                                  description: The header field name. This will be
+                                    canonicalized upon output, so case-variant names
+                                    will be understood as the same header.
                                   type: string
                                 value:
                                   description: The header field value
@@ -10544,7 +10776,9 @@ spec:
                                 be used in HTTP probes
                               properties:
                                 name:
-                                  description: The header field name
+                                  description: The header field name. This will be
+                                    canonicalized upon output, so case-variant names
+                                    will be understood as the same header.
                                   type: string
                                 value:
                                   description: The header field value
@@ -10649,6 +10883,27 @@ spec:
               resources:
                 description: Resource requests and limits for the application container.
                 properties:
+                  claims:
+                    description: "Claims lists the names of resources, defined in
+                      spec.resourceClaims, that are used by this container. \n This
+                      is an alpha field and requires enabling the DynamicResourceAllocation
+                      feature gate. \n This field is immutable. It can only be set
+                      for containers."
+                    items:
+                      description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                      properties:
+                        name:
+                          description: Name must match the name of one entry in pod.spec.resourceClaims
+                            of the Pod where this field is used. It makes that resource
+                            available inside a container.
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - name
+                    x-kubernetes-list-type: map
                   limits:
                     additionalProperties:
                       anyOf:
@@ -11064,7 +11319,9 @@ spec:
                                       to be used in HTTP probes
                                     properties:
                                       name:
-                                        description: The header field name
+                                        description: The header field name. This will
+                                          be canonicalized upon output, so case-variant
+                                          names will be understood as the same header.
                                         type: string
                                       value:
                                         description: The header field value
@@ -11160,7 +11417,9 @@ spec:
                                       to be used in HTTP probes
                                     properties:
                                       name:
-                                        description: The header field name
+                                        description: The header field name. This will
+                                          be canonicalized upon output, so case-variant
+                                          names will be understood as the same header.
                                         type: string
                                       value:
                                         description: The header field value
@@ -11273,7 +11532,9 @@ spec:
                                   to be used in HTTP probes
                                 properties:
                                   name:
-                                    description: The header field name
+                                    description: The header field name. This will
+                                      be canonicalized upon output, so case-variant
+                                      names will be understood as the same header.
                                     type: string
                                   value:
                                     description: The header field value
@@ -11475,7 +11736,9 @@ spec:
                                   to be used in HTTP probes
                                 properties:
                                   name:
-                                    description: The header field name
+                                    description: The header field name. This will
+                                      be canonicalized upon output, so case-variant
+                                      names will be understood as the same header.
                                     type: string
                                   value:
                                     description: The header field value
@@ -11568,6 +11831,28 @@ spec:
                       description: 'Compute Resources required by this container.
                         Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                       properties:
+                        claims:
+                          description: "Claims lists the names of resources, defined
+                            in spec.resourceClaims, that are used by this container.
+                            \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                            feature gate. \n This field is immutable. It can only
+                            be set for containers."
+                          items:
+                            description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                            properties:
+                              name:
+                                description: Name must match the name of one entry
+                                  in pod.spec.resourceClaims of the Pod where this
+                                  field is used. It makes that resource available
+                                  inside a container.
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         limits:
                           additionalProperties:
                             anyOf:
@@ -11835,7 +12120,9 @@ spec:
                                   to be used in HTTP probes
                                 properties:
                                   name:
-                                    description: The header field name
+                                    description: The header field name. This will
+                                      be canonicalized upon output, so case-variant
+                                      names will be understood as the same header.
                                     type: string
                                   value:
                                     description: The header field value
@@ -12113,9 +12400,12 @@ spec:
                                   provisioner or an external controller can support
                                   the specified data source, it will create a new
                                   volume based on the contents of the specified data
-                                  source. If the AnyVolumeDataSource feature gate
-                                  is enabled, this field will always have the same
-                                  contents as the DataSourceRef field.'
+                                  source. When the AnyVolumeDataSource feature gate
+                                  is enabled, dataSource contents will be copied to
+                                  dataSourceRef, and dataSourceRef contents will be
+                                  copied to dataSource when dataSourceRef.namespace
+                                  is not specified. If the namespace is specified,
+                                  then dataSourceRef will not be copied to dataSource.'
                                 properties:
                                   apiGroup:
                                     description: APIGroup is the group for the resource
@@ -12140,27 +12430,33 @@ spec:
                               dataSourceRef:
                                 description: 'dataSourceRef specifies the object from
                                   which to populate the volume with data, if a non-empty
-                                  volume is desired. This may be any local object
-                                  from a non-empty API group (non core object) or
-                                  a PersistentVolumeClaim object. When this field
-                                  is specified, volume binding will only succeed if
-                                  the type of the specified object matches some installed
-                                  volume populator or dynamic provisioner. This field
-                                  will replace the functionality of the DataSource
-                                  field and as such if both fields are non-empty,
-                                  they must have the same value. For backwards compatibility,
-                                  both fields (DataSource and DataSourceRef) will
-                                  be set to the same value automatically if one of
-                                  them is empty and the other is non-empty. There
-                                  are two important differences between DataSource
-                                  and DataSourceRef: * While DataSource only allows
-                                  two specific types of objects, DataSourceRef allows
+                                  volume is desired. This may be any object from a
+                                  non-empty API group (non core object) or a PersistentVolumeClaim
+                                  object. When this field is specified, volume binding
+                                  will only succeed if the type of the specified object
+                                  matches some installed volume populator or dynamic
+                                  provisioner. This field will replace the functionality
+                                  of the dataSource field and as such if both fields
+                                  are non-empty, they must have the same value. For
+                                  backwards compatibility, when namespace isn''t specified
+                                  in dataSourceRef, both fields (dataSource and dataSourceRef)
+                                  will be set to the same value automatically if one
+                                  of them is empty and the other is non-empty. When
+                                  namespace is specified in dataSourceRef, dataSource
+                                  isn''t set to the same value and must be empty.
+                                  There are three important differences between dataSource
+                                  and dataSourceRef: * While dataSource only allows
+                                  two specific types of objects, dataSourceRef allows
                                   any non-core object, as well as PersistentVolumeClaim
-                                  objects. * While DataSource ignores disallowed values
-                                  (dropping them), DataSourceRef preserves all values,
+                                  objects. * While dataSource ignores disallowed values
+                                  (dropping them), dataSourceRef preserves all values,
                                   and generates an error if a disallowed value is
-                                  specified. (Beta) Using this field requires the
-                                  AnyVolumeDataSource feature gate to be enabled.'
+                                  specified. * While dataSource only allows local
+                                  objects, dataSourceRef allows objects in any namespaces.
+                                  (Beta) Using this field requires the AnyVolumeDataSource
+                                  feature gate to be enabled. (Alpha) Using the namespace
+                                  field of dataSourceRef requires the CrossNamespaceVolumeDataSource
+                                  feature gate to be enabled.'
                                 properties:
                                   apiGroup:
                                     description: APIGroup is the group for the resource
@@ -12177,11 +12473,21 @@ spec:
                                     description: Name is the name of resource being
                                       referenced
                                     type: string
+                                  namespace:
+                                    description: Namespace is the namespace of resource
+                                      being referenced Note that when a namespace
+                                      is specified, a gateway.networking.k8s.io/ReferenceGrant
+                                      object is required in the referent namespace
+                                      to allow that namespace's owner to accept the
+                                      reference. See the ReferenceGrant documentation
+                                      for details. (Alpha) This field requires the
+                                      CrossNamespaceVolumeDataSource feature gate
+                                      to be enabled.
+                                    type: string
                                 required:
                                 - kind
                                 - name
                                 type: object
-                                x-kubernetes-map-type: atomic
                               resources:
                                 description: 'resources represents the minimum resources
                                   the volume should have. If RecoverVolumeExpansionFailure
@@ -12190,6 +12496,30 @@ spec:
                                   value but must still be higher than capacity recorded
                                   in the status field of the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
                                 properties:
+                                  claims:
+                                    description: "Claims lists the names of resources,
+                                      defined in spec.resourceClaims, that are used
+                                      by this container. \n This is an alpha field
+                                      and requires enabling the DynamicResourceAllocation
+                                      feature gate. \n This field is immutable. It
+                                      can only be set for containers."
+                                    items:
+                                      description: ResourceClaim references one entry
+                                        in PodSpec.ResourceClaims.
+                                      properties:
+                                        name:
+                                          description: Name must match the name of
+                                            one entry in pod.spec.resourceClaims of
+                                            the Pod where this field is used. It makes
+                                            that resource available inside a container.
+                                          type: string
+                                      required:
+                                      - name
+                                      type: object
+                                    type: array
+                                    x-kubernetes-list-map-keys:
+                                    - name
+                                    x-kubernetes-list-type: map
                                   limits:
                                     additionalProperties:
                                       anyOf:
@@ -12934,9 +13264,12 @@ spec:
                                     provisioner or an external controller can support
                                     the specified data source, it will create a new
                                     volume based on the contents of the specified
-                                    data source. If the AnyVolumeDataSource feature
-                                    gate is enabled, this field will always have the
-                                    same contents as the DataSourceRef field.'
+                                    data source. When the AnyVolumeDataSource feature
+                                    gate is enabled, dataSource contents will be copied
+                                    to dataSourceRef, and dataSourceRef contents will
+                                    be copied to dataSource when dataSourceRef.namespace
+                                    is not specified. If the namespace is specified,
+                                    then dataSourceRef will not be copied to dataSource.'
                                   properties:
                                     apiGroup:
                                       description: APIGroup is the group for the resource
@@ -12962,27 +13295,35 @@ spec:
                                   description: 'dataSourceRef specifies the object
                                     from which to populate the volume with data, if
                                     a non-empty volume is desired. This may be any
-                                    local object from a non-empty API group (non core
-                                    object) or a PersistentVolumeClaim object. When
-                                    this field is specified, volume binding will only
-                                    succeed if the type of the specified object matches
-                                    some installed volume populator or dynamic provisioner.
+                                    object from a non-empty API group (non core object)
+                                    or a PersistentVolumeClaim object. When this field
+                                    is specified, volume binding will only succeed
+                                    if the type of the specified object matches some
+                                    installed volume populator or dynamic provisioner.
                                     This field will replace the functionality of the
-                                    DataSource field and as such if both fields are
+                                    dataSource field and as such if both fields are
                                     non-empty, they must have the same value. For
-                                    backwards compatibility, both fields (DataSource
-                                    and DataSourceRef) will be set to the same value
+                                    backwards compatibility, when namespace isn''t
+                                    specified in dataSourceRef, both fields (dataSource
+                                    and dataSourceRef) will be set to the same value
                                     automatically if one of them is empty and the
-                                    other is non-empty. There are two important differences
-                                    between DataSource and DataSourceRef: * While
-                                    DataSource only allows two specific types of objects,
-                                    DataSourceRef allows any non-core object, as well
-                                    as PersistentVolumeClaim objects. * While DataSource
-                                    ignores disallowed values (dropping them), DataSourceRef
-                                    preserves all values, and generates an error if
-                                    a disallowed value is specified. (Beta) Using
-                                    this field requires the AnyVolumeDataSource feature
-                                    gate to be enabled.'
+                                    other is non-empty. When namespace is specified
+                                    in dataSourceRef, dataSource isn''t set to the
+                                    same value and must be empty. There are three
+                                    important differences between dataSource and dataSourceRef:
+                                    * While dataSource only allows two specific types
+                                    of objects, dataSourceRef allows any non-core
+                                    object, as well as PersistentVolumeClaim objects.
+                                    * While dataSource ignores disallowed values (dropping
+                                    them), dataSourceRef preserves all values, and
+                                    generates an error if a disallowed value is specified.
+                                    * While dataSource only allows local objects,
+                                    dataSourceRef allows objects in any namespaces.
+                                    (Beta) Using this field requires the AnyVolumeDataSource
+                                    feature gate to be enabled. (Alpha) Using the
+                                    namespace field of dataSourceRef requires the
+                                    CrossNamespaceVolumeDataSource feature gate to
+                                    be enabled.'
                                   properties:
                                     apiGroup:
                                       description: APIGroup is the group for the resource
@@ -12999,11 +13340,21 @@ spec:
                                       description: Name is the name of resource being
                                         referenced
                                       type: string
+                                    namespace:
+                                      description: Namespace is the namespace of resource
+                                        being referenced Note that when a namespace
+                                        is specified, a gateway.networking.k8s.io/ReferenceGrant
+                                        object is required in the referent namespace
+                                        to allow that namespace's owner to accept
+                                        the reference. See the ReferenceGrant documentation
+                                        for details. (Alpha) This field requires the
+                                        CrossNamespaceVolumeDataSource feature gate
+                                        to be enabled.
+                                      type: string
                                   required:
                                   - kind
                                   - name
                                   type: object
-                                  x-kubernetes-map-type: atomic
                                 resources:
                                   description: 'resources represents the minimum resources
                                     the volume should have. If RecoverVolumeExpansionFailure
@@ -13012,6 +13363,31 @@ spec:
                                     value but must still be higher than capacity recorded
                                     in the status field of the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
                                   properties:
+                                    claims:
+                                      description: "Claims lists the names of resources,
+                                        defined in spec.resourceClaims, that are used
+                                        by this container. \n This is an alpha field
+                                        and requires enabling the DynamicResourceAllocation
+                                        feature gate. \n This field is immutable.
+                                        It can only be set for containers."
+                                      items:
+                                        description: ResourceClaim references one
+                                          entry in PodSpec.ResourceClaims.
+                                        properties:
+                                          name:
+                                            description: Name must match the name
+                                              of one entry in pod.spec.resourceClaims
+                                              of the Pod where this field is used.
+                                              It makes that resource available inside
+                                              a container.
+                                            type: string
+                                        required:
+                                        - name
+                                        type: object
+                                      type: array
+                                      x-kubernetes-list-map-keys:
+                                      - name
+                                      x-kubernetes-list-type: map
                                     limits:
                                       additionalProperties:
                                         anyOf:
