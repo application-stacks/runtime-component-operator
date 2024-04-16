@@ -42,6 +42,8 @@ type RuntimeOperationStatus struct {
 	// +listType=atomic
 	Conditions []OperationStatusCondition `json:"conditions,omitempty"`
 	Versions   StatusVersions             `json:"versions,omitempty"`
+	// The last generation of this RuntimeOperation instance observed by the operator.
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
 // +kubebuilder:object:root=true

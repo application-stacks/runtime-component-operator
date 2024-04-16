@@ -405,6 +405,9 @@ type RuntimeComponentStatus struct {
 	Binding *corev1.LocalObjectReference `json:"binding,omitempty"`
 
 	References common.StatusReferences `json:"references,omitempty"`
+
+	// The last generation of this RuntimeComponent instance observed by the operator.
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
 // Defines possible status conditions.

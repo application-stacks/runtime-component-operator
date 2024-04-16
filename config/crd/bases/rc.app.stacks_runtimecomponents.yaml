@@ -7424,6 +7424,11 @@ spec:
                 type: array
               imageReference:
                 type: string
+              observedGeneration:
+                description: The last generation of this RuntimeComponent instance
+                  observed by the operator.
+                format: int64
+                type: integer
               references:
                 additionalProperties:
                   type: string

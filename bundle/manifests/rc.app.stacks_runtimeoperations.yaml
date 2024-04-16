@@ -78,6 +78,11 @@ spec:
                   type: object
                 type: array
                 x-kubernetes-list-type: atomic
+              observedGeneration:
+                description: The last generation of this RuntimeOperation instance
+                  observed by the operator.
+                format: int64
+                type: integer
               versions:
                 properties:
                   reconciled:
