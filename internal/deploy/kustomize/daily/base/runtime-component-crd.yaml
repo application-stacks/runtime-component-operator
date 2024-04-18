@@ -72,6 +72,20 @@ spec:
       name: ReadyMessage
       priority: 1
       type: string
+    - description: Status of the component warning condition
+      jsonPath: .status.conditions[?(@.type=='Warning')].status
+      name: Warning
+      type: string
+    - description: Reason for the failure of component warning condition
+      jsonPath: .status.conditions[?(@.type=='Warning')].reason
+      name: WarningReason
+      priority: 1
+      type: string
+    - description: Failure message from component warning condition
+      jsonPath: .status.conditions[?(@.type=='Warning')].message
+      name: WarningMessage
+      priority: 1
+      type: string
     - description: Age of the resource
       jsonPath: .metadata.creationTimestamp
       name: Age
