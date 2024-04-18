@@ -262,6 +262,24 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 		if isKnativeSupported {
 			reqLogger.Info("Knative is supported and Knative Service is enabled")
+
+			networkPolicy := &networkingv1.NetworkPolicy{ObjectMeta: defaultMeta}
+			if np := instance.Spec.NetworkPolicy; np == nil || np != nil && !np.IsDisabled() {
+				err = r.CreateOrUpdate(networkPolicy, instance, func() error {
+					appstacksutils.CustomizeNetworkPolicy(networkPolicy, r.IsOpenShift(), instance)
+					return nil
+				})
+				if err != nil {
+					reqLogger.Error(err, "Failed to reconcile network policy")
+					return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+				}
+			} else {
+				if err := r.DeleteResource(networkPolicy); err != nil {
+					reqLogger.Error(err, "Failed to delete network policy")
+					return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+				}
+			}
+
 			ksvc := &servingv1.Service{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(ksvc, instance, func() error {
 				appstacksutils.CustomizeKnativeService(ksvc, instance)

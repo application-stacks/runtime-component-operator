@@ -448,13 +448,22 @@ func createNetworkPolicyPeer(appName string, namespace string, networkPolicy com
 
 func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule, ba common.BaseComponent) {
 	var ports []int32
-	ports = append(ports, ba.GetService().GetPort())
+
 	for _, port := range ba.GetService().GetPorts() {
 		ports = append(ports, port.Port)
 	}
 
 	currentLen := len(ingress.Ports)
-	desiredLen := len(ba.GetService().GetPorts()) + 1 // Add one for normal port
+	desiredLen := len(ba.GetService().GetPorts())
+
+	if ba.GetCreateKnativeService() != nil && *ba.GetCreateKnativeService() {
+		knativeports := []int32{8012, 8013, 8112, 8022, 9090, 9091}
+		ports = append(ports, knativeports...)
+		desiredLen += len(knativeports)
+	} else {
+		ports = append(ports, ba.GetService().GetPort())
+		desiredLen += 1 // Add one for normal port
+	}
 
 	// Shrink if needed
 	if currentLen > desiredLen {
