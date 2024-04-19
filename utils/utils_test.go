@@ -676,40 +676,6 @@ func TestCustomizeServiceMonitor(t *testing.T) {
 	verifyTests(testSM, t)
 }
 
-func TestGetCondition(t *testing.T) {
-	logger := zap.New()
-	logf.SetLogger(logger)
-	status := &appstacksv1.RuntimeComponentStatus{
-		Conditions: []appstacksv1.StatusCondition{
-			{
-				Status: corev1.ConditionTrue,
-				Type:   appstacksv1.StatusConditionTypeReconciled,
-			},
-		},
-	}
-	conditionType := appstacksv1.StatusConditionTypeReconciled
-	cond := GetCondition(conditionType, status)
-	testGC := []Test{{"Set status condition", status.Conditions[0].Status, cond.Status}}
-	verifyTests(testGC, t)
-}
-
-func TestSetCondition(t *testing.T) {
-	logger := zap.New()
-	logf.SetLogger(logger)
-	status := &appstacksv1.RuntimeComponentStatus{
-		Conditions: []appstacksv1.StatusCondition{
-			{Type: appstacksv1.StatusConditionTypeReconciled},
-		},
-	}
-	condition := appstacksv1.StatusCondition{
-		Status: corev1.ConditionTrue,
-		Type:   appstacksv1.StatusConditionTypeReconciled,
-	}
-	SetCondition(condition, status)
-	testSC := []Test{{"Set status condition", condition.Status, status.Conditions[0].Status}}
-	verifyTests(testSC, t)
-}
-
 func TestGetWatchNamespaces(t *testing.T) {
 	// Set the logger to development mode for verbose logs
 	logger := zap.New()

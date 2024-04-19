@@ -963,6 +963,10 @@ func (s *RuntimeComponentStatus) GetCondition(t common.StatusConditionType) comm
 	}
 	return nil
 }
+func (s *RuntimeComponentStatus) UnsetCondition(c common.StatusCondition) {
+	// Intentional dummy
+	return
+}
 
 // SetCondition ...
 func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
