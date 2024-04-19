@@ -299,7 +299,7 @@ func (r *ReconcilerBase) IsGroupVersionSupported(groupVersion string, kind strin
 
 // UpdateStatus updates the fields corresponding to the status subresource for the object
 func (r *ReconcilerBase) UpdateStatus(obj client.Object) error {
-	return r.GetClient().Status().Update(context.Background(), obj)
+	return r.GetClient().Status().Update(context.TODO(), obj)
 }
 
 // IsOpenShift returns true if the operator is running on an OpenShift platform
