@@ -175,6 +175,29 @@ func (r *ReconcilerBase) GetOpConfigMap(name string, ns string) (*corev1.ConfigM
 	return configMap, nil
 }
 
+func addStatusWarnings(ba common.BaseComponent) {
+
+	s := ba.GetStatus()
+
+	mtls := ba.GetManageTLS()
+	svc := ba.GetService()
+	if (mtls == nil || *mtls == true) && svc != nil && svc.GetPort() == 9080 {
+		status := corev1.ConditionTrue
+		msg := "ManageTLS is true but port is set to 9080"
+		statusCondition := s.NewCondition(common.StatusConditionTypeWarning)
+		statusCondition.SetReason("")
+		statusCondition.SetMessage(msg)
+		statusCondition.SetStatus(status)
+		s.SetCondition(statusCondition)
+	} else {
+		// The warning condition may previously have been set, but is now not needed.
+		// Removing the warning is clearer than have a warning condition set to 'false'
+		statusCondition := s.NewCondition(common.StatusConditionTypeWarning)
+		s.UnsetCondition(statusCondition)
+	}
+
+}
+
 // ManageError ...
 func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
 	s := ba.GetStatus()
@@ -190,6 +213,8 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 	newCondition.SetMessage(issue.Error())
 	newCondition.SetStatus(corev1.ConditionFalse)
 	s.SetCondition(newCondition)
+
+	addStatusWarnings(ba)
 
 	if conditionType != common.StatusConditionTypeResourcesReady {
 		//Check Application status (reconciliation & resource status & endpoint status)
@@ -246,6 +271,8 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 	statusCondition.SetMessage("")
 	statusCondition.SetStatus(corev1.ConditionTrue)
 	s.SetCondition(statusCondition)
+
+	addStatusWarnings(ba)
 
 	//Check application status (reconciliation & resource status & endpoint status)
 	readyStatus := r.CheckApplicationStatus(ba)
