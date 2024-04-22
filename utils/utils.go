@@ -382,11 +382,21 @@ func customizeProbeDefaults(config *common.BaseComponentProbe, defaultProbe *com
 		if config.BaseComponentProbeHandler.GRPC != nil {
 			probe.BaseComponentProbeHandler.GRPC = config.BaseComponentProbeHandler.GRPC
 		}
-		probe.InitialDelaySeconds = config.InitialDelaySeconds
-		probe.TimeoutSeconds = config.TimeoutSeconds
-		probe.PeriodSeconds = config.PeriodSeconds
-		probe.SuccessThreshold = config.SuccessThreshold
-		probe.FailureThreshold = config.FailureThreshold
+		if config.InitialDelaySeconds != 0 {
+			probe.InitialDelaySeconds = config.InitialDelaySeconds
+		}
+		if config.TimeoutSeconds != 0 {
+			probe.TimeoutSeconds = config.TimeoutSeconds
+		}
+		if config.PeriodSeconds != 0 {
+			probe.PeriodSeconds = config.PeriodSeconds
+		}
+		if config.SuccessThreshold != 0 {
+			probe.SuccessThreshold = config.SuccessThreshold
+		}
+		if config.FailureThreshold != 0 {
+			probe.FailureThreshold = config.FailureThreshold
+		}
 	}
 	return probe
 }
