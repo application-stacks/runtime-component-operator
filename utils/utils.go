@@ -745,6 +745,12 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		}
 	}
 	pts.Spec.AutomountServiceAccountToken = &mount
+
+	if ba.GetPriorityClassName() != nil {
+		pts.Spec.PriorityClassName = *ba.GetPriorityClassName()
+	} else {
+		pts.Spec.PriorityClassName = ""
+	}
 }
 
 // Initialize an empty TopologySpreadConstraints list and optionally prefers scheduling across zones/hosts for pods with podMatchLabels

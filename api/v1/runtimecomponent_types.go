@@ -149,6 +149,9 @@ type RuntimeComponentSpec struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Topology Spread Constraints"
 	TopologySpreadConstraints *RuntimeComponentTopologySpreadConstraints `json:"topologySpreadConstraints,omitempty"`
+
+	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="Priority Class Name"
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 // Defines the topology spread constraints
@@ -701,6 +704,13 @@ func (cr *RuntimeComponent) GetDeployment() common.BaseComponentDeployment {
 		return nil
 	}
 	return cr.Spec.Deployment
+}
+
+func (cr *RuntimeComponent) GetPriorityClassName() *string {
+	if cr.Spec.PriorityClassName == nil {
+		return nil
+	}
+	return cr.Spec.PriorityClassName
 }
 
 // GetDeploymentStrategy returns deployment strategy struct
