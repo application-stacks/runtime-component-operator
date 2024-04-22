@@ -67,6 +67,7 @@ type BaseComponentStatus interface {
 	GetConditions() []StatusCondition
 	GetCondition(StatusConditionType) StatusCondition
 	SetCondition(StatusCondition)
+	UnsetCondition(StatusCondition)
 	NewCondition(StatusConditionType) StatusCondition
 
 	GetStatusEndpoint(string) StatusEndpoint
@@ -90,6 +91,7 @@ const (
 	StatusConditionTypeReconciled     StatusConditionType = "Reconciled"
 	StatusConditionTypeResourcesReady StatusConditionType = "ResourcesReady"
 	StatusConditionTypeReady          StatusConditionType = "Ready"
+	StatusConditionTypeWarning        StatusConditionType = "Warning"
 
 	// Status Condition Type Messages
 	StatusConditionTypeReadyMessage string = "Application is reconciled and resources are ready."
