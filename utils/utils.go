@@ -333,11 +333,7 @@ func createHTTPGetActionFromOptionalHTTPGetAction(ba common.BaseComponent, optio
 		if optionalHTTPGetAction.Scheme != "" {
 			httpGetAction.Scheme = optionalHTTPGetAction.Scheme
 		} else {
-			if ba.GetManageTLS() == nil || *ba.GetManageTLS() {
-				httpGetAction.Scheme = corev1.URISchemeHTTPS
-			} else {
-				httpGetAction.Scheme = corev1.URISchemeHTTP
-			}
+			httpGetAction.Scheme = corev1.URISchemeHTTP
 		}
 	}
 	return httpGetAction
