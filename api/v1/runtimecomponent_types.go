@@ -406,7 +406,7 @@ type RuntimeComponentStatus struct {
 
 	References common.StatusReferences `json:"references,omitempty"`
 
-	// The last generation of this RuntimeComponent instance observed by the operator.
+	// The generation identifier of this RuntimeComponent instance completely reconciled by the Operator.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 

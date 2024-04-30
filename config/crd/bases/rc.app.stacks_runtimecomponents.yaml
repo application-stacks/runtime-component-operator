@@ -7439,8 +7439,8 @@ spec:
               imageReference:
                 type: string
               observedGeneration:
-                description: The last generation of this RuntimeComponent instance
-                  observed by the operator.
+                description: The generation identifier of this RuntimeComponent instance
+                  completely reconciled by the Operator.
                 format: int64
                 type: integer
               references:
