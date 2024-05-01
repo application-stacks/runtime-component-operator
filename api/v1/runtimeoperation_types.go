@@ -42,7 +42,7 @@ type RuntimeOperationStatus struct {
 	// +listType=atomic
 	Conditions []OperationStatusCondition `json:"conditions,omitempty"`
 	Versions   StatusVersions             `json:"versions,omitempty"`
-	// The generation identifier of this RuntimeComponent instance completely reconciled by the Operator.
+	// The generation identifier of this RuntimeOperation instance completely reconciled by the Operator.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
