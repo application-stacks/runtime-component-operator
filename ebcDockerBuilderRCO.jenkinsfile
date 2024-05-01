@@ -11,7 +11,6 @@ properties([
       string(name: 'command', defaultValue: "make build-operator-pipeline REGISTRY=cp.stg.icr.io", description: 'Build command to execute on target arch machine, e.g. make build-pipeline-releases'),
       string(name: 'PIPELINE_OPERATOR_IMAGE', defaultValue: "cp/runtime-component-operator", description: 'namespace to push image to in registry'),
       string(name: 'RELEASE_TARGET', defaultValue: "main", description: 'release branch to use'),
-      string(name: 'OPM_VERSION', defaultValue: "4.12", description: 'Redhat CLI OPM version'),
       string(name: 'PIPELINE_PRODUCTION_IMAGE', defaultValue: "icr.io/cpopen/runtime-component-operator", description: 'namespace in prod registry'),
       string(name: 'REDHAT_BASE_IMAGE', defaultValue: "registry.redhat.io/openshift4/ose-operator-registry", description: 'base image for operator'),
       string(name: 'REDHAT_REGISTRY', defaultValue: "registry.redhat.io", description: 'RH registry used for docker login'),
