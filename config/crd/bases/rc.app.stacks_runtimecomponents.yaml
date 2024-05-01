@@ -7437,6 +7437,11 @@ spec:
                 type: array
               imageReference:
                 type: string
+              observedGeneration:
+                description: The generation identifier of this RuntimeComponent instance
+                  completely reconciled by the Operator.
+                format: int64
+                type: integer
               references:
                 additionalProperties:
                   type: string

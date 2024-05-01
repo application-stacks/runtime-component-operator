@@ -7440,6 +7440,11 @@ spec:
                 type: array
               imageReference:
                 type: string
+              observedGeneration:
+                description: The generation identifier of this RuntimeComponent instance
+                  completely reconciled by the Operator.
+                format: int64
+                type: integer
               references:
                 additionalProperties:
                   type: string
@@ -14507,6 +14512,11 @@ spec:
                   type: object
                 type: array
                 x-kubernetes-list-type: atomic
+              observedGeneration:
+                description: The generation identifier of this RuntimeOperation instance
+                  completely reconciled by the Operator.
+                format: int64
+                type: integer
               versions:
                 properties:
                   reconciled:
