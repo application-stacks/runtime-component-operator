@@ -302,30 +302,6 @@ rm -rf $$TMP_DIR ;\
 }
 endef
 
-.PHONY: opm
-OPM = ./bin/opm
-opm: ## Download opm locally if necessary.
-ifeq (,$(wildcard $(OPM)))
-ifeq (,$(shell which opm 2>/dev/null))
-	@{ \
-	set -e ;\
-	mkdir -p $(dir $(OPM)) ;\
-	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
-	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.15.1/$${OS}-$${ARCH}-opm ;\
-	chmod +x $(OPM) ;\
-	}
-else
-OPM = $(shell which opm)
-endif
-endif
-
-# Build a catalog image by adding bundle images to an empty catalog using the operator package manager tool, 'opm'.
-# This recipe invokes 'opm' in 'semver' bundle add mode. For more information on add modes, see:
-# https://github.com/operator-framework/community-operators/blob/7f1438c/docs/packaging-operator.md#updating-your-existing-operator
-.PHONY: catalog-build
-catalog-build: opm ## Build a catalog image.
-	$(OPM) index add $(SKIP_TLS_VERIFY) --container-tool $(CONTAINER_COMMAND)  --mode semver --tag $(CATALOG_IMG) --bundles $(BUNDLE_IMGS) $(FROM_INDEX_OPT) --permissive
-
 kind-e2e-test:
 	./operators/scripts/test/e2e-kind.sh --test-tag "${BUILD_NUMBER}"
 
@@ -341,8 +317,8 @@ build-manifest-pipeline:
 build-bundle-pipeline:
 	./operators/scripts/build/build-bundle.sh --prod-image "${PIPELINE_PRODUCTION_IMAGE}" --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
 
-build-catalog-pipeline: opm ## Build a catalog image.
-	./operators/scripts/build/build-catalog.sh -n "v${OPM_VERSION}" -b "${REDHAT_BASE_IMAGE}" -o "${OPM}" --container-tool "docker" -r "${REGISTRY}" -i "${PIPELINE_OPERATOR_IMAGE}-bundle:${RELEASE_TARGET}" -p "${PIPELINE_PRODUCTION_IMAGE}-bundle" -a "${PIPELINE_OPERATOR_IMAGE}-catalog:${RELEASE_TARGET}" -t "${PWD}/operator-build" -v "${VERSION}"
+build-catalog-pipeline:
+	./operators/scripts/build/build-catalog.sh --prod-image "${OPERATOR_IMAGE}" --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}" --version "${VERSION}"
 
 test-pipeline-e2e:
 	./operators/scripts/test/e2e-ocp.sh --cluster-url "${CLUSTER_URL}" --cluster-user "${CLUSTER_USER}" --cluster-token "${CLUSTER_TOKEN}" \
@@ -354,9 +330,6 @@ bundle-build-podman:
 
 bundle-push-podman:
 	podman push --format=docker "${BUNDLE_IMG}"
-
-build-catalog:
-	opm index add --bundles "${BUNDLE_IMG}" --tag "${CATALOG_IMG}"
 
 push-catalog: docker-login
 	podman push --format=docker "${CATALOG_IMG}"
