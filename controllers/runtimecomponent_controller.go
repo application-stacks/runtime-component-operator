@@ -271,6 +271,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 				reqLogger.Error(err, "Failed to reconcile Knative Service")
 				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 			}
+			instance.Status.ObservedGeneration = instance.GetObjectMeta().GetGeneration()
 			instance.Status.Versions.Reconciled = appstacksutils.RCOOperandVersion
 			reqLogger.Info("Reconcile RuntimeComponent - completed")
 			return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)
@@ -522,6 +523,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		reqLogger.V(1).Info(fmt.Sprintf("%s is not supported", prometheusv1.SchemeGroupVersion.String()))
 	}
 
+	instance.Status.ObservedGeneration = instance.GetObjectMeta().GetGeneration()
 	instance.Status.Versions.Reconciled = appstacksutils.RCOOperandVersion
 	reqLogger.Info("Reconcile RuntimeComponent - completed")
 	return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)

@@ -3,8 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.10.0
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.11.4
   name: runtimeoperations.rc.app.stacks
 spec:
   group: rc.app.stacks
@@ -75,6 +74,11 @@ spec:
                   type: object
                 type: array
                 x-kubernetes-list-type: atomic
+              observedGeneration:
+                description: The generation identifier of this RuntimeOperation instance
+                  completely reconciled by the Operator.
+                format: int64
+                type: integer
               versions:
                 properties:
                   reconciled:

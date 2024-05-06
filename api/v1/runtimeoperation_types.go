@@ -42,6 +42,8 @@ type RuntimeOperationStatus struct {
 	// +listType=atomic
 	Conditions []OperationStatusCondition `json:"conditions,omitempty"`
 	Versions   StatusVersions             `json:"versions,omitempty"`
+	// The generation identifier of this RuntimeOperation instance completely reconciled by the Operator.
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
 // +kubebuilder:object:root=true
