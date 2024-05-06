@@ -261,11 +261,14 @@ status:
     svcCertSecretName: my-app-svc-tls-ocp
   versions:
     reconciled: 1.0.0
+  observedGeneration: 1
 ----
 
 If the `.status.conditions.type` Ready type does not have a status of `True`, see link:++troubleshooting.adoc++[Troubleshooting Runtime Component operators].
 
 The value of the `.status.versions.reconciled` parameter is the version of the operand that is deployed into the cluster after the reconcile loop completes.
+
+At the end of the reconcile loop, the operator will also update the `.status.observedGeneration` parameter to match the value of `.metadata.generation`. 
 
 
 === Operator configuration examples

@@ -139,6 +139,7 @@ func (r *RuntimeOperationReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			Message: err.Error(),
 		}
 		instance.Status.Conditions = appstacksv1.SetOperationCondition(instance.Status.Conditions, c)
+		instance.Status.ObservedGeneration = instance.GetObjectMeta().GetGeneration()
 		instance.Status.Versions.Reconciled = utils.RCOOperandVersion
 		r.Client.Status().Update(context.TODO(), instance)
 		return reconcile.Result{}, nil
@@ -151,6 +152,7 @@ func (r *RuntimeOperationReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	instance.Status.Conditions = appstacksv1.SetOperationCondition(instance.Status.Conditions, c)
+	instance.Status.ObservedGeneration = instance.GetObjectMeta().GetGeneration()
 	instance.Status.Versions.Reconciled = utils.RCOOperandVersion
 	r.Client.Status().Update(context.TODO(), instance)
 	return reconcile.Result{}, nil
