@@ -473,11 +473,11 @@ func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule,
 
 	// Initialize additional ports
 	for i := 0; i < len(ba.GetService().GetPorts()); i++ {
-		portRef := &ba.GetService().GetPorts()[i]
-		if portRef.TargetPort.String() != "" {
-			ingress.Ports[i+1].Port = &portRef.TargetPort
+		portPtr := &ba.GetService().GetPorts()[i]
+		if portPtr.TargetPort.String() != "" {
+			ingress.Ports[i+1].Port = &portPtr.TargetPort
 		} else {
-			additionalPort := &intstr.IntOrString{Type: intstr.Int, IntVal: portRef.Port}
+			additionalPort := &intstr.IntOrString{Type: intstr.Int, IntVal: portPtr.Port}
 			ingress.Ports[i+1].Port = additionalPort
 		}
 	}
