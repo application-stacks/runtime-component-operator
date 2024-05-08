@@ -205,22 +205,25 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	if appstacksutils.GetServiceAccountName(instance) == "" {
-		serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
-		err = r.CreateOrUpdate(serviceAccount, instance, func() error {
-			return appstacksutils.CustomizeServiceAccount(serviceAccount, instance, r.GetClient())
-		})
-		if err != nil {
-			reqLogger.Error(err, "Failed to reconcile ServiceAccount")
-			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
-		}
-	} else {
-		// delete our SA, as one has been specified
-		serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
-		err = r.DeleteResource(serviceAccount)
-		if err != nil {
-			reqLogger.Error(err, "Failed to delete ServiceAccount")
-			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+	serviceAccountName := appstacksutils.GetServiceAccountName(instance)
+	if serviceAccountName != defaultMeta.Name {
+		if serviceAccountName == "" {
+			serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
+			err = r.CreateOrUpdate(serviceAccount, instance, func() error {
+				return appstacksutils.CustomizeServiceAccount(serviceAccount, instance, r.GetClient())
+			})
+			if err != nil {
+				reqLogger.Error(err, "Failed to reconcile ServiceAccount")
+				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+			}
+		} else {
+			// delete our SA, as one has been specified
+			serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
+			err = r.DeleteResource(serviceAccount)
+			if err != nil {
+				reqLogger.Error(err, "Failed to delete ServiceAccount")
+				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+			}
 		}
 	}
 
