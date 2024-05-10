@@ -299,12 +299,7 @@ func customizeProbe(config *common.BaseComponentProbe, getDefaultProbeCallback f
 		return nil
 	}
 
-	// Probe handler is defined in config so use probe as is
-	if config.BaseComponentProbeHandler != (common.BaseComponentProbeHandler{}) {
-		return ConvertToCoreProbe(ba, patchProbeCallback(ba, config))
-	}
-
-	// Probe handler is not defined so use default values for the probe if values not set in probe config
+	// Always use MicroProfile default values for the probe
 	return ConvertToCoreProbe(ba, patchProbeCallback(ba, customizeProbeDefaults(config, getDefaultProbeCallback(ba))))
 }
 
@@ -332,7 +327,15 @@ func createHTTPGetActionFromOptionalHTTPGetAction(ba common.BaseComponent, optio
 
 		if optionalHTTPGetAction.Scheme != "" {
 			httpGetAction.Scheme = optionalHTTPGetAction.Scheme
+		} else if httpGetAction.Port.IntValue() == int(ba.GetService().GetPort()) {
+			// If .spec.service.port matches the configured probe port, set the scheme based on the .spec.manageTLS flag
+			if ba.GetManageTLS() == nil || *ba.GetManageTLS() {
+				httpGetAction.Scheme = corev1.URISchemeHTTPS
+			} else {
+				httpGetAction.Scheme = corev1.URISchemeHTTP
+			}
 		} else {
+			// Otherwise, use the Kubernetes default scheme
 			httpGetAction.Scheme = corev1.URISchemeHTTP
 		}
 	}
