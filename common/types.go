@@ -271,10 +271,6 @@ type BaseComponentProbes interface {
 	GetDefaultLivenessProbe(ba BaseComponent) *BaseComponentProbe
 	GetDefaultReadinessProbe(ba BaseComponent) *BaseComponentProbe
 	GetDefaultStartupProbe(ba BaseComponent) *BaseComponentProbe
-
-	PatchLivenessProbe(ba BaseComponent, probe *BaseComponentProbe) *BaseComponentProbe
-	PatchReadinessProbe(ba BaseComponent, probe *BaseComponentProbe) *BaseComponentProbe
-	PatchStartupProbe(ba BaseComponent, probe *BaseComponentProbe) *BaseComponentProbe
 }
 
 type BaseComponentServiceAccount interface {

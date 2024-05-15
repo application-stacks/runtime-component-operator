@@ -288,19 +288,19 @@ func CustomizeProbes(container *corev1.Container, ba common.BaseComponent) {
 		return
 	}
 
-	container.ReadinessProbe = customizeProbe(probesConfig.GetReadinessProbe(), probesConfig.GetDefaultReadinessProbe, probesConfig.PatchReadinessProbe, ba)
-	container.LivenessProbe = customizeProbe(probesConfig.GetLivenessProbe(), probesConfig.GetDefaultLivenessProbe, probesConfig.PatchLivenessProbe, ba)
-	container.StartupProbe = customizeProbe(probesConfig.GetStartupProbe(), probesConfig.GetDefaultStartupProbe, probesConfig.PatchStartupProbe, ba)
+	container.ReadinessProbe = customizeProbe(probesConfig.GetReadinessProbe(), probesConfig.GetDefaultReadinessProbe, ba)
+	container.LivenessProbe = customizeProbe(probesConfig.GetLivenessProbe(), probesConfig.GetDefaultLivenessProbe, ba)
+	container.StartupProbe = customizeProbe(probesConfig.GetStartupProbe(), probesConfig.GetDefaultStartupProbe, ba)
 }
 
-func customizeProbe(config *common.BaseComponentProbe, getDefaultProbeCallback func(ba common.BaseComponent) *common.BaseComponentProbe, patchProbeCallback func(ba common.BaseComponent, probe *common.BaseComponentProbe) *common.BaseComponentProbe, ba common.BaseComponent) *corev1.Probe {
+func customizeProbe(config *common.BaseComponentProbe, getDefaultProbeCallback func(ba common.BaseComponent) *common.BaseComponentProbe, ba common.BaseComponent) *corev1.Probe {
 	// Probe not defined -- set probe to nil
 	if config == nil {
 		return nil
 	}
 
 	// Always use MicroProfile default values for the probe
-	return ConvertToCoreProbe(ba, patchProbeCallback(ba, customizeProbeDefaults(config, getDefaultProbeCallback(ba))))
+	return ConvertToCoreProbe(ba, customizeProbeDefaults(config, getDefaultProbeCallback(ba)))
 }
 
 func createHTTPGetActionFromOptionalHTTPGetAction(ba common.BaseComponent, optionalHTTPGetAction *common.OptionalHTTPGetAction) *corev1.HTTPGetAction {
