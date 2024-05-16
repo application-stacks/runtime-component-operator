@@ -373,6 +373,21 @@ func customizeProbeDefaults(config *common.BaseComponentProbe, defaultProbe *com
 		}
 		if config.BaseComponentProbeHandler.HTTPGet != nil {
 			probe.BaseComponentProbeHandler.HTTPGet = config.BaseComponentProbeHandler.HTTPGet
+			if config.BaseComponentProbeHandler.HTTPGet.Path != "" {
+				probe.BaseComponentProbeHandler.HTTPGet.Path = config.BaseComponentProbeHandler.HTTPGet.Path
+			}
+			if config.BaseComponentProbeHandler.HTTPGet.Host != "" {
+				probe.BaseComponentProbeHandler.HTTPGet.Host = config.BaseComponentProbeHandler.HTTPGet.Host
+			}
+			if config.BaseComponentProbeHandler.HTTPGet.Port != nil {
+				probe.BaseComponentProbeHandler.HTTPGet.Port = config.BaseComponentProbeHandler.HTTPGet.Port
+			}
+			if config.BaseComponentProbeHandler.HTTPGet.Scheme != "" {
+				probe.BaseComponentProbeHandler.HTTPGet.Scheme = config.BaseComponentProbeHandler.HTTPGet.Scheme
+			}
+			if len(config.BaseComponentProbeHandler.HTTPGet.HTTPHeaders) > 0 {
+				probe.BaseComponentProbeHandler.HTTPGet.HTTPHeaders = config.BaseComponentProbeHandler.HTTPGet.HTTPHeaders
+			}
 		}
 		if config.BaseComponentProbeHandler.TCPSocket != nil {
 			probe.BaseComponentProbeHandler.TCPSocket = config.BaseComponentProbeHandler.TCPSocket
