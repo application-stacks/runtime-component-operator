@@ -19,7 +19,7 @@ package v1beta2
 import (
 	"time"
 
-	"github.com/application-stacks/runtime-component-operator/common"
+	common "github.com/application-stacks/runtime-component-operator/common_v1beta2"
 	routev1 "github.com/openshift/api/route/v1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
