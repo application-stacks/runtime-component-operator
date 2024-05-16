@@ -372,7 +372,6 @@ func customizeProbeDefaults(config *common.BaseComponentProbe, defaultProbe *com
 			probe.BaseComponentProbeHandler.Exec = config.BaseComponentProbeHandler.Exec
 		}
 		if config.BaseComponentProbeHandler.HTTPGet != nil {
-			probe.BaseComponentProbeHandler.HTTPGet = config.BaseComponentProbeHandler.HTTPGet
 			if config.BaseComponentProbeHandler.HTTPGet.Path != "" {
 				probe.BaseComponentProbeHandler.HTTPGet.Path = config.BaseComponentProbeHandler.HTTPGet.Path
 			}
