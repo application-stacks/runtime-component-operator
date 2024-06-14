@@ -688,6 +688,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	pts.Spec.Volumes = ba.GetVolumes()
 
 	appContainer.SecurityContext = GetSecurityContext(ba)
+	pts.Spec.SecurityContext = PatchPodSecurityContext(ba, pts.Spec.SecurityContext)
 
 	if ba.GetManageTLS() == nil || *ba.GetManageTLS() || ba.GetService().GetCertificateSecretRef() != nil {
 
@@ -935,6 +936,7 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	ksvc.Spec.Template.Spec.Containers[0].EnvFrom = ba.GetEnvFrom()
 
 	ksvc.Spec.Template.Spec.Containers[0].SecurityContext = GetSecurityContext(ba)
+	ksvc.Spec.Template.Spec.SecurityContext = PatchPodSecurityContext(ba, ksvc.Spec.Template.Spec.SecurityContext)
 
 	ksvc.Spec.Template.Spec.Containers[0].VolumeMounts = ba.GetVolumeMounts()
 	ksvc.Spec.Template.Spec.Volumes = ba.GetVolumes()
@@ -1584,7 +1586,7 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 
 // Get security context from CR and apply customization to default settings
 func GetSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
-	baSecurityContext := ba.GetSecurityContext()
+	baSecurityContext := ba.GetSecurityContext().GetContainerSecurityContext()
 
 	valFalse := false
 	valTrue := true
@@ -1623,6 +1625,11 @@ func GetSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
 		return baSecurityContext
 	}
 	return secContext
+}
+
+// Get pod security context from CR
+func PatchPodSecurityContext(ba common.BaseComponent, podSecurityContext *corev1.PodSecurityContext) *corev1.PodSecurityContext {
+	return ba.GetSecurityContext().PatchPodSecurityContext(podSecurityContext)
 }
 
 func AddOCPCertAnnotation(ba common.BaseComponent, svc *corev1.Service) {

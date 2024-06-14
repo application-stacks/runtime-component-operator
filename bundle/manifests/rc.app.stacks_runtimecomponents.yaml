@@ -3604,7 +3604,7 @@ spec:
                     type: string
                 type: object
               securityContext:
-                description: Security context for the application container.
+                description: Security context for the application pod and container.
                 properties:
                   allowPrivilegeEscalation:
                     description: 'AllowPrivilegeEscalation controls whether a process
@@ -3633,6 +3633,28 @@ spec:
                           type: string
                         type: array
                     type: object
+                  fsGroup:
+                    description: "A special supplemental group that applies to all
+                      containers in a pod. Some volume types allow the Kubelet to
+                      change the ownership of that volume to be owned by the pod:
+                      \n 1. The owning GID will be the FSGroup 2. The setgid bit is
+                      set (new files created in the volume will be owned by FSGroup)
+                      3. The permission bits are OR'd with rw-rw---- \n If unset,
+                      the Kubelet will not modify the ownership and permissions of
+                      any volume. Note that this field cannot be set when spec.os.name
+                      is windows."
+                    format: int64
+                    type: integer
+                  fsGroupChangePolicy:
+                    description: 'fsGroupChangePolicy defines behavior of changing
+                      ownership and permission of the volume before being exposed
+                      inside Pod. This field will only apply to volume types which
+                      support fsGroup based ownership(and permissions). It will have
+                      no effect on ephemeral volume types such as: secret, configmaps
+                      and emptydir. Valid values are "OnRootMismatch" and "Always".
+                      If not specified, "Always" is used. Note that this field cannot
+                      be set when spec.os.name is windows.'
+                    type: string
                   privileged:
                     description: Run container in privileged mode. Processes in privileged
                       containers are essentially equivalent to root on the host. Defaults
@@ -3725,6 +3747,34 @@ spec:
                     required:
                     - type
                     type: object
+                  supplementalGroups:
+                    description: A list of groups applied to the first process run
+                      in each container, in addition to the container's primary GID.  If
+                      unspecified, no groups will be added to any container. Note
+                      that this field cannot be set when spec.os.name is windows.
+                    items:
+                      format: int64
+                      type: integer
+                    type: array
+                  sysctls:
+                    description: Sysctls hold a list of namespaced sysctls used for
+                      the pod. Pods with unsupported sysctls (by the container runtime)
+                      might fail to launch. Note that this field cannot be set when
+                      spec.os.name is windows.
+                    items:
+                      description: Sysctl defines a kernel parameter to be set
+                      properties:
+                        name:
+                          description: Name of a property to set
+                          type: string
+                        value:
+                          description: Value of a property to set
+                          type: string
+                      required:
+                      - name
+                      - value
+                      type: object
+                    type: array
                   windowsOptions:
                     description: The Windows specific settings applied to all containers.
                       If unspecified, the options from the PodSecurityContext will

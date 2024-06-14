@@ -59,3 +59,36 @@ func GetDefaultMicroProfileLivenessProbe(ba BaseComponent) *corev1.Probe {
 func GetComponentNameLabel(ba BaseComponent) string {
 	return ba.GetGroupName() + "/name"
 }
+
+func GetSecurityContext(asc *AppSecurityContext) *corev1.SecurityContext {
+	if asc == nil {
+		return nil
+	}
+	sc := asc.SecurityContext
+	securityContext := &corev1.SecurityContext{}
+	sc.DeepCopyInto(securityContext)
+	return securityContext
+}
+
+func PatchPodSecurityContext(asc *AppSecurityContext, podSecurityContext *corev1.PodSecurityContext) *corev1.PodSecurityContext {
+	if asc == nil {
+		return podSecurityContext
+	}
+	if podSecurityContext == nil {
+		podSecurityContext = &corev1.PodSecurityContext{}
+	}
+	sc := asc.IsolatedPodSecurityContext
+	if len(sc.SupplementalGroups) > 0 {
+		podSecurityContext.SupplementalGroups = sc.SupplementalGroups
+	}
+	if sc.FSGroup != nil {
+		podSecurityContext.FSGroup = sc.FSGroup
+	}
+	if len(sc.Sysctls) > 0 {
+		podSecurityContext.Sysctls = sc.Sysctls
+	}
+	if sc.FSGroupChangePolicy != nil {
+		podSecurityContext.FSGroupChangePolicy = sc.FSGroupChangePolicy
+	}
+	return podSecurityContext
+}

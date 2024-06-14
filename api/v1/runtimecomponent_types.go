@@ -143,9 +143,9 @@ type RuntimeComponentSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=24,type=spec,displayName="Affinity"
 	Affinity *RuntimeComponentAffinity `json:"affinity,omitempty"`
 
-	// Security context for the application container.
+	// Security context for the application pod and container.
 	// +operator-sdk:csv:customresourcedefinitions:order=25,type=spec,displayName="Security Context"
-	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
+	SecurityContext *RuntimeComponentSecurityContext `json:"securityContext,omitempty"`
 
 	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Topology Spread Constraints"
 	TopologySpreadConstraints *RuntimeComponentTopologySpreadConstraints `json:"topologySpreadConstraints,omitempty"`
@@ -160,6 +160,11 @@ type RuntimeComponentTopologySpreadConstraints struct {
 	// Whether the operator should disable its default set of TopologySpreadConstraints. Defaults to false.
 	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Disable Operator Defaults",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	DisableOperatorDefaults *bool `json:"disableOperatorDefaults,omitempty"`
+}
+
+// Define the security context object for the application pod and container
+type RuntimeComponentSecurityContext struct {
+	common.AppSecurityContext `json:",omitempty"`
 }
 
 // Defines the service account
@@ -933,8 +938,22 @@ func (a *RuntimeComponentAffinity) GetNodeAffinityLabels() map[string]string {
 	return a.NodeAffinityLabels
 }
 
+func (sc *RuntimeComponentSecurityContext) GetContainerSecurityContext() *corev1.SecurityContext {
+	if sc == nil {
+		return nil
+	}
+	return common.GetSecurityContext(&sc.AppSecurityContext)
+}
+
+func (sc *RuntimeComponentSecurityContext) PatchPodSecurityContext(podSecurityContext *corev1.PodSecurityContext) *corev1.PodSecurityContext {
+	if sc == nil {
+		return podSecurityContext
+	}
+	return common.PatchPodSecurityContext(&sc.AppSecurityContext, podSecurityContext)
+}
+
 // GetSecurityContext returns container security context
-func (cr *RuntimeComponent) GetSecurityContext() *corev1.SecurityContext {
+func (cr *RuntimeComponent) GetSecurityContext() common.BaseComponentSecurityContext {
 	return cr.Spec.SecurityContext
 }
 
