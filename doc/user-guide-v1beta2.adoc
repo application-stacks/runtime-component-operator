@@ -67,7 +67,7 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `initContainers` | The list of link:++https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#container-v1-core++[Init Container] definitions.
 | `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`.
 | `service.bindable` | A boolean to toggle whether the operator expose the application as a bindable service. The default value for this field is `false`.
-| `service.port` | The port exposed by the container.
+| `service.port` | The primary port exposed by the container. If not specified, the default is `8080`. See link:++#service-ports++[Service ports] for more info. 
 | `service.targetPort` | The port that the operator assigns to containers inside pods. Defaults to the value of `service.port`.
 | `service.portName` | The name for the port exposed by the container.
 | `service.ports` | An array consisting of service ports.
@@ -106,7 +106,7 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `route.annotations` | Annotations to be added to the Route.
 | `route.host`   | Hostname to be used for the Route.
 | `route.path`   | Path to be used for Route.
-| `route.pathType`   | Path type to be used. Required field for Ingress. See link:++https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types++[Ingress path types].
+| `route.pathType`   | Path type to be used. If not specified, the default is `ImplementationSpecific`. See link:++https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types++[Ingress path types].
 | `route.termination`   | TLS termination policy. Can be one of `edge`, `reencrypt` and `passthrough`.
 | `route.insecureEdgeTerminationPolicy`   | HTTP traffic policy with TLS enabled. Can be one of `Allow`, `Redirect` and `None`.
 | `route.certificateSecretRef` | A name of a secret that already contains TLS key, certificate and CA to be used in the route. It can also contain destination CA certificate. The following keys are valid in the secret: `ca.crt`, `destCA.crt`, `tls.crt`, and `tls.key`.
