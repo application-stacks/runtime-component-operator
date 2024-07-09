@@ -1043,6 +1043,10 @@ spec:
                         type: string
                     type: object
                 type: object
+              disableServiceLinks:
+                description: Disable information about services being injected into
+                  the application pod's environment variables. Default to false.
+                type: boolean
               env:
                 description: An array of environment variables for the application
                   container.

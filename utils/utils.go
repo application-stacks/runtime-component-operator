@@ -745,6 +745,14 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		}
 	}
 	pts.Spec.AutomountServiceAccountToken = &mount
+
+	if ba.GetDisableServiceLinks() != nil && *ba.GetDisableServiceLinks() == true {
+		//pts.Spec.EnableServiceLinks = ba.GetEnableServiceLinks()
+		fv := false
+		pts.Spec.EnableServiceLinks = &fv
+	} else {
+		pts.Spec.EnableServiceLinks = nil
+	}
 }
 
 // Initialize an empty TopologySpreadConstraints list and optionally prefers scheduling across zones/hosts for pods with podMatchLabels
