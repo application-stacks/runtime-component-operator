@@ -71,7 +71,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2024-05-24T20:56:30Z"
+    createdAt: "2024-07-09T09:27:04Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     olm.skipRange: '>=0.8.0 <1.3.2'
     operators.openshift.io/infrastructure-features: '["disconnected"]'
@@ -358,6 +358,12 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:text
       - displayName: Topology Spread Constraints
         path: topologySpreadConstraints
+      - description: Disable information about services being injected into the application
+          pod's environment variables. Default to false.
+        displayName: Disable Service Links
+        path: disableServiceLinks
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: The directory inside the container where this persisted storage
           will be bound to.
         displayName: Storage Mount Path
