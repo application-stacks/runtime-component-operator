@@ -229,6 +229,8 @@ spec:
       - description: Configure service certificate.
         displayName: Service Certificate
         path: service.certificate
+      - displayName: Knative Service
+        path: knative
       - displayName: Monitoring
         path: monitoring
       - description: An array consisting of service ports.
@@ -262,6 +264,12 @@ spec:
       - description: List of containers to run before other containers in a pod.
         displayName: Init Containers
         path: initContainers
+      - description: Annotations for Autoscaling.
+        displayName: Autoscaling Annotations
+        path: knative.autoscaling
+      - description: List of traffic targets.
+        displayName: Traffic Targets
+        path: knative.traffic
       - description: List of sidecar containers. These are additional containers to
           be added to the pods.
         displayName: Sidecar Containers
