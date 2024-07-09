@@ -571,7 +571,20 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 				}
 			}
 
-			svcCert.Spec.CommonName = bao.GetName() + "." + bao.GetNamespace() + ".svc"
+			commonName := bao.GetName() + "." + bao.GetNamespace() + ".svc"
+			if len(commonName) > 64 {
+				// Try removing '.svc'
+				commonName = commonName[:len(commonName)-4]
+			}
+			if len(commonName) > 64 {
+				// Try removing the namespace
+				commonName = commonName[:len(commonName)-len(bao.GetNamespace())-1]
+			}
+			if len(commonName) > 64 {
+				// Just have to truncate
+				commonName = commonName[:64]
+			}
+			svcCert.Spec.CommonName = commonName
 			svcCert.Spec.DNSNames = make([]string, 2)
 			svcCert.Spec.DNSNames[0] = bao.GetName() + "." + bao.GetNamespace() + ".svc"
 			svcCert.Spec.DNSNames[1] = bao.GetName() + "." + bao.GetNamespace() + ".svc.cluster.local"
