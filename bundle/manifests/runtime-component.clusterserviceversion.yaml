@@ -71,7 +71,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2024-05-24T20:56:30Z"
+    createdAt: "2024-07-09T13:58:29Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     olm.skipRange: '>=0.8.0 <1.3.2'
     operators.openshift.io/infrastructure-features: '["disconnected"]'
@@ -295,6 +295,8 @@ spec:
       - description: Configure service certificate.
         displayName: Service Certificate
         path: service.certificate
+      - displayName: Knative Service
+        path: knative
       - displayName: Monitoring
         path: monitoring
       - description: An array consisting of service ports.
@@ -328,6 +330,12 @@ spec:
       - description: List of containers to run before other containers in a pod.
         displayName: Init Containers
         path: initContainers
+      - description: Annotations for Autoscaling.
+        displayName: Autoscaling Annotations
+        path: knative.autoscaling
+      - description: List of traffic targets.
+        displayName: Traffic Targets
+        path: knative.traffic
       - description: List of sidecar containers. These are additional containers to
           be added to the pods.
         displayName: Sidecar Containers
