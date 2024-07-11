@@ -571,7 +571,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 				}
 			}
 
-			svcCert.Spec.CommonName = bao.GetName() + "." + bao.GetNamespace() + ".svc"
+			svcCert.Spec.CommonName = trimCommonName(bao.GetName(), bao.GetNamespace())
 			svcCert.Spec.DNSNames = make([]string, 2)
 			svcCert.Spec.DNSNames[0] = bao.GetName() + "." + bao.GetNamespace() + ".svc"
 			svcCert.Spec.DNSNames[1] = bao.GetName() + "." + bao.GetNamespace() + ".svc.cluster.local"
@@ -654,4 +654,25 @@ func (r *ReconcilerBase) GetIngressInfo(ba common.BaseComponent) (host string, p
 		}
 	}
 	return host, path, protocol
+}
+
+// Create a common name for a certificate that is no longer
+// that 64 bytes
+func trimCommonName(compName string, ns string) (cn string) {
+
+	commonName := compName + "." + ns + ".svc"
+	if len(commonName) > 64 {
+		// Try removing '.svc'
+		commonName = compName + "." + ns
+	}
+	if len(commonName) > 64 {
+		// Try removing the namespace
+		commonName = compName
+	}
+	if len(commonName) > 64 {
+		// Just have to truncate
+		commonName = commonName[:64]
+	}
+
+	return commonName
 }
