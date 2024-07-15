@@ -447,12 +447,7 @@ func createNetworkPolicyPeer(appName string, namespace string, networkPolicy com
 }
 
 func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule, ba common.BaseComponent) {
-	var ports []int32
-	ports = append(ports, ba.GetService().GetPort())
-	for _, port := range ba.GetService().GetPorts() {
-		ports = append(ports, port.Port)
-	}
-
+	// Resize the ingress ports
 	currentLen := len(ingress.Ports)
 	desiredLen := len(ba.GetService().GetPorts()) + 1 // Add one for normal port
 
@@ -462,15 +457,29 @@ func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule,
 		currentLen = desiredLen
 	}
 
-	// Add additional ports needed
+	// Add additional ports if needed
 	for currentLen < desiredLen {
 		ingress.Ports = append(ingress.Ports, networkingv1.NetworkPolicyPort{})
 		currentLen++
 	}
 
-	for i, port := range ports {
-		newPort := &intstr.IntOrString{Type: intstr.Int, IntVal: port}
-		ingress.Ports[i].Port = newPort
+	// Initialize the normal port
+	primaryPortIntVal := ba.GetService().GetPort()
+	if ba.GetService().GetTargetPort() != nil {
+		primaryPortIntVal = *ba.GetService().GetTargetPort()
+	}
+	primaryPort := intstr.IntOrString{Type: intstr.Int, IntVal: primaryPortIntVal}
+	ingress.Ports[0].Port = &primaryPort
+
+	// Initialize additional ports
+	for i := 0; i < len(ba.GetService().GetPorts()); i++ {
+		portPtr := &ba.GetService().GetPorts()[i]
+		if portPtr.TargetPort.String() != "" {
+			ingress.Ports[i+1].Port = &portPtr.TargetPort
+		} else {
+			additionalPort := &intstr.IntOrString{Type: intstr.Int, IntVal: portPtr.Port}
+			ingress.Ports[i+1].Port = additionalPort
+		}
 	}
 }
 
