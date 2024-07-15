@@ -149,6 +149,10 @@ type RuntimeComponentSpec struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Topology Spread Constraints"
 	TopologySpreadConstraints *RuntimeComponentTopologySpreadConstraints `json:"topologySpreadConstraints,omitempty"`
+
+	// Disable information about services being injected into the application pod's environment variables. Default to false.
+	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="Disable Service Links",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	DisableServiceLinks *bool `json:"disableServiceLinks,omitempty"`
 }
 
 // Defines the topology spread constraints
@@ -1036,6 +1040,11 @@ func (cr *RuntimeComponent) GetAnnotations() map[string]string {
 	}
 	delete(annotations, "kubectl.kubernetes.io/last-applied-configuration")
 	return annotations
+}
+
+// GetDisableServiceLinks returns whether service links should be disabled in the pod spec
+func (cr *RuntimeComponent) GetDisableServiceLinks() *bool {
+	return cr.Spec.DisableServiceLinks
 }
 
 // GetType returns status condition type

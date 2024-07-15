@@ -292,6 +292,12 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:text
       - displayName: Topology Spread Constraints
         path: topologySpreadConstraints
+      - description: Disable information about services being injected into the application
+          pod's environment variables. Default to false.
+        displayName: Disable Service Links
+        path: disableServiceLinks
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: The directory inside the container where this persisted storage
           will be bound to.
         displayName: Storage Mount Path
