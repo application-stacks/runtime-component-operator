@@ -67,7 +67,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.annotations['olm.targetNamespaces']
           - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
-            value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:fd04ce5a5870387a379b54da5c47d0338c5f4a1254611d2418f1f959d018ba7e
+            value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:e74e4c7bcc6999d704bafbb92bf78a6c776953401fd37f3597e3f4ebca0c3952
           - name: RELATED_IMAGE_RUNTIME_COMPONENT_OPERATOR
             value: OPERATOR_IMAGE
         securityContext:
