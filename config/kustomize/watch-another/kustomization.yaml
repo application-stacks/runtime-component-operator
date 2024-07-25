@@ -14,49 +14,47 @@ patches:
 - path: patches/delete-service-account.yaml
   target:
     kind: ServiceAccount
-
-patchesJson6902:
-  - target:
-      kind: RoleBinding
-      name: manager-rolebinding
-    patch: |-
-      - op: replace
-        path: /metadata/name
-        value: rco-watched-rolebinding
-      - op: replace
-        path: /roleRef/name
-        value: rco-watched-role
-  - target:
-      kind: RoleBinding
-      name: leader-election-rolebinding
-    patch: |-
-      - op: replace
-        path: /metadata/name
-        value: rco-leader-election-watched-rolebinding
-      - op: replace
-        path: /roleRef/name
-        value: rco-leader-election-watched-role
-  - target:
-      kind: RoleBinding
-      name: .*
-    patch: |-
-      - op: replace
-        path: /subjects/0/namespace
-        value: rco-ns
-      - op: replace
-        path: /subjects/0/name
-        value: rco-controller-manager
-  - target:
-      kind: Role
-      name: leader-election-role
-    patch: |-
-      - op: replace
-        path: /metadata/name
-        value: rco-leader-election-watched-role
-  - target:
-      kind: Role
-      name: manager-role
-    patch: |-
-      - op: replace
-        path: /metadata/name
-        value: rco-watched-role
+- target:
+    kind: RoleBinding
+    name: manager-rolebinding
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: rco-watched-rolebinding
+    - op: replace
+      path: /roleRef/name
+      value: rco-watched-role
+- target:
+    kind: RoleBinding
+    name: leader-election-rolebinding
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: rco-leader-election-watched-rolebinding
+    - op: replace
+      path: /roleRef/name
+      value: rco-leader-election-watched-role
+- target:
+    kind: RoleBinding
+    name: .*
+  patch: |-
+    - op: replace
+      path: /subjects/0/namespace
+      value: rco-ns
+    - op: replace
+      path: /subjects/0/name
+      value: rco-controller-manager
+- target:
+    kind: Role
+    name: leader-election-role
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: rco-leader-election-watched-role
+- target:
+    kind: Role
+    name: manager-role
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: rco-watched-role
