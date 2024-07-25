@@ -5,9 +5,8 @@ resources:
 - ../default
 - ../samples
 - ../scorecard
-patchesStrategicMerge:
-- patches/csvAnnotations.yaml
 patches:
+- path: patches/csvAnnotations.yaml
 - path: serviceBindingPatch.yaml
   target:
     kind: ClusterServiceVersion
