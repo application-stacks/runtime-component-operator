@@ -802,7 +802,7 @@ func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseCompone
 						Labels:    ba.GetLabels(),
 					},
 					Spec: corev1.PersistentVolumeClaimSpec{
-						Resources: corev1.ResourceRequirements{
+						Resources: corev1.VolumeResourceRequirements{
 							Requests: corev1.ResourceList{
 								corev1.ResourceStorage: resource.MustParse(ss.GetStorage().GetSize()),
 							},

@@ -81,23 +81,15 @@ func main() {
 	leaseDuration := 30 * time.Second
 	renewDeadline := 20 * time.Second
 
-	watchNamespace, err := getWatchNamespace()
-	if err != nil {
-		setupLog.Error(err, "unable to get WatchNamespace, "+
-			"the manager will watch and manage resources in all Namespaces")
-	}
-
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
-		MetricsBindAddress:     "0",
-		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "c407d44e.rc.app.stacks",
 		LeaseDuration:          &leaseDuration,
 		RenewDeadline:          &renewDeadline,
-		Namespace:              watchNamespace,
 	})
+
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
