@@ -12,6 +12,6 @@ commonLabels:
   app.kubernetes.io/instance: runtime-component-operator
   app.kubernetes.io/name: runtime-component-operator
 
-patchesStrategicMerge:
-- patches/delete-namespace.yaml
-- patches/watch-namespace.yaml
+patches:
+- path: patches/delete-namespace.yaml
+- path: patches/watch-namespace.yaml
