@@ -302,7 +302,7 @@ spec:
         - name: WATCH_NAMESPACE
           value: RUNTIME_COMPONENT_WATCH_NAMESPACE
         - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
-          value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:fd04ce5a5870387a379b54da5c47d0338c5f4a1254611d2418f1f959d018ba7e
+          value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:422a7a00edc338497c0a91890b09204b8505ef0e377bb9b5944ace0102055e91
         - name: RELATED_IMAGE_RUNTIME_COMPONENT_OPERATOR
           value: icr.io/appcafe/runtime-component-operator:daily
         image: icr.io/appcafe/runtime-component-operator:daily
