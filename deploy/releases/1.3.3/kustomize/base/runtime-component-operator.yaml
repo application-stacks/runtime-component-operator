@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: runtime-component-operator
+    app.kubernetes.io/name: runtime-component-operator
+    control-plane: controller-manager
+  name: rco-controller-manager
+  namespace: runtime-component
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: runtime-component-operator
+      app.kubernetes.io/name: runtime-component-operator
+      control-plane: controller-manager
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        app.kubernetes.io/instance: runtime-component-operator
+        app.kubernetes.io/name: runtime-component-operator
+        control-plane: controller-manager
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - ppc64le
+                - s390x
+      containers:
+      - args:
+        - --health-probe-bind-address=:8081
+        - --enable-leader-election
+        command:
+        - /manager
+        env:
+        - name: WATCH_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: OPERATOR_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
+          value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:422a7a00edc338497c0a91890b09204b8505ef0e377bb9b5944ace0102055e91
+        - name: RELATED_IMAGE_RUNTIME_COMPONENT_OPERATOR
+          value:  icr.io/appcafe/runtime-component-operator@sha256:682c5cb3e24566bf2933b1d4a4f6bf520d9b546edcedc1ee3214ec1ac4d48629
+        image:  icr.io/appcafe/runtime-component-operator@sha256:682c5cb3e24566bf2933b1d4a4f6bf520d9b546edcedc1ee3214ec1ac4d48629
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 8081
+            scheme: HTTP
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 10
+        name: manager
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /readyz
+            port: 8081
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 10
+        resources:
+          limits:
+            cpu: 400m
+            memory: 1Gi
+          requests:
+            cpu: 200m
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: rco-controller-manager
+      terminationGracePeriodSeconds: 10
