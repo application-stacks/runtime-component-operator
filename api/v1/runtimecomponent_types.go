@@ -153,6 +153,11 @@ type RuntimeComponentSpec struct {
 	// Disable information about services being injected into the application pod's environment variables. Default to false.
 	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="Disable Service Links",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	DisableServiceLinks *bool `json:"disableServiceLinks,omitempty"`
+
+	// Tolerations to be added to application pods.
+	// TODO what is the list type descriptor
+	// +operator-sdk:csv:customresourcedefinitions:order=28,type=spec,displayName="Tolerations"
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 }
 
 // Defines the topology spread constraints
@@ -511,6 +516,11 @@ func (cr *RuntimeComponent) GetPullPolicy() *corev1.PullPolicy {
 // GetPullSecret returns secret name for docker registry credentials
 func (cr *RuntimeComponent) GetPullSecret() *string {
 	return cr.Spec.PullSecret
+}
+
+// GetToleration returns pod tolerations slice
+func (cr *RuntimeComponent) GetTolerations() []corev1.Toleration {
+	return cr.Spec.Tolerations
 }
 
 // GetServiceAccountName returns service account name
