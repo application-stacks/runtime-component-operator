@@ -155,7 +155,6 @@ type RuntimeComponentSpec struct {
 	DisableServiceLinks *bool `json:"disableServiceLinks,omitempty"`
 
 	// Tolerations to be added to application pods.
-	// TODO what is the list type descriptor
 	// +operator-sdk:csv:customresourcedefinitions:order=28,type=spec,displayName="Tolerations"
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 }

@@ -5599,9 +5599,7 @@ spec:
                     type: object
                 type: object
               tolerations:
-                description: |-
-                  Tolerations to be added to application pods.
-                  TODO what is the list type descriptor
+                description: Tolerations to be added to application pods.
                 items:
                   description: |-
                     The pod this Toleration is attached to tolerates any taint that matches
