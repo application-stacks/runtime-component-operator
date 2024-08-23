@@ -234,4 +234,5 @@ type BaseComponent interface {
 	GetSecurityContext() *corev1.SecurityContext
 	GetManageTLS() *bool
 	GetDisableServiceLinks() *bool
+	GetTolerations() []corev1.Toleration
 }

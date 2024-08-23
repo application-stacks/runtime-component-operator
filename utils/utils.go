@@ -762,6 +762,8 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	} else {
 		pts.Spec.EnableServiceLinks = nil
 	}
+
+	pts.Spec.Tolerations = ba.GetTolerations()
 }
 
 // Initialize an empty TopologySpreadConstraints list and optionally prefers scheduling across zones/hosts for pods with podMatchLabels
