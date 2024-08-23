@@ -316,6 +316,10 @@ spec:
         path: statefulSet.storage.volumeClaimTemplate
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:PersistentVolumeClaim
+      - description: Tolerations to be added to application pods. Tolerations allow
+          the scheduler to schedule pods on nodes with matching taints.
+        displayName: Tolerations
+        path: tolerations
       - description: Labels to set on ServiceMonitor.
         displayName: Monitoring Labels
         path: monitoring.labels
