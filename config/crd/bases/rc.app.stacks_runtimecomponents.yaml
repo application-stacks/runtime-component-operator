@@ -5599,7 +5599,8 @@ spec:
                     type: object
                 type: object
               tolerations:
-                description: Tolerations to be added to application pods.
+                description: Tolerations to be added to application pods. Tolerations
+                  allow the scheduler to schedule pods on nodes with matching taints.
                 items:
                   description: |-
                     The pod this Toleration is attached to tolerates any taint that matches
