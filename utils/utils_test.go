@@ -1,11 +1,12 @@
 package utils
 
 import (
-	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	"os"
 	"reflect"
 	"strconv"
 	"testing"
+
+	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 
 	"github.com/application-stacks/runtime-component-operator/common"
 	routev1 "github.com/openshift/api/route/v1"
@@ -210,7 +211,7 @@ func partialTestCustomizeNodeAffinity(t *testing.T) {
 			Preference: corev1.NodeSelectorTerm{
 				MatchExpressions: []corev1.NodeSelectorRequirement{
 					{
-						Key:      "failure-domain.beta.kubernetes.io/zone",
+						Key:      "topology.kubernetes.io/zone",
 						Operator: corev1.NodeSelectorOpIn,
 						Values:   []string{"zoneB"},
 					},
@@ -259,7 +260,7 @@ func partialTestCustomizePodAffinity(t *testing.T) {
 	selectorB := makeInLabelSelector("service", []string{"Service-B"})
 	// required during scheduling ignored during execution
 	rDSIDE := []corev1.PodAffinityTerm{
-		{LabelSelector: &selectorA, TopologyKey: "failure-domain.beta.kubernetes.io/zone"},
+		{LabelSelector: &selectorA, TopologyKey: "topology.kubernetes.io/zone"},
 	}
 	// preferred during scheduling ignored during execution
 	pDSIDE := []corev1.WeightedPodAffinityTerm{
