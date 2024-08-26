@@ -71,7 +71,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2024-08-23T13:51:42Z"
+    createdAt: "2024-08-26T17:19:19Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -376,9 +376,6 @@ spec:
         path: disableServiceLinks
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: DNS settings for the pod.
-        displayName: DNS
-        path: dns
       - description: The directory inside the container where this persisted storage
           will be bound to.
         displayName: Storage Mount Path
@@ -395,6 +392,9 @@ spec:
           the scheduler to schedule pods on nodes with matching taints.
         displayName: Tolerations
         path: tolerations
+      - description: DNS settings for the pod.
+        displayName: DNS
+        path: dns
       - description: Labels to set on ServiceMonitor.
         displayName: Monitoring Labels
         path: monitoring.labels

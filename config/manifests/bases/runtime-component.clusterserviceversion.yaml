@@ -310,9 +310,6 @@ spec:
         path: disableServiceLinks
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: DNS settings for the pod.
-        displayName: DNS
-        path: dns
       - description: The directory inside the container where this persisted storage
           will be bound to.
         displayName: Storage Mount Path
@@ -329,6 +326,9 @@ spec:
           the scheduler to schedule pods on nodes with matching taints.
         displayName: Tolerations
         path: tolerations
+      - description: DNS settings for the pod.
+        displayName: DNS
+        path: dns
       - description: Labels to set on ServiceMonitor.
         displayName: Monitoring Labels
         path: monitoring.labels
