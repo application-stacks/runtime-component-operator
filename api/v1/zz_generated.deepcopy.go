@@ -627,6 +627,7 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
 	if in.DNS != nil {
 		in, out := &in.DNS, &out.DNS
 		*out = new(RuntimeComponentDNS)
