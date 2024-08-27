@@ -1098,7 +1098,7 @@ func ValidatePrometheusMonitoringEndpoints(ba common.BaseComponent, client clien
 				}
 			}
 			// BearerTokenSecret
-			bearerTokenSecret = endpoint.BearerTokenSecret
+			bearerTokenSecret = *endpoint.BearerTokenSecret
 			if secretShouldExist(bearerTokenSecret) {
 				secretNames = appendNameIfUnique(secretNames, bearerTokenSecret.Name)
 			}

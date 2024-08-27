@@ -27,11 +27,13 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
-	"github.com/application-stacks/runtime-component-operator/controllers"
+	"github.com/application-stacks/runtime-component-operator/internal/controller"
 	"github.com/application-stacks/runtime-component-operator/utils"
 	certmanagerv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	imagev1 "github.com/openshift/api/image/v1"
@@ -39,6 +41,7 @@ import (
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -88,31 +91,39 @@ func main() {
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme,
-		MetricsBindAddress:     "0",
-		Port:                   9443,
+		Scheme: scheme,
+		Metrics: metricsserver.Options{
+			BindAddress: "0",
+		},
+		WebhookServer: &webhook.DefaultServer{
+			Options: webhook.Options{
+				Port: 9443,
+			},
+		},
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "c407d44e.rc.app.stacks",
 		LeaseDuration:          &leaseDuration,
 		RenewDeadline:          &renewDeadline,
-		Namespace:              watchNamespace,
+		Cache: cache.Options{
+			DefaultNamespaces: map[string]cache.Config{watchNamespace: cache.Config{}},
+		},
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 
-	if err = (&controllers.RuntimeComponentReconciler{
+	if err = (&controller.RuntimeComponentReconciler{
 		ReconcilerBase: utils.NewReconcilerBase(mgr.GetAPIReader(), mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("runtime-component-operator")),
-		Log:            ctrl.Log.WithName("controllers").WithName("RuntimeComponent"),
+		Log:            ctrl.Log.WithName("controller").WithName("RuntimeComponent"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RuntimeComponent")
 		os.Exit(1)
 	}
-	if err = (&controllers.RuntimeOperationReconciler{
+	if err = (&controller.RuntimeOperationReconciler{
 		Client:     mgr.GetClient(),
-		Log:        ctrl.Log.WithName("controllers").WithName("RuntimeOperation"),
+		Log:        ctrl.Log.WithName("controller").WithName("RuntimeOperation"),
 		Scheme:     mgr.GetScheme(),
 		Recorder:   mgr.GetEventRecorderFor(""),
 		RestConfig: mgr.GetConfig(),
@@ -122,7 +133,7 @@ func main() {
 	}
 	// +kubebuilder:scaffold:builder
 
-	utils.CreateConfigMap(controllers.OperatorName)
+	utils.CreateConfigMap(controller.OperatorName)
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")
