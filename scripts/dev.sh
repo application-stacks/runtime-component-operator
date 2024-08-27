@@ -125,7 +125,7 @@ main() {
      setup_knative_serving
      install_cert_manager
      add_affinity_label_to_node
-     create_image_content_source_policy
+     create_image_digest_mirror_set
   elif [[ "$COMMAND" == "scorecard" ]]; then
      run_scorecard
   elif [[ "$COMMAND" == "deploy" ]]; then
@@ -442,16 +442,16 @@ add_affinity_label_to_node() {
   fi
 }
 
-create_image_content_source_policy() {
-  if ! oc get imagecontentsourcepolicy | grep mirror-config >/dev/null; then
-    echo "Adding ImageContentSourcePolicy to mirror to staging repository..."
+create_image_digest_mirror_set() {
+  if ! oc get ImageDigestMirrorSet | grep mirror-config >/dev/null; then
+    echo "Adding ImageDigestMirrorSet to mirror to staging repository..."
     cat <<EOF | oc apply -f -
-apiVersion: operator.openshift.io/v1alpha1
-kind: ImageContentSourcePolicy
+apiVersion: config.openshift.io/v1
+kind: ImageDigestMirrorSet
 metadata:
     name: mirror-config
 spec:
-    repositoryDigestMirrors:
+  imageDigestMirrors:
     - mirrors:
       - cp.stg.icr.io/cp
       source: cp.icr.io/cp
@@ -461,7 +461,7 @@ spec:
 EOF
     echo
   else
-    echo "ImageContentSourcePolicy to mirror to staging repository already exists."
+    echo "ImageDigestMirrorSet to mirror to staging repository already exists."
   fi
 }
 
