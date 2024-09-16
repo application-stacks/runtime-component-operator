@@ -1,6 +1,6 @@
 module github.com/application-stacks/runtime-component-operator
 
-go 1.22
+go 1.23
 
 require (
 	github.com/cert-manager/cert-manager v1.13.6
