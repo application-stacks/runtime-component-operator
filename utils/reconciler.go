@@ -572,9 +572,22 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 			}
 
 			svcCert.Spec.CommonName = trimCommonName(bao.GetName(), bao.GetNamespace())
-			svcCert.Spec.DNSNames = make([]string, 2)
+			svcCert.Spec.DNSNames = make([]string, 4)
 			svcCert.Spec.DNSNames[0] = bao.GetName() + "." + bao.GetNamespace() + ".svc"
 			svcCert.Spec.DNSNames[1] = bao.GetName() + "." + bao.GetNamespace() + ".svc.cluster.local"
+			svcCert.Spec.DNSNames[2] = bao.GetName() + "." + bao.GetNamespace()
+			svcCert.Spec.DNSNames[3] = bao.GetName()
+			if ba.GetStatefulSet() != nil {
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, bao.GetName()+"-headless."+bao.GetNamespace()+".svc")
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, bao.GetName()+"-headless."+bao.GetNamespace()+".svc.cluster.local")
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, bao.GetName()+"-headless."+bao.GetNamespace())
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, bao.GetName()+"-headless")
+				// Wildcard entries for the pods
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, "*."+bao.GetName()+"-headless."+bao.GetNamespace()+".svc")
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, "*."+bao.GetName()+"-headless."+bao.GetNamespace()+".svc.cluster.local")
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, "*."+bao.GetName()+"-headless."+bao.GetNamespace())
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, "*."+bao.GetName()+"-headless")
+			}
 			svcCert.Spec.IsCA = false
 			svcCert.Spec.IssuerRef = certmanagermetav1.ObjectReference{
 				Name: prefix + "-ca-issuer",
