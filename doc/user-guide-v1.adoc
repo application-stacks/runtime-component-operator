@@ -206,6 +206,7 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `statefulSet.storage.volumeClaimTemplate` | A YAML object representing a link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components++[volumeClaimTemplate] component of a `StatefulSet`.
 | `statefulSet.updateStrategy`   | A field to specify the update strategy of the StatefulSet. For examples, see link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies++[updateStrategy]
 | `statefulSet.updateStrategy.type`   | The type of update strategy of the StatefulSet. The type can be set to `RollingUpdate` or `OnDelete`, where `RollingUpdate` is the default update strategy.
+| `tolerations` | Tolerations to be added to application pods. Tolerations allow the scheduler to schedule pods on nodes with matching taints. For more information, see link:#++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#configure-tolerations[Configure tolerations].
 | `volumeMounts` | A YAML object representing a link:++https://kubernetes.io/docs/concepts/storage/volumes/++[pod volumeMount]. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#persist-resources[Persist Resources].
 | `volumes` | A YAML object representing a link:++https://kubernetes.io/docs/concepts/storage/volumes++[pod volume].
 
