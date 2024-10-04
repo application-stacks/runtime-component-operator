@@ -369,6 +369,8 @@ Browse the `RuntimeComponent` examples to learn how to use custom resource (CR) 
   - link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#generating-certificates-with-certificate-manager++[Generating certificates with certificate manager]
   - link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#generating-certificates-with-red-hat-openshift-service-ca++[Generating certificates with Red Hat OpenShift service CA (`.spec.service.annotations`)]
   - link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#specifying-certificates-for-a-secret-route-and-service++[Specifying certificates for a secret Route and Service (`.spec.service.certificateSecretRef` and `.spec.route.certificateSecretRef`)] 
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#configure-tolerations++[Configure tolerations (`.spec.tolerations`)]
+* link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#configure-dns-specdnspolicy-and-specdnsconfig++[Configure DNS (`.spec.dns.policy` and `.spec.dns.config`)]
 
 
 === Day-2 Operations
