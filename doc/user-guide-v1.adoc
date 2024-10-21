@@ -133,6 +133,9 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `deployment.annotations`   | Annotations to be added only to the deployment and resources owned by the deployment.
 | `deployment.updateStrategy`   | A field to specify the update strategy of the deployment. For examples, see link:++https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy++[updateStrategy]
 | `deployment.updateStrategy.type`   | The type of update strategy of the deployment. The type can be set to `RollingUpdate` or `Recreate`, where `RollingUpdate` is the default update strategy.
+| `dns` | DNS settings for the application pods. For more information, see https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#configure-dns-specdnspolicy-and-specdnsconfig[Configure DNS]
+| `dns.config` | The DNS Config for the application pods.
+| `dns.policy` | The DNS Policy for the application pod. Defaults to ClusterFirst.
 | `disableServiceLinks`   | Disable information about services being injected into the application pod as environment variables. The default value for this field is `false`.
 | `env`   | [[crd-spec-env]] An array of environment variables following the format of `{name, value}`, where value is a simple string. It may also follow the format of `{name, valueFrom}`, where valueFrom refers to a value in a `ConfigMap` or `Secret` resource. For examples, see link:#++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#set-environment-variables-for-an-application-container++[Set environment variables for an application container] and link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#override-console-logging-environment-variable-default-values++[Override console logging environment variable default values].
 | `envFrom`   | An array of references to `ConfigMap` or `Secret` resources containing environment variables. Keys from `ConfigMap` or `Secret` resources become environment variable names in your container. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#set-environment-variables-for-an-application-container++[Set environment variables for an application container].
@@ -203,6 +206,7 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `statefulSet.storage.volumeClaimTemplate` | A YAML object representing a link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components++[volumeClaimTemplate] component of a `StatefulSet`.
 | `statefulSet.updateStrategy`   | A field to specify the update strategy of the StatefulSet. For examples, see link:++https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies++[updateStrategy]
 | `statefulSet.updateStrategy.type`   | The type of update strategy of the StatefulSet. The type can be set to `RollingUpdate` or `OnDelete`, where `RollingUpdate` is the default update strategy.
+| `tolerations` | Tolerations to be added to application pods. Tolerations allow the scheduler to schedule pods on nodes with matching taints. For more information, see https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#configure-tolerations[Configure tolerations].
 | `volumeMounts` | A YAML object representing a link:++https://kubernetes.io/docs/concepts/storage/volumes/++[pod volumeMount]. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#persist-resources[Persist Resources].
 | `volumes` | A YAML object representing a link:++https://kubernetes.io/docs/concepts/storage/volumes++[pod volume].
 
@@ -365,6 +369,8 @@ Browse the `RuntimeComponent` examples to learn how to use custom resource (CR) 
   - link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#generating-certificates-with-certificate-manager++[Generating certificates with certificate manager]
   - link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#generating-certificates-with-red-hat-openshift-service-ca++[Generating certificates with Red Hat OpenShift service CA (`.spec.service.annotations`)]
   - link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#specifying-certificates-for-a-secret-route-and-service++[Specifying certificates for a secret Route and Service (`.spec.service.certificateSecretRef` and `.spec.route.certificateSecretRef`)] 
+* https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#configure-tolerations-spectolerations[Configure tolerations (`.spec.tolerations`)]
+* https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#configure-dns-specdnspolicy-and-specdnsconfig[Configure DNS (`.spec.dns.policy` and `.spec.dns.config`)]
 
 
 === Day-2 Operations
