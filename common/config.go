@@ -1,11 +1,10 @@
 package common
 
 import (
+	"sync"
+
 	corev1 "k8s.io/api/core/v1"
 )
-
-// OpConfig stored operator configuration
-type OpConfig map[string]string
 
 const (
 
@@ -20,24 +19,25 @@ const (
 )
 
 // Config stores operator configuration
-var Config = OpConfig{}
+var Config = &sync.Map{}
 
 // LoadFromConfigMap creates a config out of kubernetes config map
-func (oc OpConfig) LoadFromConfigMap(cm *corev1.ConfigMap) {
-	for k, v := range DefaultOpConfig() {
-		oc[k] = v
-	}
-
+func LoadFromConfigMap(oc *sync.Map, cm *corev1.ConfigMap) {
+	cfg := DefaultOpConfig()
+	cfg.Range(func(key, value interface{}) bool {
+		oc.Store(key, value)
+		return true
+	})
 	for k, v := range cm.Data {
-		oc[k] = v
+		oc.Store(k, v)
 	}
 }
 
 // DefaultOpConfig returns default configuration
-func DefaultOpConfig() OpConfig {
-	cfg := OpConfig{}
-	cfg[OpConfigDefaultHostname] = ""
-	cfg[OpConfigCMCADuration] = "8766h"
-	cfg[OpConfigCMCertDuration] = "2160h"
+func DefaultOpConfig() *sync.Map {
+	cfg := &sync.Map{}
+	cfg.Store(OpConfigDefaultHostname, "")
+	cfg.Store(OpConfigCMCADuration, "8766h")
+	cfg.Store(OpConfigCMCertDuration, "2160h")
 	return cfg
 }
