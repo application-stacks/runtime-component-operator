@@ -53,7 +53,11 @@ const (
 )
 
 // Config stores operator configuration
-var Config = &sync.Map{}
+var Config *sync.Map
+
+func init() {
+	Config = &sync.Map{}
+}
 
 var LevelFunc = uberzap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 	return lvl >= Config.GetZapLogLevel()
