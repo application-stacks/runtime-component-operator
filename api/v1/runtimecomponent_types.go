@@ -1196,6 +1196,7 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 	condition.SetMessage(c.GetMessage())
 	condition.SetStatus(c.GetStatus())
 	condition.SetType(c.GetType())
+	condition.SetStatusTypeUnchangedCount(c.GetStatusTypeUnchangedCount())
 	if !found {
 		s.Conditions = append(s.Conditions, *condition)
 	}
