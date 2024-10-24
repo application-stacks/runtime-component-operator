@@ -17,6 +17,13 @@ const (
 
 	// OpConfigCMCADuration default duration for cert-manager issued service certificate
 	OpConfigCMCertDuration = "certManagerCertDuration"
+
+	// OpConfigReconcileInterval default reconciliation interval in seconds
+	OpConfigReconcileInterval = "reconcileInterval"
+
+	// OpConfigReconcileIntervalIncrease default reconciliation interval increase, represented as a percentage (1 equaling to 100%)
+	// When the reconciliation needs to increase, it will increase by the given percentage
+	OpConfigReconcileIntervalIncrease = "reconcileIntervalIncrease"
 )
 
 // Config stores operator configuration
@@ -39,5 +46,7 @@ func DefaultOpConfig() OpConfig {
 	cfg[OpConfigDefaultHostname] = ""
 	cfg[OpConfigCMCADuration] = "8766h"
 	cfg[OpConfigCMCertDuration] = "2160h"
+	cfg[OpConfigReconcileInterval] = "15"
+	cfg[OpConfigReconcileIntervalIncrease] = "1"
 	return cfg
 }

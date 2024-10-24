@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (r *ReconcilerBase) CheckApplicationStatus(ba common.BaseComponent) corev1.ConditionStatus {
+func (r *ReconcilerBase) CheckApplicationStatus(ba common.BaseComponent) (common.StatusCondition, common.StatusCondition) {
 	s := ba.GetStatus()
 
 	status, msg, reason := corev1.ConditionFalse, "", ""
@@ -63,7 +63,7 @@ func (r *ReconcilerBase) CheckApplicationStatus(ba common.BaseComponent) corev1.
 	newCondition.SetConditionFields(msg, reason, status)
 	r.setCondition(ba, oldCondition, newCondition)
 
-	return status
+	return oldCondition, newCondition
 }
 
 func (r *ReconcilerBase) CheckResourcesStatus(ba common.BaseComponent) {
