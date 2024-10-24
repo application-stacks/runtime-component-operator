@@ -113,7 +113,8 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	if _, err = strconv.Atoi(common.Config[common.OpConfigReconcileInterval]); err != nil {
 		return reconcile.Result{}, err
 	}
-	if _, err = strconv.Atoi(common.Config[common.OpConfigReconcileIntervalIncrease]); err != nil {
+
+	if _, err = strconv.ParseFloat(common.Config[common.OpConfigReconcileIntervalIncrease], 64); err != nil {
 		return reconcile.Result{}, err
 	}
 
