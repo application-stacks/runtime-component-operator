@@ -381,6 +381,22 @@ func (in *RuntimeComponentStatus) SetReference(s string, s2 string) {
 	return
 }
 
+func (s *RuntimeComponentStatus) GetReconcileInterval() *int32 {
+	return nil
+}
+
+func (s *RuntimeComponentStatus) SetReconcileInterval(interval *int32) {
+	return
+}
+
+func (s *StatusCondition) GetStatusTypeUnchangedCount() *int32 {
+	return nil
+}
+
+func (s *StatusCondition) SetStatusTypeUnchangedCount(count *int32) {
+	return
+}
+
 // Defines possible status conditions.
 type StatusCondition struct {
 	LastTransitionTime *metav1.Time           `json:"lastTransitionTime,omitempty"`

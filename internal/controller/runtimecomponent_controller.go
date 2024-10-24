@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/application-stacks/runtime-component-operator/common"
@@ -106,6 +107,15 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		appstacksutils.CreateConfigMap(OperatorName)
 	} else {
 		common.Config.LoadFromConfigMap(configMap)
+	}
+
+	// Check if the interval and interval increase are set properly in the ConfigMap
+	if _, err = strconv.Atoi(common.Config[common.OpConfigReconcileInterval]); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if _, err = strconv.ParseFloat(common.Config[common.OpConfigReconcileIntervalIncrease], 64); err != nil {
+		return reconcile.Result{}, err
 	}
 
 	// Fetch the RuntimeComponent instance

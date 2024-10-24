@@ -431,6 +431,9 @@ type RuntimeComponentStatus struct {
 
 	// The generation identifier of this RuntimeComponent instance completely reconciled by the Operator.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// The reconciliation interval in seconds.
+	ReconcileInterval *int32 `json:"reconcileInterval,omitempty"`
 }
 
 // Defines possible status conditions.
@@ -440,6 +443,9 @@ type StatusCondition struct {
 	Message            string                 `json:"message,omitempty"`
 	Status             corev1.ConditionStatus `json:"status,omitempty"`
 	Type               StatusConditionType    `json:"type,omitempty"`
+
+	// The count of how many times the condition status type has not been changed.
+	TypeUnchangedCount *int32 `json:"typeUnchangedCount,omitempty"`
 }
 
 // Defines the type of status condition.
@@ -1190,6 +1196,7 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 	condition.SetMessage(c.GetMessage())
 	condition.SetStatus(c.GetStatus())
 	condition.SetType(c.GetType())
+	condition.SetStatusTypeUnchangedCount(c.GetStatusTypeUnchangedCount())
 	if !found {
 		s.Conditions = append(s.Conditions, *condition)
 	}
@@ -1222,11 +1229,27 @@ func (s *RuntimeComponentStatus) SetReferences(refs common.StatusReferences) {
 	s.References = refs
 }
 
+func (s *RuntimeComponentStatus) GetReconcileInterval() *int32 {
+	return s.ReconcileInterval
+}
+
+func (s *RuntimeComponentStatus) SetReconcileInterval(interval *int32) {
+	s.ReconcileInterval = interval
+}
+
 func (s *RuntimeComponentStatus) SetReference(name string, value string) {
 	if s.References == nil {
 		s.References = make(common.StatusReferences)
 	}
 	s.References[name] = value
+}
+
+func (s *StatusCondition) GetStatusTypeUnchangedCount() *int32 {
+	return s.TypeUnchangedCount
+}
+
+func (s *StatusCondition) SetStatusTypeUnchangedCount(count *int32) {
+	s.TypeUnchangedCount = count
 }
 
 func convertToCommonStatusConditionType(c StatusConditionType) common.StatusConditionType {
