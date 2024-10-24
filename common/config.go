@@ -19,7 +19,11 @@ const (
 )
 
 // Config stores operator configuration
-var Config = &sync.Map{}
+var Config *sync.Map
+
+func init() {
+	Config = &sync.Map{}
+}
 
 // LoadFromConfigMap creates a config out of kubernetes config map
 func LoadFromConfigMap(oc *sync.Map, cm *corev1.ConfigMap) {
