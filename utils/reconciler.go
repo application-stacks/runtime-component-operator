@@ -272,12 +272,13 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 
 	var retryInterval time.Duration
 	// If the application was reconciled and now it is not or encountered a different error
+	// Use the default reconcile interval
 	if oldCondition == nil || s.GetReconcileInterval() == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
 		retryInterval = getBaseReconcileInterval(newCondition, s)
 	} else {
-		// If the application fails to reconcile again
-		// And if the error message has not changed
-		maxMinutes := 2
+		// If the application fails to reconcile again and the error message has not changed
+		// Increase the retry interval upto maxMinutes
+		maxMinutes := 4
 		retryInterval = updateReconcileInterval(maxMinutes, oldCondition, newCondition, s)
 	}
 
@@ -321,23 +322,22 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 
 	// If resources are not ready
 	if newAppCondition.GetStatus() != corev1.ConditionTrue {
-		// If the application was reconciled and now it is not or encountered a different error
+		// If the resources were ready and now they are not or encountered a different error
 		if oldAppCondition == nil || oldAppCondition.GetStatus() != newAppCondition.GetStatus() || oldAppCondition.GetMessage() != newAppCondition.GetMessage() {
 			retryInterval = getBaseReconcileInterval(newAppCondition, s)
 		} else {
-			// If the application fails to reconcile again
-			// And if the error message has not changed
-			maxMinutes := 2
+			// If the resources stay unready and the error message has not changed
+			maxMinutes := 4
 			retryInterval = updateReconcileInterval(maxMinutes, oldAppCondition, newAppCondition, s)
 		}
 	} else {
-		// If the application was reconciled and now it is not or encountered a different error
+		// If the application and resources are ready
+		// If the application or the resources were not ready before
 		if oldRecCondition == nil || oldRecCondition.GetStatus() != newRecCondition.GetStatus() || oldRecCondition.GetMessage() != newRecCondition.GetMessage() {
 			retryInterval = getBaseReconcileInterval(newRecCondition, s)
 		} else {
-			// If the application fails to reconcile again
-			// And if the error message has not changed
-			maxMinutes := 4
+			// If the application and resources stay ready and there are no changes
+			maxMinutes := 2
 			retryInterval = updateReconcileInterval(maxMinutes, oldRecCondition, newRecCondition, s)
 		}
 	}
