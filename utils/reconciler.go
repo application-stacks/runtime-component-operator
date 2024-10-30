@@ -212,7 +212,10 @@ func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition
 
 	var newCount int32
 	if count := oldCondition.GetUnchangedConditionCount(); count == nil {
-		newCount = 1
+		newCount = 0
+		oldReconcileInterval, _ = strconv.ParseFloat(common.Config[common.OpConfigReconcileIntervalSeconds], 64)
+		baseInterval := int32(oldReconcileInterval)
+		s.SetReconcileInterval(&baseInterval)
 	} else {
 		newCount = *count + 1
 	}
@@ -232,7 +235,6 @@ func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition
 		// Only increase to the maximum interval
 		if newInterval <= int32(maxSeconds) {
 			s.SetReconcileInterval(&newInterval)
-
 			return time.Duration(newInterval) * time.Second
 		}
 	}
