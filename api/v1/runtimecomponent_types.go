@@ -445,7 +445,7 @@ type StatusCondition struct {
 	Type               StatusConditionType    `json:"type,omitempty"`
 
 	// The count of how many times the condition status type has not been changed.
-	TypeUnchangedCount *int32 `json:"typeUnchangedCount,omitempty"`
+	UnchangedConditionCount *int32 `json:"unchangedConditionCount,omitempty"`
 }
 
 // Defines the type of status condition.
@@ -1196,7 +1196,7 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 	condition.SetMessage(c.GetMessage())
 	condition.SetStatus(c.GetStatus())
 	condition.SetType(c.GetType())
-	condition.SetStatusTypeUnchangedCount(c.GetStatusTypeUnchangedCount())
+	condition.SetUnchangedConditionCount(c.GetUnchangedConditionCount())
 	if !found {
 		s.Conditions = append(s.Conditions, *condition)
 	}
@@ -1244,12 +1244,22 @@ func (s *RuntimeComponentStatus) SetReference(name string, value string) {
 	s.References[name] = value
 }
 
-func (s *StatusCondition) GetStatusTypeUnchangedCount() *int32 {
-	return s.TypeUnchangedCount
+func (sc *StatusCondition) GetUnchangedConditionCount() *int32 {
+	return sc.UnchangedConditionCount
 }
 
-func (s *StatusCondition) SetStatusTypeUnchangedCount(count *int32) {
-	s.TypeUnchangedCount = count
+func (sc *StatusCondition) SetUnchangedConditionCount(count *int32) {
+	sc.UnchangedConditionCount = count
+}
+
+func (s *RuntimeComponentStatus) UnsetUnchangedConditionCount(conditionType common.StatusConditionType) {
+	// Reset unchanged count for other status conditions
+	var emptyCount *int32
+	for i := range s.Conditions {
+		if s.Conditions[i].GetType() != conditionType && s.Conditions[i].GetUnchangedConditionCount() != nil {
+			s.Conditions[i].SetUnchangedConditionCount(emptyCount)
+		}
+	}
 }
 
 func convertToCommonStatusConditionType(c StatusConditionType) common.StatusConditionType {

@@ -7829,7 +7829,7 @@ spec:
                     type:
                       description: Defines the type of status condition.
                       type: string
-                    typeUnchangedCount:
+                    unchangedConditionCount:
                       description: The count of how many times the condition status
                         type has not been changed.
                       format: int32

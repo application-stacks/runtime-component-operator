@@ -882,8 +882,8 @@ func (in *StatusCondition) DeepCopyInto(out *StatusCondition) {
 		in, out := &in.LastTransitionTime, &out.LastTransitionTime
 		*out = (*in).DeepCopy()
 	}
-	if in.TypeUnchangedCount != nil {
-		in, out := &in.TypeUnchangedCount, &out.TypeUnchangedCount
+	if in.UnchangedConditionCount != nil {
+		in, out := &in.UnchangedConditionCount, &out.UnchangedConditionCount
 		*out = new(int32)
 		**out = **in
 	}

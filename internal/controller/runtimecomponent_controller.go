@@ -110,11 +110,11 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	// Check if the interval and interval increase are set properly in the ConfigMap
-	if _, err = strconv.Atoi(common.Config[common.OpConfigReconcileInterval]); err != nil {
+	if _, err = strconv.Atoi(common.Config[common.OpConfigReconcileIntervalSeconds]); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	if _, err = strconv.ParseFloat(common.Config[common.OpConfigReconcileIntervalIncrease], 64); err != nil {
+	if _, err = strconv.Atoi(common.Config[common.OpConfigReconcileIntervalPercentage]); err != nil {
 		return reconcile.Result{}, err
 	}
 

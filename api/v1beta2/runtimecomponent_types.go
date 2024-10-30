@@ -389,11 +389,15 @@ func (s *RuntimeComponentStatus) SetReconcileInterval(interval *int32) {
 	return
 }
 
-func (s *StatusCondition) GetStatusTypeUnchangedCount() *int32 {
+func (s *StatusCondition) GetUnchangedConditionCount() *int32 {
 	return nil
 }
 
-func (s *StatusCondition) SetStatusTypeUnchangedCount(count *int32) {
+func (s *StatusCondition) SetUnchangedConditionCount(count *int32) {
+	return
+}
+
+func (s *RuntimeComponentStatus) UnsetUnchangedConditionCount(conditionType common.StatusConditionType) {
 	return
 }
 
