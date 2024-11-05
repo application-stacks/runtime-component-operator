@@ -40,6 +40,12 @@ func (oc OpConfig) LoadFromConfigMap(cm *corev1.ConfigMap) {
 	}
 }
 
+// SetConfigMapDefaultValue sets default value for specified key
+func (oc OpConfig) SetConfigMapDefaultValue(key string) {
+	cm := DefaultOpConfig()
+	oc[key] = cm[key]
+}
+
 // DefaultOpConfig returns default configuration
 func DefaultOpConfig() OpConfig {
 	cfg := OpConfig{}

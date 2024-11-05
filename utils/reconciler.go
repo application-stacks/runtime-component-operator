@@ -228,7 +228,7 @@ func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition
 	if newCount >= 2 && newCount%2 == 0 {
 		intervalIncreasePercentage, _ := strconv.ParseFloat(common.Config[common.OpConfigReconcileIntervalPercentage], 64)
 		exp := float64(newCount / 2)
-		increase := math.Pow(1+intervalIncreasePercentage/100, exp)
+		increase := math.Pow(1+(intervalIncreasePercentage/100), exp)
 		baseInterval, _ := strconv.ParseFloat(common.Config[common.OpConfigReconcileIntervalSeconds], 64)
 		newInterval := int32(baseInterval * increase)
 
@@ -250,7 +250,6 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 	r.GetRecorder().Event(obj, "Warning", "ProcessingError", issue.Error())
 
 	oldCondition := s.GetCondition(conditionType)
-
 	newCondition := s.NewCondition(conditionType)
 	newCondition.SetReason(string(apierrors.ReasonForError(issue)))
 	newCondition.SetMessage(issue.Error())

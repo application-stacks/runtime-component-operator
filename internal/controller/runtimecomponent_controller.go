@@ -109,15 +109,6 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		common.Config.LoadFromConfigMap(configMap)
 	}
 
-	// Check if the interval and interval increase are set properly in the ConfigMap
-	if _, err = strconv.Atoi(common.Config[common.OpConfigReconcileIntervalSeconds]); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	if _, err = strconv.Atoi(common.Config[common.OpConfigReconcileIntervalPercentage]); err != nil {
-		return reconcile.Result{}, err
-	}
-
 	// Fetch the RuntimeComponent instance
 	instance := &appstacksv1.RuntimeComponent{}
 	var ba common.BaseComponent = instance
@@ -131,6 +122,16 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
+	}
+
+	if _, err = strconv.Atoi(common.Config[common.OpConfigReconcileIntervalSeconds]); err != nil {
+		common.Config.SetConfigMapDefaultValue(common.OpConfigReconcileIntervalSeconds)
+		return r.ManageError(errors.New("reconcileIntervalSeconds in open-liberty-operator config map has an invalid syntax, error: "+err.Error()), common.StatusConditionTypeReconciled, instance)
+	}
+
+	if _, err = strconv.Atoi(common.Config[common.OpConfigReconcileIntervalPercentage]); err != nil {
+		common.Config.SetConfigMapDefaultValue(common.OpConfigReconcileIntervalPercentage)
+		return r.ManageError(errors.New("reconcileIntervalIncreasePercentage in open-liberty-operator config map has an invalid syntax, error: "+err.Error()), common.StatusConditionTypeReconciled, instance)
 	}
 
 	isKnativeSupported, err := r.IsGroupVersionSupported(servingv1.SchemeGroupVersion.String(), "Service")
