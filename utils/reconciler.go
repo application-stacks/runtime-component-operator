@@ -233,7 +233,7 @@ func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition
 		newInterval := int32(baseInterval * increase)
 
 		// Only increase to the maximum interval
-		if newInterval <= int32(maxSeconds) {
+		if newInterval > 0 && newInterval <= int32(maxSeconds) {
 			s.SetReconcileInterval(&newInterval)
 			return time.Duration(newInterval) * time.Second
 		}

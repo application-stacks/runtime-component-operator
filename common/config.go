@@ -1,6 +1,9 @@
 package common
 
 import (
+	"errors"
+	"strconv"
+
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -38,6 +41,23 @@ func (oc OpConfig) LoadFromConfigMap(cm *corev1.ConfigMap) {
 	for k, v := range cm.Data {
 		oc[k] = v
 	}
+}
+func (oc OpConfig) CheckValidValue(key string, OperatorName string) error {
+	value := oc[key]
+
+	intValue, err := strconv.Atoi(value)
+	if err != nil {
+		oc.SetConfigMapDefaultValue(key)
+		return errors.New(key + " in ConfigMap: " + OperatorName + " has an invalid syntax, error: " + err.Error())
+	} else if key == OpConfigReconcileIntervalSeconds && intValue <= 0 {
+		oc.SetConfigMapDefaultValue(key)
+		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value + ". It must be greater than 0.")
+	} else if key == OpConfigReconcileIntervalPercentage && intValue < 0 {
+		oc.SetConfigMapDefaultValue(key)
+		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value + ". It must be greater or equal to 0.")
+	}
+
+	return nil
 }
 
 // SetConfigMapDefaultValue sets default value for specified key
