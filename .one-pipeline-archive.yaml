@@ -27,6 +27,7 @@ setup:
       curl -X POST -H 'Content-type: application/json' --data '{"text":"The archive operation for '$REPO' has failed."}' $(get_env slack_web_hook_url) </dev/null
       curl -X POST -H 'Content-type: application/json' --data '{"text":"Failing pipeline: '$pipeline_url'"}' $(get_env slack_web_hook_url) </dev/null
       curl -X POST -H 'Content-type: application/json' --data '{"text":"Destination repository: '$ARCHIVE_DESTINATION_REPO'"}' $(get_env slack_web_hook_url) </dev/null
+      exit 1
     else
       echo "${REPO} has been archived successfully to ${ARCHIVE_DESTINATION_REPO}"
     fi
