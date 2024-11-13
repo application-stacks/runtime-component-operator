@@ -22,6 +22,8 @@ import (
 	"os"
 	"time"
 
+	uberzap "go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -33,6 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
+	"github.com/application-stacks/runtime-component-operator/common"
 	"github.com/application-stacks/runtime-component-operator/internal/controller"
 	"github.com/application-stacks/runtime-component-operator/utils"
 	certmanagerv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
@@ -80,7 +83,14 @@ func main() {
 
 	utils.CreateConfigMap(controller.OperatorName)
 
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+	levelFunc := uberzap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+		return lvl >= common.Config.GetZapLogLevel()
+	})
+	opts := zap.Options{
+		Level:       levelFunc,
+		Development: true,
+	}
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	// see https://github.com/operator-framework/operator-sdk/issues/1813
 	leaseDuration := 30 * time.Second

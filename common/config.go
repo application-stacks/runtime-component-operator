@@ -1,6 +1,7 @@
 package common
 
 import (
+	"go.uber.org/zap/zapcore"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -18,9 +19,24 @@ const (
 	// OpConfigCMCADuration default duration for cert-manager issued service certificate
 	OpConfigCMCertDuration = "certManagerCertDuration"
 
+	// OpConfigLogLevel the level of logs to be written
+	OpConfigLogLevel = "logLevel"
+
+	// The allowed values for OpConfigLogLevel
+	logLevelWarning = "warning"
+	logLevelInfo    = "info"
+	logLevelDebug   = "debug"
+	logLevelDebug2  = "debug2"
+
 	// Constants to use when fetching a debug level logger
 	LogLevelDebug  = 1
 	LogLevelDebug2 = 2
+
+	// zap logging level constants
+	zLevelWarn   zapcore.Level = 1
+	zLevelInfo   zapcore.Level = 0
+	zLevelDebug  zapcore.Level = -1
+	zLevelDebug2 zapcore.Level = -2
 )
 
 // Config stores operator configuration
@@ -37,11 +53,35 @@ func (oc OpConfig) LoadFromConfigMap(cm *corev1.ConfigMap) {
 	}
 }
 
+// Returns the zap log level corresponding to the value of the
+// 'logLevel' key in the config map. Returns 'info' if they key
+// is missing or contains an invalid value.
+func (oc OpConfig) GetZapLogLevel() zapcore.Level {
+	level, ok := oc[OpConfigLogLevel]
+	if !ok {
+		return zLevelInfo
+	}
+	switch level {
+	case logLevelWarning:
+		return zLevelWarn
+	case logLevelInfo:
+		return zLevelInfo
+	case logLevelDebug:
+		return zLevelDebug
+	case logLevelDebug2:
+		return zLevelDebug2
+	default:
+		// config value is invalid.
+		return zLevelInfo
+	}
+}
+
 // DefaultOpConfig returns default configuration
 func DefaultOpConfig() OpConfig {
 	cfg := OpConfig{}
 	cfg[OpConfigDefaultHostname] = ""
 	cfg[OpConfigCMCADuration] = "8766h"
 	cfg[OpConfigCMCertDuration] = "2160h"
+	cfg[OpConfigLogLevel] = logLevelInfo
 	return cfg
 }
