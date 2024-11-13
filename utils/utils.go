@@ -1892,8 +1892,8 @@ func ShouldDeleteRoute(ba common.BaseComponent) bool {
 }
 
 // Returns the max concurrent reconciles set for the operator custom resource instance crInstance if set
-func GetMaxConcurrentReconciles(crInstance string) int {
-	envValue := os.Getenv(fmt.Sprintf("%s_MAX_CONCURRENT_RECONCILES", crInstance))
+func GetMaxConcurrentReconciles(customResourceName string) int {
+	envValue := os.Getenv(fmt.Sprintf("%s_MAX_CONCURRENT_RECONCILES", customResourceName))
 	if envValue != "" {
 		maxConcurrentReconciles, err := strconv.ParseInt(envValue, 10, 64)
 		if err == nil && maxConcurrentReconciles >= 1 {
