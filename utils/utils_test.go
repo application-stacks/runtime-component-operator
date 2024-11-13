@@ -797,6 +797,47 @@ func TestGetMaxConcurrentReconciles(t *testing.T) {
 	verifyTests(maxConcurrentReconcilesTests, t)
 }
 
+func TestGetMaxConcurrentReconcilesWithDefault(t *testing.T) {
+	// Set the logger to development mode for verbose logs
+	logger := zap.New()
+	logf.SetLogger(logger)
+
+	os.Setenv("MAX_CONCURRENT_RECONCILES", "10") // set a default max concurrent reconcile of 10
+	maxConcurrentReconciles := GetMaxConcurrentReconciles("CUSTOM_RESOURCE_NAME")
+	maxConcurrentReconcilesTests := []Test{
+		{"max concurrent reconcile (no env set)", 10, maxConcurrentReconciles},
+	}
+	verifyTests(maxConcurrentReconcilesTests, t)
+
+	os.Setenv("CUSTOM_RESOURCE_NAME_MAX_CONCURRENT_RECONCILES", "1")
+	maxConcurrentReconciles = GetMaxConcurrentReconciles("CUSTOM_RESOURCE_NAME")
+	maxConcurrentReconcilesTests = []Test{
+		{"max concurrent reconcile (env set to 1)", 1, maxConcurrentReconciles},
+	}
+	verifyTests(maxConcurrentReconcilesTests, t)
+
+	os.Setenv("CUSTOM_RESOURCE_NAME_MAX_CONCURRENT_RECONCILES", "-1")
+	maxConcurrentReconciles = GetMaxConcurrentReconciles("CUSTOM_RESOURCE_NAME")
+	maxConcurrentReconcilesTests = []Test{
+		{"max concurrent reconcile (env set to -1)", 10, maxConcurrentReconciles},
+	}
+	verifyTests(maxConcurrentReconcilesTests, t)
+
+	os.Setenv("CUSTOM_RESOURCE_NAME_MAX_CONCURRENT_RECONCILES", "8")
+	maxConcurrentReconciles = GetMaxConcurrentReconciles("CUSTOM_RESOURCE_NAME")
+	maxConcurrentReconcilesTests = []Test{
+		{"max concurrent reconcile (env set to 8)", 8, maxConcurrentReconciles},
+	}
+	verifyTests(maxConcurrentReconcilesTests, t)
+
+	os.Setenv("CUSTOM_RESOURCE_NAME_MAX_CONCURRENT_RECONCILES", "tenthousand")
+	maxConcurrentReconciles = GetMaxConcurrentReconciles("CUSTOM_RESOURCE_NAME")
+	maxConcurrentReconcilesTests = []Test{
+		{"max concurrent reconcile (env set to NaN)", 10, maxConcurrentReconciles},
+	}
+	verifyTests(maxConcurrentReconcilesTests, t)
+}
+
 func TestShouldDeleteRoute(t *testing.T) {
 	logger := zap.New()
 	logf.SetLogger(logger)
