@@ -78,6 +78,8 @@ func main() {
 			"Enabling this will ensure there is only one active controller manager.")
 	flag.Parse()
 
+	utils.CreateConfigMap(controller.OperatorName)
+
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	// see https://github.com/operator-framework/operator-sdk/issues/1813
@@ -132,8 +134,6 @@ func main() {
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
-
-	utils.CreateConfigMap(controller.OperatorName)
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")
