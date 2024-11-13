@@ -31,12 +31,14 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	kcontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	"github.com/application-stacks/runtime-component-operator/utils"
+	appstacksutils "github.com/application-stacks/runtime-component-operator/utils"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -190,8 +192,13 @@ func (r *RuntimeOperationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	}
 
+	maxConcurrentReconciles := appstacksutils.GetMaxConcurrentReconciles("RUNTIME_OPERATION")
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&appstacksv1.RuntimeOperation{}, builder.WithPredicates(pred)).
+		WithOptions(kcontroller.Options{
+			MaxConcurrentReconciles: maxConcurrentReconciles,
+		}).
 		Complete(r)
 }
 
