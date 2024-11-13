@@ -23,10 +23,11 @@ const (
 	OpConfigLogLevel = "logLevel"
 
 	// The allowed values for OpConfigLogLevel
-	logLevelWarning = "warning"
-	logLevelInfo    = "info"
-	logLevelDebug   = "debug"
-	logLevelDebug2  = "debug2"
+	logLevelWarning  = "warning"
+	logLevelInfo     = "info"
+	logLevelDebug    = "debug"
+	logLevelDebug2   = "debug2"
+	logLevelDebugMax = "debugmax"
 
 	// Constants to use when fetching a debug level logger
 	LogLevelDebug  = 1
@@ -37,6 +38,8 @@ const (
 	zLevelInfo   zapcore.Level = 0
 	zLevelDebug  zapcore.Level = -1
 	zLevelDebug2 zapcore.Level = -2
+	// zapcore.Level is defined as int8, so this logs everything
+	zLevelDebugMax zapcore.Level = -127
 )
 
 // Config stores operator configuration
@@ -70,6 +73,8 @@ func (oc OpConfig) GetZapLogLevel() zapcore.Level {
 		return zLevelDebug
 	case logLevelDebug2:
 		return zLevelDebug2
+	case logLevelDebugMax:
+		return zLevelDebugMax
 	default:
 		// config value is invalid.
 		return zLevelInfo
