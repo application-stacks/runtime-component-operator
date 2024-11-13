@@ -1896,7 +1896,7 @@ func GetMaxConcurrentReconciles(crInstance string) int {
 	envValue := os.Getenv(fmt.Sprintf("%s_MAX_CONCURRENT_RECONCILES", crInstance))
 	if envValue != "" {
 		maxConcurrentReconciles, err := strconv.ParseInt(envValue, 10, 64)
-		if err != nil && maxConcurrentReconciles >= 1 {
+		if err == nil && maxConcurrentReconciles >= 1 {
 			return int(maxConcurrentReconciles)
 		}
 	}
