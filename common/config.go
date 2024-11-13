@@ -17,6 +17,10 @@ const (
 
 	// OpConfigCMCADuration default duration for cert-manager issued service certificate
 	OpConfigCMCertDuration = "certManagerCertDuration"
+
+	// Constants to use when fetching a debug level logger
+	LogLevelDebug  = 1
+	LogLevelDebug2 = 2
 )
 
 // Config stores operator configuration
