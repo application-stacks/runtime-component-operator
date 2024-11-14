@@ -62,7 +62,7 @@ curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-o
 ----
 curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/internal/deploy/kubectl/runtime-component-operator.yaml \
       | sed -e "s/RUNTIME_COMPONENT_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" \
-      | sed -e "s/RUNTIME_COMPONENT_MAX_CONCURRENT_RECONCILES/${MAX_CONCURRENT_RECONCILES}/" \
+      | sed -e "s/RUNTIME_COMPONENT_MAX_CONCURRENT_RECONCILES/'${MAX_CONCURRENT_RECONCILES}'/" \
       | kubectl apply -n ${OPERATOR_NAMESPACE} -f -
 ----
 
