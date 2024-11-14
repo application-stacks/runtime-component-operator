@@ -38,7 +38,6 @@ import (
 
 	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	"github.com/application-stacks/runtime-component-operator/utils"
-	appstacksutils "github.com/application-stacks/runtime-component-operator/utils"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -192,12 +191,10 @@ func (r *RuntimeOperationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	}
 
-	maxConcurrentReconciles := appstacksutils.GetMaxConcurrentReconciles("RUNTIME_OPERATION")
-
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&appstacksv1.RuntimeOperation{}, builder.WithPredicates(pred)).
 		WithOptions(kcontroller.Options{
-			MaxConcurrentReconciles: maxConcurrentReconciles,
+			MaxConcurrentReconciles: 1,
 		}).
 		Complete(r)
 }

@@ -616,7 +616,7 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	}
 
-	maxConcurrentReconciles := appstacksutils.GetMaxConcurrentReconciles("RUNTIME_COMPONENT")
+	maxConcurrentReconciles := appstacksutils.GetMaxConcurrentReconciles()
 
 	b := ctrl.NewControllerManagedBy(mgr).For(&appstacksv1.RuntimeComponent{}, builder.WithPredicates(pred)).
 		Owns(&corev1.Service{}, builder.WithPredicates(predSubResource)).
