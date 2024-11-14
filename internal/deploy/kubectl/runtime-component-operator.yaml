@@ -301,6 +301,8 @@ spec:
               fieldPath: metadata.namespace
         - name: WATCH_NAMESPACE
           value: RUNTIME_COMPONENT_WATCH_NAMESPACE
+        - name: MAX_CONCURRENT_RECONCILES
+          value: RUNTIME_COMPONENT_MAX_CONCURRENT_RECONCILES
         - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
           value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:3999aa86f788e601d305896e48a043a91861cdbf71951a1959887151390b3650
         - name: RELATED_IMAGE_RUNTIME_COMPONENT_OPERATOR
