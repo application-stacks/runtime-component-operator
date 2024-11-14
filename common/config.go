@@ -20,14 +20,14 @@ const (
 	OpConfigCMCertDuration = "certManagerCertDuration"
 
 	// OpConfigLogLevel the level of logs to be written
-	OpConfigLogLevel = "logLevel"
+	OpConfigLogLevel = "operatorLogLevel"
 
 	// The allowed values for OpConfigLogLevel
 	logLevelWarning  = "warning"
 	logLevelInfo     = "info"
-	logLevelDebug    = "debug"
-	logLevelDebug2   = "debug2"
-	logLevelDebugMax = "debugmax"
+	logLevelDebug    = "fine"
+	logLevelDebug2   = "finer"
+	logLevelDebugMax = "finest"
 
 	// Constants to use when fetching a debug level logger
 	LogLevelDebug  = 1
