@@ -9,13 +9,13 @@ resources:
 
 configMapGenerator:
   - envs:
-      - env.yaml
-    name: env
+      - application.properties
+    name: app-config
 
 replacements:
 - source:
     kind: ConfigMap
-    name: env
+    name: app-config
     fieldPath: data.MAX_CONCURRENT_RECONCILES
   targets:
   - select:

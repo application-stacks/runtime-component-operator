@@ -45,3 +45,8 @@ This example overlay builds on the previous example and demonstrates how to chan
 the namespace that the operator installs into. In this example, the operator installs
 into a namespace that is called 'rco-ns' and watches for Runtime Component custom resource
 instances in any namespaces. To install, run: `kubectl create -k examples/watch-all-namespaces`
+
+== Setting max concurrent reconciles
+
+=== overlays/set-max-concurrent-reconciles
+This overlay updates the base configuration by setting the `MAX_CONCURRENT_RECONCILES` environment variable in the operator's Deployment. It enables multiple workers to reconcile the Runtime Component custom resource instances concurrently. There are `8` workers set by default, and this setting can be customized in the `overlays/set-max-concurrent-reconciles/application.properties` file.
