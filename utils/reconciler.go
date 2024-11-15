@@ -332,20 +332,27 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 	// If the resources are not ready
 	if newCondition.GetStatus() != corev1.ConditionTrue {
 		// If the resources were ready and now they are not, or encountered a different error
+		// Use the default reconcile interval
 		if oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
 			retryInterval = getBaseReconcileInterval(newCondition, s)
 		} else {
 			// If the resources stay unready and the error message has not changed
+			// Increase the retry interval upto maxSeconds
 			maxSeconds := 240 // Max 4 minutes
 			retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
 		}
 	} else { // If the application and resources are ready
-		// If the application or the resources were not reconciled before
-		// Or if the application (resources) were not ready before
-		if oldRecCondition == nil || oldRecCondition.GetStatus() != newRecCondition.GetStatus() || oldRecCondition.GetMessage() != newRecCondition.GetMessage() || oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
+		if oldRecCondition == nil || oldRecCondition.GetStatus() != newRecCondition.GetStatus() || oldRecCondition.GetMessage() != newRecCondition.GetMessage() {
+			// If the application or the resources were not reconciled before
+			// Use the default reconcile interval
 			retryInterval = getBaseReconcileInterval(newRecCondition, s)
+		} else if oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
+			// Or if the application (resources) were not ready before
+			// Use the default reconcile interval
+			retryInterval = getBaseReconcileInterval(newCondition, s)
 		} else {
 			// If the application and resources stay ready and there are no changes
+			// Increase the retry interval upto maxSeconds
 			maxSeconds := 120 // Max 2 minutes
 			retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
 		}
