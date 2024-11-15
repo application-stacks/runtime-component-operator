@@ -1,0 +1,79 @@
+= Runtime Component Operator v1.4.1
+
+== Supported Environments
+
+The Runtime Component Operator is available for the following CPU architectures:
+
+- Linux&reg; x86_64 (amd64)
+- Linux&reg; on IBM&reg; Z (s390x)
+- Linux&reg; on Power&reg; (ppc64le)
+
+Red Hat OpenShift 4.12 or higher is supported. The operator is also supported on Kubernetes environments with v1.25 or higher.
+
+== Installation
+
+=== Option 1: Install using Operator Lifecycle Manager (OLM) on OpenShift
+
+Runtime Component Operator is available from Red Hat's Certified OpenShift Operators catalog. 
+
+To install using the integrated OperatorHub in OpenShift UI, select `Operators` from the navigation panel, then select `OperatorHub` and then search for `Runtime Component`. Click on the tile with `Runtime Component` to install the Operator. Select the channel `v1.4` and install.
+
+  * (Optional) To specify more than one worker that can reconcile Runtime Component CR instances concurrently, select `Manual` Update Approval and install the operator. Under the `Installed Operators` tab, you should see the operator pending installation with message "Upgrade available". Click the name to enter the Subscription resource then navigate to the YAML tab to update the Subscription's `.spec` field with the following configuration:
+  
+```
+spec:
+  config:
+    env:
+      - name: MAX_CONCURRENT_RECONCILES
+        value: "8"
+```
+
+
+To install using the `oc` CLI, use the following `Subscription`. Replace `<install_namespace>` with the namespace you want to install the Operator to:
+
+```
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: runtime-component-operator-certified
+  namespace: <install_namespace>
+spec:
+  channel: v1.4
+  name: runtime-component-operator-certified
+  source: certified-operators
+  sourceNamespace: openshift-marketplace
+```
+
+    * (Optional) To specify more than one worker that can reconcile Runtime Component CR instances concurrently, set the environment variable `MAX_CONCURRENT_RECONCILES`
+
+```
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: runtime-component-operator-certified
+  namespace: <install_namespace>
+spec:
+  channel: v1.4
+  name: runtime-component-operator-certified
+  source: certified-operators
+  sourceNamespace: openshift-marketplace
+  config:
+    env:
+      - name: MAX_CONCURRENT_RECONCILES
+        value: "8"
+```
+
+=== Option 2: Install using kubectl
+
+See the instructions link:++kubectl/++[here].
+
+=== Option 3: Install using kustomize
+
+See the instructions link:++kustomize/++[here].
+
+
+== Limitations
+
+* Knative support is limited. Values specified for `.spec.autoscaling`, `.spec.resources` and `.spec.replicas` fields would not apply for Knative when enabled using `.spec.createKnativeService` field.
+* Monitoring feature does not support integration with Knative Service. Prometheus Operator is required to use ServiceMonitor.
+* After the initial deployment of `RuntimeComponent`, any changes to its labels would be applied only when one of the fields from `.spec` is updated.
