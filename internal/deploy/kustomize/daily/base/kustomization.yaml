@@ -8,3 +8,19 @@ resources:
   - runtime-component-operator.yaml
   - runtime-component-roles.yaml
 
+configMapGenerator:
+  - envs:
+      - env.yaml
+    name: env
+
+replacements:
+- source:
+    kind: ConfigMap
+    name: env
+    fieldPath: data.MAX_CONCURRENT_RECONCILES
+  targets:
+  - select:
+      name: rco-controller-manager
+      kind: Deployment
+    fieldPaths:
+      - spec.template.spec.containers.[name=manager].env.[name=MAX_CONCURRENT_RECONCILES].value
