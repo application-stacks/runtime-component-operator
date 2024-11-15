@@ -35,7 +35,7 @@ spec:
 
 ==== OPTIONAL: Set multiple concurrent reconcile workers
 
-You can configure multiple workers to reconcile Runtime Component CR instances concurrently.
+You can configure multiple workers to reconcile Runtime Component custom resource instances concurrently. If not set, the number of workers defaults to `1`.
 
 To set this using the integrated OperatorHub in OpenShift UI, select `Manual` Update Approval and install the operator. Under the `Installed Operators` tab, you should see the operator pending installation with message "Upgrade available". Click the name to enter the Subscription resource then navigate to the YAML tab to nest the following configuration as the Subscription's `.spec.config` field.
   
