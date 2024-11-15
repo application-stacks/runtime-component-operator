@@ -64,7 +64,7 @@ spec:
         value: "8"
 ```
 
-You can verify if the configuration has been successfully set by viewing the Pod logs under the `rco-controller-manager` Deployment which prints the newly modified number of `worker count` as `8`.
+You can verify if the configuration has been successfully set by viewing the Pod logs under the `rco-controller-manager` Deployment which outputs the newly modified `worker count` as `8`.
 
 ```
 2024-11-15T18:10:35Z	INFO	Starting workers	{"controller": "runtimeoperation", "controllerGroup": "rc.app.stacks", "controllerKind": "RuntimeOperation", "worker count": 1}
