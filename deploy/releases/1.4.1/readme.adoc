@@ -18,17 +18,6 @@ Runtime Component Operator is available from Red Hat's Certified OpenShift Opera
 
 To install using the integrated OperatorHub in OpenShift UI, select `Operators` from the navigation panel, then select `OperatorHub` and then search for `Runtime Component`. Click on the tile with `Runtime Component` to install the Operator. Select the channel `v1.4` and install.
 
-  * (Optional) To specify more than one worker that can reconcile Runtime Component CR instances concurrently, select `Manual` Update Approval and install the operator. Under the `Installed Operators` tab, you should see the operator pending installation with message "Upgrade available". Click the name to enter the Subscription resource then navigate to the YAML tab to update the Subscription's `.spec` field with the following configuration:
-  
-```
-spec:
-  config:
-    env:
-      - name: MAX_CONCURRENT_RECONCILES
-        value: "8"
-```
-
-
 To install using the `oc` CLI, use the following `Subscription`. Replace `<install_namespace>` with the namespace you want to install the Operator to:
 
 ```
@@ -44,7 +33,19 @@ spec:
   sourceNamespace: openshift-marketplace
 ```
 
-    * (Optional) To specify more than one worker that can reconcile Runtime Component CR instances concurrently, set the environment variable `MAX_CONCURRENT_RECONCILES`
+==== OPTIONAL: Set multiple concurrent reconcile workers
+
+You can configure multiple workers to reconcile Runtime Component CR instances concurrently.
+
+To set this using the integrated OperatorHub in OpenShift UI, select `Manual` Update Approval and install the operator. Under the `Installed Operators` tab, you should see the operator pending installation with message "Upgrade available". Click the name to enter the Subscription resource then navigate to the YAML tab to nest the following configuration as the Subscription's `.spec.config` field.
+  
+```
+config:
+  env:
+    - name: MAX_CONCURRENT_RECONCILES
+      value: "8"
+```
+To set this using the `oc` CLI, use the following `Subscription`.
 
 ```
 apiVersion: operators.coreos.com/v1alpha1
@@ -62,6 +63,14 @@ spec:
       - name: MAX_CONCURRENT_RECONCILES
         value: "8"
 ```
+
+You can verify if the configuration has been successfully set by viewing the Pod logs under the `rco-controller-manager` Deployment which prints the newly modified number of `worker count` as `8`.
+
+```
+2024-11-15T18:10:35Z	INFO	Starting workers	{"controller": "runtimeoperation", "controllerGroup": "rc.app.stacks", "controllerKind": "RuntimeOperation", "worker count": 1}
+2024-11-15T18:10:35Z	INFO	Starting workers	{"controller": "runtimecomponent", "controllerGroup": "rc.app.stacks", "controllerKind": "RuntimeComponent", "worker count": 8}
+```
+
 
 === Option 2: Install using kubectl
 
