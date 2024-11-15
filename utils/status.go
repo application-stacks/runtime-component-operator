@@ -29,13 +29,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (r *ReconcilerBase) CheckApplicationStatus(ba common.BaseComponent) corev1.ConditionStatus {
+func (r *ReconcilerBase) CheckApplicationStatus(ba common.BaseComponent) (common.StatusCondition, common.StatusCondition) {
 	s := ba.GetStatus()
 
 	status, msg, reason := corev1.ConditionFalse, "", ""
 
 	// Check application and resources status
 	scReconciled := s.GetCondition(common.StatusConditionTypeReconciled)
+	oldResourcesCondition := s.GetCondition(common.StatusConditionTypeResourcesReady)
+	var newResourcesCondition common.StatusCondition
 
 	// If not reconciled, resources and endpoints will not be ready and reconciled status will show the errors
 	if scReconciled == nil || scReconciled.GetStatus() != corev1.ConditionTrue {
@@ -46,8 +48,8 @@ func (r *ReconcilerBase) CheckApplicationStatus(ba common.BaseComponent) corev1.
 		r.CheckResourcesStatus(ba)
 		r.ReportExternalEndpointStatus(ba)
 
-		scReady := s.GetCondition(common.StatusConditionTypeResourcesReady)
-		if scReady == nil || scReady.GetStatus() != corev1.ConditionTrue {
+		newResourcesCondition = s.GetCondition(common.StatusConditionTypeResourcesReady)
+		if newResourcesCondition == nil || newResourcesCondition.GetStatus() != corev1.ConditionTrue {
 			msg = "Resources are not ready."
 			reason = "ResourcesNotReady"
 		} else {
@@ -58,12 +60,16 @@ func (r *ReconcilerBase) CheckApplicationStatus(ba common.BaseComponent) corev1.
 
 	// Check Application Ready status condition is created/updated
 	conditionType := common.StatusConditionTypeReady
-	oldCondition := s.GetCondition(conditionType)
-	newCondition := s.NewCondition(conditionType)
-	newCondition.SetConditionFields(msg, reason, status)
-	r.setCondition(ba, oldCondition, newCondition)
+	oldAppCondition := s.GetCondition(conditionType)
+	newAppCondition := s.NewCondition(conditionType)
+	newAppCondition.SetConditionFields(msg, reason, status)
+	r.setCondition(ba, oldAppCondition, newAppCondition)
 
-	return status
+	if status == corev1.ConditionFalse {
+		return oldResourcesCondition, newResourcesCondition
+	} else {
+		return oldAppCondition, newAppCondition
+	}
 }
 
 func (r *ReconcilerBase) CheckResourcesStatus(ba common.BaseComponent) {

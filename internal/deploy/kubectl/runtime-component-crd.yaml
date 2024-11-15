@@ -7828,6 +7828,11 @@ spec:
                     type:
                       description: Defines the type of status condition.
                       type: string
+                    unchangedConditionCount:
+                      description: The count of the number of reconciles the condition
+                        status type has not changed.
+                      format: int32
+                      type: integer
                   type: object
                 type: array
                 x-kubernetes-list-type: atomic
@@ -7853,6 +7858,10 @@ spec:
                 description: The generation identifier of this RuntimeComponent instance
                   completely reconciled by the Operator.
                 format: int64
+                type: integer
+              reconcileInterval:
+                description: The reconciliation interval in seconds.
+                format: int32
                 type: integer
               references:
                 additionalProperties:
