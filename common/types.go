@@ -41,6 +41,9 @@ type StatusCondition interface {
 	GetType() StatusConditionType
 	SetType(StatusConditionType)
 
+	GetUnchangedConditionCount() *int32
+	SetUnchangedConditionCount(*int32)
+
 	SetConditionFields(string, string, corev1.ConditionStatus) StatusCondition
 }
 
@@ -83,6 +86,11 @@ type BaseComponentStatus interface {
 	GetReferences() StatusReferences
 	SetReferences(StatusReferences)
 	SetReference(string, string)
+
+	GetReconcileInterval() *int32
+	SetReconcileInterval(*int32)
+
+	UnsetUnchangedConditionCount(conditionType StatusConditionType)
 }
 
 const (
