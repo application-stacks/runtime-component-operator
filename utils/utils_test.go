@@ -783,7 +783,7 @@ func TestShouldDeleteRoute(t *testing.T) {
 
 	// When there is a defaultHost in config.
 	// This should be ignored as the route is nil
-	common.Config[common.OpConfigDefaultHostname] = "default.host"
+	common.Config.Store(common.OpConfigDefaultHostname, "default.host")
 	noPreviousWithDefault := ShouldDeleteRoute(runtime)
 
 	// If the route object exists with no host,

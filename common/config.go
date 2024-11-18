@@ -1,16 +1,15 @@
 package common
 
 import (
-	uberzap "go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"errors"
 	"strconv"
+	"sync"
+
+	uberzap "go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	corev1 "k8s.io/api/core/v1"
 )
-
-// OpConfig stored operator configuration
-type OpConfig map[string]string
 
 const (
 
@@ -54,7 +53,7 @@ const (
 )
 
 // Config stores operator configuration
-var Config = OpConfig{}
+var Config = &sync.Map{}
 
 var LevelFunc = uberzap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 	return lvl >= Config.GetZapLogLevel()
@@ -76,37 +75,45 @@ var StackLevelFunc = uberzap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 })
 
 // LoadFromConfigMap creates a config out of kubernetes config map
-func (oc OpConfig) LoadFromConfigMap(cm *corev1.ConfigMap) {
-	for k, v := range DefaultOpConfig() {
-		oc[k] = v
-	}
-
+func LoadFromConfigMap(oc *sync.Map, cm *corev1.ConfigMap) {
+	cfg := DefaultOpConfig()
+	cfg.Range(func(key, value interface{}) bool {
+		oc.Store(key, value)
+		return true
+	})
 	for k, v := range cm.Data {
-		oc[k] = v
+		oc.Store(k, v)
 	}
 }
-func (oc OpConfig) CheckValidValue(key string, OperatorName string) error {
-	value := oc[key]
+func CheckValidValue(oc *sync.Map, key string, OperatorName string) error {
+	// value := oc[key]
+	value, ok := oc.Load(key)
+	if !ok {
+		return errors.New("operator config could not get value for key: " + key)
+	}
 
-	intValue, err := strconv.Atoi(value)
+	intValue, err := strconv.Atoi(value.(string))
 	if err != nil {
-		oc.SetConfigMapDefaultValue(key)
+		SetConfigMapDefaultValue(oc, key)
 		return errors.New(key + " in ConfigMap: " + OperatorName + " has an invalid syntax, error: " + err.Error())
 	} else if key == OpConfigReconcileIntervalSeconds && intValue <= 0 {
-		oc.SetConfigMapDefaultValue(key)
-		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value + ". It must be greater than 0.")
+		SetConfigMapDefaultValue(oc, key)
+		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value.(string) + ". It must be greater than 0.")
 	} else if key == OpConfigReconcileIntervalPercentage && intValue < 0 {
-		oc.SetConfigMapDefaultValue(key)
-		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value + ". It must be greater than or equal to 0.")
+		SetConfigMapDefaultValue(oc, key)
+		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value.(string) + ". It must be greater than or equal to 0.")
 	}
 
 	return nil
 }
 
 // SetConfigMapDefaultValue sets default value for specified key
-func (oc OpConfig) SetConfigMapDefaultValue(key string) {
+func SetConfigMapDefaultValue(oc *sync.Map, key string) {
 	cm := DefaultOpConfig()
-	oc[key] = cm[key]
+	defaultValue, ok := cm.Load(key)
+	if ok {
+		oc.Store(key, defaultValue)
+	}
 }
 
 // Returns the zap log level corresponding to the value of the
@@ -135,13 +142,12 @@ func (oc OpConfig) GetZapLogLevel() zapcore.Level {
 }
 
 // DefaultOpConfig returns default configuration
-func DefaultOpConfig() OpConfig {
-	cfg := OpConfig{}
-	cfg[OpConfigDefaultHostname] = ""
-	cfg[OpConfigCMCADuration] = "8766h"
-	cfg[OpConfigCMCertDuration] = "2160h"
-	cfg[OpConfigLogLevel] = logLevelInfo
-	cfg[OpConfigReconcileIntervalSeconds] = "15"
-	cfg[OpConfigReconcileIntervalPercentage] = "100"
+func DefaultOpConfig() *sync.Map {
+	cfg := &sync.Map{}
+	cfg.Store(OpConfigDefaultHostname, "")
+	cfg.Store(OpConfigCMCADuration, "8766h")
+	cfg.Store(OpConfigCMCertDuration, "2160h")
+	cfg.Store(OpConfigReconcileIntervalSeconds, "15")
+	cfg.Store(OpConfigReconcileIntervalPercentage, "100")
 	return cfg
 }

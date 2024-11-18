@@ -116,9 +116,12 @@ func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, c
 		route.Annotations = MergeMaps(route.Annotations, rt.GetAnnotations())
 
 		host := rt.GetHost()
-		if host == "" && common.Config[common.OpConfigDefaultHostname] != "" {
-			host = obj.GetName() + "-" + obj.GetNamespace() + "." + common.Config[common.OpConfigDefaultHostname]
+		if defaultHostName, found := common.Config.Load(common.OpConfigDefaultHostname); found {
+			if host == "" && defaultHostName.(string) != "" {
+				host = obj.GetName() + "-" + obj.GetNamespace() + "." + defaultHostName.(string)
+			}
 		}
+
 		ba.GetStatus().SetReference(common.StatusReferenceRouteHost, host)
 		route.Spec.Host = host
 		route.Spec.Path = rt.GetPath()
@@ -1438,10 +1441,12 @@ func CustomizeIngress(ing *networkingv1.Ingress, ba common.BaseComponent) {
 	if ba.GetService().GetPortName() != "" {
 		servicePort = ba.GetService().GetPortName()
 	}
-
-	if host == "" && common.Config[common.OpConfigDefaultHostname] != "" {
-		host = obj.GetName() + "-" + obj.GetNamespace() + "." + common.Config[common.OpConfigDefaultHostname]
+	if defaultHostName, found := common.Config.Load(common.OpConfigDefaultHostname); found {
+		if host == "" && defaultHostName.(string) != "" {
+			host = obj.GetName() + "-" + obj.GetNamespace() + "." + defaultHostName.(string)
+		}
 	}
+
 	if host == "" {
 		l := log.WithValues("Request.Namespace", obj.GetNamespace(), "Request.Name", obj.GetName())
 		l.Info("No Ingress hostname is provided. Ingress might not function correctly without hostname. It is recommended to set Ingress host or to provide default value through operator's config map.")
@@ -1770,7 +1775,12 @@ func CreateConfigMap(mapName string) {
 	// store it in a new map
 	common.Config = common.DefaultOpConfig()
 	_, cerr := controllerutil.CreateOrUpdate(context.TODO(), client, newConfigMap, func() error {
-		newConfigMap.Data = common.Config
+		newConfigMapData := make(map[string]string)
+		common.Config.Range(func(key, value interface{}) bool {
+			newConfigMapData[key.(string)] = value.(string)
+			return true
+		})
+		newConfigMap.Data = newConfigMapData
 		return nil
 	})
 	if cerr != nil {
@@ -1875,8 +1885,10 @@ func ShouldDeleteRoute(ba common.BaseComponent) bool {
 		// The host was previously set.
 		// If the host is now empty, delete the old route
 		rt := ba.GetRoute()
-		if rt == nil || (rt.GetHost() == "" && common.Config[common.OpConfigDefaultHostname] == "") {
-			return true
+		if defaultHostName, found := common.Config.Load(common.OpConfigDefaultHostname); found {
+			if rt == nil || (rt.GetHost() == "" && defaultHostName.(string) == "") {
+				return true
+			}
 		}
 	}
 	return false

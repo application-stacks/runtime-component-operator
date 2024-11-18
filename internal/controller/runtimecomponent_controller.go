@@ -36,6 +36,7 @@ import (
 	"github.com/go-logr/logr"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+	kcontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 
 	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	imagev1 "github.com/openshift/api/image/v1"
@@ -105,7 +106,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		reqLogger.Info("Failed to find runtime-component-operator config map")
 		appstacksutils.CreateConfigMap(OperatorName)
 	} else {
-		common.Config.LoadFromConfigMap(configMap)
+		common.LoadFromConfigMap(common.Config, configMap)
 	}
 
 	// Fetch the RuntimeComponent instance
@@ -620,7 +621,10 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource)).
 		Owns(&appsv1.Deployment{}, builder.WithPredicates(predSubResWithGenCheck)).
 		Owns(&appsv1.StatefulSet{}, builder.WithPredicates(predSubResWithGenCheck)).
-		Owns(&autoscalingv1.HorizontalPodAutoscaler{}, builder.WithPredicates(predSubResource))
+		Owns(&autoscalingv1.HorizontalPodAutoscaler{}, builder.WithPredicates(predSubResource)).
+		WithOptions(kcontroller.Options{
+			MaxConcurrentReconciles: 5,
+		})
 
 	ok, _ := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route")
 	if ok {
