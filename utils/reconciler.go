@@ -5,6 +5,8 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"math"
+	"strconv"
 	"time"
 
 	networkingv1 "k8s.io/api/networking/v1"
@@ -28,10 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-)
-
-const (
-	ReconcileInterval = 15
 )
 
 // ReconcilerBase base reconciler with some common behaviour
@@ -198,6 +196,52 @@ func addStatusWarnings(ba common.BaseComponent) {
 
 }
 
+func getBaseReconcileInterval(newCondition common.StatusCondition, s common.BaseComponentStatus) time.Duration {
+	var newCount *int32
+	newCondition.SetUnchangedConditionCount(newCount)
+
+	baseIntervalInt, _ := strconv.Atoi(common.Config[common.OpConfigReconcileIntervalSeconds])
+	baseInterval := int32(baseIntervalInt)
+	s.SetReconcileInterval(&baseInterval)
+
+	return time.Duration(baseInterval) * time.Second
+}
+
+func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition, newCondition common.StatusCondition, s common.BaseComponentStatus) time.Duration {
+	oldReconcileInterval := float64(*s.GetReconcileInterval())
+
+	var newCount int32
+	if count := oldCondition.GetUnchangedConditionCount(); count == nil {
+		newCount = 0
+		oldReconcileInterval, _ = strconv.ParseFloat(common.Config[common.OpConfigReconcileIntervalSeconds], 64)
+		baseInterval := int32(oldReconcileInterval)
+		s.SetReconcileInterval(&baseInterval)
+	} else {
+		newCount = *count + 1
+	}
+	newCondition.SetUnchangedConditionCount(&newCount)
+
+	s.UnsetUnchangedConditionCount(newCondition.GetType())
+	s.SetCondition(newCondition)
+
+	// For every repeated 2 reconciliation errors, increase reconcile period
+	if newCount >= 2 && newCount%2 == 0 {
+		intervalIncreasePercentage, _ := strconv.ParseFloat(common.Config[common.OpConfigReconcileIntervalPercentage], 64)
+		exp := float64(newCount / 2)
+		increase := math.Pow(1+(intervalIncreasePercentage/100), exp)
+		baseInterval, _ := strconv.ParseFloat(common.Config[common.OpConfigReconcileIntervalSeconds], 64)
+		newInterval := int32(baseInterval * increase)
+
+		// Only increase to the maximum interval
+		if newInterval < 0 || newInterval >= int32(maxSeconds) {
+			newInterval = int32(maxSeconds)
+		}
+		s.SetReconcileInterval(&newInterval)
+		return time.Duration(newInterval) * time.Second
+	}
+	return time.Duration(oldReconcileInterval) * time.Second
+}
+
 // ManageError ...
 func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
 	s := ba.GetStatus()
@@ -207,12 +251,11 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 	r.GetRecorder().Event(obj, "Warning", "ProcessingError", issue.Error())
 
 	oldCondition := s.GetCondition(conditionType)
-
 	newCondition := s.NewCondition(conditionType)
 	newCondition.SetReason(string(apierrors.ReasonForError(issue)))
 	newCondition.SetMessage(issue.Error())
 	newCondition.SetStatus(corev1.ConditionFalse)
-	s.SetCondition(newCondition)
+	r.setCondition(ba, oldCondition, newCondition)
 
 	addStatusWarnings(ba)
 
@@ -234,6 +277,18 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 		s.SetCondition(reconciledNewCondition)
 	}
 
+	var retryInterval time.Duration
+	// If the application was reconciled and now it is not or encountered a different error
+	// Use the default reconcile interval
+	if oldCondition == nil || s.GetReconcileInterval() == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
+		retryInterval = getBaseReconcileInterval(newCondition, s)
+	} else {
+		// If the application fails to reconcile again and the error message has not changed
+		// Increase the retry interval upto maxSeconds
+		maxSeconds := 240 // Max 4 minutes
+		retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
+	}
+
 	err := r.UpdateStatus(obj)
 	if err != nil {
 
@@ -247,14 +302,6 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 		}, nil
 	}
 
-	var retryInterval time.Duration
-	// If the application was reconciled and now it is not
-	if oldCondition == nil || oldCondition.GetStatus() == corev1.ConditionTrue {
-		retryInterval = time.Second
-	} else {
-		retryInterval = 5 * time.Second
-	}
-
 	return reconcile.Result{
 		//RequeueAfter: time.Duration(math.Min(float64(retryInterval.Nanoseconds()*2), float64(time.Hour.Nanoseconds()*6))),
 		RequeueAfter: retryInterval,
@@ -265,17 +312,51 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 // ManageSuccess ...
 func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
 	s := ba.GetStatus()
+	oldRecCondition := s.GetCondition(conditionType)
 
-	statusCondition := s.NewCondition(conditionType)
-	statusCondition.SetReason("")
-	statusCondition.SetMessage("")
-	statusCondition.SetStatus(corev1.ConditionTrue)
-	s.SetCondition(statusCondition)
+	newRecCondition := s.NewCondition(conditionType)
+	newRecCondition.SetReason("")
+	newRecCondition.SetMessage("")
+	newRecCondition.SetStatus(corev1.ConditionTrue)
+	s.SetCondition(newRecCondition)
 
 	addStatusWarnings(ba)
 
-	//Check application status (reconciliation & resource status & endpoint status)
-	readyStatus := r.CheckApplicationStatus(ba)
+	// Check application status (reconciliation & resource condition & endpoint condition)
+	// CheckApplicationStatus returns overall Application condition if ready
+	// If not ready, it returns Resources condition
+	oldCondition, newCondition := r.CheckApplicationStatus(ba)
+
+	var retryInterval time.Duration
+
+	// If the resources are not ready
+	if newCondition.GetStatus() != corev1.ConditionTrue {
+		// If the resources were ready and now they are not, or encountered a different error
+		// Use the default reconcile interval
+		if oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
+			retryInterval = getBaseReconcileInterval(newCondition, s)
+		} else {
+			// If the resources stay unready and the error message has not changed
+			// Increase the retry interval upto maxSeconds
+			maxSeconds := 240 // Max 4 minutes
+			retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
+		}
+	} else { // If the application and resources are ready
+		if oldRecCondition == nil || oldRecCondition.GetStatus() != newRecCondition.GetStatus() || oldRecCondition.GetMessage() != newRecCondition.GetMessage() {
+			// If the application or the resources were not reconciled before
+			// Use the default reconcile interval
+			retryInterval = getBaseReconcileInterval(newRecCondition, s)
+		} else if oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
+			// Or if the application (resources) were not ready before
+			// Use the default reconcile interval
+			retryInterval = getBaseReconcileInterval(newCondition, s)
+		} else {
+			// If the application and resources stay ready and there are no changes
+			// Increase the retry interval upto maxSeconds
+			maxSeconds := 120 // Max 2 minutes
+			retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
+		}
+	}
 
 	err := r.UpdateStatus(ba.(client.Object))
 	if err != nil {
@@ -284,15 +365,6 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 			RequeueAfter: time.Second,
 			Requeue:      true,
 		}, nil
-	}
-
-	var retryInterval time.Duration
-
-	// If resources are not ready
-	if readyStatus != corev1.ConditionTrue {
-		retryInterval = time.Second
-	} else {
-		retryInterval = ReconcileInterval * time.Second
 	}
 
 	return reconcile.Result{RequeueAfter: retryInterval}, nil
