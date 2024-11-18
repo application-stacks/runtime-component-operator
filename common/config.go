@@ -102,7 +102,7 @@ func LoadFromConfig(oc *sync.Map, key string) string {
 func CheckValidValue(oc *sync.Map, key string, OperatorName string) error {
 	value := LoadFromConfig(oc, key)
 
-	intValue, err := strconv.Atoi(value)
+	intValue, err := strconv.Atoi(value.(string))
 	if err != nil {
 		SetConfigMapDefaultValue(oc, key)
 		return errors.New(key + " in ConfigMap: " + OperatorName + " has an invalid syntax, error: " + err.Error())
