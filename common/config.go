@@ -90,34 +90,17 @@ func LoadFromConfigMap(oc *sync.Map, cm *corev1.ConfigMap) {
 	}
 }
 
-// Loads the value stored in operator config's key or falls back to the operator default value
-func LoadConfigValueOrFallback(oc *sync.Map, key string) (string, error) {
+// Loads a string value stored at key in the sync.Map oc or "" if it does not exist
+func LoadFromConfig(oc *sync.Map, key string) string {
 	value, ok := oc.Load(key)
 	if !ok {
-		fallbackValue, fallbackErr := GetFallbackConfigValue(key)
-		if fallbackErr != nil {
-			return "", fallbackErr
-		}
-		return fallbackValue, nil
+		return ""
 	}
-	return value.(string), nil
-}
-
-// Gets the value associated with the operator default config if the key exists, otherwise return an error
-func GetFallbackConfigValue(key string) (string, error) {
-	fallbackConfig := DefaultOpConfig()
-	fallbackValue, fallbackOk := fallbackConfig.Load(key)
-	if !fallbackOk {
-		return "", errors.New("could not get value for key " + key + " in the default operator config")
-	}
-	return fallbackValue.(string), nil
+	return value.(string)
 }
 
 func CheckValidValue(oc *sync.Map, key string, OperatorName string) error {
-	value, err := LoadConfigValueOrFallback(oc, key)
-	if err != nil {
-		return err
-	}
+	value := LoadFromConfig(oc, key)
 
 	intValue, err := strconv.Atoi(value)
 	if err != nil {
