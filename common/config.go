@@ -89,23 +89,46 @@ func LoadFromConfigMap(oc *sync.Map, cm *corev1.ConfigMap) {
 		oc.Store(k, v)
 	}
 }
-func CheckValidValue(oc *sync.Map, key string, OperatorName string) error {
-	// value := oc[key]
+
+// Loads the value stored in operator config's key or falls back to the operator default value
+func LoadConfigValueOrFallback(oc *sync.Map, key string) (string, error) {
 	value, ok := oc.Load(key)
 	if !ok {
-		return errors.New("operator config could not get value for key: " + key)
+		fallbackValue, fallbackErr := GetFallbackConfigValue(key)
+		if fallbackErr != nil {
+			return "", fallbackErr
+		}
+		return fallbackValue, nil
+	}
+	return value.(string), nil
+}
+
+// Gets the value associated with the operator default config if the key exists, otherwise return an error
+func GetFallbackConfigValue(key string) (string, error) {
+	fallbackConfig := DefaultOpConfig()
+	fallbackValue, fallbackOk := fallbackConfig.Load(key)
+	if !fallbackOk {
+		return "", errors.New("could not get value for key " + key + " in the default operator config")
+	}
+	return fallbackValue.(string), nil
+}
+
+func CheckValidValue(oc *sync.Map, key string, OperatorName string) error {
+	value, err := LoadConfigValueOrFallback(oc, key)
+	if err != nil {
+		return err
 	}
 
-	intValue, err := strconv.Atoi(value.(string))
+	intValue, err := strconv.Atoi(value)
 	if err != nil {
 		SetConfigMapDefaultValue(oc, key)
 		return errors.New(key + " in ConfigMap: " + OperatorName + " has an invalid syntax, error: " + err.Error())
 	} else if key == OpConfigReconcileIntervalSeconds && intValue <= 0 {
 		SetConfigMapDefaultValue(oc, key)
-		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value.(string) + ". It must be greater than 0.")
+		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value + ". It must be greater than 0.")
 	} else if key == OpConfigReconcileIntervalPercentage && intValue < 0 {
 		SetConfigMapDefaultValue(oc, key)
-		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value.(string) + ". It must be greater than or equal to 0.")
+		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value + ". It must be greater than or equal to 0.")
 	}
 
 	return nil

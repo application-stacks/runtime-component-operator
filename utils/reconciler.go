@@ -214,7 +214,8 @@ func resetReconcileInterval(newCondition common.StatusCondition, s common.BaseCo
 }
 
 func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition, newCondition common.StatusCondition, s common.BaseComponentStatus) time.Duration {
-	var oldReconcileInterval int32
+	oldReconcileInterval := float64(*s.GetReconcileInterval())
+	defaultReconcileInterval := 5 * time.Second
 	var newCount int32
 	count := oldCondition.GetUnchangedConditionCount()
 	if count == nil || s.GetReconcileInterval() == nil {
@@ -232,10 +233,25 @@ func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition
 
 	// For every repeated 2 reconciliation errors, increase reconcile period
 	if newCount >= 2 && newCount%2 == 0 {
-		intervalIncreasePercentage, _ := strconv.ParseFloat(common.Config[common.OpConfigReconcileIntervalPercentage], 64)
+		reconcileIntervalPercentage, err := common.LoadConfigValueOrFallback(common.Config, common.OpConfigReconcileIntervalPercentage)
+		if err != nil {
+			return defaultReconcileInterval
+		}
+		intervalIncreasePercentage, err := strconv.ParseFloat(reconcileIntervalPercentage, 64)
+		if err != nil {
+			return defaultReconcileInterval
+		}
 		exp := float64(newCount / 2)
 		increase := math.Pow(1+(intervalIncreasePercentage/100), exp)
-		baseInterval, _ := strconv.ParseFloat(common.Config[common.OpConfigReconcileIntervalSeconds], 64)
+
+		reconcileIntervalSeconds, err := common.LoadConfigValueOrFallback(common.Config, common.OpConfigReconcileIntervalSeconds)
+		if err != nil {
+			return defaultReconcileInterval
+		}
+		baseInterval, err := strconv.ParseFloat(reconcileIntervalSeconds, 64)
+		if err != nil {
+			return defaultReconcileInterval
+		}
 		newInterval := int32(baseInterval * increase)
 
 		// Only increase to the maximum interval
@@ -522,6 +538,8 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 			if err != nil {
 				return err
 			}
+		} else {
+			return errors.New("could not load value " + common.OpConfigCMCADuration + " from the operator config map")
 		}
 		caCert.Spec.Duration = &metav1.Duration{Duration: duration}
 		return nil
@@ -702,6 +720,8 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 				if err != nil {
 					return err
 				}
+			} else {
+				return errors.New("could not load value " + common.OpConfigCMCertDuration + " from the operator config map")
 			}
 			svcCert.Spec.Duration = &metav1.Duration{Duration: duration}
 
