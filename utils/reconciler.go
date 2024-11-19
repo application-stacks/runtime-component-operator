@@ -237,10 +237,7 @@ func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition
 		if err != nil {
 			return defaultReconcileInterval
 		}
-		intervalIncreasePercentage, err := strconv.ParseFloat(reconcileIntervalPercentage, 64)
-		if err != nil {
-			return defaultReconcileInterval
-		}
+		intervalIncreasePercentage, _ := strconv.ParseFloat(reconcileIntervalPercentage, 64)
 		exp := float64(newCount / 2)
 		increase := math.Pow(1+(intervalIncreasePercentage/100), exp)
 
@@ -248,10 +245,7 @@ func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition
 		if err != nil {
 			return defaultReconcileInterval
 		}
-		baseInterval, err := strconv.ParseFloat(reconcileIntervalSeconds, 64)
-		if err != nil {
-			return defaultReconcileInterval
-		}
+		baseInterval, _ := strconv.ParseFloat(reconcileIntervalSeconds, 64)
 		newInterval := int32(baseInterval * increase)
 
 		// Only increase to the maximum interval
