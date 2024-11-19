@@ -86,9 +86,24 @@ func main() {
 	levelFunc := uberzap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl >= common.Config.GetZapLogLevel()
 	})
+	stackLevelFunc := uberzap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+		configuredLevel := common.Config.GetZapLogLevel()
+		if configuredLevel > zapcore.DebugLevel {
+			// No stack traces unless fine/finer/finest has been requested
+			// Zap's debug is mapped to fine
+			return false
+		}
+		// Stack traces for error or worse (fatal/panic)
+		if lvl >= zapcore.ErrorLevel {
+			return true
+		}
+		// Logging is set to fine/finer/finest but msg is info or less. No stack trace
+		return false
+	})
 	opts := zap.Options{
-		Level:       levelFunc,
-		Development: true,
+		Level:           levelFunc,
+		StacktraceLevel: stackLevelFunc,
+		Development:     true,
 	}
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
