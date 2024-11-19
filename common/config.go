@@ -1,6 +1,7 @@
 package common
 
 import (
+	uberzap "go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -44,6 +45,25 @@ const (
 
 // Config stores operator configuration
 var Config = OpConfig{}
+
+var LevelFunc = uberzap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+	return lvl >= Config.GetZapLogLevel()
+})
+
+var StackLevelFunc = uberzap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+	configuredLevel := Config.GetZapLogLevel()
+	if configuredLevel > zapcore.DebugLevel {
+		// No stack traces unless fine/finer/finest has been requested
+		// Zap's debug is mapped to fine
+		return false
+	}
+	// Stack traces for error or worse (fatal/panic)
+	if lvl >= zapcore.ErrorLevel {
+		return true
+	}
+	// Logging is set to fine/finer/finest but msg is info or less. No stack trace
+	return false
+})
 
 // LoadFromConfigMap creates a config out of kubernetes config map
 func (oc OpConfig) LoadFromConfigMap(cm *corev1.ConfigMap) {
