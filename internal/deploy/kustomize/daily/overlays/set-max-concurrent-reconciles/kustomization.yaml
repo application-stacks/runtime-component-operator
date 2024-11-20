@@ -9,7 +9,7 @@ resources:
 
 configMapGenerator:
   - envs:
-      - application.properties
+      - operator.properties
     name: app-config
 
 replacements:
