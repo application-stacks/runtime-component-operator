@@ -3,6 +3,9 @@ package common
 import (
 	uberzap "go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"errors"
+	"strconv"
+
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -41,6 +44,13 @@ const (
 	zLevelDebug2 zapcore.Level = -2
 	// zapcore.Level is defined as int8, so this logs everything
 	zLevelDebugMax zapcore.Level = -127
+
+	// OpConfigReconcileIntervalSeconds default reconciliation interval in seconds
+	OpConfigReconcileIntervalSeconds = "reconcileIntervalSeconds"
+
+	// OpConfigReconcileIntervalPercentage default reconciliation interval increase, represented as a percentage (100 equaling to 100%)
+	// When the reconciliation interval needs to increase, it will increase by the given percentage
+	OpConfigReconcileIntervalPercentage = "reconcileIntervalIncreasePercentage"
 )
 
 // Config stores operator configuration
@@ -75,6 +85,29 @@ func (oc OpConfig) LoadFromConfigMap(cm *corev1.ConfigMap) {
 		oc[k] = v
 	}
 }
+func (oc OpConfig) CheckValidValue(key string, OperatorName string) error {
+	value := oc[key]
+
+	intValue, err := strconv.Atoi(value)
+	if err != nil {
+		oc.SetConfigMapDefaultValue(key)
+		return errors.New(key + " in ConfigMap: " + OperatorName + " has an invalid syntax, error: " + err.Error())
+	} else if key == OpConfigReconcileIntervalSeconds && intValue <= 0 {
+		oc.SetConfigMapDefaultValue(key)
+		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value + ". It must be greater than 0.")
+	} else if key == OpConfigReconcileIntervalPercentage && intValue < 0 {
+		oc.SetConfigMapDefaultValue(key)
+		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value + ". It must be greater than or equal to 0.")
+	}
+
+	return nil
+}
+
+// SetConfigMapDefaultValue sets default value for specified key
+func (oc OpConfig) SetConfigMapDefaultValue(key string) {
+	cm := DefaultOpConfig()
+	oc[key] = cm[key]
+}
 
 // Returns the zap log level corresponding to the value of the
 // 'logLevel' key in the config map. Returns 'info' if they key
@@ -108,5 +141,7 @@ func DefaultOpConfig() OpConfig {
 	cfg[OpConfigCMCADuration] = "8766h"
 	cfg[OpConfigCMCertDuration] = "2160h"
 	cfg[OpConfigLogLevel] = logLevelInfo
+	cfg[OpConfigReconcileIntervalSeconds] = "15"
+	cfg[OpConfigReconcileIntervalPercentage] = "100"
 	return cfg
 }
