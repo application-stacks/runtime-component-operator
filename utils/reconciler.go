@@ -198,7 +198,7 @@ func addStatusWarnings(ba common.BaseComponent) {
 }
 
 func getBaseReconcileInterval(s common.BaseComponentStatus) int32 {
-	baseIntervalInt, _ := strconv.Atoi(common.Config[common.OpConfigReconcileIntervalSeconds])
+	baseIntervalInt, _ := strconv.Atoi(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalSeconds))
 	baseInterval := int32(baseIntervalInt)
 	s.SetReconcileInterval(&baseInterval)
 
@@ -215,7 +215,7 @@ func resetReconcileInterval(newCondition common.StatusCondition, s common.BaseCo
 
 // Precondition: Operator config values for common.OpConfigReconcileIntervalSeconds and common.OpConfigReconcileIntervalPercentage must be integers
 func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition, newCondition common.StatusCondition, s common.BaseComponentStatus) time.Duration {
-	oldReconcileInterval := float64(*s.GetReconcileInterval())
+	var oldReconcileInterval int32
 
 	var newCount int32
 	count := oldCondition.GetUnchangedConditionCount()
