@@ -60,11 +60,11 @@ func init() {
 }
 
 var LevelFunc = uberzap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-	return lvl >= Config.GetZapLogLevel()
+	return lvl >= GetZapLogLevel(Config)
 })
 
 var StackLevelFunc = uberzap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-	configuredLevel := Config.GetZapLogLevel()
+	configuredLevel := GetZapLogLevel(Config)
 	if configuredLevel > zapcore.DebugLevel {
 		// No stack traces unless fine/finer/finest has been requested
 		// Zap's debug is mapped to fine
@@ -129,9 +129,9 @@ func SetConfigMapDefaultValue(oc *sync.Map, key string) {
 // Returns the zap log level corresponding to the value of the
 // 'logLevel' key in the config map. Returns 'info' if they key
 // is missing or contains an invalid value.
-func (oc OpConfig) GetZapLogLevel() zapcore.Level {
-	level, ok := oc[OpConfigLogLevel]
-	if !ok {
+func GetZapLogLevel(oc *sync.Map) zapcore.Level {
+	level := LoadFromConfig(oc, OpConfigLogLevel)
+	if level == "" {
 		return zLevelInfo
 	}
 	switch level {
