@@ -10,12 +10,12 @@ resources:
 configMapGenerator:
   - envs:
       - operator.properties
-    name: app-config
+    name: operator-config
 
 replacements:
 - source:
     kind: ConfigMap
-    name: app-config
+    name: operator-config
     fieldPath: data.MAX_CONCURRENT_RECONCILES
   targets:
   - select:
