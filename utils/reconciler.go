@@ -518,10 +518,7 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 			Name: prefix + "-self-signed",
 		}
 
-		var duration time.Duration
-		var err error
-		cmCADuration := common.LoadFromConfig(common.Config, common.OpConfigCMCADuration)
-		duration, err = time.ParseDuration(cmCADuration)
+		duration, err := time.ParseDuration(common.LoadFromConfig(common.Config, common.OpConfigCMCADuration))
 		if err != nil {
 			return err
 		}
@@ -698,10 +695,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 
 			svcCert.Spec.SecretName = svcCertSecretName
 
-			var duration time.Duration
-			var err error
-			cmCertDuration := common.LoadFromConfig(common.Config, common.OpConfigCMCertDuration)
-			duration, err = time.ParseDuration(cmCertDuration)
+			duration, err := time.ParseDuration(common.LoadFromConfig(common.Config, common.OpConfigCMCertDuration))
 			if err != nil {
 				return err
 			}
