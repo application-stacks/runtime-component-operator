@@ -49,4 +49,4 @@ instances in any namespaces. To install, run: `kubectl create -k examples/watch-
 == Setting max concurrent reconciles
 
 === overlays/set-max-concurrent-reconciles
-This overlay updates the base configuration by setting the `MAX_CONCURRENT_RECONCILES` environment variable in the operator's Deployment. It enables multiple workers to reconcile the Runtime Component custom resource instances concurrently. There are `8` workers set by default, and this setting can be customized in the `overlays/set-max-concurrent-reconciles/operator.properties` file. To install, run: `kubectl apply -k overlays/set-max-concurrent-reconciles`
+This overlay updates the base configuration by setting the `MAX_CONCURRENT_RECONCILES` environment variable in the operator's Deployment. It enables multiple workers to reconcile the RuntimeComponent custom resource instances concurrently. There are `8` workers set by default, and this setting can be customized in the `overlays/set-max-concurrent-reconciles/operator.properties` file. To install, run: `kubectl apply -k overlays/set-max-concurrent-reconciles`

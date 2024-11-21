@@ -26,7 +26,7 @@ NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY
 +
     * To watch all namespaces in the cluster, set `WATCH_NAMESPACE='""'`
 +
-    * To optionally reconcile multiple `RuntimeComponent` instances concurrently, set `MAX_CONCURRENT_RECONCILES=<SPECIFY_MAX_CONCURRENT_RECONCILES_HERE` (default is `1`)
+    * To optionally reconcile multiple `RuntimeComponent` instances concurrently, set `MAX_CONCURRENT_RECONCILES=<SPECIFY_MAX_CONCURRENT_RECONCILES_HERE>` (default is `1`)
 +
 [source,sh]
 ----
