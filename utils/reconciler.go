@@ -198,7 +198,7 @@ func addStatusWarnings(ba common.BaseComponent) {
 }
 
 func getBaseReconcileInterval(s common.BaseComponentStatus) int32 {
-	baseIntervalInt, _ := strconv.Atoi(common.Config[common.OpConfigReconcileIntervalSeconds])
+	baseIntervalInt, _ := strconv.Atoi(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalSeconds))
 	baseInterval := int32(baseIntervalInt)
 	s.SetReconcileInterval(&baseInterval)
 
@@ -213,8 +213,10 @@ func resetReconcileInterval(newCondition common.StatusCondition, s common.BaseCo
 	return time.Duration(baseInterval) * time.Second
 }
 
+// Precondition: Operator config values for common.OpConfigReconcileIntervalSeconds and common.OpConfigReconcileIntervalPercentage must be integers
 func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition, newCondition common.StatusCondition, s common.BaseComponentStatus) time.Duration {
 	var oldReconcileInterval int32
+
 	var newCount int32
 	count := oldCondition.GetUnchangedConditionCount()
 	if count == nil || s.GetReconcileInterval() == nil {
@@ -232,10 +234,11 @@ func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition
 
 	// For every repeated 2 reconciliation errors, increase reconcile period
 	if newCount >= 2 && newCount%2 == 0 {
-		intervalIncreasePercentage, _ := strconv.ParseFloat(common.Config[common.OpConfigReconcileIntervalPercentage], 64)
+		intervalIncreasePercentage, _ := strconv.ParseFloat(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalPercentage), 64)
 		exp := float64(newCount / 2)
 		increase := math.Pow(1+(intervalIncreasePercentage/100), exp)
-		baseInterval, _ := strconv.ParseFloat(common.Config[common.OpConfigReconcileIntervalSeconds], 64)
+
+		baseInterval, _ := strconv.ParseFloat(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalSeconds), 64)
 		newInterval := int32(baseInterval * increase)
 
 		// Only increase to the maximum interval
@@ -515,10 +518,11 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 			Name: prefix + "-self-signed",
 		}
 
-		duration, err := time.ParseDuration(common.Config[common.OpConfigCMCADuration])
+		duration, err := time.ParseDuration(common.LoadFromConfig(common.Config, common.OpConfigCMCADuration))
 		if err != nil {
 			return err
 		}
+
 		caCert.Spec.Duration = &metav1.Duration{Duration: duration}
 		return nil
 	})
@@ -691,7 +695,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 
 			svcCert.Spec.SecretName = svcCertSecretName
 
-			duration, err := time.ParseDuration(common.Config[common.OpConfigCMCertDuration])
+			duration, err := time.ParseDuration(common.LoadFromConfig(common.Config, common.OpConfigCMCertDuration))
 			if err != nil {
 				return err
 			}

@@ -110,6 +110,12 @@ type Test struct {
 	actual   interface{}
 }
 
+func TestMain(m *testing.M) {
+	common.Config = common.DefaultOpConfig()
+	rc := m.Run()
+	os.Exit(rc)
+}
+
 func TestCustomizeRoute(t *testing.T) {
 	logger := zap.New()
 	logf.SetLogger(logger)
@@ -783,7 +789,7 @@ func TestShouldDeleteRoute(t *testing.T) {
 
 	// When there is a defaultHost in config.
 	// This should be ignored as the route is nil
-	common.Config[common.OpConfigDefaultHostname] = "default.host"
+	common.Config.Store(common.OpConfigDefaultHostname, "default.host")
 	noPreviousWithDefault := ShouldDeleteRoute(runtime)
 
 	// If the route object exists with no host,
