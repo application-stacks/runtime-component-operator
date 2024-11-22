@@ -763,6 +763,40 @@ func TestGetWatchNamespaces(t *testing.T) {
 	verifyTests(configMapConstTests, t)
 }
 
+func TestGetMaxConcurrentReconciles(t *testing.T) {
+	// Set the logger to development mode for verbose logs
+	logger := zap.New()
+	logf.SetLogger(logger)
+
+	os.Setenv("MAX_CONCURRENT_RECONCILES", "1")
+	maxConcurrentReconciles := GetMaxConcurrentReconciles()
+	maxConcurrentReconcilesTests := []Test{
+		{"max concurrent reconcile (env set to 1)", 1, maxConcurrentReconciles},
+	}
+	verifyTests(maxConcurrentReconcilesTests, t)
+
+	os.Setenv("MAX_CONCURRENT_RECONCILES", "-1")
+	maxConcurrentReconciles = GetMaxConcurrentReconciles()
+	maxConcurrentReconcilesTests = []Test{
+		{"max concurrent reconcile (env set to -1)", 1, maxConcurrentReconciles},
+	}
+	verifyTests(maxConcurrentReconcilesTests, t)
+
+	os.Setenv("MAX_CONCURRENT_RECONCILES", "8")
+	maxConcurrentReconciles = GetMaxConcurrentReconciles()
+	maxConcurrentReconcilesTests = []Test{
+		{"max concurrent reconcile (env set to 8)", 8, maxConcurrentReconciles},
+	}
+	verifyTests(maxConcurrentReconcilesTests, t)
+
+	os.Setenv("MAX_CONCURRENT_RECONCILES", "tenthousand")
+	maxConcurrentReconciles = GetMaxConcurrentReconciles()
+	maxConcurrentReconcilesTests = []Test{
+		{"max concurrent reconcile (env set to NaN)", 1, maxConcurrentReconciles},
+	}
+	verifyTests(maxConcurrentReconcilesTests, t)
+}
+
 func TestShouldDeleteRoute(t *testing.T) {
 	logger := zap.New()
 	logf.SetLogger(logger)
