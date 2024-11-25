@@ -157,6 +157,7 @@ func DefaultOpConfig() *sync.Map {
 	cfg.Store(OpConfigDefaultHostname, "")
 	cfg.Store(OpConfigCMCADuration, "8766h")
 	cfg.Store(OpConfigCMCertDuration, "2160h")
+	cfg[OpConfigLogLevel] = logLevelInfo
 	cfg.Store(OpConfigReconcileIntervalSeconds, "15")
 	cfg.Store(OpConfigReconcileIntervalPercentage, "100")
 	return cfg
