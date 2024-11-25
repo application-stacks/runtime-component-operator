@@ -21,9 +21,11 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/application-stacks/runtime-component-operator/common"
 	"github.com/pkg/errors"
+	"golang.org/x/time/rate"
 
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -50,6 +52,7 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/workqueue"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -540,6 +543,14 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)
 }
 
+func DefaultRuntimeComponentControllerRateLimiter() workqueue.RateLimiter {
+	return workqueue.NewMaxOfRateLimiter(
+		workqueue.NewItemExponentialFailureRateLimiter(5*time.Millisecond, 1000*time.Second),
+		// 100 qps, 1000 bucket size.
+		&workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(100), 1000)},
+	)
+}
+
 // SetupWithManager initializes reconciler
 func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
@@ -626,6 +637,7 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&autoscalingv1.HorizontalPodAutoscaler{}, builder.WithPredicates(predSubResource)).
 		WithOptions(kcontroller.Options{
 			MaxConcurrentReconciles: maxConcurrentReconciles,
+			RateLimiter:             DefaultRuntimeComponentControllerRateLimiter(),
 		})
 
 	ok, _ := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route")
