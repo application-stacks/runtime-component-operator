@@ -3,7 +3,7 @@ kind: RuntimeComponent
 metadata:
   name: runtimecomponent-sample
 spec:
-  applicationImage: icr.io/appcafe/open-liberty/samples/getting-started@sha256:b99e5af298a800a7d53217be7b33797cedb1eeadc4d5cd14c0c3aafccf21f1ac
+  applicationImage: icr.io/appcafe/open-liberty/samples/getting-started@sha256:3999aa86f788e601d305896e48a043a91861cdbf71951a1959887151390b3650
   expose: true
   manageTLS: true
   replicas: 1

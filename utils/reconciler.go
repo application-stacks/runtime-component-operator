@@ -5,6 +5,8 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"math"
+	"strconv"
 	"time"
 
 	networkingv1 "k8s.io/api/networking/v1"
@@ -28,10 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-)
-
-const (
-	ReconcileInterval = 15
 )
 
 // ReconcilerBase base reconciler with some common behaviour
@@ -106,6 +104,7 @@ func (r *ReconcilerBase) SetDiscoveryClient(discovery discovery.DiscoveryInterfa
 }
 
 var log = logf.Log.WithName("utils")
+var logD1 = log.V(common.LogLevelDebug)
 
 // CreateOrUpdate ...
 func (r *ReconcilerBase) CreateOrUpdate(obj client.Object, owner metav1.Object, reconcile func() error) error {
@@ -122,7 +121,7 @@ func (r *ReconcilerBase) CreateOrUpdate(obj client.Object, owner metav1.Object, 
 	var gvk schema.GroupVersionKind
 	gvk, err = apiutil.GVKForObject(obj, r.scheme)
 	if err == nil {
-		log.Info("Reconciled", "Kind", gvk.Kind, "Namespace", obj.GetNamespace(), "Name", obj.GetName(), "Status", result)
+		logD1.Info("Reconciled", "Kind", gvk.Kind, "Namespace", obj.GetNamespace(), "Name", obj.GetName(), "Status", result)
 	}
 
 	return err
@@ -198,6 +197,60 @@ func addStatusWarnings(ba common.BaseComponent) {
 
 }
 
+func getBaseReconcileInterval(s common.BaseComponentStatus) int32 {
+	baseIntervalInt, _ := strconv.Atoi(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalSeconds))
+	baseInterval := int32(baseIntervalInt)
+	s.SetReconcileInterval(&baseInterval)
+
+	return baseInterval
+}
+
+func resetReconcileInterval(newCondition common.StatusCondition, s common.BaseComponentStatus) time.Duration {
+	var newCount *int32
+	newCondition.SetUnchangedConditionCount(newCount)
+	baseInterval := getBaseReconcileInterval(s)
+
+	return time.Duration(baseInterval) * time.Second
+}
+
+// Precondition: Operator config values for common.OpConfigReconcileIntervalSeconds and common.OpConfigReconcileIntervalPercentage must be integers
+func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition, newCondition common.StatusCondition, s common.BaseComponentStatus) time.Duration {
+	var oldReconcileInterval int32
+
+	var newCount int32
+	count := oldCondition.GetUnchangedConditionCount()
+	if count == nil || s.GetReconcileInterval() == nil {
+		newCount = 0
+		oldReconcileInterval = getBaseReconcileInterval(s)
+	} else {
+		newCount = *count + 1
+		oldReconcileInterval = *s.GetReconcileInterval()
+	}
+
+	newCondition.SetUnchangedConditionCount(&newCount)
+
+	s.UnsetUnchangedConditionCount(newCondition.GetType())
+	s.SetCondition(newCondition)
+
+	// For every repeated 2 reconciliation errors, increase reconcile period
+	if newCount >= 2 && newCount%2 == 0 {
+		intervalIncreasePercentage, _ := strconv.ParseFloat(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalPercentage), 64)
+		exp := float64(newCount / 2)
+		increase := math.Pow(1+(intervalIncreasePercentage/100), exp)
+
+		baseInterval, _ := strconv.ParseFloat(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalSeconds), 64)
+		newInterval := int32(baseInterval * increase)
+
+		// Only increase to the maximum interval
+		if newInterval < 0 || newInterval >= int32(maxSeconds) {
+			newInterval = int32(maxSeconds)
+		}
+		s.SetReconcileInterval(&newInterval)
+		return time.Duration(newInterval) * time.Second
+	}
+	return time.Duration(oldReconcileInterval) * time.Second
+}
+
 // ManageError ...
 func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
 	s := ba.GetStatus()
@@ -207,12 +260,11 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 	r.GetRecorder().Event(obj, "Warning", "ProcessingError", issue.Error())
 
 	oldCondition := s.GetCondition(conditionType)
-
 	newCondition := s.NewCondition(conditionType)
 	newCondition.SetReason(string(apierrors.ReasonForError(issue)))
 	newCondition.SetMessage(issue.Error())
 	newCondition.SetStatus(corev1.ConditionFalse)
-	s.SetCondition(newCondition)
+	r.setCondition(ba, oldCondition, newCondition)
 
 	addStatusWarnings(ba)
 
@@ -234,6 +286,18 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 		s.SetCondition(reconciledNewCondition)
 	}
 
+	var retryInterval time.Duration
+	// If the application was reconciled and now it is not or encountered a different error
+	// Use the default reconcile interval
+	if oldCondition == nil || s.GetReconcileInterval() == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
+		retryInterval = resetReconcileInterval(newCondition, s)
+	} else {
+		// If the application fails to reconcile again and the error message has not changed
+		// Increase the retry interval upto maxSeconds
+		maxSeconds := 240 // Max 4 minutes
+		retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
+	}
+
 	err := r.UpdateStatus(obj)
 	if err != nil {
 
@@ -247,14 +311,6 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 		}, nil
 	}
 
-	var retryInterval time.Duration
-	// If the application was reconciled and now it is not
-	if oldCondition == nil || oldCondition.GetStatus() == corev1.ConditionTrue {
-		retryInterval = time.Second
-	} else {
-		retryInterval = 5 * time.Second
-	}
-
 	return reconcile.Result{
 		//RequeueAfter: time.Duration(math.Min(float64(retryInterval.Nanoseconds()*2), float64(time.Hour.Nanoseconds()*6))),
 		RequeueAfter: retryInterval,
@@ -265,17 +321,51 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 // ManageSuccess ...
 func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
 	s := ba.GetStatus()
+	oldRecCondition := s.GetCondition(conditionType)
 
-	statusCondition := s.NewCondition(conditionType)
-	statusCondition.SetReason("")
-	statusCondition.SetMessage("")
-	statusCondition.SetStatus(corev1.ConditionTrue)
-	s.SetCondition(statusCondition)
+	newRecCondition := s.NewCondition(conditionType)
+	newRecCondition.SetReason("")
+	newRecCondition.SetMessage("")
+	newRecCondition.SetStatus(corev1.ConditionTrue)
+	s.SetCondition(newRecCondition)
 
 	addStatusWarnings(ba)
 
-	//Check application status (reconciliation & resource status & endpoint status)
-	readyStatus := r.CheckApplicationStatus(ba)
+	// Check application status (reconciliation & resource condition & endpoint condition)
+	// CheckApplicationStatus returns overall Application condition if ready
+	// If not ready, it returns Resources condition
+	oldCondition, newCondition := r.CheckApplicationStatus(ba)
+
+	var retryInterval time.Duration
+
+	// If the resources are not ready
+	if newCondition.GetStatus() != corev1.ConditionTrue {
+		// If the resources were ready and now they are not, or encountered a different error
+		// Use the default reconcile interval
+		if oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
+			retryInterval = resetReconcileInterval(newCondition, s)
+		} else {
+			// If the resources stay unready and the error message has not changed
+			// Increase the retry interval upto maxSeconds
+			maxSeconds := 240 // Max 4 minutes
+			retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
+		}
+	} else { // If the application and resources are ready
+		if oldRecCondition == nil || oldRecCondition.GetStatus() != newRecCondition.GetStatus() || oldRecCondition.GetMessage() != newRecCondition.GetMessage() {
+			// If the application or the resources were not reconciled before
+			// Use the default reconcile interval
+			retryInterval = resetReconcileInterval(newRecCondition, s)
+		} else if oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
+			// Or if the application (resources) were not ready before
+			// Use the default reconcile interval
+			retryInterval = resetReconcileInterval(newCondition, s)
+		} else {
+			// If the application and resources stay ready and there are no changes
+			// Increase the retry interval upto maxSeconds
+			maxSeconds := 120 // Max 2 minutes
+			retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
+		}
+	}
 
 	err := r.UpdateStatus(ba.(client.Object))
 	if err != nil {
@@ -284,15 +374,6 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 			RequeueAfter: time.Second,
 			Requeue:      true,
 		}, nil
-	}
-
-	var retryInterval time.Duration
-
-	// If resources are not ready
-	if readyStatus != corev1.ConditionTrue {
-		retryInterval = time.Second
-	} else {
-		retryInterval = ReconcileInterval * time.Second
 	}
 
 	return reconcile.Result{RequeueAfter: retryInterval}, nil
@@ -437,10 +518,11 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 			Name: prefix + "-self-signed",
 		}
 
-		duration, err := time.ParseDuration(common.Config[common.OpConfigCMCADuration])
+		duration, err := time.ParseDuration(common.LoadFromConfig(common.Config, common.OpConfigCMCADuration))
 		if err != nil {
 			return err
 		}
+
 		caCert.Spec.Duration = &metav1.Duration{Duration: duration}
 		return nil
 	})
@@ -571,10 +653,23 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 				}
 			}
 
-			svcCert.Spec.CommonName = bao.GetName() + "." + bao.GetNamespace() + ".svc"
-			svcCert.Spec.DNSNames = make([]string, 2)
+			svcCert.Spec.CommonName = trimCommonName(bao.GetName(), bao.GetNamespace())
+			svcCert.Spec.DNSNames = make([]string, 4)
 			svcCert.Spec.DNSNames[0] = bao.GetName() + "." + bao.GetNamespace() + ".svc"
 			svcCert.Spec.DNSNames[1] = bao.GetName() + "." + bao.GetNamespace() + ".svc.cluster.local"
+			svcCert.Spec.DNSNames[2] = bao.GetName() + "." + bao.GetNamespace()
+			svcCert.Spec.DNSNames[3] = bao.GetName()
+			if ba.GetStatefulSet() != nil {
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, bao.GetName()+"-headless."+bao.GetNamespace()+".svc")
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, bao.GetName()+"-headless."+bao.GetNamespace()+".svc.cluster.local")
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, bao.GetName()+"-headless."+bao.GetNamespace())
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, bao.GetName()+"-headless")
+				// Wildcard entries for the pods
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, "*."+bao.GetName()+"-headless."+bao.GetNamespace()+".svc")
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, "*."+bao.GetName()+"-headless."+bao.GetNamespace()+".svc.cluster.local")
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, "*."+bao.GetName()+"-headless."+bao.GetNamespace())
+				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, "*."+bao.GetName()+"-headless")
+			}
 			svcCert.Spec.IsCA = false
 			svcCert.Spec.IssuerRef = certmanagermetav1.ObjectReference{
 				Name: prefix + "-ca-issuer",
@@ -600,7 +695,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 
 			svcCert.Spec.SecretName = svcCertSecretName
 
-			duration, err := time.ParseDuration(common.Config[common.OpConfigCMCertDuration])
+			duration, err := time.ParseDuration(common.LoadFromConfig(common.Config, common.OpConfigCMCertDuration))
 			if err != nil {
 				return err
 			}
@@ -654,4 +749,25 @@ func (r *ReconcilerBase) GetIngressInfo(ba common.BaseComponent) (host string, p
 		}
 	}
 	return host, path, protocol
+}
+
+// Create a common name for a certificate that is no longer
+// that 64 bytes
+func trimCommonName(compName string, ns string) (cn string) {
+
+	commonName := compName + "." + ns + ".svc"
+	if len(commonName) > 64 {
+		// Try removing '.svc'
+		commonName = compName + "." + ns
+	}
+	if len(commonName) > 64 {
+		// Try removing the namespace
+		commonName = compName
+	}
+	if len(commonName) > 64 {
+		// Just have to truncate
+		commonName = commonName[:64]
+	}
+
+	return commonName
 }

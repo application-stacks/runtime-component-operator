@@ -41,6 +41,9 @@ type StatusCondition interface {
 	GetType() StatusConditionType
 	SetType(StatusConditionType)
 
+	GetUnchangedConditionCount() *int32
+	SetUnchangedConditionCount(*int32)
+
 	SetConditionFields(string, string, corev1.ConditionStatus) StatusCondition
 }
 
@@ -83,6 +86,11 @@ type BaseComponentStatus interface {
 	GetReferences() StatusReferences
 	SetReferences(StatusReferences)
 	SetReference(string, string)
+
+	GetReconcileInterval() *int32
+	SetReconcileInterval(*int32)
+
+	UnsetUnchangedConditionCount(conditionType StatusConditionType)
 }
 
 const (
@@ -198,6 +206,11 @@ type BaseComponentTopologySpreadConstraints interface {
 	GetDisableOperatorDefaults() *bool
 }
 
+type BaseComponentDNS interface {
+	GetPolicy() *corev1.DNSPolicy
+	GetConfig() *corev1.PodDNSConfig
+}
+
 // BaseComponent represents basic kubernetes application
 type BaseComponent interface {
 	GetApplicationImage() string
@@ -233,4 +246,7 @@ type BaseComponent interface {
 	GetTopologySpreadConstraints() BaseComponentTopologySpreadConstraints
 	GetSecurityContext() *corev1.SecurityContext
 	GetManageTLS() *bool
+	GetDisableServiceLinks() *bool
+	GetTolerations() []corev1.Toleration
+	GetDNS() BaseComponentDNS
 }

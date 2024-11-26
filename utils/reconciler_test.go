@@ -496,6 +496,18 @@ func TestAddStatusWarnings(t *testing.T) {
 	verifyTests(testData, t)
 }
 
+func TestTrimCommonName(t *testing.T) {
+	//cn := trimCommonName("my-app", "my-ns")
+	testData := []Test{
+		{"common name should not have been trimmed", "my-app.my-ns.svc", trimCommonName("my-app", "my-ns")},
+		{"common name should have svc trimmed.", "123456789-123456789-123456789-123456789-123456789-123456.my-ns", trimCommonName("123456789-123456789-123456789-123456789-123456789-123456", "my-ns")},
+		{"common name should have svc and ns trimmed.", "123456789-123456789-123456789-123456789-123456789-123456789-", trimCommonName("123456789-123456789-123456789-123456789-123456789-123456789-", "my-ns")},
+		{"common name should be truncated.", "123456789-123456789-123456789-123456789-123456789-123456789-1234", trimCommonName("123456789-123456789-123456789-123456789-123456789-123456789-1234-all-of-this-should-go", "my-ns")},
+	}
+	verifyTests(testData, t)
+
+}
+
 func createFakeDiscoveryClient() discovery.DiscoveryInterface {
 	fakeDiscoveryClient := &fakediscovery.FakeDiscovery{Fake: &coretesting.Fake{}}
 	fakeDiscoveryClient.Resources = []*metav1.APIResourceList{

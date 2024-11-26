@@ -149,6 +149,29 @@ type RuntimeComponentSpec struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Topology Spread Constraints"
 	TopologySpreadConstraints *RuntimeComponentTopologySpreadConstraints `json:"topologySpreadConstraints,omitempty"`
+
+	// Disable information about services being injected into the application pod's environment variables. Default to false.
+	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="Disable Service Links",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	DisableServiceLinks *bool `json:"disableServiceLinks,omitempty"`
+
+	// Tolerations to be added to application pods. Tolerations allow the scheduler to schedule pods on nodes with matching taints.
+	// +operator-sdk:csv:customresourcedefinitions:order=28,type=spec,displayName="Tolerations"
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+
+	// DNS settings for the pod.
+	// +operator-sdk:csv:customresourcedefinitions:order=29,type=spec,displayName="DNS"
+	DNS *RuntimeComponentDNS `json:"dns,omitempty"`
+}
+
+// Defines the DNS
+type RuntimeComponentDNS struct {
+	// The DNS Policy for the application pod.
+	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="DNS Policy"
+	DNSPolicy *corev1.DNSPolicy `json:"policy,omitempty"`
+
+	// The DNS Config for the application pod.
+	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="DNS Config"
+	PodDNSConfig *corev1.PodDNSConfig `json:"config,omitempty"`
 }
 
 // Defines the topology spread constraints
@@ -158,7 +181,7 @@ type RuntimeComponentTopologySpreadConstraints struct {
 	Constraints *[]corev1.TopologySpreadConstraint `json:"constraints,omitempty"`
 
 	// Whether the operator should disable its default set of TopologySpreadConstraints. Defaults to false.
-	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Disable Operator Defaults",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="Disable Operator Defaults",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	DisableOperatorDefaults *bool `json:"disableOperatorDefaults,omitempty"`
 }
 
@@ -408,6 +431,9 @@ type RuntimeComponentStatus struct {
 
 	// The generation identifier of this RuntimeComponent instance completely reconciled by the Operator.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// The reconciliation interval in seconds.
+	ReconcileInterval *int32 `json:"reconcileInterval,omitempty"`
 }
 
 // Defines possible status conditions.
@@ -417,6 +443,9 @@ type StatusCondition struct {
 	Message            string                 `json:"message,omitempty"`
 	Status             corev1.ConditionStatus `json:"status,omitempty"`
 	Type               StatusConditionType    `json:"type,omitempty"`
+
+	// The count of the number of reconciles the condition status type has not changed.
+	UnchangedConditionCount *int32 `json:"unchangedConditionCount,omitempty"`
 }
 
 // Defines the type of status condition.
@@ -507,6 +536,11 @@ func (cr *RuntimeComponent) GetPullPolicy() *corev1.PullPolicy {
 // GetPullSecret returns secret name for docker registry credentials
 func (cr *RuntimeComponent) GetPullSecret() *string {
 	return cr.Spec.PullSecret
+}
+
+// GetToleration returns pod tolerations slice
+func (cr *RuntimeComponent) GetTolerations() []corev1.Toleration {
+	return cr.Spec.Tolerations
 }
 
 // GetServiceAccountName returns service account name
@@ -946,6 +980,21 @@ func (cr *RuntimeComponent) GetTopologySpreadConstraints() common.BaseComponentT
 	return cr.Spec.TopologySpreadConstraints
 }
 
+func (cr *RuntimeComponent) GetDNS() common.BaseComponentDNS {
+	if cr.Spec.DNS == nil {
+		return nil
+	}
+	return cr.Spec.DNS
+}
+
+func (d *RuntimeComponentDNS) GetPolicy() *corev1.DNSPolicy {
+	return d.DNSPolicy
+}
+
+func (d *RuntimeComponentDNS) GetConfig() *corev1.PodDNSConfig {
+	return d.PodDNSConfig
+}
+
 func (cr *RuntimeComponentTopologySpreadConstraints) GetConstraints() *[]corev1.TopologySpreadConstraint {
 	if cr.Constraints == nil {
 		return nil
@@ -1036,6 +1085,11 @@ func (cr *RuntimeComponent) GetAnnotations() map[string]string {
 	}
 	delete(annotations, "kubectl.kubernetes.io/last-applied-configuration")
 	return annotations
+}
+
+// GetDisableServiceLinks returns whether service links should be disabled in the pod spec
+func (cr *RuntimeComponent) GetDisableServiceLinks() *bool {
+	return cr.Spec.DisableServiceLinks
 }
 
 // GetType returns status condition type
@@ -1142,6 +1196,7 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 	condition.SetMessage(c.GetMessage())
 	condition.SetStatus(c.GetStatus())
 	condition.SetType(c.GetType())
+	condition.SetUnchangedConditionCount(c.GetUnchangedConditionCount())
 	if !found {
 		s.Conditions = append(s.Conditions, *condition)
 	}
@@ -1174,11 +1229,37 @@ func (s *RuntimeComponentStatus) SetReferences(refs common.StatusReferences) {
 	s.References = refs
 }
 
+func (s *RuntimeComponentStatus) GetReconcileInterval() *int32 {
+	return s.ReconcileInterval
+}
+
+func (s *RuntimeComponentStatus) SetReconcileInterval(interval *int32) {
+	s.ReconcileInterval = interval
+}
+
 func (s *RuntimeComponentStatus) SetReference(name string, value string) {
 	if s.References == nil {
 		s.References = make(common.StatusReferences)
 	}
 	s.References[name] = value
+}
+
+func (sc *StatusCondition) GetUnchangedConditionCount() *int32 {
+	return sc.UnchangedConditionCount
+}
+
+func (sc *StatusCondition) SetUnchangedConditionCount(count *int32) {
+	sc.UnchangedConditionCount = count
+}
+
+func (s *RuntimeComponentStatus) UnsetUnchangedConditionCount(conditionType common.StatusConditionType) {
+	// Reset unchanged count for other status conditions
+	var emptyCount *int32
+	for i := range s.Conditions {
+		if s.Conditions[i].GetType() != conditionType && s.Conditions[i].GetUnchangedConditionCount() != nil {
+			s.Conditions[i].SetUnchangedConditionCount(emptyCount)
+		}
+	}
 }
 
 func convertToCommonStatusConditionType(c StatusConditionType) common.StatusConditionType {

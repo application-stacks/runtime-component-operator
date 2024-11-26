@@ -1,11 +1,12 @@
 package utils
 
 import (
-	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	"os"
 	"reflect"
 	"strconv"
 	"testing"
+
+	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 
 	"github.com/application-stacks/runtime-component-operator/common"
 	routev1 "github.com/openshift/api/route/v1"
@@ -109,6 +110,12 @@ type Test struct {
 	actual   interface{}
 }
 
+func TestMain(m *testing.M) {
+	common.Config = common.DefaultOpConfig()
+	rc := m.Run()
+	os.Exit(rc)
+}
+
 func TestCustomizeRoute(t *testing.T) {
 	logger := zap.New()
 	logf.SetLogger(logger)
@@ -210,7 +217,7 @@ func partialTestCustomizeNodeAffinity(t *testing.T) {
 			Preference: corev1.NodeSelectorTerm{
 				MatchExpressions: []corev1.NodeSelectorRequirement{
 					{
-						Key:      "failure-domain.beta.kubernetes.io/zone",
+						Key:      "topology.kubernetes.io/zone",
 						Operator: corev1.NodeSelectorOpIn,
 						Values:   []string{"zoneB"},
 					},
@@ -259,7 +266,7 @@ func partialTestCustomizePodAffinity(t *testing.T) {
 	selectorB := makeInLabelSelector("service", []string{"Service-B"})
 	// required during scheduling ignored during execution
 	rDSIDE := []corev1.PodAffinityTerm{
-		{LabelSelector: &selectorA, TopologyKey: "failure-domain.beta.kubernetes.io/zone"},
+		{LabelSelector: &selectorA, TopologyKey: "topology.kubernetes.io/zone"},
 	}
 	// preferred during scheduling ignored during execution
 	pDSIDE := []corev1.WeightedPodAffinityTerm{
@@ -432,6 +439,49 @@ func TestCustomizePodSpec(t *testing.T) {
 		{"No target port", targetPort, assignedTPort},
 	}
 	verifyTests(testCA, t)
+}
+
+func TestCustomizePodSpecServiceLinks(t *testing.T) {
+	logger := zap.New()
+	logf.SetLogger(logger)
+
+	tv := true
+	fv := false
+	nb := &tv
+	nb = nil
+
+	spec := appstacksv1.RuntimeComponentSpec{
+		ApplicationImage: appImage,
+		Service:          service,
+		Resources:        resourceContraints,
+		Probes:           probes,
+		VolumeMounts:     []corev1.VolumeMount{volumeMount},
+		PullPolicy:       &pullPolicy,
+		Env:              env,
+		EnvFrom:          envFrom,
+		Volumes:          []corev1.Volume{volume},
+	}
+
+	pts, runtime := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	defaultLinks := pts.Spec.EnableServiceLinks
+
+	spec.DisableServiceLinks = &tv
+	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	disableLinks := *pts.Spec.EnableServiceLinks
+
+	spec.DisableServiceLinks = &fv
+	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	enableLinks := pts.Spec.EnableServiceLinks
+
+	testCPS := []Test{
+		{"Default service links", nb, defaultLinks},
+		{"Disable service links", false, disableLinks},
+		{"Enable service links", nb, enableLinks},
+	}
+	verifyTests(testCPS, t)
 }
 
 func TestCustomizePersistence(t *testing.T) {
@@ -713,6 +763,40 @@ func TestGetWatchNamespaces(t *testing.T) {
 	verifyTests(configMapConstTests, t)
 }
 
+func TestGetMaxConcurrentReconciles(t *testing.T) {
+	// Set the logger to development mode for verbose logs
+	logger := zap.New()
+	logf.SetLogger(logger)
+
+	os.Setenv("MAX_CONCURRENT_RECONCILES", "1")
+	maxConcurrentReconciles := GetMaxConcurrentReconciles()
+	maxConcurrentReconcilesTests := []Test{
+		{"max concurrent reconcile (env set to 1)", 1, maxConcurrentReconciles},
+	}
+	verifyTests(maxConcurrentReconcilesTests, t)
+
+	os.Setenv("MAX_CONCURRENT_RECONCILES", "-1")
+	maxConcurrentReconciles = GetMaxConcurrentReconciles()
+	maxConcurrentReconcilesTests = []Test{
+		{"max concurrent reconcile (env set to -1)", 1, maxConcurrentReconciles},
+	}
+	verifyTests(maxConcurrentReconcilesTests, t)
+
+	os.Setenv("MAX_CONCURRENT_RECONCILES", "8")
+	maxConcurrentReconciles = GetMaxConcurrentReconciles()
+	maxConcurrentReconcilesTests = []Test{
+		{"max concurrent reconcile (env set to 8)", 8, maxConcurrentReconciles},
+	}
+	verifyTests(maxConcurrentReconcilesTests, t)
+
+	os.Setenv("MAX_CONCURRENT_RECONCILES", "tenthousand")
+	maxConcurrentReconciles = GetMaxConcurrentReconciles()
+	maxConcurrentReconcilesTests = []Test{
+		{"max concurrent reconcile (env set to NaN)", 1, maxConcurrentReconciles},
+	}
+	verifyTests(maxConcurrentReconcilesTests, t)
+}
+
 func TestShouldDeleteRoute(t *testing.T) {
 	logger := zap.New()
 	logf.SetLogger(logger)
@@ -739,7 +823,7 @@ func TestShouldDeleteRoute(t *testing.T) {
 
 	// When there is a defaultHost in config.
 	// This should be ignored as the route is nil
-	common.Config[common.OpConfigDefaultHostname] = "default.host"
+	common.Config.Store(common.OpConfigDefaultHostname, "default.host")
 	noPreviousWithDefault := ShouldDeleteRoute(runtime)
 
 	// If the route object exists with no host,

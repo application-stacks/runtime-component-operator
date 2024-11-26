@@ -9,8 +9,14 @@ metadata:
     containerImage: icr.io/appcafe/runtime-component-operator:daily
     createdAt: "2022-02-25T09:00:00Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
-    olm.skipRange: '>=0.8.0 <1.3.2'
-    operators.openshift.io/infrastructure-features: '["disconnected"]'
+    features.operators.openshift.io/disconnected: "true"
+    features.operators.openshift.io/fips-compliant: "true"
+    features.operators.openshift.io/proxy-aware: "false"
+    features.operators.openshift.io/tls-profiles: "false"
+    features.operators.openshift.io/token-auth-aws: "false"
+    features.operators.openshift.io/token-auth-azure: "false"
+    features.operators.openshift.io/token-auth-gcp: "false"
+    olm.skipRange: '>=0.8.0 <1.4.1'
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
   labels:
@@ -66,6 +72,9 @@ spec:
         path: autoscaling.maxReplicas
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
+      - description: The DNS Policy for the application pod.
+        displayName: DNS Policy
+        path: dns.policy
       - description: Probe to determine successful initialization. If specified, other
           probes are not executed until this completes successfully.
         displayName: Startup Probe
@@ -79,12 +88,6 @@ spec:
       - description: The list of TopologySpreadConstraints for the application pod.
         displayName: Constraints
         path: topologySpreadConstraints.constraints
-      - description: Whether the operator should disable its default set of TopologySpreadConstraints.
-          Defaults to false.
-        displayName: Disable Operator Defaults
-        path: topologySpreadConstraints.disableOperatorDefaults
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Name of the application. Defaults to the name of this custom
           resource.
         displayName: Application Name
@@ -96,6 +99,9 @@ spec:
         path: autoscaling.minReplicas
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
+      - description: The DNS Config for the application pod.
+        displayName: DNS Config
+        path: dns.config
       - description: Periodic probe of container service readiness. Container will
           be removed from service endpoints if the probe fails.
         displayName: Readiness Probe
@@ -106,6 +112,12 @@ spec:
         path: serviceAccount.name
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Whether the operator should disable its default set of TopologySpreadConstraints.
+          Defaults to false.
+        displayName: Disable Operator Defaults
+        path: topologySpreadConstraints.disableOperatorDefaults
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Version of the application.
         displayName: Application Version
         path: applicationVersion
@@ -292,6 +304,12 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:text
       - displayName: Topology Spread Constraints
         path: topologySpreadConstraints
+      - description: Disable information about services being injected into the application
+          pod's environment variables. Default to false.
+        displayName: Disable Service Links
+        path: disableServiceLinks
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: The directory inside the container where this persisted storage
           will be bound to.
         displayName: Storage Mount Path
@@ -304,6 +322,13 @@ spec:
         path: statefulSet.storage.volumeClaimTemplate
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:PersistentVolumeClaim
+      - description: Tolerations to be added to application pods. Tolerations allow
+          the scheduler to schedule pods on nodes with matching taints.
+        displayName: Tolerations
+        path: tolerations
+      - description: DNS settings for the pod.
+        displayName: DNS
+        path: dns
       - description: Labels to set on ServiceMonitor.
         displayName: Monitoring Labels
         path: monitoring.labels

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package controller
 
 import (
 	"context"
@@ -27,7 +27,6 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
@@ -37,6 +36,7 @@ import (
 	"github.com/go-logr/logr"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+	kcontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 
 	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	imagev1 "github.com/openshift/api/image/v1"
@@ -106,7 +106,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		reqLogger.Info("Failed to find runtime-component-operator config map")
 		appstacksutils.CreateConfigMap(OperatorName)
 	} else {
-		common.Config.LoadFromConfigMap(configMap)
+		common.LoadFromConfigMap(common.Config, configMap)
 	}
 
 	// Fetch the RuntimeComponent instance
@@ -122,6 +122,14 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
+	}
+
+	if err = common.CheckValidValue(common.Config, common.OpConfigReconcileIntervalSeconds, OperatorName); err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+	}
+
+	if err = common.CheckValidValue(common.Config, common.OpConfigReconcileIntervalPercentage, OperatorName); err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
 	isKnativeSupported, err := r.IsGroupVersionSupported(servingv1.SchemeGroupVersion.String(), "Service")
@@ -608,12 +616,17 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	}
 
+	maxConcurrentReconciles := appstacksutils.GetMaxConcurrentReconciles()
+
 	b := ctrl.NewControllerManagedBy(mgr).For(&appstacksv1.RuntimeComponent{}, builder.WithPredicates(pred)).
 		Owns(&corev1.Service{}, builder.WithPredicates(predSubResource)).
 		Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource)).
 		Owns(&appsv1.Deployment{}, builder.WithPredicates(predSubResWithGenCheck)).
 		Owns(&appsv1.StatefulSet{}, builder.WithPredicates(predSubResWithGenCheck)).
-		Owns(&autoscalingv1.HorizontalPodAutoscaler{}, builder.WithPredicates(predSubResource))
+		Owns(&autoscalingv1.HorizontalPodAutoscaler{}, builder.WithPredicates(predSubResource)).
+		WithOptions(kcontroller.Options{
+			MaxConcurrentReconciles: maxConcurrentReconciles,
+		})
 
 	ok, _ := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route")
 	if ok {
@@ -633,7 +646,7 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 	ok, _ = r.IsGroupVersionSupported(imagev1.SchemeGroupVersion.String(), "ImageStream")
 	if ok {
-		b = b.Watches(&source.Kind{Type: &imagev1.ImageStream{}}, &EnqueueRequestsForCustomIndexField{
+		b = b.Watches(&imagev1.ImageStream{}, &EnqueueRequestsForCustomIndexField{
 			Matcher: &ImageStreamMatcher{
 				Klient:          mgr.GetClient(),
 				WatchNamespaces: watchNamespaces,

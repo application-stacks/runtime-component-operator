@@ -18,7 +18,6 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	clientcfg "sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -41,7 +40,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const RCOOperandVersion = "1.3.2"
+const RCOOperandVersion = "1.4.1"
 
 var APIVersionNotFoundError = errors.New("APIVersion is not available")
 
@@ -117,9 +116,11 @@ func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, c
 		route.Annotations = MergeMaps(route.Annotations, rt.GetAnnotations())
 
 		host := rt.GetHost()
-		if host == "" && common.Config[common.OpConfigDefaultHostname] != "" {
-			host = obj.GetName() + "-" + obj.GetNamespace() + "." + common.Config[common.OpConfigDefaultHostname]
+		defaultHostName := common.LoadFromConfig(common.Config, common.OpConfigDefaultHostname)
+		if host == "" && defaultHostName != "" {
+			host = obj.GetName() + "-" + obj.GetNamespace() + "." + defaultHostName
 		}
+
 		ba.GetStatus().SetReference(common.StatusReferenceRouteHost, host)
 		route.Spec.Host = host
 		route.Spec.Path = rt.GetPath()
@@ -447,12 +448,7 @@ func createNetworkPolicyPeer(appName string, namespace string, networkPolicy com
 }
 
 func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule, ba common.BaseComponent) {
-	var ports []int32
-	ports = append(ports, ba.GetService().GetPort())
-	for _, port := range ba.GetService().GetPorts() {
-		ports = append(ports, port.Port)
-	}
-
+	// Resize the ingress ports
 	currentLen := len(ingress.Ports)
 	desiredLen := len(ba.GetService().GetPorts()) + 1 // Add one for normal port
 
@@ -462,15 +458,29 @@ func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule,
 		currentLen = desiredLen
 	}
 
-	// Add additional ports needed
+	// Add additional ports if needed
 	for currentLen < desiredLen {
 		ingress.Ports = append(ingress.Ports, networkingv1.NetworkPolicyPort{})
 		currentLen++
 	}
 
-	for i, port := range ports {
-		newPort := &intstr.IntOrString{Type: intstr.Int, IntVal: port}
-		ingress.Ports[i].Port = newPort
+	// Initialize the normal port
+	primaryPortIntVal := ba.GetService().GetPort()
+	if ba.GetService().GetTargetPort() != nil {
+		primaryPortIntVal = *ba.GetService().GetTargetPort()
+	}
+	primaryPort := intstr.IntOrString{Type: intstr.Int, IntVal: primaryPortIntVal}
+	ingress.Ports[0].Port = &primaryPort
+
+	// Initialize additional ports
+	for i := 0; i < len(ba.GetService().GetPorts()); i++ {
+		portPtr := &ba.GetService().GetPorts()[i]
+		if portPtr.TargetPort.String() != "" {
+			ingress.Ports[i+1].Port = &portPtr.TargetPort
+		} else {
+			additionalPort := &intstr.IntOrString{Type: intstr.Int, IntVal: portPtr.Port}
+			ingress.Ports[i+1].Port = additionalPort
+		}
 	}
 }
 
@@ -722,7 +732,17 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		pts.Spec.ServiceAccountName = obj.GetName()
 	}
 	pts.Spec.RestartPolicy = corev1.RestartPolicyAlways
-	pts.Spec.DNSPolicy = corev1.DNSClusterFirst
+	badns := ba.GetDNS()
+	if badns != nil && badns.GetPolicy() != nil {
+		pts.Spec.DNSPolicy = *badns.GetPolicy()
+	} else {
+		pts.Spec.DNSPolicy = corev1.DNSClusterFirst
+	}
+	if badns != nil && badns.GetConfig() != nil {
+		pts.Spec.DNSConfig = badns.GetConfig()
+	} else {
+		pts.Spec.DNSConfig = nil
+	}
 
 	pts.Spec.TopologySpreadConstraints = make([]corev1.TopologySpreadConstraint, 0)
 	topologySpreadConstraintsConfig := ba.GetTopologySpreadConstraints()
@@ -745,6 +765,16 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		}
 	}
 	pts.Spec.AutomountServiceAccountToken = &mount
+
+	if ba.GetDisableServiceLinks() != nil && *ba.GetDisableServiceLinks() == true {
+		//pts.Spec.EnableServiceLinks = ba.GetEnableServiceLinks()
+		fv := false
+		pts.Spec.EnableServiceLinks = &fv
+	} else {
+		pts.Spec.EnableServiceLinks = nil
+	}
+
+	pts.Spec.Tolerations = ba.GetTolerations()
 }
 
 // Initialize an empty TopologySpreadConstraints list and optionally prefers scheduling across zones/hosts for pods with podMatchLabels
@@ -1081,7 +1111,9 @@ func ValidatePrometheusMonitoringEndpoints(ba common.BaseComponent, client clien
 				}
 			}
 			// BearerTokenSecret
-			bearerTokenSecret = endpoint.BearerTokenSecret
+			if endpoint.BearerTokenSecret != nil {
+				bearerTokenSecret = *endpoint.BearerTokenSecret
+			}
 			if secretShouldExist(bearerTokenSecret) {
 				secretNames = appendNameIfUnique(secretNames, bearerTokenSecret.Name)
 			}
@@ -1408,10 +1440,11 @@ func CustomizeIngress(ing *networkingv1.Ingress, ba common.BaseComponent) {
 	if ba.GetService().GetPortName() != "" {
 		servicePort = ba.GetService().GetPortName()
 	}
-
-	if host == "" && common.Config[common.OpConfigDefaultHostname] != "" {
-		host = obj.GetName() + "-" + obj.GetNamespace() + "." + common.Config[common.OpConfigDefaultHostname]
+	defaultHostName := common.LoadFromConfig(common.Config, common.OpConfigDefaultHostname)
+	if host == "" && defaultHostName != "" {
+		host = obj.GetName() + "-" + obj.GetNamespace() + "." + defaultHostName
 	}
+
 	if host == "" {
 		l := log.WithValues("Request.Namespace", obj.GetNamespace(), "Request.Name", obj.GetName())
 		l.Info("No Ingress hostname is provided. Ingress might not function correctly without hostname. It is recommended to set Ingress host or to provide default value through operator's config map.")
@@ -1601,6 +1634,9 @@ func GetSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
 		Privileged:             &valFalse,
 		ReadOnlyRootFilesystem: &valFalse,
 		RunAsNonRoot:           &valTrue,
+		SeccompProfile: &corev1.SeccompProfile{
+			Type: corev1.SeccompProfileTypeRuntimeDefault,
+		},
 	}
 
 	// Customize security context
@@ -1619,6 +1655,9 @@ func GetSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
 		}
 		if baSecurityContext.RunAsNonRoot == nil {
 			baSecurityContext.RunAsNonRoot = secContext.RunAsNonRoot
+		}
+		if baSecurityContext.SeccompProfile == nil {
+			baSecurityContext.SeccompProfile = secContext.SeccompProfile
 		}
 		return baSecurityContext
 	}
@@ -1692,12 +1731,12 @@ func addSecretResourceVersionAsEnvVar(pts *corev1.PodTemplateSpec, object metav1
 // This should only be called once from main.go on operator start
 // It checks for the presence of the operators config map and
 // creates it if it doesn't exist
+// As we load logging config from the config map, we can't use log messages as the logger won't be setup yet.
 func CreateConfigMap(mapName string) {
-	utilsLog := ctrl.Log.WithName("utils-setup")
-	// This function is called from main, so the normal client isn't setup properly
+	// The config map may not be in a watched namespace, in which case the normal client won't read it.
 	client, clerr := client.New(clientcfg.GetConfigOrDie(), client.Options{})
 	if clerr != nil {
-		utilsLog.Error(clerr, "Couldn't create a client for config map creation")
+		fmt.Fprintf(os.Stderr, "Couldn't create a client for config map creation: %s\n", clerr)
 		return
 	}
 
@@ -1706,7 +1745,7 @@ func CreateConfigMap(mapName string) {
 		// This could happen if the operator is running locally, i.e. outside the cluster
 		watchNamespaces, err := GetWatchNamespaces()
 		if err != nil {
-			utilsLog.Error(err, "Error getting watch namespace")
+			fmt.Fprintf(os.Stderr, "Error getting watch namespace: %s\n", err)
 			return
 		}
 		// If the operator is running locally, use the first namespace in the `watchNamespaces`
@@ -1715,12 +1754,12 @@ func CreateConfigMap(mapName string) {
 	configMap := &corev1.ConfigMap{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: mapName, Namespace: operatorNs}, configMap)
 	if err != nil && apierrors.IsNotFound(err) {
-		utilsLog.Error(err, "The operator config map was not found. Attempting to create it")
+		fmt.Fprintf(os.Stderr, "The operator config map was not found. Attempting to create it: %s\n", err)
 	} else if err != nil {
-		utilsLog.Error(err, "Couldn't retrieve operator config map")
+		fmt.Fprintf(os.Stderr, "Couldn't retrieve operator config map: %s\n", err)
 		return
 	} else {
-		utilsLog.Info("Existing operator config map was found")
+		fmt.Fprintf(os.Stderr, "Existing operator config map was found\n")
 		return
 	}
 
@@ -1734,13 +1773,18 @@ func CreateConfigMap(mapName string) {
 	// store it in a new map
 	common.Config = common.DefaultOpConfig()
 	_, cerr := controllerutil.CreateOrUpdate(context.TODO(), client, newConfigMap, func() error {
-		newConfigMap.Data = common.Config
+		newConfigMapData := make(map[string]string)
+		common.Config.Range(func(key, value interface{}) bool {
+			newConfigMapData[key.(string)] = value.(string)
+			return true
+		})
+		newConfigMap.Data = newConfigMapData
 		return nil
 	})
 	if cerr != nil {
-		utilsLog.Error(cerr, "Couldn't create config map in namespace "+operatorNs)
+		fmt.Fprintf(os.Stderr, "Couldn't create config map in namespace %s: %s\n", operatorNs, err)
 	} else {
-		utilsLog.Info("Operator Config map created in namespace " + operatorNs)
+		fmt.Fprintf(os.Stderr, "Operator Config map created in namespace %s\n", operatorNs)
 	}
 }
 
@@ -1839,9 +1883,30 @@ func ShouldDeleteRoute(ba common.BaseComponent) bool {
 		// The host was previously set.
 		// If the host is now empty, delete the old route
 		rt := ba.GetRoute()
-		if rt == nil || (rt.GetHost() == "" && common.Config[common.OpConfigDefaultHostname] == "") {
+		defaultHostName := common.LoadFromConfig(common.Config, common.OpConfigDefaultHostname)
+		if rt == nil || (rt.GetHost() == "" && defaultHostName == "") {
 			return true
 		}
 	}
 	return false
+}
+
+// Returns the configured operator max concurrent reconciles setting
+func GetMaxConcurrentReconciles() int {
+	envValue := os.Getenv("MAX_CONCURRENT_RECONCILES")
+	if intVal := parseEnvAsPositiveInt(envValue); intVal != -1 {
+		return intVal
+	}
+	return 1
+}
+
+// Parses env as positive int or returns -1 on failure
+func parseEnvAsPositiveInt(envValue string) int {
+	if envValue != "" {
+		positiveIntVal, err := strconv.ParseInt(envValue, 10, 64)
+		if err == nil && positiveIntVal >= 1 {
+			return int(positiveIntVal)
+		}
+	}
+	return -1
 }
