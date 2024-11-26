@@ -332,6 +332,38 @@ The value of the `.status.versions.reconciled` parameter is the version of the o
 
 At the end of the reconcile loop, the operator will also update the `.status.observedGeneration` parameter to match the value of `.metadata.generation`. 
 
+[[operator-config-map]]
+=== Operator ConfigMap
+
+The `ConfigMap` named `runtime-component-operator` is used for configuring Runtime Component operator managed resources. It is created once when the operator starts and is located in the operator's installed namespace.
+
+NOTE: For OCP users, the `AllNamespaces` install mode designates `openshift-operators` as the operator's installed namespace.
+
+This is a sample operator `ConfigMap` that would get generated when the operator is installed and running in the `test-namespace` namespace.
+
+[source,yaml]
+----
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: runtime-component-operator
+  namespace: test-namespace
+data:
+  certManagerCACertDuration: 8766h
+  certManagerCertDuration: 2160h
+  defaultHostname: ''
+----
+
+And here is the set of descriptions corresponding to each configurable field.
+
+.Operator ConfigMap data fields
+|===
+| Field | Description
+| `certManagerCACertDuration` | The cert-manager issued CA certificate's duration before expiry in link:++https://pkg.go.dev/time#ParseDuration++[Go `time.Duration`] string format. The default value is `8766h` (1 year). To learn more about this field see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#generating-certificates-with-certificate-manager++[Generating certificates with certificate manager].
+| `certManagerCertDuration` |  The cert-manager issued service certificate's duration before expiry in link:++https://pkg.go.dev/time#ParseDuration++[Go `time.Duration`] string format. The default value is `2160h` (90 days). To learn more about this field see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#generating-certificates-with-certificate-manager++[Generating certificates with certificate manager].
+| `defaultHostname` | The default hostname for the `RuntimeComponent` Route or Ingress URL when `.spec.expose` is set to `true`. To learn more about this field see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#expose-applications-externally++[Expose applications externally].
+|===
+
 
 === Operator configuration examples
 Browse the `RuntimeComponent` examples to learn how to use custom resource (CR) parameters to configure your operator. The complete component documentation can be found under link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#operator-configuration-examples++[Open Liberty Operator's "Common Component"] section. Any references to Open Liberty Operator-specific resources can be mapped over to Runtime Component Operator using the table below.
