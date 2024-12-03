@@ -573,7 +573,7 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 	return nil
 }
 
-func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string) (bool, error) {
+func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string, shouldDeferError bool) (bool, error) {
 
 	delete(ba.GetStatus().GetReferences(), common.StatusReferenceCertSecretName)
 	cleanup := func() {
@@ -615,12 +615,14 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 	} else if ok {
 		bao := ba.(metav1.Object)
 
-		err = r.GenerateCMIssuer(bao.GetNamespace(), prefix, CACommonName, operatorName)
-		if err != nil {
-			if errors.Is(err, APIVersionNotFoundError) {
+		cmIssuerErr := r.GenerateCMIssuer(bao.GetNamespace(), prefix, CACommonName, operatorName)
+		if cmIssuerErr != nil {
+			if errors.Is(cmIssuerErr, APIVersionNotFoundError) {
 				return false, nil
 			}
-			return true, err
+			if !shouldDeferError {
+				return true, cmIssuerErr
+			}
 		}
 		svcCertSecretName := bao.GetName() + "-svc-tls-cm"
 
@@ -704,6 +706,9 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 			return nil
 		})
 		if err != nil {
+			return true, err
+		}
+		if shouldDeferError && cmIssuerErr != nil {
 			return true, err
 		}
 		if shouldRefreshCertSecret {
