@@ -708,7 +708,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 		if err != nil {
 			return true, err
 		}
-		if shouldDeferError && cmIssuerErr != nil {
+		if shouldDeferError && !customIssuerFound && cmIssuerErr != nil {
 			return true, err
 		}
 		if shouldRefreshCertSecret {
