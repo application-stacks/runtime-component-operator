@@ -574,7 +574,7 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 }
 
 func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string, shouldDeferError bool) (bool, error) {
-
+	start := time.Now()
 	delete(ba.GetStatus().GetReferences(), common.StatusReferenceCertSecretName)
 	cleanup := func() {
 		if ok, err := r.IsGroupVersionSupported(certmanagerv1.SchemeGroupVersion.String(), "Certificate"); err != nil {
@@ -589,23 +589,33 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 	}
 
 	if ba.GetCreateKnativeService() != nil && *ba.GetCreateKnativeService() {
+		elapsed := time.Since(start)
+		fmt.Printf("---- GenerateSvcCertSecret [1] cleanup started after %s\n", elapsed)
 		cleanup()
 		return false, nil
 	}
 	if ba.GetService() != nil && ba.GetService().GetCertificateSecretRef() != nil {
+		elapsed := time.Since(start)
+		fmt.Printf("---- GenerateSvcCertSecret [2] cleanup started after %s\n", elapsed)
 		cleanup()
 		return false, nil
 	}
 	if ba.GetManageTLS() != nil && !*ba.GetManageTLS() {
+		elapsed := time.Since(start)
+		fmt.Printf("---- GenerateSvcCertSecret [3] cleanup started after %s\n", elapsed)
 		cleanup()
 		return false, nil
 	}
 	if ba.GetService() != nil && ba.GetService().GetAnnotations() != nil {
 		if _, ok := ba.GetService().GetAnnotations()["service.beta.openshift.io/serving-cert-secret-name"]; ok {
+			elapsed := time.Since(start)
+			fmt.Printf("---- GenerateSvcCertSecret [4a] cleanup started after %s\n", elapsed)
 			cleanup()
 			return false, nil
 		}
 		if _, ok := ba.GetService().GetAnnotations()["service.alpha.openshift.io/serving-cert-secret-name"]; ok {
+			elapsed := time.Since(start)
+			fmt.Printf("---- GenerateSvcCertSecret [4b] cleanup started after %s\n", elapsed)
 			cleanup()
 			return false, nil
 		}
@@ -620,9 +630,8 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 			if errors.Is(cmIssuerErr, APIVersionNotFoundError) {
 				return false, nil
 			}
-			if !shouldDeferError {
-				return true, cmIssuerErr
-			}
+
+			return true, cmIssuerErr
 		}
 		svcCertSecretName := bao.GetName() + "-svc-tls-cm"
 
@@ -706,9 +715,13 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 			return nil
 		})
 		if err != nil {
+			elapsed := time.Since(start)
+			fmt.Printf("---- GenerateSvcCertSecret [A] exited after %s\n", elapsed)
 			return true, err
 		}
 		if shouldDeferError && !customIssuerFound && cmIssuerErr != nil {
+			elapsed := time.Since(start)
+			fmt.Printf("---- GenerateSvcCertSecret [B] exited after %s\n", elapsed)
 			return true, err
 		}
 		if shouldRefreshCertSecret {
@@ -716,8 +729,12 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 		}
 		ba.GetStatus().SetReference(common.StatusReferenceCertSecretName, svcCertSecretName)
 	} else {
+		elapsed := time.Since(start)
+		fmt.Printf("---- GenerateSvcCertSecret [C] exited after %s\n", elapsed)
 		return false, nil
 	}
+	elapsed := time.Since(start)
+	fmt.Printf("---- GenerateSvcCertSecret [D] exited after %s\n", elapsed)
 	return true, nil
 }
 
