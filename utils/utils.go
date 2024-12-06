@@ -1910,3 +1910,24 @@ func parseEnvAsPositiveInt(envValue string) int {
 	}
 	return -1
 }
+
+// Returns the env setting for Operator watching HorizontalPodAutoscaler (HPA)
+func GetOperatorWatchHPA() bool {
+	return parseEnvAsBool(os.Getenv("OPERATOR_WATCH_HPA"))
+}
+
+// Returns the env setting for disabling all watches
+func GetOperatorDisableWatch() bool {
+	return parseEnvAsBool(os.Getenv("OPERATOR_DISABLE_WATCH"))
+}
+
+// Parses env as bool or returns false on failure
+func parseEnvAsBool(envValue string) bool {
+	if envValue != "" {
+		boolVal, err := strconv.ParseBool(envValue)
+		if err == nil {
+			return boolVal
+		}
+	}
+	return false
+}

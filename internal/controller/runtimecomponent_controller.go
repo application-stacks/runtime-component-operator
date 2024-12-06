@@ -25,6 +25,7 @@ import (
 	"github.com/application-stacks/runtime-component-operator/common"
 	"github.com/pkg/errors"
 
+	kcontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -36,7 +37,6 @@ import (
 	"github.com/go-logr/logr"
 
 	ctrl "sigs.k8s.io/controller-runtime"
-	kcontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 
 	appstacksv1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	imagev1 "github.com/openshift/api/image/v1"
@@ -616,43 +616,50 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	}
 
+	b := ctrl.NewControllerManagedBy(mgr).For(&appstacksv1.RuntimeComponent{}, builder.WithPredicates(pred))
+
+	if !appstacksutils.GetOperatorDisableWatch() {
+		b = b.Owns(&corev1.Service{}, builder.WithPredicates(predSubResource)).
+			Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource)).
+			Owns(&appsv1.Deployment{}, builder.WithPredicates(predSubResWithGenCheck)).
+			Owns(&appsv1.StatefulSet{}, builder.WithPredicates(predSubResWithGenCheck))
+
+		if appstacksutils.GetOperatorWatchHPA() {
+			b = b.Owns(&autoscalingv1.HorizontalPodAutoscaler{}, builder.WithPredicates(predSubResource))
+		}
+
+		ok, _ := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route")
+		if ok {
+			b = b.Owns(&routev1.Route{}, builder.WithPredicates(predSubResource))
+		}
+		ok, _ = r.IsGroupVersionSupported(networkingv1.SchemeGroupVersion.String(), "Ingress")
+		if ok {
+			b = b.Owns(&networkingv1.Ingress{}, builder.WithPredicates(predSubResource))
+		}
+		ok, _ = r.IsGroupVersionSupported(servingv1.SchemeGroupVersion.String(), "Service")
+		if ok {
+			b = b.Owns(&servingv1.Service{}, builder.WithPredicates(predSubResource))
+		}
+		ok, _ = r.IsGroupVersionSupported(prometheusv1.SchemeGroupVersion.String(), "ServiceMonitor")
+		if ok {
+			b = b.Owns(&prometheusv1.ServiceMonitor{}, builder.WithPredicates(predSubResource))
+		}
+		ok, _ = r.IsGroupVersionSupported(imagev1.SchemeGroupVersion.String(), "ImageStream")
+		if ok {
+			b = b.Watches(&imagev1.ImageStream{}, &EnqueueRequestsForCustomIndexField{
+				Matcher: &ImageStreamMatcher{
+					Klient:          mgr.GetClient(),
+					WatchNamespaces: watchNamespaces,
+				},
+			})
+		}
+	}
+
 	maxConcurrentReconciles := appstacksutils.GetMaxConcurrentReconciles()
 
-	b := ctrl.NewControllerManagedBy(mgr).For(&appstacksv1.RuntimeComponent{}, builder.WithPredicates(pred)).
-		Owns(&corev1.Service{}, builder.WithPredicates(predSubResource)).
-		Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource)).
-		Owns(&appsv1.Deployment{}, builder.WithPredicates(predSubResWithGenCheck)).
-		Owns(&appsv1.StatefulSet{}, builder.WithPredicates(predSubResWithGenCheck)).
-		WithOptions(kcontroller.Options{
-			MaxConcurrentReconciles: maxConcurrentReconciles,
-		})
-
-	ok, _ := r.IsGroupVersionSupported(routev1.SchemeGroupVersion.String(), "Route")
-	if ok {
-		b = b.Owns(&routev1.Route{}, builder.WithPredicates(predSubResource))
-	}
-	ok, _ = r.IsGroupVersionSupported(networkingv1.SchemeGroupVersion.String(), "Ingress")
-	if ok {
-		b = b.Owns(&networkingv1.Ingress{}, builder.WithPredicates(predSubResource))
-	}
-	ok, _ = r.IsGroupVersionSupported(servingv1.SchemeGroupVersion.String(), "Service")
-	if ok {
-		b = b.Owns(&servingv1.Service{}, builder.WithPredicates(predSubResource))
-	}
-	ok, _ = r.IsGroupVersionSupported(prometheusv1.SchemeGroupVersion.String(), "ServiceMonitor")
-	if ok {
-		b = b.Owns(&prometheusv1.ServiceMonitor{}, builder.WithPredicates(predSubResource))
-	}
-	ok, _ = r.IsGroupVersionSupported(imagev1.SchemeGroupVersion.String(), "ImageStream")
-	if ok {
-		b = b.Watches(&imagev1.ImageStream{}, &EnqueueRequestsForCustomIndexField{
-			Matcher: &ImageStreamMatcher{
-				Klient:          mgr.GetClient(),
-				WatchNamespaces: watchNamespaces,
-			},
-		})
-	}
-	return b.Complete(r)
+	return b.WithOptions(kcontroller.Options{
+		MaxConcurrentReconciles: maxConcurrentReconciles,
+	}).Complete(r)
 }
 
 func getMonitoringEnabledLabelName(ba common.BaseComponent) string {
