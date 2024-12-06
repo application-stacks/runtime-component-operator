@@ -232,8 +232,8 @@ func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition
 	s.UnsetUnchangedConditionCount(newCondition.GetType())
 	s.SetCondition(newCondition)
 
-	// For every repeated 2 reconciliation errors, increase reconcile period
-	if newCount >= 2 && newCount%2 == 0 {
+	// For every repeated 5 reconciliation errors, increase reconcile period
+	if newCount >= 5 && newCount%5 == 0 {
 		intervalIncreasePercentage, _ := strconv.ParseFloat(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalPercentage), 64)
 		exp := float64(newCount / 2)
 		increase := math.Pow(1+(intervalIncreasePercentage/100), exp)
@@ -347,7 +347,7 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 		} else {
 			// If the resources stay unready and the error message has not changed
 			// Increase the retry interval upto maxSeconds
-			maxSeconds := 240 // Max 4 minutes
+			maxSeconds := 120 // Max 2 minutes
 			retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
 		}
 	} else { // If the application and resources are ready
@@ -574,7 +574,6 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 }
 
 func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string) (bool, error) {
-	start := time.Now()
 	delete(ba.GetStatus().GetReferences(), common.StatusReferenceCertSecretName)
 	cleanup := func() {
 		if ok, err := r.IsGroupVersionSupported(certmanagerv1.SchemeGroupVersion.String(), "Certificate"); err != nil {
@@ -589,33 +588,23 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 	}
 
 	if ba.GetCreateKnativeService() != nil && *ba.GetCreateKnativeService() {
-		elapsed := time.Since(start)
-		fmt.Printf("---- GenerateSvcCertSecret [1] cleanup started after %s\n", elapsed)
 		cleanup()
 		return false, nil
 	}
 	if ba.GetService() != nil && ba.GetService().GetCertificateSecretRef() != nil {
-		elapsed := time.Since(start)
-		fmt.Printf("---- GenerateSvcCertSecret [2] cleanup started after %s\n", elapsed)
 		cleanup()
 		return false, nil
 	}
 	if ba.GetManageTLS() != nil && !*ba.GetManageTLS() {
-		elapsed := time.Since(start)
-		fmt.Printf("---- GenerateSvcCertSecret [3] cleanup started after %s\n", elapsed)
 		cleanup()
 		return false, nil
 	}
 	if ba.GetService() != nil && ba.GetService().GetAnnotations() != nil {
 		if _, ok := ba.GetService().GetAnnotations()["service.beta.openshift.io/serving-cert-secret-name"]; ok {
-			elapsed := time.Since(start)
-			fmt.Printf("---- GenerateSvcCertSecret [4a] cleanup started after %s\n", elapsed)
 			cleanup()
 			return false, nil
 		}
 		if _, ok := ba.GetService().GetAnnotations()["service.alpha.openshift.io/serving-cert-secret-name"]; ok {
-			elapsed := time.Since(start)
-			fmt.Printf("---- GenerateSvcCertSecret [4b] cleanup started after %s\n", elapsed)
 			cleanup()
 			return false, nil
 		}
@@ -630,8 +619,6 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 			if errors.Is(cmIssuerErr, APIVersionNotFoundError) {
 				return false, nil
 			}
-			elapsed := time.Since(start)
-			fmt.Printf("---- GenerateSvcCertSecret [0] exited after %s\n", elapsed)
 			return true, cmIssuerErr
 		}
 		svcCertSecretName := bao.GetName() + "-svc-tls-cm"
@@ -716,8 +703,6 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 			return nil
 		})
 		if err != nil {
-			elapsed := time.Since(start)
-			fmt.Printf("---- GenerateSvcCertSecret [A] exited after %s\n", elapsed)
 			return true, err
 		}
 		if shouldRefreshCertSecret {
@@ -725,12 +710,8 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 		}
 		ba.GetStatus().SetReference(common.StatusReferenceCertSecretName, svcCertSecretName)
 	} else {
-		elapsed := time.Since(start)
-		fmt.Printf("---- GenerateSvcCertSecret [C] exited after %s\n", elapsed)
 		return false, nil
 	}
-	elapsed := time.Since(start)
-	fmt.Printf("---- GenerateSvcCertSecret [D] exited after %s\n", elapsed)
 	return true, nil
 }
 
