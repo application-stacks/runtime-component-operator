@@ -623,7 +623,6 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource)).
 		Owns(&appsv1.Deployment{}, builder.WithPredicates(predSubResWithGenCheck)).
 		Owns(&appsv1.StatefulSet{}, builder.WithPredicates(predSubResWithGenCheck)).
-		Owns(&autoscalingv1.HorizontalPodAutoscaler{}, builder.WithPredicates(predSubResource)).
 		WithOptions(kcontroller.Options{
 			MaxConcurrentReconciles: maxConcurrentReconciles,
 		})
