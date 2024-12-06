@@ -25,14 +25,11 @@ kubectl create -f https://raw.githubusercontent.com/application-stacks/runtime-c
 NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY_WATCH_NAMESPACE_HERE>` with proper values. The namespaces must already exist. The commands below will not create the namespaces.
 +
     * To watch all namespaces in the cluster, set `WATCH_NAMESPACE='""'`
-+
-    * To optionally reconcile multiple `RuntimeComponent` instances concurrently, set `MAX_CONCURRENT_RECONCILES=<SPECIFY_MAX_CONCURRENT_RECONCILES_HERE>` (default is `1`)
-+
+
 [source,sh]
 ----
     OPERATOR_NAMESPACE=<SPECIFY_OPERATOR_NAMESPACE_HERE>
     WATCH_NAMESPACE=<SPECIFY_WATCH_NAMESPACE_HERE>
-    MAX_CONCURRENT_RECONCILES=<OPTIONALLY_SPECIFY_MAX_CONCURRENT_RECONCILES_HERE>
 ----
 
 .. _Optional_: Install roles and bindings to watch another namespace or all namespaces.  This step can be skipped if the operator is only watching own namespace.
@@ -62,7 +59,6 @@ curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-o
 ----
 curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/internal/deploy/kubectl/runtime-component-operator.yaml \
       | sed -e "s/RUNTIME_COMPONENT_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" \
-      | sed -e "s/RUNTIME_COMPONENT_MAX_CONCURRENT_RECONCILES/'${MAX_CONCURRENT_RECONCILES}'/" \
       | kubectl apply -n ${OPERATOR_NAMESPACE} -f -
 ----
 
