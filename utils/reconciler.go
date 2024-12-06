@@ -573,7 +573,7 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 	return nil
 }
 
-func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string, shouldDeferError bool) (bool, error) {
+func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string) (bool, error) {
 	start := time.Now()
 	delete(ba.GetStatus().GetReferences(), common.StatusReferenceCertSecretName)
 	cleanup := func() {
@@ -630,7 +630,8 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 			if errors.Is(cmIssuerErr, APIVersionNotFoundError) {
 				return false, nil
 			}
-
+			elapsed := time.Since(start)
+			fmt.Printf("---- GenerateSvcCertSecret [0] exited after %s\n", elapsed)
 			return true, cmIssuerErr
 		}
 		svcCertSecretName := bao.GetName() + "-svc-tls-cm"
@@ -717,11 +718,6 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 		if err != nil {
 			elapsed := time.Since(start)
 			fmt.Printf("---- GenerateSvcCertSecret [A] exited after %s\n", elapsed)
-			return true, err
-		}
-		if shouldDeferError && !customIssuerFound && cmIssuerErr != nil {
-			elapsed := time.Since(start)
-			fmt.Printf("---- GenerateSvcCertSecret [B] exited after %s\n", elapsed)
 			return true, err
 		}
 		if shouldRefreshCertSecret {
