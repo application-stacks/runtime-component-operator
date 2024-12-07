@@ -618,7 +618,7 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	b := ctrl.NewControllerManagedBy(mgr).For(&appstacksv1.RuntimeComponent{}, builder.WithPredicates(pred))
 
-	if !appstacksutils.GetOperatorDisableWatch() {
+	if !appstacksutils.GetOperatorDisableWatches() {
 		b = b.Owns(&corev1.Service{}, builder.WithPredicates(predSubResource)).
 			Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource)).
 			Owns(&appsv1.Deployment{}, builder.WithPredicates(predSubResWithGenCheck)).

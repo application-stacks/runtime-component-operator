@@ -1917,8 +1917,8 @@ func GetOperatorWatchHPA() bool {
 }
 
 // Returns the env setting for disabling all watches
-func GetOperatorDisableWatch() bool {
-	return parseEnvAsBool(os.Getenv("OPERATOR_DISABLE_WATCH"))
+func GetOperatorDisableWatches() bool {
+	return parseEnvAsBool(os.Getenv("OPERATOR_DISABLE_WATCHES"))
 }
 
 // Parses env as bool or returns false on failure
