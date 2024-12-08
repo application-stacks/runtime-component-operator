@@ -158,7 +158,7 @@ func DefaultOpConfig() *sync.Map {
 	cfg.Store(OpConfigCMCADuration, "8766h")
 	cfg.Store(OpConfigCMCertDuration, "2160h")
 	cfg.Store(OpConfigLogLevel, logLevelInfo)
-	cfg.Store(OpConfigReconcileIntervalSeconds, "15")
+	cfg.Store(OpConfigReconcileIntervalSeconds, "5")
 	cfg.Store(OpConfigReconcileIntervalPercentage, "100")
 	return cfg
 }
