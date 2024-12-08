@@ -44,8 +44,8 @@ const (
 	// zapcore.Level is defined as int8, so this logs everything
 	zLevelDebugMax zapcore.Level = -127
 
-	// OpConfigReconcileIntervalSeconds default reconciliation interval in seconds
-	OpConfigReconcileIntervalSeconds = "reconcileIntervalSeconds"
+	// OpConfigReconcileIntervalMinimum default reconciliation interval in seconds
+	OpConfigReconcileIntervalMinimum = "reconcileIntervalMinimum"
 
 	// OpConfigReconcileIntervalPercentage default reconciliation interval increase, represented as a percentage (100 equaling to 100%)
 	// When the reconciliation interval needs to increase, it will increase by the given percentage
@@ -106,7 +106,7 @@ func CheckValidValue(oc *sync.Map, key string, OperatorName string) error {
 	if err != nil {
 		SetConfigMapDefaultValue(oc, key)
 		return errors.New(key + " in ConfigMap: " + OperatorName + " has an invalid syntax, error: " + err.Error())
-	} else if key == OpConfigReconcileIntervalSeconds && intValue <= 0 {
+	} else if key == OpConfigReconcileIntervalMinimum && intValue <= 0 {
 		SetConfigMapDefaultValue(oc, key)
 		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value + ". It must be greater than 0.")
 	} else if key == OpConfigReconcileIntervalPercentage && intValue < 0 {
@@ -158,7 +158,7 @@ func DefaultOpConfig() *sync.Map {
 	cfg.Store(OpConfigCMCADuration, "8766h")
 	cfg.Store(OpConfigCMCertDuration, "2160h")
 	cfg.Store(OpConfigLogLevel, logLevelInfo)
-	cfg.Store(OpConfigReconcileIntervalSeconds, "5")
+	cfg.Store(OpConfigReconcileIntervalMinimum, "5")
 	cfg.Store(OpConfigReconcileIntervalPercentage, "100")
 	return cfg
 }
