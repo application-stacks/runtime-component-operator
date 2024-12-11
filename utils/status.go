@@ -65,7 +65,7 @@ func (r *ReconcilerBase) CheckApplicationStatus(ba common.BaseComponent) (common
 	newAppCondition.SetConditionFields(msg, reason, status)
 	r.setCondition(ba, oldAppCondition, newAppCondition)
 
-	if status == corev1.ConditionFalse {
+	if newResourcesCondition != nil && status == corev1.ConditionFalse {
 		return oldResourcesCondition, newResourcesCondition
 	} else {
 		return oldAppCondition, newAppCondition
