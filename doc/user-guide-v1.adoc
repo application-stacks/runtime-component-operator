@@ -332,6 +332,25 @@ The value of the `.status.versions.reconciled` parameter is the version of the o
 
 At the end of the reconcile loop, the operator will also update the `.status.observedGeneration` parameter to match the value of `.metadata.generation`. 
 
+==== Viewing reconciliation frequency in the status [[viewing-reconciliation-frequency-in-the-status]]
+The operator controller periodically runs reconciliation to match the current state to the wanted state so that the managed resources remain functional. Runtime Component operator allows for increasing the reconciliation interval to reduce the controller's workload when status remains unchanged. The reconciliation frequency can be configured with the link:#operator-configmap[Operator ConfigMap] settings.
+
+The value of the `.status.conditions.unchangedConditionCount` parameter represents the number of reconciliation cycles during which the condition status type remains unchanged. Each time this value becomes an even number, the reconciliation interval increases according to the configurations in the `ConfigMap`. The reconciliation interval increase feature is enabled by default but can be disabled if needed.
+
+The `.status.reconcileInterval` parameter represents the current reconciliation interval of the instance. The parameter increases by the increase percentage, which is specified in the `ConfigMap`, based on the current interval. The calculation uses the base reconciliation interval, the increase percentage, and the count of unchanged status conditions, with the increases compounding over time. The maximum reconciliation interval is _240_ seconds for repeated failures and _120_ seconds for repeated successful status conditions.
+
+=== Operator ConfigMap [[operator-configmap]]
+
+The `ConfigMap` named `runtime-component-operator` is used for configuring the managed resources. It is created once when the operator starts and is located in the operator's installed namespace.
+
+For more information on ConfigMap configurations, see under link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#operator-configmap++[Open Liberty Operator’s "Operator ConfigMap"] section. Any references to Open Liberty Operator-specific resources can be mapped over to Runtime Component Operator using the table below.
+
+.Open Liberty Operator Name Mapping
+|===
+| *Data* | *Open Liberty Operator* | *Runtime Component Operator*
+| Kind | `OpenLibertyApplication` | `RuntimeComponent`
+| ConfigMap | `open-liberty-operator` | `runtime-component-operator`
+|===
 
 === Operator configuration examples
 Browse the `RuntimeComponent` examples to learn how to use custom resource (CR) parameters to configure your operator. The complete component documentation can be found under link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#operator-configuration-examples++[Open Liberty Operator's "Common Component"] section. Any references to Open Liberty Operator-specific resources can be mapped over to Runtime Component Operator using the table below.
