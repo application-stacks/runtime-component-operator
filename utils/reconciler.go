@@ -485,6 +485,44 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string,
 	return key, cert, ca, destCa, nil
 }
 
+func (r *ReconcilerBase) checkCertificateReady(cert *certmanagerv1.Certificate) error {
+	err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: cert.Name, Namespace: cert.Namespace}, cert)
+	if err != nil {
+		return err
+	}
+	isReady := false
+	for _, condition := range cert.Status.Conditions {
+		if condition.Type == certmanagerv1.CertificateConditionReady {
+			if condition.Status == certmanagermetav1.ConditionTrue {
+				isReady = true
+			}
+		}
+	}
+	if !isReady {
+		return fmt.Errorf("certificate %s is not ready", cert.Name)
+	}
+	return nil
+}
+
+func (r *ReconcilerBase) checkIssuerReady(issuer *certmanagerv1.Issuer) error {
+	err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: issuer.Name, Namespace: issuer.Namespace}, issuer)
+	if err != nil {
+		return err
+	}
+	isReady := false
+	for _, condition := range issuer.Status.Conditions {
+		if condition.Type == certmanagerv1.IssuerConditionReady {
+			if condition.Status == certmanagermetav1.ConditionTrue {
+				isReady = true
+			}
+		}
+	}
+	if !isReady {
+		return fmt.Errorf("issuer %s is not ready", issuer.Name)
+	}
+	return nil
+}
+
 func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACommonName string, operatorName string) error {
 	if ok, err := r.IsGroupVersionSupported(certmanagerv1.SchemeGroupVersion.String(), "Issuer"); err != nil {
 		return err
@@ -504,21 +542,8 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 	if err != nil {
 		return err
 	}
-	// check for self-signed Issuer to be ready
-	err = r.GetClient().Get(context.TODO(), types.NamespacedName{Name: issuer.Name, Namespace: issuer.Namespace}, issuer)
-	if err != nil {
+	if err := r.checkIssuerReady(issuer); err != nil {
 		return err
-	}
-	isReady := false
-	for _, condition := range issuer.Status.Conditions {
-		if condition.Type == certmanagerv1.IssuerConditionReady {
-			if condition.Status == certmanagermetav1.ConditionTrue {
-				isReady = true
-			}
-		}
-	}
-	if !isReady {
-		return fmt.Errorf("issuer %s is not ready", issuer.Name)
 	}
 
 	caCert := &certmanagerv1.Certificate{ObjectMeta: metav1.ObjectMeta{
@@ -547,6 +572,7 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 	if err != nil {
 		return err
 	}
+
 	CustomCACert := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{
 		Name:      prefix + "-custom-ca-tls",
 		Namespace: namespace,
@@ -556,6 +582,10 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 		Namespace: CustomCACert.GetNamespace()}, CustomCACert)
 	if err == nil {
 		customCACertFound = true
+	} else {
+		if err := r.checkCertificateReady(caCert); err != nil {
+			return err
+		}
 	}
 
 	issuer = &certmanagerv1.Issuer{ObjectMeta: metav1.ObjectMeta{
