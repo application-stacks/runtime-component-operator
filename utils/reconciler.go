@@ -504,6 +504,23 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 	if err != nil {
 		return err
 	}
+	// check for self-signed Issuer to be ready
+	err = r.GetClient().Get(context.TODO(), types.NamespacedName{Name: issuer.Name, Namespace: issuer.Namespace}, issuer)
+	if err != nil {
+		return err
+	}
+	isReady := false
+	for _, condition := range issuer.Status.Conditions {
+		if condition.Type == certmanagerv1.IssuerConditionReady {
+			if condition.Status == certmanagermetav1.ConditionTrue {
+				isReady = true
+			}
+		}
+	}
+	if !isReady {
+		return fmt.Errorf("issuer %s is not ready", issuer.Name)
+	}
+
 	caCert := &certmanagerv1.Certificate{ObjectMeta: metav1.ObjectMeta{
 		Name:      prefix + "-ca-cert",
 		Namespace: namespace,
