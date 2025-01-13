@@ -620,7 +620,7 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 	return nil
 }
 
-func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string) (bool, error) {
+func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string, addOwnerReference bool) (bool, error) {
 	delete(ba.GetStatus().GetReferences(), common.StatusReferenceCertSecretName)
 	cleanup := func() {
 		if ok, err := r.IsGroupVersionSupported(certmanagerv1.SchemeGroupVersion.String(), "Certificate"); err != nil {
@@ -688,7 +688,13 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 		}
 
 		shouldRefreshCertSecret := false
-		err = r.CreateOrUpdate(svcCert, bao, func() error {
+		var owner metav1.Object
+		if addOwnerReference {
+			owner = bao
+		} else {
+			owner = nil
+		}
+		err = r.CreateOrUpdate(svcCert, owner, func() error {
 			svcCert.Labels = ba.GetLabels()
 			svcCert.Annotations = MergeMaps(svcCert.Annotations, ba.GetAnnotations())
 			if ba.GetService() != nil {

@@ -299,7 +299,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	useCertmanager, err := r.GenerateSvcCertSecret(ba, "rco", "Runtime Component Operator", "runtime-component-operator")
+	useCertmanager, err := r.GenerateSvcCertSecret(ba, "rco", "Runtime Component Operator", "runtime-component-operator", true)
 	if err != nil {
 		reqLogger.Error(err, "Failed to reconcile CertManager Certificate")
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
