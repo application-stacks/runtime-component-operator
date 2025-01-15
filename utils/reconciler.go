@@ -232,10 +232,10 @@ func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition
 	s.UnsetUnchangedConditionCount(newCondition.GetType())
 	s.SetCondition(newCondition)
 
-	// For every repeated 10 reconciliation errors, increase reconcile period
-	if newCount >= 10 && newCount%10 == 0 {
+	// For every repeated 2 reconciliation errors, increase reconcile period
+	if newCount >= 2 && newCount%2 == 0 {
 		intervalIncreasePercentage, _ := strconv.ParseFloat(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalPercentage), 64)
-		exp := float64(newCount / 10)
+		exp := float64(newCount / 2)
 		increase := math.Pow(1+(intervalIncreasePercentage/100), exp)
 
 		baseInterval, _ := strconv.ParseFloat(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalMinimum), 64)
