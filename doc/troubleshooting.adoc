@@ -2,7 +2,7 @@
 
 You might encounter an issue when installing, configuring, or managing operators. You can run `oc` or `kubectl` commands to check the status of pods, operators, and custom resources and to investigate problems.
 
-To run `oc` commands, you need the link:++https://docs.openshift.com/container-platform/4.10/cli_reference/openshift_cli/getting-started-cli.html++[OpenShift command-line interface (CLI)]. To run `kubectl` commands, if you don't have OpenShift installed, you need the link:++https://kubernetes.io/docs/reference/kubectl/++[Kubernetes command line tool].
+To run `oc` commands, you need the link:++https://docs.openshift.com/container-platform/latest/cli_reference/openshift_cli/getting-started-cli.html++[OpenShift command-line interface (CLI)]. To run `kubectl` commands, if you don't have OpenShift installed, you need the link:++https://kubernetes.io/docs/reference/kubectl/++[Kubernetes command line tool].
 
 TIP: The documentation shows `oc` commands. To run `kubectl` commands, replace `oc` with `kubectl` in the commands.
 
