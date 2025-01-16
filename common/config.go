@@ -50,6 +50,9 @@ const (
 	// OpConfigReconcileIntervalPercentage default reconciliation interval increase, represented as a percentage (100 equaling to 100%)
 	// When the reconciliation interval needs to increase, it will increase by the given percentage
 	OpConfigReconcileIntervalPercentage = "reconcileIntervalIncreasePercentage"
+
+	OpConfigMaxWorkers            = "maxWorkers"
+	OpConfigMaxCertManagerWorkers = "maxCertManagerWorkers"
 )
 
 // Config stores operator configuration
