@@ -161,6 +161,11 @@ type RuntimeComponentSpec struct {
 	// DNS settings for the pod.
 	// +operator-sdk:csv:customresourcedefinitions:order=29,type=spec,displayName="DNS"
 	DNS *RuntimeComponentDNS `json:"dns,omitempty"`
+
+	// Hide reconcile interval of the instance in the status section.
+	// Reconcile Interval is listed in the status section by default.
+	// +operator-sdk:csv:customresourcedefinitions:order=29,type=spec,displayName="Hide Reconcile Interval"
+	ReconcileIntervalHide *bool `json:"reconcileIntervalHide,omitempty"`
 }
 
 // Defines the DNS
@@ -443,9 +448,6 @@ type StatusCondition struct {
 	Message            string                 `json:"message,omitempty"`
 	Status             corev1.ConditionStatus `json:"status,omitempty"`
 	Type               StatusConditionType    `json:"type,omitempty"`
-
-	// The count of the number of reconciles the condition status type has not changed.
-	UnchangedConditionCount *int32 `json:"unchangedConditionCount,omitempty"`
 }
 
 // Defines the type of status condition.
@@ -1092,6 +1094,11 @@ func (cr *RuntimeComponent) GetDisableServiceLinks() *bool {
 	return cr.Spec.DisableServiceLinks
 }
 
+// GetReconcileIntervalHide returns whether reconcileInterval should be hidden in the status section
+func (cr *RuntimeComponent) GetReconcileIntervalHide() *bool {
+	return cr.Spec.ReconcileIntervalHide
+}
+
 // GetType returns status condition type
 func (c *StatusCondition) GetType() common.StatusConditionType {
 	return convertToCommonStatusConditionType(c.Type)
@@ -1110,6 +1117,19 @@ func (c *StatusCondition) GetLastTransitionTime() *metav1.Time {
 // SetLastTransitionTime sets time of last status change
 func (c *StatusCondition) SetLastTransitionTime(t *metav1.Time) {
 	c.LastTransitionTime = t
+}
+
+// GetLastestTransitionTime returns latest time of status change
+func (s *RuntimeComponentStatus) GetLastestTransitionTime() *metav1.Time {
+	var latestTime *metav1.Time
+	for i := range s.Conditions {
+		t := s.Conditions[i].GetLastTransitionTime()
+		// If latestTime is not set or condition's time is before latestTime
+		if latestTime == nil || latestTime.Before(t) {
+			latestTime = t
+		}
+	}
+	return latestTime
 }
 
 // GetMessage returns condition's message
@@ -1188,7 +1208,7 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 		}
 	}
 
-	if condition.GetStatus() != c.GetStatus() || condition.GetMessage() != c.GetMessage() {
+	if condition.GetStatus() != c.GetStatus() || condition.GetMessage() != c.GetMessage() || condition.GetReason() != c.GetReason() {
 		condition.SetLastTransitionTime(&metav1.Time{Time: time.Now()})
 	}
 
@@ -1196,7 +1216,6 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 	condition.SetMessage(c.GetMessage())
 	condition.SetStatus(c.GetStatus())
 	condition.SetType(c.GetType())
-	condition.SetUnchangedConditionCount(c.GetUnchangedConditionCount())
 	if !found {
 		s.Conditions = append(s.Conditions, *condition)
 	}
@@ -1237,29 +1256,15 @@ func (s *RuntimeComponentStatus) SetReconcileInterval(interval *int32) {
 	s.ReconcileInterval = interval
 }
 
+func (s *RuntimeComponentStatus) UnsetReconcileInterval() {
+	s.ReconcileInterval = nil
+}
+
 func (s *RuntimeComponentStatus) SetReference(name string, value string) {
 	if s.References == nil {
 		s.References = make(common.StatusReferences)
 	}
 	s.References[name] = value
-}
-
-func (sc *StatusCondition) GetUnchangedConditionCount() *int32 {
-	return sc.UnchangedConditionCount
-}
-
-func (sc *StatusCondition) SetUnchangedConditionCount(count *int32) {
-	sc.UnchangedConditionCount = count
-}
-
-func (s *RuntimeComponentStatus) UnsetUnchangedConditionCount(conditionType common.StatusConditionType) {
-	// Reset unchanged count for other status conditions
-	var emptyCount *int32
-	for i := range s.Conditions {
-		if s.Conditions[i].GetType() != conditionType && s.Conditions[i].GetUnchangedConditionCount() != nil {
-			s.Conditions[i].SetUnchangedConditionCount(emptyCount)
-		}
-	}
 }
 
 func convertToCommonStatusConditionType(c StatusConditionType) common.StatusConditionType {
