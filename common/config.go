@@ -50,6 +50,12 @@ const (
 	// OpConfigReconcileIntervalPercentage default reconciliation interval increase, represented as a percentage (100 equaling to 100%)
 	// When the reconciliation interval needs to increase, it will increase by the given percentage
 	OpConfigReconcileIntervalPercentage = "reconcileIntervalIncreasePercentage"
+
+	// OpConfigRreconcileIntervalFailureMaximum default max reconcile interval for repeated failures
+	OpConfigRreconcileIntervalFailureMaximum = "reconcileIntervalFailureMaximum"
+
+	// OpConfigRreconcileIntervalSuccessMaximum default max reconcile interval for repeated successful reconciled and application ready status
+	OpConfigRreconcileIntervalSuccessMaximum = "reconcileIntervalSuccessMaximum"
 )
 
 // Config stores operator configuration
@@ -102,19 +108,32 @@ func LoadFromConfig(oc *sync.Map, key string) string {
 func CheckValidValue(oc *sync.Map, key string, OperatorName string) error {
 	value := LoadFromConfig(oc, key)
 
-	intValue, err := strconv.Atoi(value)
+	floatValue, err := strconv.ParseFloat(value, 64)
 	if err != nil {
 		SetConfigMapDefaultValue(oc, key)
 		return errors.New(key + " in ConfigMap: " + OperatorName + " has an invalid syntax, error: " + err.Error())
-	} else if key == OpConfigReconcileIntervalMinimum && intValue <= 0 {
+	} else if key == OpConfigReconcileIntervalMinimum && floatValue <= 0 {
 		SetConfigMapDefaultValue(oc, key)
 		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value + ". It must be greater than 0.")
-	} else if key == OpConfigReconcileIntervalPercentage && intValue < 0 {
+	} else if key == OpConfigReconcileIntervalPercentage && floatValue < 0 {
 		SetConfigMapDefaultValue(oc, key)
 		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value + ". It must be greater than or equal to 0.")
+	} else if key == OpConfigRreconcileIntervalFailureMaximum && floatValue <= 0 {
+		SetConfigMapDefaultValue(oc, key)
+		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value + ". It must be greater than 0.")
+	} else if key == OpConfigRreconcileIntervalSuccessMaximum && floatValue <= 0 {
+		SetConfigMapDefaultValue(oc, key)
+		return errors.New(key + " in ConfigMap: " + OperatorName + " is set to " + value + ". It must be greater than 0.")
 	}
-
 	return nil
+}
+
+func UpdateReconcileIntervalPercentage(oc *sync.Map, OperatorName string) {
+	intervalIncreasePercentage, _ := strconv.ParseFloat(LoadFromConfig(oc, OpConfigReconcileIntervalPercentage), 64)
+	if intervalIncreasePercentage == 100 {
+		intervalIncreasePercentageStr := strconv.FormatFloat(50, 'f', -1, 64)
+		oc.Store(OpConfigReconcileIntervalPercentage, intervalIncreasePercentageStr)
+	}
 }
 
 // SetConfigMapDefaultValue sets default value for specified key
@@ -159,6 +178,8 @@ func DefaultOpConfig() *sync.Map {
 	cfg.Store(OpConfigCMCertDuration, "2160h")
 	cfg.Store(OpConfigLogLevel, logLevelInfo)
 	cfg.Store(OpConfigReconcileIntervalMinimum, "5")
-	cfg.Store(OpConfigReconcileIntervalPercentage, "100")
+	cfg.Store(OpConfigReconcileIntervalPercentage, "50")
+	cfg.Store(OpConfigRreconcileIntervalFailureMaximum, "240")
+	cfg.Store(OpConfigRreconcileIntervalSuccessMaximum, "120")
 	return cfg
 }
