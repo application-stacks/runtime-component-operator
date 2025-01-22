@@ -3700,6 +3700,11 @@ spec:
                   repository. It is not required if the cluster is configured with
                   a global image pull secret.
                 type: string
+              reconcileIntervalHide:
+                description: |-
+                  Hide reconcile interval of the instance in the status section.
+                  Reconcile Interval is listed in the status section by default.
+                type: boolean
               replicas:
                 description: Number of pods to create. Defaults to 1. Not applicable
                   when .spec.autoscaling or .spec.createKnativeService is specified.
@@ -7825,11 +7830,6 @@ spec:
                     type:
                       description: Defines the type of status condition.
                       type: string
-                    unchangedConditionCount:
-                      description: The count of the number of reconciles the condition
-                        status type has not changed.
-                      format: int32
-                      type: integer
                   type: object
                 type: array
                 x-kubernetes-list-type: atomic
