@@ -40,7 +40,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const RCOOperandVersion = "1.4.1"
+const RCOOperandVersion = "1.4.2"
 
 var APIVersionNotFoundError = errors.New("APIVersion is not available")
 
@@ -1786,6 +1786,12 @@ func CreateConfigMap(mapName string) {
 	} else {
 		fmt.Fprintf(os.Stderr, "Operator Config map created in namespace %s\n", operatorNs)
 	}
+}
+
+// UpdateConfigMap ...
+func UpdateConfigMap(configMap *corev1.ConfigMap, key string) {
+	data := configMap.Data
+	data[key] = common.LoadFromConfig(common.Config, key)
 }
 
 func GetIssuerResourceVersion(client client.Client, certificate *certmanagerv1.Certificate) (string, error) {
