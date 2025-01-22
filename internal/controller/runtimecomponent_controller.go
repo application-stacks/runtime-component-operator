@@ -140,7 +140,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
-	if instance.Status.Versions.Reconciled == "1.4.2" {
+	if instance.Status.Versions.Reconciled == "1.4.1" {
 		common.UpdateReconcileIntervalPercentage(common.Config, OperatorName)
 		err = r.CreateOrUpdate(configMap, instance, func() error {
 			appstacksutils.UpdateConfigMap(configMap, common.OpConfigReconcileIntervalPercentage)
