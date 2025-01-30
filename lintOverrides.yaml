@@ -1,9 +1,8 @@
 overrides:
     - reason: "No sensitive information. Fields features.operators.openshift.io/token-auth.* are set to false"
       rule: OLMOperatorBundleNoSensitiveInfo
+      message: metadata.annotations.features.operators.openshift.io/token-auth
       severity: REVIEW
-      filenames:
-        - runtime-component.v1.4.1.ClusterServiceVersion.yaml
     - reason: "No sensitive information. Auth fields under Monitoring properties are descriptions"
       rule: OLMOperatorBundleNoSensitiveInfo
       message: '(monitoring.properties.endpoints.items.properties.authorization|monitoring.properties.endpoints.items.properties.basicAuth|monitoring.properties.endpoints.items.properties.oauth2)'
