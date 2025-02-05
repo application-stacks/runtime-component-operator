@@ -397,21 +397,6 @@ func createOpenShiftNetworkPolicyIngressRule(appName string, namespace string, i
 				},
 			},
 		},
-
-		// Add peer to allow traffic from operator webhook
-		// TODO: change
-		networkingv1.NetworkPolicyPeer{
-			NamespaceSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"kubernetes.io/metadata.name": "openshift-operators",
-				},
-			},
-			PodSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app.kubernetes.io/name": "open-liberty-operator",
-				},
-			},
-		},
 	)
 
 	return rule
