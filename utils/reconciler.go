@@ -347,7 +347,7 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 		} else {
 			// If the resources stay unready and the error message has not changed
 			// Increase the retry interval upto maxSeconds
-			maxSeconds := 120 // Max 2 minutes
+			maxSeconds := 240 // Max 4 minutes
 			retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
 		}
 	} else { // If the application and resources are ready
@@ -362,7 +362,7 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 		} else {
 			// If the application and resources stay ready and there are no changes
 			// Increase the retry interval upto maxSeconds
-			maxSeconds := 240 // Max 4 minutes
+			maxSeconds := 120 // Max 2 minutes
 			retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
 		}
 	}
@@ -661,12 +661,12 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 	} else if ok {
 		bao := ba.(metav1.Object)
 
-		cmIssuerErr := r.GenerateCMIssuer(bao.GetNamespace(), prefix, CACommonName, operatorName)
-		if cmIssuerErr != nil {
-			if errors.Is(cmIssuerErr, APIVersionNotFoundError) {
+		err = r.GenerateCMIssuer(bao.GetNamespace(), prefix, CACommonName, operatorName)
+		if err != nil {
+			if errors.Is(err, APIVersionNotFoundError) {
 				return false, nil
 			}
-			return true, cmIssuerErr
+			return true, err
 		}
 		svcCertSecretName := bao.GetName() + "-svc-tls-cm"
 
