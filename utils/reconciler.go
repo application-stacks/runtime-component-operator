@@ -239,7 +239,7 @@ func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition
 		increase := math.Pow(1+(intervalIncreasePercentage/100), exp)
 
 		baseInterval, _ := strconv.ParseFloat(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalMinimum), 64)
-		newInterval := int32(baseInterval * increase) // + bias
+		newInterval := int32(baseInterval * increase)
 
 		// Only increase to the maximum interval
 		if newInterval < 0 || newInterval >= int32(maxSeconds) {
@@ -362,7 +362,7 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 		} else {
 			// If the application and resources stay ready and there are no changes
 			// Increase the retry interval upto maxSeconds
-			maxSeconds := 120 // Max 2 minutes
+			maxSeconds := 240 // Max 4 minutes
 			retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
 		}
 	}
@@ -620,7 +620,7 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 	return nil
 }
 
-func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string, addOwnerReference bool) (bool, error) {
+func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string) (bool, error) {
 	delete(ba.GetStatus().GetReferences(), common.StatusReferenceCertSecretName)
 	cleanup := func() {
 		if ok, err := r.IsGroupVersionSupported(certmanagerv1.SchemeGroupVersion.String(), "Certificate"); err != nil {
@@ -688,13 +688,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 		}
 
 		shouldRefreshCertSecret := false
-		var owner metav1.Object
-		if addOwnerReference {
-			owner = bao
-		} else {
-			owner = nil
-		}
-		err = r.CreateOrUpdate(svcCert, owner, func() error {
+		err = r.CreateOrUpdate(svcCert, bao, func() error {
 			svcCert.Labels = ba.GetLabels()
 			svcCert.Annotations = MergeMaps(svcCert.Annotations, ba.GetAnnotations())
 			if ba.GetService() != nil {
