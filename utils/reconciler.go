@@ -523,6 +523,13 @@ func (r *ReconcilerBase) checkIssuerReady(issuer *certmanagerv1.Issuer) error {
 	return nil
 }
 
+func (r *ReconcilerBase) checkSecretExists(secretName, secretNamespace string) error {
+	secret := &corev1.Secret{}
+	secret.Name = secretName
+	secret.Namespace = secretNamespace
+	return r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: secretNamespace}, secret)
+}
+
 func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACommonName string, operatorName string) error {
 	if ok, err := r.IsGroupVersionSupported(certmanagerv1.SchemeGroupVersion.String(), "Issuer"); err != nil {
 		return err
@@ -551,11 +558,12 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 		Namespace: namespace,
 	}}
 
+	caCertSecretName := prefix + "-ca-tls"
 	err = r.CreateOrUpdate(caCert, nil, func() error {
 		caCert.Labels = MergeMaps(caCert.Labels, map[string]string{"app.kubernetes.io/managed-by": operatorName})
 		caCert.Spec.CommonName = CACommonName
 		caCert.Spec.IsCA = true
-		caCert.Spec.SecretName = prefix + "-ca-tls"
+		caCert.Spec.SecretName = caCertSecretName
 		caCert.Spec.IssuerRef = certmanagermetav1.ObjectReference{
 			Name: prefix + "-self-signed",
 		}
@@ -583,7 +591,11 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 	if err == nil {
 		customCACertFound = true
 	} else {
+		// check CA Certificate and it's Secret exist before CA Issuer init
 		if err := r.checkCertificateReady(caCert); err != nil {
+			return err
+		}
+		if err := r.checkSecretExists(caCertSecretName, namespace); err != nil {
 			return err
 		}
 	}
@@ -595,7 +607,7 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 	err = r.CreateOrUpdate(issuer, nil, func() error {
 		issuer.Labels = MergeMaps(issuer.Labels, map[string]string{"app.kubernetes.io/managed-by": operatorName})
 		issuer.Spec.CA = &certmanagerv1.CAIssuer{}
-		issuer.Spec.CA.SecretName = prefix + "-ca-tls"
+		issuer.Spec.CA.SecretName = caCertSecretName
 		if issuer.Annotations == nil {
 			issuer.Annotations = map[string]string{}
 		}
