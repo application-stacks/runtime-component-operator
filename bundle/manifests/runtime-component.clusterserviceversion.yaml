@@ -71,7 +71,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2024-12-13T20:28:38Z"
+    createdAt: "2025-02-11T22:13:41Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -81,7 +81,7 @@ metadata:
     features.operators.openshift.io/token-auth-azure: "false"
     features.operators.openshift.io/token-auth-gcp: "false"
     olm.skipRange: '>=0.8.0 <1.4.1'
-    operators.operatorframework.io/builder: operator-sdk-v1.35.0
+    operators.operatorframework.io/builder: operator-sdk-v1.37.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
