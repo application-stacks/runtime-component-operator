@@ -1,7 +1,9 @@
 # Labels to add to all resources and selectors.
-commonLabels:
-  app.kubernetes.io/instance: runtime-component-operator
-  app.kubernetes.io/name: runtime-component-operator
+labels:
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/instance: runtime-component-operator
+    app.kubernetes.io/name: runtime-component-operator
 
-bases:
+resources:
 - ../../crd
