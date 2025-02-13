@@ -6,45 +6,43 @@ resources:
 namePrefix: rco-watched-
 
 # Labels to add to all resources and selectors.
-commonLabels:
-  app.kubernetes.io/instance: runtime-component-operator
-  app.kubernetes.io/name: runtime-component-operator
+labels:
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/instance: runtime-component-operator
+    app.kubernetes.io/name: runtime-component-operator
 
 patches:
 - path: patches/delete-service-account.yaml
   target:
     kind: ServiceAccount
-
-patchesJson6902:
-  - target:
-      name: .*
-    patch: |-
-      - op: replace
-        path: /metadata/namespace
-        value: RUNTIME_COMPONENT_WATCH_NAMESPACE
-  - target:
-      kind: RoleBinding
-      name: .*
-    patch: |-
-      - op: replace
-        path: /subjects/0/namespace
-        value: RUNTIME_COMPONENT_OPERATOR_NAMESPACE
-      - op: replace
-        path: /subjects/0/name
-        value: rco-controller-manager
-  - target:
-      kind: RoleBinding
-      name: rco-watched-leader-election-rolebinding
-    patch: |-
-      - op: replace
-        path: /roleRef/name
-        value: rco-watched-leader-election-role
-  - target:
-      kind: RoleBinding
-      name: rco-watched-manager-rolebinding
-    patch: |-
-      - op: replace
-        path: /roleRef/name
-        value: rco-watched-manager-role
-
-        
+- target:
+    name: .*
+  patch: |-
+    - op: replace
+      path: /metadata/namespace
+      value: RUNTIME_COMPONENT_WATCH_NAMESPACE
+- target:
+    kind: RoleBinding
+    name: .*
+  patch: |-
+    - op: replace
+      path: /subjects/0/namespace
+      value: RUNTIME_COMPONENT_OPERATOR_NAMESPACE
+    - op: replace
+      path: /subjects/0/name
+      value: rco-controller-manager
+- target:
+    kind: RoleBinding
+    name: rco-watched-leader-election-rolebinding
+  patch: |-
+    - op: replace
+      path: /roleRef/name
+      value: rco-watched-leader-election-role
+- target:
+    kind: RoleBinding
+    name: rco-watched-manager-rolebinding
+  patch: |-
+    - op: replace
+      path: /roleRef/name
+      value: rco-watched-manager-role
