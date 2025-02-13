@@ -16,7 +16,7 @@ labels:
     app.kubernetes.io/managed-by: olm
     app.kubernetes.io/name: runtime-component-operator
 
-bases:
+resources:
 - ../crd
 - ../rbac
 - ../manager
