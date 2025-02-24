@@ -71,7 +71,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2024-12-13T20:28:38Z"
+    createdAt: "2025-01-22T22:38:59Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -395,6 +395,10 @@ spec:
       - description: DNS settings for the pod.
         displayName: DNS
         path: dns
+      - description: Hide reconcile interval of the instance in the status section.
+          Reconcile Interval is listed in the status section by default.
+        displayName: Hide Reconcile Interval
+        path: reconcileIntervalHide
       - description: Labels to set on ServiceMonitor.
         displayName: Monitoring Labels
         path: monitoring.labels

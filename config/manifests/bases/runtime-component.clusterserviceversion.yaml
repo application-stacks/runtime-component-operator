@@ -329,6 +329,10 @@ spec:
       - description: DNS settings for the pod.
         displayName: DNS
         path: dns
+      - description: Hide reconcile interval of the instance in the status section.
+          Reconcile Interval is listed in the status section by default.
+        displayName: Hide Reconcile Interval
+        path: reconcileIntervalHide
       - description: Labels to set on ServiceMonitor.
         displayName: Monitoring Labels
         path: monitoring.labels
