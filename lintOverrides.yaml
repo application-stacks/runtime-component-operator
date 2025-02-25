@@ -1,11 +1,20 @@
 overrides:
-    - reason: "This operator uses 1 to 1 and not fan out"
-      rule: CRDDefinesVersionProperty
-      severity: WARNING
-      message: '(openAPIV3Schema.properties.spec.required|openAPIV3Schema.properties.spec.properties.version)'
+    - reason: "No sensitive information. Fields features.operators.openshift.io/token-auth.* are set to false"
+      rule: OLMOperatorBundleNoSensitiveInfo
+      message: metadata.annotations.features.operators.openshift.io/token-auth
+      severity: REVIEW
+    - reason: "No sensitive information. Auth fields under Monitoring properties are descriptions"
+      rule: OLMOperatorBundleNoSensitiveInfo
+      message: '(monitoring.properties.endpoints.items.properties.authorization|monitoring.properties.endpoints.items.properties.basicAuth|monitoring.properties.endpoints.items.properties.oauth2)'
+      severity: REVIEW
       filenames:
-        - bundle/manifests/rc.app.stacks_runtimecomponents.yaml
-        - bundle/manifests/rc.app.stacks_runtimeoperations.yaml
-    - reason: "This is only needed for products storing their container images in IBM Entitled Registry, which the Runtime Component Operator does not"
-      rule: ServiceAccountHasPullSecret
-  
+        - runtimecomponents.rc.app.stacks.CustomResourceDefinition.yaml
+    - reason: "No sensitive information. Certificate fields under Route and Service properties are descriptions"
+      rule: OLMOperatorBundleNoSensitiveInfo
+      message: '(service.properties.certificate|route.properties.certificate)'
+      severity: REVIEW
+      filenames:
+        - runtimecomponents.rc.app.stacks.CustomResourceDefinition.yaml
+    - reason: "HorizontalPodAutoscaler is enabled through instances' CustomResource"
+      severity: INFO
+      rule: UsesHorizontalPodAutoscaler
