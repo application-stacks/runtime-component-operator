@@ -71,7 +71,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2024-12-13T20:28:38Z"
+    createdAt: "2025-02-26T16:04:37Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -978,6 +978,21 @@ spec:
     mediatype: image/png
   install:
     spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - authentication.k8s.io
+          resources:
+          - tokenreviews
+          verbs:
+          - create
+        - apiGroups:
+          - authorization.k8s.io
+          resources:
+          - subjectaccessreviews
+          verbs:
+          - create
+        serviceAccountName: rco-controller-manager
       deployments:
       - label:
           app.kubernetes.io/instance: runtime-component-operator
@@ -1017,6 +1032,7 @@ spec:
                         - s390x
               containers:
               - args:
+                - --metrics-bind-address=:8443
                 - --health-probe-bind-address=:8081
                 - --enable-leader-election
                 command:

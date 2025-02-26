@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/instance: runtime-component-operator
+    app.kubernetes.io/managed-by: olm
+    app.kubernetes.io/name: runtime-component-operator
+    control-plane: controller-manager
+  name: rco-controller-manager-metrics-service
+spec:
+  ports:
+  - name: https
+    port: 8443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app.kubernetes.io/instance: runtime-component-operator
+    app.kubernetes.io/managed-by: olm
+    app.kubernetes.io/name: runtime-component-operator
+    control-plane: controller-manager
+status:
+  loadBalancer: {}

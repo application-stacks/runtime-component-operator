@@ -70,7 +70,6 @@ func init() {
 func main() {
 	//var metricsAddr string
 	var enableLeaderElection bool
-	//flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	var probeAddr string
 
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")

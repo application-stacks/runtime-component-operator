@@ -71,7 +71,7 @@ spec:
           - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
             value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:1ac4699f934128ed62da43b3720120d469e930458355152e547a574bb7b70c07
           - name: RELATED_IMAGE_RUNTIME_COMPONENT_OPERATOR
-            value: OPERATOR_IMAGE
+            value: icr.io/appcafe/runtime-component-operator:daily
         securityContext:
           allowPrivilegeEscalation: false
           privileged: false
