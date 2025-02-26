@@ -71,7 +71,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2025-02-26T16:04:37Z"
+    createdAt: "2025-02-26T16:17:38Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -1032,7 +1032,6 @@ spec:
                         - s390x
               containers:
               - args:
-                - --metrics-bind-address=:8443
                 - --health-probe-bind-address=:8081
                 - --enable-leader-election
                 command:
@@ -1152,7 +1151,6 @@ spec:
           - apps
           resources:
           - deployments/finalizers
-          - statefulsets
           verbs:
           - update
         - apiGroups:
@@ -1243,17 +1241,6 @@ spec:
           - runtimecomponents
           - runtimecomponents/finalizers
           - runtimecomponents/status
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - rc.app.stacks
-          resources:
           - runtimeoperations
           - runtimeoperations/finalizers
           - runtimeoperations/status

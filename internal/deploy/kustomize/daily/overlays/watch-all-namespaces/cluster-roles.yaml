@@ -104,7 +104,6 @@ rules:
   - apps
   resources:
   - deployments/finalizers
-  - statefulsets
   verbs:
   - update
 - apiGroups:
@@ -195,17 +194,6 @@ rules:
   - runtimecomponents
   - runtimecomponents/finalizers
   - runtimecomponents/status
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - rc.app.stacks
-  resources:
   - runtimeoperations
   - runtimeoperations/finalizers
   - runtimeoperations/status
