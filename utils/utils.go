@@ -1039,7 +1039,7 @@ func Validate(ba common.BaseComponent) (bool, error) {
 	if ss != nil && ss.GetStorage() != nil {
 		if ss.GetStorage().GetVolumeClaimTemplate() == nil {
 			if ss.GetStorage().GetSize() == "" {
-				return false, fmt.Errorf("validation failed: " + requiredFieldMessage("spec.statefulSet.storage.size"))
+				return false, fmt.Errorf("validation failed: %s", requiredFieldMessage("spec.statefulSet.storage.size"))
 			}
 			if _, err := resource.ParseQuantity(ss.GetStorage().GetSize()); err != nil {
 				return false, fmt.Errorf("validation failed: cannot parse '%v': %v", ss.GetStorage().GetSize(), err)
@@ -1142,7 +1142,7 @@ func ValidatePrometheusMonitoringEndpoints(ba common.BaseComponent, client clien
 }
 
 func createValidationError(msg string) error {
-	return fmt.Errorf("validation failed: " + msg)
+	return fmt.Errorf("validation failed: %s", msg)
 }
 
 func requiredFieldMessage(fieldPaths ...string) string {
