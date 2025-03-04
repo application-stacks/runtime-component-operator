@@ -184,6 +184,6 @@ func DefaultOpConfig() *sync.Map {
 	cfg.Store(OpConfigReconcileIntervalPercentage, "50")
 	cfg.Store(OpConfigReconcileIntervalFailureMaximum, "240")
 	cfg.Store(OpConfigReconcileIntervalSuccessMaximum, "120")
-	cfg.Store(OpConfigShowReconcileInterval, "120")
+	cfg.Store(OpConfigShowReconcileInterval, "false")
 	return cfg
 }
