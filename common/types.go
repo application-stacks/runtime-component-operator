@@ -41,9 +41,6 @@ type StatusCondition interface {
 	GetType() StatusConditionType
 	SetType(StatusConditionType)
 
-	GetUnchangedConditionCount() *int32
-	SetUnchangedConditionCount(*int32)
-
 	SetConditionFields(string, string, corev1.ConditionStatus) StatusCondition
 }
 
@@ -89,8 +86,9 @@ type BaseComponentStatus interface {
 
 	GetReconcileInterval() *int32
 	SetReconcileInterval(*int32)
+	UnsetReconcileInterval()
 
-	UnsetUnchangedConditionCount(conditionType StatusConditionType)
+	GetLastestTransitionTime() *metav1.Time
 }
 
 const (
