@@ -1789,6 +1789,12 @@ func CreateConfigMap(mapName string) {
 	}
 }
 
+// UpdateConfigMap ...
+func UpdateConfigMap(configMap *corev1.ConfigMap, key string) {
+	data := configMap.Data
+	data[key] = common.LoadFromConfig(common.Config, key)
+}
+
 func GetIssuerResourceVersion(client client.Client, certificate *certmanagerv1.Certificate) (string, error) {
 	issuer := &certmanagerv1.Issuer{}
 	err := client.Get(context.Background(), types.NamespacedName{Name: certificate.Spec.IssuerRef.Name,

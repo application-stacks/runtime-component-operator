@@ -194,61 +194,85 @@ func addStatusWarnings(ba common.BaseComponent) {
 		statusCondition := s.NewCondition(common.StatusConditionTypeWarning)
 		s.UnsetCondition(statusCondition)
 	}
-
 }
 
-func getBaseReconcileInterval(s common.BaseComponentStatus) int32 {
-	baseIntervalInt, _ := strconv.Atoi(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalMinimum))
-	baseInterval := int32(baseIntervalInt)
-	s.SetReconcileInterval(&baseInterval)
+func getMaxReconcileInterval(success bool) int {
+	var maxInterval int
+	if success {
+		maxInterval, _ = strconv.Atoi(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalSuccessMaximum))
+	} else {
+		maxInterval, _ = strconv.Atoi(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalFailureMaximum))
+	}
 
-	return baseInterval
+	return maxInterval
 }
 
-func resetReconcileInterval(newCondition common.StatusCondition, s common.BaseComponentStatus) time.Duration {
-	var newCount *int32
-	newCondition.SetUnchangedConditionCount(newCount)
-	baseInterval := getBaseReconcileInterval(s)
+func resetReconcileInterval(s common.BaseComponentStatus, ba common.BaseComponent) time.Duration {
+	minIntervalInt, _ := strconv.Atoi(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalMinimum))
+	minInterval := int32(minIntervalInt)
 
-	return time.Duration(baseInterval) * time.Second
+	// If user wants to hide reconcileInterval field, unset the value
+	showReconcileInterval := common.LoadFromConfig(common.Config, common.OpConfigShowReconcileInterval)
+
+	if showReconcileInterval == "true" {
+		s.SetReconcileInterval(&minInterval)
+	} else {
+		s.UnsetReconcileInterval()
+	}
+
+	return time.Duration(minInterval) * time.Second
 }
 
 // Precondition: Operator config values for common.OpConfigReconcileIntervalMinimum and common.OpConfigReconcileIntervalPercentage must be integers
-func updateReconcileInterval(maxSeconds int, oldCondition common.StatusCondition, newCondition common.StatusCondition, s common.BaseComponentStatus) time.Duration {
-	var oldReconcileInterval int32
-
-	var newCount int32
-	count := oldCondition.GetUnchangedConditionCount()
-	if count == nil || s.GetReconcileInterval() == nil {
-		newCount = 0
-		oldReconcileInterval = getBaseReconcileInterval(s)
-	} else {
-		newCount = *count + 1
-		oldReconcileInterval = *s.GetReconcileInterval()
+func updateReconcileInterval(maxSeconds int, s common.BaseComponentStatus, ba common.BaseComponent) time.Duration {
+	lastestTransitionTime := s.GetLastestTransitionTime()
+	if lastestTransitionTime == nil {
+		return resetReconcileInterval(s, ba)
 	}
+	currentTime := metav1.Time{Time: time.Now()}
+	realReconcileInterval := math.Floor(currentTime.Time.Sub(lastestTransitionTime.Time).Seconds())
 
-	newCondition.SetUnchangedConditionCount(&newCount)
+	minInterval, _ := strconv.ParseFloat(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalMinimum), 64)
+	intervalIncreasePercentage, _ := strconv.ParseFloat(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalPercentage), 64)
+	increase := 1 + (intervalIncreasePercentage / 100)
 
-	s.UnsetUnchangedConditionCount(newCondition.GetType())
-	s.SetCondition(newCondition)
+	newInterval := int32(minInterval)
 
-	// For every repeated 2 reconciliation errors, increase reconcile period
-	if newCount >= 2 && newCount%2 == 0 {
-		intervalIncreasePercentage, _ := strconv.ParseFloat(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalPercentage), 64)
-		exp := float64(newCount / 2)
-		increase := math.Pow(1+(intervalIncreasePercentage/100), exp)
+	// If last transition time was more than maxSeconds ago,
+	// set reconcile interval to maxSeconds
+	if realReconcileInterval >= float64(maxSeconds) || realReconcileInterval < 0 {
+		newInterval = int32(maxSeconds)
+	} else if realReconcileInterval >= minInterval {
+		// If last transition time was in between minInterval and maxSeconds ago,
+		// increase the reconcile interval
+		increasedInterval := realReconcileInterval
 
-		baseInterval, _ := strconv.ParseFloat(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalMinimum), 64)
-		newInterval := int32(baseInterval * increase)
+		// Calculate exponent
+		exponent := 0
+		for increasedInterval > minInterval {
+			increasedInterval = math.Floor(increasedInterval / increase)
+			exponent += 1
+		}
+		newIncrease := math.Pow(1+(intervalIncreasePercentage/100), float64(exponent))
+		newInterval = int32(minInterval * newIncrease)
 
-		// Only increase to the maximum interval
-		if newInterval < 0 || newInterval >= int32(maxSeconds) {
+		// If the increased interval exceeds maxSeconds,
+		// set reconcile interval to maxSeconds
+		if newInterval >= int32(maxSeconds) {
 			newInterval = int32(maxSeconds)
 		}
-		s.SetReconcileInterval(&newInterval)
-		return time.Duration(newInterval) * time.Second
 	}
-	return time.Duration(oldReconcileInterval) * time.Second
+
+	// If user wants to hide reconcileInterval field, unset the value
+	showReconcileInterval := common.LoadFromConfig(common.Config, common.OpConfigShowReconcileInterval)
+
+	if showReconcileInterval == "true" {
+		s.SetReconcileInterval(&newInterval)
+	} else {
+		s.UnsetReconcileInterval()
+	}
+
+	return time.Duration(newInterval) * time.Second
 }
 
 // ManageError ...
@@ -290,12 +314,12 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 	// If the application was reconciled and now it is not or encountered a different error
 	// Use the default reconcile interval
 	if oldCondition == nil || s.GetReconcileInterval() == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
-		retryInterval = resetReconcileInterval(newCondition, s)
+		retryInterval = resetReconcileInterval(s, ba)
 	} else {
 		// If the application fails to reconcile again and the error message has not changed
 		// Increase the retry interval upto maxSeconds
-		maxSeconds := 240 // Max 4 minutes
-		retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
+		maxSeconds := getMaxReconcileInterval(false)
+		retryInterval = updateReconcileInterval(maxSeconds, s, ba)
 	}
 
 	err := r.UpdateStatus(obj)
@@ -338,32 +362,21 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 
 	var retryInterval time.Duration
 
-	// If the resources are not ready
-	if newCondition.GetStatus() != corev1.ConditionTrue {
-		// If the resources were ready and now they are not, or encountered a different error
+	// If the application or resources are not ready
+	if oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() || oldRecCondition == nil || oldRecCondition.GetStatus() != newRecCondition.GetStatus() || oldRecCondition.GetMessage() != newRecCondition.GetMessage() {
+		// If the application or the resources were not reconciled before
+		// Or if the application (resources) were not ready before
 		// Use the default reconcile interval
-		if oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
-			retryInterval = resetReconcileInterval(newCondition, s)
+		retryInterval = resetReconcileInterval(s, ba)
+	} else {
+		// If the application and resources stay ready and there are no changes
+		// Increase the retry interval upto maxSeconds
+		if newCondition.GetStatus() != corev1.ConditionTrue {
+			maxSeconds := getMaxReconcileInterval(false)
+			retryInterval = updateReconcileInterval(maxSeconds, s, ba)
 		} else {
-			// If the resources stay unready and the error message has not changed
-			// Increase the retry interval upto maxSeconds
-			maxSeconds := 240 // Max 4 minutes
-			retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
-		}
-	} else { // If the application and resources are ready
-		if oldRecCondition == nil || oldRecCondition.GetStatus() != newRecCondition.GetStatus() || oldRecCondition.GetMessage() != newRecCondition.GetMessage() {
-			// If the application or the resources were not reconciled before
-			// Use the default reconcile interval
-			retryInterval = resetReconcileInterval(newRecCondition, s)
-		} else if oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
-			// Or if the application (resources) were not ready before
-			// Use the default reconcile interval
-			retryInterval = resetReconcileInterval(newCondition, s)
-		} else {
-			// If the application and resources stay ready and there are no changes
-			// Increase the retry interval upto maxSeconds
-			maxSeconds := 120 // Max 2 minutes
-			retryInterval = updateReconcileInterval(maxSeconds, oldCondition, newCondition, s)
+			maxSeconds := getMaxReconcileInterval(true)
+			retryInterval = updateReconcileInterval(maxSeconds, s, ba)
 		}
 	}
 
