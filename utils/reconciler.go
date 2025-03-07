@@ -225,12 +225,12 @@ func resetReconcileInterval(s common.BaseComponentStatus) time.Duration {
 
 // Precondition: Operator config values for common.OpConfigReconcileIntervalMinimum and common.OpConfigReconcileIntervalPercentage must be integers
 func updateReconcileInterval(maxSeconds int, s common.BaseComponentStatus, ba common.BaseComponent) time.Duration {
-	lastestTransitionTime := s.GetLatestTransitionTime()
-	if lastestTransitionTime == nil {
+	latestTransitionTime := s.GetLatestTransitionTime()
+	if latestTransitionTime == nil {
 		return resetReconcileInterval(s)
 	}
 	currentTime := metav1.Time{Time: time.Now()}
-	realReconcileInterval := math.Floor(currentTime.Time.Sub(lastestTransitionTime.Time).Seconds())
+	realReconcileInterval := math.Floor(currentTime.Time.Sub(latestTransitionTime.Time).Seconds())
 
 	minInterval, _ := strconv.ParseFloat(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalMinimum), 64)
 	intervalIncreasePercentage, _ := strconv.ParseFloat(common.LoadFromConfig(common.Config, common.OpConfigReconcileIntervalPercentage), 64)
