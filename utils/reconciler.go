@@ -249,17 +249,21 @@ func updateReconcileInterval(maxSeconds int, s common.BaseComponentStatus, ba co
 
 		// Calculate exponent
 		exponent := 0
-		for increasedInterval > minInterval {
-			increasedInterval = math.Floor(increasedInterval / increase)
-			exponent += 1
-		}
-		newIncrease := math.Pow(1+(intervalIncreasePercentage/100), float64(exponent))
-		newInterval = int32(minInterval * newIncrease)
+		if increase > 1 {
+			for increasedInterval > minInterval {
+				increasedInterval = math.Floor(increasedInterval / increase)
+				exponent += 1
+			}
+			newIncrease := math.Pow(1+(intervalIncreasePercentage/100), float64(exponent))
+			newInterval = int32(minInterval * newIncrease)
 
-		// If the increased interval exceeds maxSeconds,
-		// set reconcile interval to maxSeconds
-		if newInterval >= int32(maxSeconds) {
-			newInterval = int32(maxSeconds)
+			// If the increased interval exceeds maxSeconds,
+			// set reconcile interval to maxSeconds
+			if newInterval >= int32(maxSeconds) {
+				newInterval = int32(maxSeconds)
+			}
+		} else {
+			newInterval = int32(minInterval)
 		}
 	}
 
