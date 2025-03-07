@@ -93,7 +93,7 @@ func (r *ReconcilerBase) setCondition(ba common.BaseComponent, oldCondition comm
 	s := ba.GetStatus()
 
 	// Check if status or message changed
-	if oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() || oldCondition.GetReason() != oldCondition.GetReason() {
+	if oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() || oldCondition.GetReason() != newCondition.GetReason() {
 		// Set condition and update status
 		s.SetCondition(newCondition)
 	}

@@ -1109,8 +1109,8 @@ func (c *StatusCondition) SetLastTransitionTime(t *metav1.Time) {
 	c.LastTransitionTime = t
 }
 
-// GetLastestTransitionTime returns latest time of status change
-func (s *RuntimeComponentStatus) GetLastestTransitionTime() *metav1.Time {
+// GetLatestTransitionTime returns latest time of status change
+func (s *RuntimeComponentStatus) GetLatestTransitionTime() *metav1.Time {
 	var latestTime *metav1.Time
 	for i := range s.Conditions {
 		t := s.Conditions[i].GetLastTransitionTime()

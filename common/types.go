@@ -88,7 +88,7 @@ type BaseComponentStatus interface {
 	SetReconcileInterval(*int32)
 	UnsetReconcileInterval()
 
-	GetLastestTransitionTime() *metav1.Time
+	GetLatestTransitionTime() *metav1.Time
 }
 
 const (

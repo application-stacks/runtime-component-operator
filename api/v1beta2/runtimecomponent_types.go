@@ -909,7 +909,7 @@ func (c *StatusCondition) SetLastTransitionTime(t *metav1.Time) {
 	c.LastTransitionTime = t
 }
 
-func (s *RuntimeComponentStatus) GetLastestTransitionTime() *metav1.Time {
+func (s *RuntimeComponentStatus) GetLatestTransitionTime() *metav1.Time {
 	return nil
 }
 
