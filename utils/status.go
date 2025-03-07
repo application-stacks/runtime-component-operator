@@ -65,7 +65,7 @@ func (r *ReconcilerBase) CheckApplicationStatus(ba common.BaseComponent) (common
 	newAppCondition.SetConditionFields(msg, reason, status)
 	r.setCondition(ba, oldAppCondition, newAppCondition)
 
-	if status == corev1.ConditionFalse {
+	if newResourcesCondition != nil && status == corev1.ConditionFalse {
 		return oldResourcesCondition, newResourcesCondition
 	} else {
 		return oldAppCondition, newAppCondition
@@ -93,7 +93,7 @@ func (r *ReconcilerBase) setCondition(ba common.BaseComponent, oldCondition comm
 	s := ba.GetStatus()
 
 	// Check if status or message changed
-	if oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() {
+	if oldCondition == nil || oldCondition.GetStatus() != newCondition.GetStatus() || oldCondition.GetMessage() != newCondition.GetMessage() || oldCondition.GetReason() != newCondition.GetReason() {
 		// Set condition and update status
 		s.SetCondition(newCondition)
 	}

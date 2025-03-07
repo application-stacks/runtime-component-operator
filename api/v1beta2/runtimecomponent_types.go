@@ -389,15 +389,7 @@ func (s *RuntimeComponentStatus) SetReconcileInterval(interval *int32) {
 	return
 }
 
-func (s *StatusCondition) GetUnchangedConditionCount() *int32 {
-	return nil
-}
-
-func (s *StatusCondition) SetUnchangedConditionCount(count *int32) {
-	return
-}
-
-func (s *RuntimeComponentStatus) UnsetUnchangedConditionCount(conditionType common.StatusConditionType) {
+func (s *RuntimeComponentStatus) UnsetReconcileInterval() {
 	return
 }
 
@@ -915,6 +907,10 @@ func (c *StatusCondition) GetLastTransitionTime() *metav1.Time {
 // SetLastTransitionTime sets time of last status change
 func (c *StatusCondition) SetLastTransitionTime(t *metav1.Time) {
 	c.LastTransitionTime = t
+}
+
+func (s *RuntimeComponentStatus) GetLatestTransitionTime() *metav1.Time {
+	return nil
 }
 
 // GetMessage return condition's message

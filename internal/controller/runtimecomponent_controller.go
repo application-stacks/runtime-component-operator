@@ -132,6 +132,26 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 	}
 
+	if err = common.CheckValidValue(common.Config, common.OpConfigReconcileIntervalFailureMaximum, OperatorName); err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+	}
+
+	if err = common.CheckValidValue(common.Config, common.OpConfigReconcileIntervalSuccessMaximum, OperatorName); err != nil {
+		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+	}
+
+	if instance.Status.Versions.Reconciled == "1.4.1" {
+		common.UpdateReconcileIntervalPercentage(common.Config, OperatorName)
+		err = r.CreateOrUpdate(configMap, instance, func() error {
+			appstacksutils.UpdateConfigMap(configMap, common.OpConfigReconcileIntervalPercentage)
+			return nil
+		})
+		if err != nil {
+			reqLogger.Error(err, "Failed to reconcile ConfigMap")
+			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+		}
+	}
+
 	isKnativeSupported, err := r.IsGroupVersionSupported(servingv1.SchemeGroupVersion.String(), "Service")
 	if err != nil {
 		r.ManageError(err, common.StatusConditionTypeReconciled, instance)
