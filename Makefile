@@ -231,6 +231,10 @@ test: manifests generate fmt vet envtest ## Run tests.
 unit-test: ## Run unit tests
 	go test -v -mod=vendor -tags=unit github.com/application-stacks/runtime-component-operator/...
 
+.PHONY: test-cover
+test-cover: test
+	go tool cover -html=cover.out
+
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller against the configured Kubernetes cluster in ~/.kube/config from your host.
 	go run ./cmd/main.go
