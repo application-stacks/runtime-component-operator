@@ -19,8 +19,6 @@ import (
 
 	"knative.dev/pkg/apis"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var (
@@ -29,8 +27,6 @@ var (
 )
 
 func TestCheckApplicationStatus(t *testing.T) {
-	logger := zap.New()
-	logf.SetLogger(logger)
 
 	// Setup fake client and reconciler base
 	spec := appstacksv1.RuntimeComponentSpec{Replicas: &st_replicas}
