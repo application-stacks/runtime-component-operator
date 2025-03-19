@@ -40,7 +40,6 @@ func TestCheckApplicationStatus(t *testing.T) {
 	_, newCondition := r.CheckApplicationStatus(runtimecomponent)
 	notReconciled := newCondition.GetReason()
 
-	// Create Deployment with less number of ready replicas
 	// ResourcesReady condition should report MinimumReplicasUnavailable with less number of ready replicas
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -255,7 +254,6 @@ func TestKnativeReady(t *testing.T) {
 	conditions := apis.Conditions{condition}
 	knative2.Status.SetConditions(conditions)
 
-	r.scheme.AddKnownTypes(schema.GroupVersion{Group: "serving.knative.dev", Version: "v1"}, knative2)
 	r.CreateOrUpdate(knative2, runtimecomponent, func() error {
 		return nil
 	})
@@ -282,7 +280,6 @@ func TestKnativeReady(t *testing.T) {
 	conditions = apis.Conditions{condition}
 	knative3.Status.SetConditions(conditions)
 
-	r.scheme.AddKnownTypes(schema.GroupVersion{Group: "serving.knative.dev", Version: "v1"}, knative3)
 	r.CreateOrUpdate(knative3, runtimecomponent, func() error {
 		return nil
 	})
