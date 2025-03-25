@@ -27,7 +27,7 @@ import (
 
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	autoscaling "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -1012,16 +1012,43 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	}
 }
 
-// CustomizeHPA ...
-func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseComponent) {
+// CustomizeHPA for autoscaling/v2
+func CustomizeHPA(hpa *autoscaling.HorizontalPodAutoscaler, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	hpa.Labels = ba.GetLabels()
 	hpa.Annotations = MergeMaps(hpa.Annotations, ba.GetAnnotations())
 
 	hpa.Spec.MaxReplicas = ba.GetAutoscaling().GetMaxReplicas()
 	hpa.Spec.MinReplicas = ba.GetAutoscaling().GetMinReplicas()
-	hpa.Spec.TargetCPUUtilizationPercentage = ba.GetAutoscaling().GetTargetCPUUtilizationPercentage()
+	hpa.Spec.Behavior = ba.GetAutoscaling().GetHorizontalPodAutoscalerBehavior()
 
+	metricsList := ba.GetAutoscaling().GetMetrics()
+
+	cpuPer := ba.GetAutoscaling().GetTargetCPUUtilizationPercentage()
+	if cpuPer != nil {
+		metricSpec := autoscaling.MetricSpec{
+			Type: autoscaling.ResourceMetricSourceType,
+			Resource: &autoscaling.ResourceMetricSource{
+				Name:   corev1.ResourceCPU,
+				Target: autoscaling.MetricTarget{Type: autoscaling.UtilizationMetricType, AverageUtilization: cpuPer},
+			},
+		}
+		metricsList = append(metricsList, metricSpec)
+	}
+
+	memPer := ba.GetAutoscaling().GetTargetMemoryUtilizationPercentage()
+	if memPer != nil {
+		metricSpec := autoscaling.MetricSpec{
+			Type: autoscaling.ResourceMetricSourceType,
+			Resource: &autoscaling.ResourceMetricSource{
+				Name:   corev1.ResourceMemory,
+				Target: autoscaling.MetricTarget{Type: autoscaling.UtilizationMetricType, AverageUtilization: memPer},
+			},
+		}
+		metricsList = append(metricsList, metricSpec)
+	}
+
+	hpa.Spec.Metrics = metricsList
 	hpa.Spec.ScaleTargetRef.Name = obj.GetName()
 	hpa.Spec.ScaleTargetRef.APIVersion = "apps/v1"
 
