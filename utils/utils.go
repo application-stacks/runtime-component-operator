@@ -1934,6 +1934,22 @@ func GetMaxConcurrentReconciles() int {
 	return 1
 }
 
+// Returns true if reconciledVersion is older than compareVersion or if reconciledVersion is "" otherwise return false
+func IsOlderVersion(compareVersion string, reconciledVersion string) bool {
+	compareVSplit := strings.Split(compareVersion, ".")
+	reconciledVSplit := strings.Split(reconciledVersion, ".")
+	for i, v := range reconciledVSplit {
+		reconciledInt, _ := strconv.Atoi(v)
+		compareInt, _ := strconv.Atoi(compareVSplit[i])
+		if reconciledInt > compareInt {
+			return false
+		} else if reconciledInt < compareInt {
+			return true
+		}
+	}
+	return false
+}
+
 // Parses env as positive int or returns -1 on failure
 func parseEnvAsPositiveInt(envValue string) int {
 	if envValue != "" {

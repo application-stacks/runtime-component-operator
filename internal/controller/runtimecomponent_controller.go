@@ -44,6 +44,7 @@ import (
 	"github.com/openshift/library-go/pkg/image/imageutil"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	autoscaling "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -443,6 +444,13 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	if instance.Spec.Autoscaling != nil {
+		// If upgrading from older version, delete autoscaling/v1 resource
+		if appstacksutils.IsOlderVersion("1.4.3", instance.Status.Versions.Reconciled) {
+			hpav1 := &autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta}
+			err = r.DeleteResource(hpav1)
+		}
+
+		// Then create autoscaling/v2 resource
 		hpa := &autoscaling.HorizontalPodAutoscaler{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(hpa, instance, func() error {
 			appstacksutils.CustomizeHPA(hpa, instance)
@@ -454,6 +462,11 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 		}
 	} else {
+		// If upgrading from older version, delete autoscaling/v1 resource
+		if appstacksutils.IsOlderVersion("1.4.3", instance.Status.Versions.Reconciled) {
+			hpav1 := &autoscalingv1.HorizontalPodAutoscaler{ObjectMeta: defaultMeta}
+			err = r.DeleteResource(hpav1)
+		}
 		hpa := &autoscaling.HorizontalPodAutoscaler{ObjectMeta: defaultMeta}
 		err = r.DeleteResource(hpa)
 
