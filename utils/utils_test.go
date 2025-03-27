@@ -12,7 +12,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	autoscaling "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,20 +25,31 @@ import (
 )
 
 var (
-	name               = "my-app"
-	namespace          = "runtime"
-	stack              = "java-microprofile"
-	appImage           = "my-image"
-	replicas     int32 = 2
-	expose             = true
-	createKNS          = true
-	targetCPUPer int32 = 30
-	targetPort   int32 = 3333
-	nodePort     int32 = 3011
-	autoscaling        = &appstacksv1.RuntimeComponentAutoScaling{
-		TargetCPUUtilizationPercentage: &targetCPUPer,
-		MinReplicas:                    &replicas,
-		MaxReplicas:                    3,
+	name                  = "my-app"
+	namespace             = "runtime"
+	stack                 = "java-microprofile"
+	appImage              = "my-image"
+	replicas        int32 = 2
+	expose                = true
+	createKNS             = true
+	targetPort      int32 = 3333
+	nodePort        int32 = 3011
+	targetCPUPer    int32 = 30
+	targetMemoryPer int32 = 20
+	targetValue           = &resource.Quantity{Format: "1k"}
+	metrics               = autoscaling.MetricSpec{
+		Type: autoscaling.PodsMetricSourceType,
+		Resource: &autoscaling.ResourceMetricSource{
+			Name:   "packets-per-second",
+			Target: autoscaling.MetricTarget{Type: autoscaling.AverageValueMetricType, AverageValue: targetValue},
+		},
+	}
+	rcAutoscaling = &appstacksv1.RuntimeComponentAutoScaling{
+		MinReplicas:                       &replicas,
+		MaxReplicas:                       3,
+		TargetCPUUtilizationPercentage:    &targetCPUPer,
+		TargetMemoryUtilizationPercentage: &targetMemoryPer,
+		Metrics:                           []autoscaling.MetricSpec{metrics},
 	}
 	envFrom            = []corev1.EnvFromSource{{Prefix: namespace}}
 	env                = []corev1.EnvVar{{Name: namespace}}
@@ -626,25 +637,40 @@ func TestCustomizeHPA(t *testing.T) {
 	logger := zap.New()
 	logf.SetLogger(logger)
 
-	spec := appstacksv1.RuntimeComponentSpec{Autoscaling: autoscaling}
-	hpa, runtime := &autoscalingv1.HorizontalPodAutoscaler{}, createRuntimeComponent(name, namespace, spec)
-	CustomizeHPA(hpa, runtime)
-	nilSTRKind := hpa.Spec.ScaleTargetRef.Kind
+	spec := appstacksv1.RuntimeComponentSpec{Autoscaling: rcAutoscaling}
 
 	runtimeStatefulSet := &appstacksv1.RuntimeComponentStatefulSet{Storage: &storage}
-	spec = appstacksv1.RuntimeComponentSpec{Autoscaling: autoscaling, StatefulSet: runtimeStatefulSet}
-	runtime = createRuntimeComponent(name, namespace, spec)
+	hpa := &autoscaling.HorizontalPodAutoscaler{}
+	spec = appstacksv1.RuntimeComponentSpec{Autoscaling: rcAutoscaling, StatefulSet: runtimeStatefulSet}
+	runtime := createRuntimeComponent(name, namespace, spec)
 	CustomizeHPA(hpa, runtime)
-	STRKind := hpa.Spec.ScaleTargetRef.Kind
+
+	cpuMetricSpec := autoscaling.MetricSpec{
+		Type: autoscaling.ResourceMetricSourceType,
+		Resource: &autoscaling.ResourceMetricSource{
+			Name:   corev1.ResourceCPU,
+			Target: autoscaling.MetricTarget{Type: autoscaling.UtilizationMetricType, AverageUtilization: &targetCPUPer},
+		},
+	}
+
+	memoryMetricSpec := autoscaling.MetricSpec{
+		Type: autoscaling.ResourceMetricSourceType,
+		Resource: &autoscaling.ResourceMetricSource{
+			Name:   corev1.ResourceMemory,
+			Target: autoscaling.MetricTarget{Type: autoscaling.UtilizationMetricType, AverageUtilization: &targetMemoryPer},
+		},
+	}
+
+	metricsList := []autoscaling.MetricSpec{metrics}
+	metricsList = append(metricsList, cpuMetricSpec, memoryMetricSpec)
 
 	testCHPA := []Test{
-		{"Max replicas", autoscaling.MaxReplicas, hpa.Spec.MaxReplicas},
-		{"Min replicas", *autoscaling.MinReplicas, *hpa.Spec.MinReplicas},
-		{"Target CPU utilization", *autoscaling.TargetCPUUtilizationPercentage, *hpa.Spec.TargetCPUUtilizationPercentage},
-		{"", name, hpa.Spec.ScaleTargetRef.Name},
-		{"", "apps/v1", hpa.Spec.ScaleTargetRef.APIVersion},
-		{"Storage not enabled", "Deployment", nilSTRKind},
-		{"Storage enabled", "StatefulSet", STRKind},
+		{"Max replicas", rcAutoscaling.MaxReplicas, hpa.Spec.MaxReplicas},
+		{"Min replicas", *rcAutoscaling.MinReplicas, *hpa.Spec.MinReplicas},
+		{"Metrics", metricsList, hpa.Spec.Metrics},
+		{"Target Reference Name", name, hpa.Spec.ScaleTargetRef.Name},
+		{"Target Reference API Version", "apps/v1", hpa.Spec.ScaleTargetRef.APIVersion},
+		{"Storage enabled", "StatefulSet", hpa.Spec.ScaleTargetRef.Kind},
 	}
 	verifyTests(testCHPA, t)
 }
