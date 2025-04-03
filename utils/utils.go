@@ -1047,6 +1047,11 @@ func CustomizeHPA(hpa *autoscalingv2.HorizontalPodAutoscaler, ba common.BaseComp
 		}
 		metricsList = append(metricsList, metricSpec)
 	}
+	metrics := ba.GetAutoscaling().GetMetrics()
+
+	if metrics != nil {
+		metricsList = append(metricsList, metrics...)
+	}
 
 	hpa.Spec.Metrics = metricsList
 	hpa.Spec.ScaleTargetRef.Name = obj.GetName()

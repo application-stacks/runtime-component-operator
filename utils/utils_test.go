@@ -36,12 +36,11 @@ var (
 	nodePort        int32 = 3011
 	targetCPUPer    int32 = 30
 	targetMemoryPer int32 = 20
-	targetValue           = &resource.Quantity{Format: "1k"}
 	metrics               = autoscalingv2.MetricSpec{
 		Type: autoscalingv2.PodsMetricSourceType,
 		Resource: &autoscalingv2.ResourceMetricSource{
 			Name:   "packets-per-second",
-			Target: autoscalingv2.MetricTarget{Type: autoscalingv2.AverageValueMetricType, AverageValue: targetValue},
+			Target: autoscalingv2.MetricTarget{Type: autoscalingv2.AverageValueMetricType, AverageValue: resource.NewQuantity(1000, "DecimalSI")},
 		},
 	}
 	autoscaling = &appstacksv1.RuntimeComponentAutoScaling{
@@ -655,6 +654,8 @@ func TestCustomizeHPA(t *testing.T) {
 	cpuResourceName := hpa.Spec.Metrics[0].Resource.Name
 	memoryAverageUtilization := hpa.Spec.Metrics[1].Resource.Target.AverageUtilization
 	memoryResourceName := hpa.Spec.Metrics[1].Resource.Name
+	packetAverageValue := hpa.Spec.Metrics[2].Resource.Target.AverageValue
+	packetMetricResourceName := hpa.Spec.Metrics[2].Resource.Name
 
 	testCHPA := []Test{
 		{"Max replicas", autoscaling.MaxReplicas, hpa.Spec.MaxReplicas},
@@ -663,6 +664,8 @@ func TestCustomizeHPA(t *testing.T) {
 		{"Target CPU resource name", corev1.ResourceCPU, cpuResourceName},
 		{"Target memory utilization", autoscaling.TargetMemoryUtilizationPercentage, memoryAverageUtilization},
 		{"Target memory resource name", corev1.ResourceMemory, memoryResourceName},
+		{"Target packet average value", autoscaling.Metrics[0].Resource.Target.AverageValue, packetAverageValue},
+		{"Target packet resource name", autoscaling.Metrics[0].Resource.Name, packetMetricResourceName},
 		{"Target Reference Name", name, hpa.Spec.ScaleTargetRef.Name},
 		{"Target Reference API Version", "apps/v1", hpa.Spec.ScaleTargetRef.APIVersion},
 		{"Storage not enabled", "Deployment", nilSTRKind},
