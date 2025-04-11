@@ -52,8 +52,7 @@ timestamps {
          stage("Running Job"){
             withCredentials([usernamePassword(credentialsId: 'operator_icrId', usernameVariable: 'PIPELINE_USERNAME', passwordVariable: 'PIPELINE_PASSWORD'),
                              usernamePassword(credentialsId: 'operatorRH_REG_ID', usernameVariable: 'REDHAT_USERNAME', passwordVariable: 'REDHAT_PASSWORD'),
-                             usernamePassword(credentialsId: 'operator_artifactory_ID', usernameVariable: 'ARTIFACTORY_USERNAME', passwordVariable: 'ARTIFACTORY_TOKEN'),
-                             usernamePassword(credentialsId: 'dockerId', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                             usernamePassword(credentialsId: 'operator_artifactory_ID', usernameVariable: 'ARTIFACTORY_USERNAME', passwordVariable: 'ARTIFACTORY_TOKEN')]) {
                //This is executing on ebc dynamic machine
                doWork();
             } // withCredentials() end
