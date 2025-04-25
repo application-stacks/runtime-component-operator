@@ -18,7 +18,7 @@ steps:
   timeoutInMinutes: 1440
   # Need properties for Makefile or build script for RCO
   properties:  
-    ebcPlan: svl-dockerJenkins-ubuntu20_s390x.yml
+    ebcPlan: svl-dockerJenkins-ubuntu22_z_fyrev3.yml
     
 
 - stepName: P Build
@@ -27,7 +27,7 @@ steps:
   timeoutInMinutes: 1440
   # Need properties for Makefile or build script for RCO
   properties:  
-    ebcPlan: svl-dockerJenkins-ubuntu20_ppcle.yml
+    ebcPlan: svl-dockerJenkins-ubuntu22_p9_fyrev3.yml
 
 #- stepName: ARM Build
 #  workType: Jenkins
