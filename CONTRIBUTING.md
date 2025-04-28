@@ -8,7 +8,7 @@ There are multiple ways to contribute: report bugs, request features, fix bugs, 
 
 ## Raising Issues
 
-Please raise any bug reports or feature requests on the [Runtime Component Operator project repository's GitHub issue tracker](https://github.com/application-stacks/runtime-component-operator/issuess). Search the list to see if your issue has already been raised.
+Please raise any bug reports or feature requests on the [Runtime Component Operator project repository's GitHub issue tracker](https://github.com/application-stacks/runtime-component-operator/issues). Search the list to see if your issue has already been raised.
 
 A good bug report is one that makes it easy for everyone to understand what you were trying to do and what went wrong. Please provide as much context as possible so we can try to recreate the issue.
 
