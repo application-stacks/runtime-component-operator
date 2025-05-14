@@ -24,6 +24,7 @@ import (
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -243,6 +244,14 @@ type RuntimeComponentService struct {
 	// Expose the application as a bindable service. Defaults to false.
 	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Bindable",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	Bindable *bool `json:"bindable,omitempty"`
+
+	// Setting to maintain session affinity. Must be ClientIP or None. Defaults to None.
+	// +operator-sdk:csv:customresourcedefinitions:order=18,type=spec,displayName="Session Affinity",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	SessionAffinity *v1.ServiceAffinity `json:"sessionAffinity,omitempty"`
+
+	// Configurations of session affinity.
+	// +operator-sdk:csv:customresourcedefinitions:order=19,type=spec
+	SessionAffinityConfig *corev1.SessionAffinityConfig `json:"sessionAffinityConfig,omitempty"`
 }
 
 // Defines the desired state and cycle of applications.
@@ -744,6 +753,16 @@ func (s *RuntimeComponentService) GetCertificate() common.BaseComponentCertifica
 // GetBindable returns whether the application should be exposable as a service
 func (s *RuntimeComponentService) GetBindable() *bool {
 	return s.Bindable
+}
+
+// GetSessionAffinity returns the session affinity setting for the service
+func (s *RuntimeComponentService) GetSessionAffinity() *v1.ServiceAffinity {
+	return s.SessionAffinity
+}
+
+// GetSessionAffinityConfig returns the session affinity configuration for the service
+func (s *RuntimeComponentService) GetSessionAffinityConfig() *corev1.SessionAffinityConfig {
+	return s.SessionAffinityConfig
 }
 
 // GetLabels returns labels to be added on ServiceMonitor
