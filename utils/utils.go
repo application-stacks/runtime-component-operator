@@ -271,12 +271,10 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	}
 
 	// session affinity
-	if sessionAffinity := ba.GetService().GetSessionAffinity(); sessionAffinity != nil {
-		if *sessionAffinity == v1.ServiceAffinityClientIP {
-			svc.Spec.SessionAffinity = v1.ServiceAffinityClientIP
-		} else {
-			svc.Spec.SessionAffinity = v1.ServiceAffinityNone
-		}
+	if sessionAffinity := ba.GetService().GetSessionAffinity(); sessionAffinity == nil || *sessionAffinity != v1.ServiceAffinityClientIP {
+		svc.Spec.SessionAffinity = v1.ServiceAffinityNone
+	} else {
+		svc.Spec.SessionAffinity = v1.ServiceAffinityClientIP
 	}
 	svc.Spec.SessionAffinityConfig = ba.GetService().GetSessionAffinityConfig()
 }
