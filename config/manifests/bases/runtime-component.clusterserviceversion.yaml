@@ -133,6 +133,12 @@ spec:
           if the probe fails.
         displayName: Liveness Probe
         path: probes.liveness
+      - description: Target average Memory utilization, represented as a percentage
+          of requested memory, over all the pods.
+        displayName: Target Memory Utilization Percentage
+        path: autoscaling.targetMemoryUtilizationPercentage
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
       - description: Policy for pulling container images. Defaults to IfNotPresent.
         displayName: Pull Policy
         path: pullPolicy
