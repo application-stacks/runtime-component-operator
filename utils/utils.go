@@ -40,7 +40,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const RCOOperandVersion = "1.4.2"
+const RCOOperandVersion = "1.4.3"
 
 var APIVersionNotFoundError = errors.New("APIVersion is not available")
 
