@@ -977,28 +977,19 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 
 	if ksvc.Spec.Template.Spec.Containers[0].LivenessProbe != nil {
 		if ksvc.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet != nil {
-			ksvc.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.Port = intstr.IntOrString{}
-		}
-		if ksvc.Spec.Template.Spec.Containers[0].LivenessProbe.TCPSocket != nil {
-			ksvc.Spec.Template.Spec.Containers[0].LivenessProbe.TCPSocket.Port = intstr.IntOrString{}
+			ksvc.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.Scheme = ""
 		}
 	}
 
 	if ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe != nil {
 		if ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet != nil {
-			ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Port = intstr.IntOrString{}
-		}
-		if ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.TCPSocket != nil {
-			ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.TCPSocket.Port = intstr.IntOrString{}
+			ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Scheme = ""
 		}
 	}
 
 	if ksvc.Spec.Template.Spec.Containers[0].StartupProbe != nil {
 		if ksvc.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet != nil {
-			ksvc.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet.Port = intstr.IntOrString{}
-		}
-		if ksvc.Spec.Template.Spec.Containers[0].StartupProbe.TCPSocket != nil {
-			ksvc.Spec.Template.Spec.Containers[0].StartupProbe.TCPSocket.Port = intstr.IntOrString{}
+			ksvc.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet.Scheme = ""
 		}
 	}
 
