@@ -27,8 +27,7 @@ Red Hat® OpenShift® GitOps is based on the open source project link:++https://
 
 === kustomize-rco-own-namespace.yaml
 This ArgoCD Application installs the operator into the 'runtime-component' namespace,
-and the operator watches for Runtime Component custom resource instances only in its own namespace. Create a namespace called 'runtime-component' for the operator.
-To install, run: `kubectl apply -f kustomize-rco-own-namespace.yaml` and to uninstall, run: `kubectl delete -f kustomize-rco-own-namespace.yaml`
+and the operator watches for Runtime Component custom resource instances only in its own namespace. To install, run: `kubectl apply -f kustomize-rco-own-namespace.yaml` and to uninstall, run: `kubectl delete -f kustomize-rco-own-namespace.yaml`
 
 
 == Installing and watching another namespace

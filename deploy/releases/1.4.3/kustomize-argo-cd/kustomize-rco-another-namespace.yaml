@@ -47,7 +47,7 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: runtime-component-watched-namespace
+  name: runtime-component-operator-watched-namespace
   namespace: openshift-gitops
 spec:
   project: runtime-component-operator
