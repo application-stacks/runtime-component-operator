@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: runtime-component-operator
+  namespace: openshift-gitops
+spec:
+  sourceRepos:
+  - 'https://github.com/application-stacks/runtime-component-operator'
+  destinations:
+  - namespace: '!kube-*'
+    server: '*'
+  - namespace: '!openshift-*'
+    server: '*'
+  - namespace: '*'
+    server: '*'
+  clusterResourceWhitelist:
+  - group: apiextensions.k8s.io
+    kind: CustomResourceDefinition
+  - group: ''
+    kind: Namespace
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: runtime-component-operator
+  namespace: openshift-gitops
+spec:
+  project: runtime-component-operator
+  source:
+    path: deploy/releases/1.4.3/kustomize/overlays/watch-another-namespace/rco-ns
+    repoURL: 'https://github.com/application-stacks/runtime-component-operator'
+    targetRevision: HEAD
+    kustomize:
+      namespace: rco-ns
+  destination:
+    namespace: rco-ns
+    server: 'https://kubernetes.default.svc'
+  ignoreDifferences:
+  - group: ''
+    kind: ConfigMap
+    name: runtime-component-operator
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
+    - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: runtime-component-watched-namespace
+  namespace: openshift-gitops
+spec:
+  project: runtime-component-operator
+  source:
+    path: deploy/releases/1.4.3/kustomize/overlays/watch-another-namespace/rco-watched-ns
+    repoURL: 'https://github.com/application-stacks/runtime-component-operator'
+    targetRevision: HEAD
+    kustomize:
+      namespace: rco-watched-ns
+  destination:
+    namespace: rco-watched-ns
+    server: 'https://kubernetes.default.svc'
+  ignoreDifferences:
+  - group: ''
+    kind: ConfigMap
+    name: runtime-component-operator
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
+    - CreateNamespace=true
