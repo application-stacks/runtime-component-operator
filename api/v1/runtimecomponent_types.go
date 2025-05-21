@@ -27,6 +27,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -105,6 +106,9 @@ type RuntimeComponentSpec struct {
 
 	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Monitoring"
 	Monitoring *RuntimeComponentMonitoring `json:"monitoring,omitempty"`
+
+	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Knative Service"
+	KnativeService *RuntimeComponentKnativeService `json:"knative,omitempty"`
 
 	// An array of environment variables for the application container.
 	// +listType=map
@@ -379,6 +383,17 @@ type RuntimeComponentMonitoring struct {
 	// +listType=atomic
 	// +operator-sdk:csv:customresourcedefinitions:order=31,type=spec,displayName="Monitoring Endpoints",xDescriptors="urn:alm:descriptor:com.tectonic.ui:endpointList"
 	Endpoints []prometheusv1.Endpoint `json:"endpoints,omitempty"`
+}
+
+// Specifies parameters for Knative Service.
+type RuntimeComponentKnativeService struct {
+	// List of traffic targets.
+	// +operator-sdk:csv:customresourcedefinitions:order=22,type=spec,displayName="Traffic Targets"
+	TrafficTarget []servingv1.TrafficTarget `json:"traffic,omitempty"`
+
+	// Annotations for Autoscaling.
+	// +operator-sdk:csv:customresourcedefinitions:order=22,type=spec,displayName="Autoscaling Annotations"
+	AutoscalingAnnotations map[string]string `json:"autoscaling,omitempty"`
 }
 
 // Configures the ingress resource.
@@ -688,6 +703,14 @@ func (cr *RuntimeComponent) GetMonitoring() common.BaseComponentMonitoring {
 	return cr.Spec.Monitoring
 }
 
+// GetMonitoring returns monitoring settings
+func (cr *RuntimeComponent) GetKnativeService() common.BaseComponentKnativeService {
+	if cr.Spec.KnativeService == nil {
+		return nil
+	}
+	return cr.Spec.KnativeService
+}
+
 // GetStatus returns RuntimeComponent status
 func (cr *RuntimeComponent) GetStatus() common.BaseComponentStatus {
 	return &cr.Status
@@ -902,6 +925,16 @@ func (m *RuntimeComponentMonitoring) GetLabels() map[string]string {
 // GetEndpoints returns endpoints to be added to ServiceMonitor
 func (m *RuntimeComponentMonitoring) GetEndpoints() []prometheusv1.Endpoint {
 	return m.Endpoints
+}
+
+// GetTrafficTarget returns traffic targets for Knative
+func (k *RuntimeComponentKnativeService) GetTrafficTarget() []servingv1.TrafficTarget {
+	return k.TrafficTarget
+}
+
+// GetTrafficTarget returns traffic targets for Knative
+func (k *RuntimeComponentKnativeService) GetAutoscalingAnnotations() map[string]string {
+	return k.AutoscalingAnnotations
 }
 
 // GetAnnotations returns route annotations
