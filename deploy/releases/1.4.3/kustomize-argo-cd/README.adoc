@@ -8,7 +8,7 @@ Red Hat® OpenShift® GitOps is based on the open source project link:++https://
 
 == Installation
 
-1. Install link:++https://github.com/redhat-developer/gitops-operator++[Red Hat® OpenShift® GitOps Operator] from OpenShift® UI into the `openshift-gitops` namespace.
+1. Install link:++https://github.com/redhat-developer/gitops-operator++[Red Hat® OpenShift® GitOps Operator] from OpenShift® UI into the `openshift-gitops-operator` namespace.
 2. Grant cluster-admin permissions for the GitOps operator to be able to create Custom Resource Definitions for Runtime Component operator. 
         
     
