@@ -255,4 +255,5 @@ type BaseComponent interface {
 	GetDisableServiceLinks() *bool
 	GetTolerations() []corev1.Toleration
 	GetDNS() BaseComponentDNS
+	GetSkipPullSecretValidation() *bool
 }

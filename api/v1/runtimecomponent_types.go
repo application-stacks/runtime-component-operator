@@ -162,6 +162,10 @@ type RuntimeComponentSpec struct {
 	// DNS settings for the pod.
 	// +operator-sdk:csv:customresourcedefinitions:order=29,type=spec,displayName="DNS"
 	DNS *RuntimeComponentDNS `json:"dns,omitempty"`
+
+	// Don't verify that a specified service account has a valid pull secret. Defaults to false
+	// +operator-sdk:csv:customresourcedefinitions:order=30,type=spec,displayName="Skip service account pull secret validation",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	SkipPullSecretValidation *bool `json:"skipPullSecretValidation,omitempty"`
 }
 
 // Defines the DNS
@@ -1035,6 +1039,11 @@ func (cr *RuntimeComponentTopologySpreadConstraints) GetConstraints() *[]corev1.
 
 func (cr *RuntimeComponentTopologySpreadConstraints) GetDisableOperatorDefaults() *bool {
 	return cr.DisableOperatorDefaults
+}
+
+// GetSkipPullSecretValidation returns flag that toggles skipping pull secret validation
+func (cr *RuntimeComponent) GetSkipPullSecretValidation() *bool {
+	return cr.Spec.SkipPullSecretValidation
 }
 
 // Initialize the RuntimeComponent instance
