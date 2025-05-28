@@ -413,6 +413,7 @@ func createOpenShiftNetworkPolicyIngressRule(appName string, namespace string, i
 		)
 	}
 
+	if allowPodPeers {
 		rule.From = append(rule.From,
 			// Add peer to allow traffic from other pods belonging to the app
 			createNetworkPolicyPeer(appName, namespace, config),
