@@ -340,6 +340,24 @@ func customizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 	return probe
 }
 
+func CustomizeOperatorNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, operatorName string, operatorPodLabels map[string]string) {
+	networkPolicy.Spec.PolicyTypes = []networkingv1.PolicyType{networkingv1.PolicyTypeIngress}
+
+	networkPolicy.Spec.PodSelector = metav1.LabelSelector{
+		MatchLabels: operatorPodLabels,
+	}
+
+	var rule networkingv1.NetworkPolicyIngressRule
+
+	if isOpenShift {
+		rule = createOpenShiftNetworkPolicyIngressRule(operatorName, networkPolicy.Namespace, false, nil, false)
+	} else {
+		rule = createKubernetesNetworkPolicyIngressRule(operatorName, networkPolicy.Namespace, false, nil, false)
+	}
+
+	networkPolicy.Spec.Ingress = []networkingv1.NetworkPolicyIngressRule{rule}
+}
+
 // CustomizeNetworkPolicy configures the network policy.
 func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
@@ -362,16 +380,16 @@ func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShi
 		config.GetFromLabels() != nil && len(config.GetFromLabels()) == 0 {
 		rule = createAllowAllNetworkPolicyIngressRule()
 	} else if isOpenShift {
-		rule = createOpenShiftNetworkPolicyIngressRule(ba.GetApplicationName(), networkPolicy.Namespace, isExposed, config)
+		rule = createOpenShiftNetworkPolicyIngressRule(ba.GetApplicationName(), networkPolicy.Namespace, isExposed, config, true)
 	} else {
-		rule = createKubernetesNetworkPolicyIngressRule(ba.GetApplicationName(), networkPolicy.Namespace, isExposed, config)
+		rule = createKubernetesNetworkPolicyIngressRule(ba.GetApplicationName(), networkPolicy.Namespace, isExposed, config, true)
 	}
 
 	customizeNetworkPolicyPorts(&rule, ba)
 	networkPolicy.Spec.Ingress = []networkingv1.NetworkPolicyIngressRule{rule}
 }
 
-func createOpenShiftNetworkPolicyIngressRule(appName string, namespace string, isExposed bool, config common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyIngressRule {
+func createOpenShiftNetworkPolicyIngressRule(appName string, namespace string, isExposed bool, config common.BaseComponentNetworkPolicy, allowPodPeers bool) networkingv1.NetworkPolicyIngressRule {
 	rule := networkingv1.NetworkPolicyIngressRule{}
 
 	// Add peer to allow traffic from the OpenShift router
@@ -395,10 +413,13 @@ func createOpenShiftNetworkPolicyIngressRule(appName string, namespace string, i
 		)
 	}
 
+		rule.From = append(rule.From,
+			// Add peer to allow traffic from other pods belonging to the app
+			createNetworkPolicyPeer(appName, namespace, config),
+		)
+	}
+	// default to allow traffic from OpenShift monitoring
 	rule.From = append(rule.From,
-		// Add peer to allow traffic from other pods belonging to the app
-		createNetworkPolicyPeer(appName, namespace, config),
-
 		// Add peer to allow traffic from OpenShift monitoring
 		networkingv1.NetworkPolicyPeer{
 			NamespaceSelector: &metav1.LabelSelector{
@@ -412,14 +433,15 @@ func createOpenShiftNetworkPolicyIngressRule(appName string, namespace string, i
 	return rule
 }
 
-func createKubernetesNetworkPolicyIngressRule(appName string, namespace string, isExposed bool, config common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyIngressRule {
+func createKubernetesNetworkPolicyIngressRule(appName string, namespace string, isExposed bool, config common.BaseComponentNetworkPolicy, allowPodPeers bool) networkingv1.NetworkPolicyIngressRule {
 	if isExposed {
 		return createAllowAllNetworkPolicyIngressRule()
 	}
 
 	rule := networkingv1.NetworkPolicyIngressRule{}
-	rule.From = []networkingv1.NetworkPolicyPeer{
-		createNetworkPolicyPeer(appName, namespace, config),
+	rule.From = []networkingv1.NetworkPolicyPeer{}
+	if allowPodPeers {
+		rule.From = append(rule.From, createNetworkPolicyPeer(appName, namespace, config))
 	}
 	return rule
 }
