@@ -148,7 +148,13 @@ type BaseComponentCertificate interface {
 
 // BaseComponentNetworkPolicy represents a basic network policy configuration
 type BaseComponentNetworkPolicy interface {
-	GetNamespaceLabels() map[string]string
+	IsDisabled() bool
+	IsIngressDisabled() bool
+	IsEgressDisabled() bool
+	IsDenyingOutboundTraffic() bool
+	GetToNamespaceLabels() map[string]string
+	GetToLabels() map[string]string
+	GetFromNamespaceLabels() map[string]string
 	GetFromLabels() map[string]string
 }
 
