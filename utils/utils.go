@@ -372,10 +372,12 @@ func createNetworkPolicyEgressRule(appName string, namespace string, allowOutbou
 		return createAllowAllNetworkPolicyEgressRule()
 	}
 	rule := networkingv1.NetworkPolicyEgressRule{}
-	rule.To = append(rule.To,
-		// Add peer to allow traffic to other pods belonging to the app
-		createNetworkPolicyPeer(appName, namespace, config, config.GetFromNamespaceLabels, config.GetFromLabels),
-	)
+	if config != nil {
+		rule.To = append(rule.To,
+			// Add peer to allow traffic to other pods belonging to the app
+			createNetworkPolicyPeer(appName, namespace, config, config.GetFromNamespaceLabels, config.GetFromLabels),
+		)
+	}
 	return rule
 }
 
@@ -442,10 +444,12 @@ func createOpenShiftNetworkPolicyIngressRule(appName string, namespace string, i
 		)
 	}
 
-	rule.From = append(rule.From,
-		// Add peer to allow traffic from other pods belonging to the app
-		createNetworkPolicyPeer(appName, namespace, config, config.GetFromNamespaceLabels, config.GetFromLabels),
-	)
+	if config != nil {
+		rule.From = append(rule.From,
+			// Add peer to allow traffic from other pods belonging to the app
+			createNetworkPolicyPeer(appName, namespace, config, config.GetFromNamespaceLabels, config.GetFromLabels),
+		)
+	}
 	// default to allow traffic from OpenShift monitoring
 	rule.From = append(rule.From,
 		// Add peer to allow traffic from OpenShift monitoring
