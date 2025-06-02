@@ -345,8 +345,8 @@ func createNetworkPolicyEgressRules(networkPolicy *networkingv1.NetworkPolicy, i
 	config := ba.GetNetworkPolicy()
 	var rule networkingv1.NetworkPolicyEgressRule
 
-	if config != nil && config.GetToNamespaceLabels() != nil && len(config.GetToNamespaceLabels()) == 0 &&
-		config.GetToLabels() != nil && len(config.GetToLabels()) == 0 {
+	if config == nil || ((config.GetToNamespaceLabels() == nil || (config.GetToNamespaceLabels() != nil && len(config.GetToNamespaceLabels()) == 0)) &&
+		(config.GetToLabels() == nil || (config.GetToLabels() != nil && len(config.GetToLabels()) == 0))) {
 		rule = createAllowAllNetworkPolicyEgressRule()
 	} else {
 		rule = createNetworkPolicyEgressRule(ba.GetApplicationName(), networkPolicy.Namespace, config)
