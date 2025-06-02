@@ -356,21 +356,17 @@ func CustomizeNetworkPolicyEgress(networkPolicy *networkingv1.NetworkPolicy, isO
 
 	config := ba.GetNetworkPolicy()
 	var rule networkingv1.NetworkPolicyEgressRule
-	denyOutboundTraffic := config.IsDenyingOutboundTraffic()
 	if config != nil && config.GetToNamespaceLabels() != nil && len(config.GetToNamespaceLabels()) == 0 &&
 		config.GetToLabels() != nil && len(config.GetToLabels()) == 0 {
 		rule = createAllowAllNetworkPolicyEgressRule()
 	} else {
-		rule = createNetworkPolicyEgressRule(ba.GetApplicationName(), networkPolicy.Namespace, !denyOutboundTraffic, config)
+		rule = createNetworkPolicyEgressRule(ba.GetApplicationName(), networkPolicy.Namespace, config)
 	}
 
 	networkPolicy.Spec.Egress = []networkingv1.NetworkPolicyEgressRule{rule}
 }
 
-func createNetworkPolicyEgressRule(appName string, namespace string, allowOutboundTraffic bool, config common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyEgressRule {
-	if allowOutboundTraffic {
-		return createAllowAllNetworkPolicyEgressRule()
-	}
+func createNetworkPolicyEgressRule(appName string, namespace string, config common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyEgressRule {
 	rule := networkingv1.NetworkPolicyEgressRule{}
 	if config != nil {
 		rule.To = append(rule.To,
