@@ -346,7 +346,9 @@ func CustomizeNetworkPolicyEgress(networkPolicy *networkingv1.NetworkPolicy, isO
 	networkPolicy.Labels = ba.GetLabels()
 	networkPolicy.Annotations = MergeMaps(networkPolicy.Annotations, ba.GetAnnotations())
 
-	networkPolicy.Spec.PolicyTypes = []networkingv1.PolicyType{networkingv1.PolicyTypeEgress}
+	if !policyTypesContains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress) {
+		networkPolicy.Spec.PolicyTypes = append(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress)
+	}
 
 	networkPolicy.Spec.PodSelector = metav1.LabelSelector{
 		MatchLabels: map[string]string{
@@ -391,7 +393,9 @@ func CustomizeNetworkPolicyIngress(networkPolicy *networkingv1.NetworkPolicy, is
 	networkPolicy.Labels = ba.GetLabels()
 	networkPolicy.Annotations = MergeMaps(networkPolicy.Annotations, ba.GetAnnotations())
 
-	networkPolicy.Spec.PolicyTypes = []networkingv1.PolicyType{networkingv1.PolicyTypeIngress}
+	if !policyTypesContains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeIngress) {
+		networkPolicy.Spec.PolicyTypes = append(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeIngress)
+	}
 
 	networkPolicy.Spec.PodSelector = metav1.LabelSelector{
 		MatchLabels: map[string]string{
@@ -541,6 +545,16 @@ func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule,
 			ingress.Ports[i+1].Port = additionalPort
 		}
 	}
+}
+
+// returns true if policy is contained within the policyTypes array, false otherwise
+func policyTypesContains(policyTypes []networkingv1.PolicyType, policy networkingv1.PolicyType) bool {
+	for _, currentPolicy := range policyTypes {
+		if currentPolicy == policy {
+			return true
+		}
+	}
+	return false
 }
 
 // CustomizeAffinity ...
