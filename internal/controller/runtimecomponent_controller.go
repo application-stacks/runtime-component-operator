@@ -351,12 +351,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	networkPolicy := &networkingv1.NetworkPolicy{ObjectMeta: defaultMeta}
 	if np := instance.Spec.NetworkPolicy; np == nil || np != nil && !np.IsDisabled() {
 		err = r.CreateOrUpdate(networkPolicy, instance, func() error {
-			if np == nil || np != nil && !np.IsIngressDisabled() {
-				appstacksutils.CustomizeNetworkPolicyIngress(networkPolicy, r.IsOpenShift(), instance)
-			}
-			if np == nil || np != nil && !np.IsEgressDisabled() {
-				appstacksutils.CustomizeNetworkPolicyEgress(networkPolicy, r.IsOpenShift(), instance)
-			}
+			appstacksutils.CustomizeNetworkPolicy(networkPolicy, r.IsOpenShift(), instance)
 			return nil
 		})
 		if err != nil {

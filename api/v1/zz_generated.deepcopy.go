@@ -286,6 +286,16 @@ func (in *RuntimeComponentNetworkPolicy) DeepCopyInto(out *RuntimeComponentNetwo
 		*out = new(bool)
 		**out = **in
 	}
+	if in.DisableIngress != nil {
+		in, out := &in.DisableIngress, &out.DisableIngress
+		*out = new(bool)
+		**out = **in
+	}
+	if in.DisableEgress != nil {
+		in, out := &in.DisableEgress, &out.DisableEgress
+		*out = new(bool)
+		**out = **in
+	}
 	if in.NamespaceLabels != nil {
 		in, out := &in.NamespaceLabels, &out.NamespaceLabels
 		*out = new(map[string]string)
@@ -297,8 +307,41 @@ func (in *RuntimeComponentNetworkPolicy) DeepCopyInto(out *RuntimeComponentNetwo
 			}
 		}
 	}
+	if in.FromNamespaceLabels != nil {
+		in, out := &in.FromNamespaceLabels, &out.FromNamespaceLabels
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
+		}
+	}
 	if in.FromLabels != nil {
 		in, out := &in.FromLabels, &out.FromLabels
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
+		}
+	}
+	if in.ToNamespaceLabels != nil {
+		in, out := &in.ToNamespaceLabels, &out.ToNamespaceLabels
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
+		}
+	}
+	if in.ToLabels != nil {
+		in, out := &in.ToLabels, &out.ToLabels
 		*out = new(map[string]string)
 		if **in != nil {
 			in, out := *in, *out

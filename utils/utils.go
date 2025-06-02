@@ -340,24 +340,11 @@ func customizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 	return probe
 }
 
-// CustomizeNetworkPolicyEgress configures the network policy for outgoing traffic to other Pod(s)
-func CustomizeNetworkPolicyEgress(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, ba common.BaseComponent) {
-	obj := ba.(metav1.Object)
-	networkPolicy.Labels = ba.GetLabels()
-	networkPolicy.Annotations = MergeMaps(networkPolicy.Annotations, ba.GetAnnotations())
-
-	if !policyTypesContains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress) {
-		networkPolicy.Spec.PolicyTypes = append(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress)
-	}
-
-	networkPolicy.Spec.PodSelector = metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			common.GetComponentNameLabel(ba): obj.GetName(),
-		},
-	}
-
+// createNetworkPolicyEgressRules returns the network policy rules for outgoing traffic to other Pod(s)
+func createNetworkPolicyEgressRules(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, ba common.BaseComponent) []networkingv1.NetworkPolicyEgressRule {
 	config := ba.GetNetworkPolicy()
 	var rule networkingv1.NetworkPolicyEgressRule
+
 	if config != nil && config.GetToNamespaceLabels() != nil && len(config.GetToNamespaceLabels()) == 0 &&
 		config.GetToLabels() != nil && len(config.GetToLabels()) == 0 {
 		rule = createAllowAllNetworkPolicyEgressRule()
@@ -365,7 +352,7 @@ func CustomizeNetworkPolicyEgress(networkPolicy *networkingv1.NetworkPolicy, isO
 		rule = createNetworkPolicyEgressRule(ba.GetApplicationName(), networkPolicy.Namespace, config)
 	}
 
-	networkPolicy.Spec.Egress = []networkingv1.NetworkPolicyEgressRule{rule}
+	return []networkingv1.NetworkPolicyEgressRule{rule}
 }
 
 func createNetworkPolicyEgressRule(appName string, namespace string, config common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyEgressRule {
@@ -387,15 +374,10 @@ func createAllowAllNetworkPolicyEgressRule() networkingv1.NetworkPolicyEgressRul
 	}
 }
 
-// CustomizeNetworkPolicyIngress configures the network policy for incoming traffic from other Pod(s)
-func CustomizeNetworkPolicyIngress(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, ba common.BaseComponent) {
+func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	networkPolicy.Labels = ba.GetLabels()
 	networkPolicy.Annotations = MergeMaps(networkPolicy.Annotations, ba.GetAnnotations())
-
-	if !policyTypesContains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeIngress) {
-		networkPolicy.Spec.PolicyTypes = append(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeIngress)
-	}
 
 	networkPolicy.Spec.PodSelector = metav1.LabelSelector{
 		MatchLabels: map[string]string{
@@ -403,6 +385,37 @@ func CustomizeNetworkPolicyIngress(networkPolicy *networkingv1.NetworkPolicy, is
 		},
 	}
 
+	ingressDisabled := ba.GetNetworkPolicy() != nil && ba.GetNetworkPolicy().IsIngressDisabled()
+	hasIngressPolicy := policyTypesContains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeIngress)
+	if ingressDisabled {
+		if hasIngressPolicy {
+			networkPolicy.Spec.PolicyTypes = networkPolicy.Spec.PolicyTypes[1:] // remove the first element
+		}
+		networkPolicy.Spec.Ingress = []networkingv1.NetworkPolicyIngressRule{}
+	} else {
+		if !hasIngressPolicy {
+			networkPolicy.Spec.PolicyTypes = append(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeIngress)
+		}
+		networkPolicy.Spec.Ingress = createNetworkPolicyIngressRules(networkPolicy, isOpenShift, ba)
+	}
+
+	egressDisabled := ba.GetNetworkPolicy() != nil && ba.GetNetworkPolicy().IsEgressDisabled()
+	hasEgressPolicy := policyTypesContains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress)
+	if egressDisabled {
+		if hasEgressPolicy {
+			networkPolicy.Spec.PolicyTypes = networkPolicy.Spec.PolicyTypes[:len(networkPolicy.Spec.PolicyTypes)-1] // remove the last element
+		}
+		networkPolicy.Spec.Egress = []networkingv1.NetworkPolicyEgressRule{}
+	} else {
+		if !hasEgressPolicy {
+			networkPolicy.Spec.PolicyTypes = append(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress)
+		}
+		networkPolicy.Spec.Egress = createNetworkPolicyEgressRules(networkPolicy, isOpenShift, ba)
+	}
+}
+
+// createNetworkPolicyIngressRules returns the network policy rules for incoming traffic from other Pod(s)
+func createNetworkPolicyIngressRules(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, ba common.BaseComponent) []networkingv1.NetworkPolicyIngressRule {
 	config := ba.GetNetworkPolicy()
 	isExposed := ba.GetExpose() != nil && *ba.GetExpose()
 	var rule networkingv1.NetworkPolicyIngressRule
@@ -417,7 +430,7 @@ func CustomizeNetworkPolicyIngress(networkPolicy *networkingv1.NetworkPolicy, is
 	}
 
 	customizeNetworkPolicyPorts(&rule, ba)
-	networkPolicy.Spec.Ingress = []networkingv1.NetworkPolicyIngressRule{rule}
+	return []networkingv1.NetworkPolicyIngressRule{rule}
 }
 
 func createOpenShiftNetworkPolicyIngressRule(appName string, namespace string, isExposed bool, config common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyIngressRule {
