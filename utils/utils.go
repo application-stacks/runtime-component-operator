@@ -345,8 +345,8 @@ func createNetworkPolicyEgressRules(networkPolicy *networkingv1.NetworkPolicy, i
 	config := ba.GetNetworkPolicy()
 	var rule networkingv1.NetworkPolicyEgressRule
 
-	if config == nil || ((config.GetToNamespaceLabels() == nil || (config.GetToNamespaceLabels() != nil && len(config.GetToNamespaceLabels()) == 0)) &&
-		(config.GetToLabels() == nil || (config.GetToLabels() != nil && len(config.GetToLabels()) == 0))) {
+	if config == nil || ((config.GetToNamespaceLabels() != nil && len(config.GetToNamespaceLabels()) == 0) &&
+		(config.GetToLabels() != nil && len(config.GetToLabels()) == 0)) {
 		rule = createAllowAllNetworkPolicyEgressRule()
 	} else {
 		rule = createNetworkPolicyEgressRule(ba.GetApplicationName(), networkPolicy.Namespace, config)
@@ -367,11 +367,7 @@ func createNetworkPolicyEgressRule(appName string, namespace string, config comm
 }
 
 func createAllowAllNetworkPolicyEgressRule() networkingv1.NetworkPolicyEgressRule {
-	return networkingv1.NetworkPolicyEgressRule{
-		To: []networkingv1.NetworkPolicyPeer{{
-			NamespaceSelector: &metav1.LabelSelector{},
-		}},
-	}
+	return networkingv1.NetworkPolicyEgressRule{} // allow all egress
 }
 
 func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, ba common.BaseComponent) {
@@ -407,10 +403,19 @@ func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShi
 		}
 		networkPolicy.Spec.Egress = []networkingv1.NetworkPolicyEgressRule{}
 	} else {
-		if !hasEgressPolicy {
-			networkPolicy.Spec.PolicyTypes = append(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress)
+		egressConfigured := ba.GetNetworkPolicy() != nil && (ba.GetNetworkPolicy().GetToLabels() != nil || ba.GetNetworkPolicy().GetToNamespaceLabels() != nil)
+		if egressConfigured {
+			if !hasEgressPolicy {
+				networkPolicy.Spec.PolicyTypes = append(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress)
+			}
+			networkPolicy.Spec.Egress = createNetworkPolicyEgressRules(networkPolicy, isOpenShift, ba)
+		} else {
+			// if egress is not configured, consider the network policy disabled
+			if hasEgressPolicy {
+				networkPolicy.Spec.PolicyTypes = networkPolicy.Spec.PolicyTypes[:len(networkPolicy.Spec.PolicyTypes)-1] // remove the last element
+			}
+			networkPolicy.Spec.Egress = []networkingv1.NetworkPolicyEgressRule{}
 		}
-		networkPolicy.Spec.Egress = createNetworkPolicyEgressRules(networkPolicy, isOpenShift, ba)
 	}
 }
 
