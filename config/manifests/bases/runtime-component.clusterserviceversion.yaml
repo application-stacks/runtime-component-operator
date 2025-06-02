@@ -438,12 +438,6 @@ spec:
         path: networkPolicy.disableEgress
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: Deny outbound traffic of the application pod(s). Defaults to
-          false.
-        displayName: Deny Outbound Traffic
-        path: networkPolicy.denyOutboundTraffic
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Deprecated. .spec.networkPolicy.fromNamespaceLabels should be
           used instead. If both are specified, .spec.networkPolicy.fromNamespaceLabels
           will override this.
