@@ -360,7 +360,7 @@ func createNetworkPolicyEgressRule(appName string, namespace string, config comm
 	if config != nil {
 		rule.To = append(rule.To,
 			// Add peer to allow traffic to other pods belonging to the app
-			createNetworkPolicyPeer(appName, namespace, config, config.GetFromNamespaceLabels, config.GetFromLabels),
+			createNetworkPolicyPeer(appName, namespace, config, config.GetToNamespaceLabels, config.GetToLabels),
 		)
 	}
 	return rule
