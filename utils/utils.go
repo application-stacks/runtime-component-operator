@@ -367,7 +367,11 @@ func createNetworkPolicyEgressRule(appName string, namespace string, config comm
 }
 
 func createAllowAllNetworkPolicyEgressRule() networkingv1.NetworkPolicyEgressRule {
-	return networkingv1.NetworkPolicyEgressRule{} // allow all egress
+	return networkingv1.NetworkPolicyEgressRule{
+		To: []networkingv1.NetworkPolicyPeer{{
+			NamespaceSelector: &metav1.LabelSelector{},
+		}},
+	}
 }
 
 func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, ba common.BaseComponent) {
