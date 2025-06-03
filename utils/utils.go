@@ -360,7 +360,7 @@ func createNetworkPolicyEgressRule(appName string, namespace string, config comm
 	if config != nil {
 		rule.To = append(rule.To,
 			// Add peer to allow traffic to other pods belonging to the app
-			createNetworkPolicyPeer(appName, namespace, config, config.GetToNamespaceLabels, config.GetToLabels),
+			createNetworkPolicyPeer(appName, namespace, config, getNetworkPolicyEgressLabelGetters),
 		)
 	}
 	return rule
@@ -466,14 +466,9 @@ func createOpenShiftNetworkPolicyIngressRule(appName string, namespace string, i
 		)
 	}
 
-	if config != nil {
-		rule.From = append(rule.From,
-			// Add peer to allow traffic from other pods belonging to the app
-			createNetworkPolicyPeer(appName, namespace, config, config.GetFromNamespaceLabels, config.GetFromLabels),
-		)
-	}
-	// default to allow traffic from OpenShift monitoring
 	rule.From = append(rule.From,
+		// Add peer to allow traffic from other pods belonging to the app
+		createNetworkPolicyPeer(appName, namespace, config, getNetworkPolicyIngressLabelGetters),
 		// Add peer to allow traffic from OpenShift monitoring
 		networkingv1.NetworkPolicyPeer{
 			NamespaceSelector: &metav1.LabelSelector{
@@ -494,7 +489,7 @@ func createKubernetesNetworkPolicyIngressRule(appName string, namespace string, 
 
 	rule := networkingv1.NetworkPolicyIngressRule{}
 	rule.From = []networkingv1.NetworkPolicyPeer{
-		createNetworkPolicyPeer(appName, namespace, config, config.GetFromNamespaceLabels, config.GetFromLabels),
+		createNetworkPolicyPeer(appName, namespace, config, getNetworkPolicyIngressLabelGetters),
 	}
 	return rule
 }
@@ -507,12 +502,12 @@ func createAllowAllNetworkPolicyIngressRule() networkingv1.NetworkPolicyIngressR
 	}
 }
 
-func createNetworkPolicyPeer(appName string, namespace string, networkPolicy common.BaseComponentNetworkPolicy, getNamespaceLabels func() map[string]string, getLabels func() map[string]string) networkingv1.NetworkPolicyPeer {
+func createNetworkPolicyPeer(appName string, namespace string, networkPolicy common.BaseComponentNetworkPolicy, getNetworkPolicyLabelGetters func(common.BaseComponentNetworkPolicy) (func() map[string]string, func() map[string]string)) networkingv1.NetworkPolicyPeer {
 	peer := networkingv1.NetworkPolicyPeer{
 		NamespaceSelector: &metav1.LabelSelector{},
 		PodSelector:       &metav1.LabelSelector{},
 	}
-
+	getNamespaceLabels, getLabels := getNetworkPolicyLabelGetters(networkPolicy)
 	if networkPolicy == nil || getNamespaceLabels() == nil {
 		peer.NamespaceSelector.MatchLabels = map[string]string{
 			"kubernetes.io/metadata.name": namespace,
@@ -567,6 +562,30 @@ func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule,
 			ingress.Ports[i+1].Port = additionalPort
 		}
 	}
+}
+
+func getNetworkPolicyIngressLabelGetters(config common.BaseComponentNetworkPolicy) (func() map[string]string, func() map[string]string) {
+	var getNamespaceLabels, getLabels func() map[string]string
+	if config != nil {
+		getNamespaceLabels = config.GetFromNamespaceLabels
+		getLabels = config.GetFromLabels
+	} else {
+		getNamespaceLabels = nil
+		getLabels = nil
+	}
+	return getNamespaceLabels, getLabels
+}
+
+func getNetworkPolicyEgressLabelGetters(config common.BaseComponentNetworkPolicy) (func() map[string]string, func() map[string]string) {
+	var getNamespaceLabels, getLabels func() map[string]string
+	if config != nil {
+		getNamespaceLabels = config.GetToNamespaceLabels
+		getLabels = config.GetToLabels
+	} else {
+		getNamespaceLabels = nil
+		getLabels = nil
+	}
+	return getNamespaceLabels, getLabels
 }
 
 // returns true if policy is contained within the policyTypes array, false otherwise
