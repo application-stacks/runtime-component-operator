@@ -481,11 +481,12 @@ func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShi
 		networkPolicy.Spec.Egress = []networkingv1.NetworkPolicyEgressRule{}
 	} else {
 		egressConfigured := ba.GetNetworkPolicy() != nil && (ba.GetNetworkPolicy().GetToLabels() != nil || ba.GetNetworkPolicy().GetToNamespaceLabels() != nil)
-		if egressConfigured {
+		egressBypass := ba.GetNetworkPolicy() != nil && ba.GetNetworkPolicy().IsBypassingDenyAllEgress() // check if egress should bypass deny all policy to access the API server and DNS
+		if egressConfigured || egressBypass {
 			if !hasEgressPolicy {
 				networkPolicy.Spec.PolicyTypes = append(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress)
 			}
-			egressBypass := ba.GetNetworkPolicy() != nil && ba.GetNetworkPolicy().IsBypassingDenyAllEgress() // check if egress should bypass deny all policy to access the API server and DNS
+
 			networkPolicy.Spec.Egress = createNetworkPolicyEgressRules(networkPolicy, isOpenShift, egressBypass, getDNSEgressRule, getEndpoints, ba)
 		} else {
 			// if egress is not configured, consider the network policy disabled
