@@ -1231,6 +1231,14 @@ spec:
         - apiGroups:
           - ""
           resources:
+          - endpoints
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - ""
+          resources:
           - pods
           - pods/exec
           verbs:
