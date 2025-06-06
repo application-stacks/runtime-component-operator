@@ -151,6 +151,7 @@ type BaseComponentNetworkPolicy interface {
 	IsDisabled() bool
 	IsIngressDisabled() bool
 	IsEgressDisabled() bool
+	IsBypassingDenyAllEgress() bool
 	GetToNamespaceLabels() map[string]string
 	GetToLabels() map[string]string
 	GetFromNamespaceLabels() map[string]string

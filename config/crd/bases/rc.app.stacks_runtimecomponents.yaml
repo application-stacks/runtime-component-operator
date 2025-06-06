@@ -3838,6 +3838,10 @@ spec:
               networkPolicy:
                 description: Defines the network policy
                 properties:
+                  bypassDenyAllEgress:
+                    description: Bypasses deny all egress rules to allow API server
+                      and DNS access. Defaults to false.
+                    type: boolean
                   disable:
                     description: Disable the creation of the network policy. Defaults
                       to false.

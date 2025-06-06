@@ -438,6 +438,12 @@ spec:
         path: networkPolicy.disableEgress
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Bypasses deny all egress rules to allow API server and DNS access.
+          Defaults to false.
+        displayName: Bypass Deny All Egress
+        path: networkPolicy.bypassDenyAllEgress
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Deprecated. .spec.networkPolicy.fromNamespaceLabels should be
           used instead. If both are specified, .spec.networkPolicy.fromNamespaceLabels
           will override this.

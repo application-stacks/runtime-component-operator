@@ -296,6 +296,11 @@ func (in *RuntimeComponentNetworkPolicy) DeepCopyInto(out *RuntimeComponentNetwo
 		*out = new(bool)
 		**out = **in
 	}
+	if in.BypassDenyAllEgress != nil {
+		in, out := &in.BypassDenyAllEgress, &out.BypassDenyAllEgress
+		*out = new(bool)
+		**out = **in
+	}
 	if in.NamespaceLabels != nil {
 		in, out := &in.NamespaceLabels, &out.NamespaceLabels
 		*out = new(map[string]string)

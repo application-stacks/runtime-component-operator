@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/application-stacks/runtime-component-operator/common"
+	"github.com/application-stacks/runtime-component-operator/utils"
 	"github.com/pkg/errors"
 
 	kcontroller "sigs.k8s.io/controller-runtime/pkg/controller"
@@ -351,7 +352,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	networkPolicy := &networkingv1.NetworkPolicy{ObjectMeta: defaultMeta}
 	if np := instance.Spec.NetworkPolicy; np == nil || np != nil && !np.IsDisabled() {
 		err = r.CreateOrUpdate(networkPolicy, instance, func() error {
-			appstacksutils.CustomizeNetworkPolicy(networkPolicy, r.IsOpenShift(), instance)
+			appstacksutils.CustomizeNetworkPolicy(networkPolicy, r.IsOpenShift(), r.getDNSEgressRule, r.getEndpoints, instance)
 			return nil
 		})
 		if err != nil {
@@ -558,6 +559,43 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	instance.Status.Versions.Reconciled = appstacksutils.RCOOperandVersion
 	reqLogger.Info("Reconcile RuntimeComponent - completed")
 	return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)
+}
+
+func (r *RuntimeComponentReconciler) getEndpoints(serviceName string, namespace string) (*corev1.Endpoints, error) {
+	endpoints := &corev1.Endpoints{}
+	if err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: serviceName, Namespace: namespace}, endpoints); err != nil {
+		return nil, err
+	} else {
+		return endpoints, nil
+	}
+}
+
+func (r *RuntimeComponentReconciler) getDNSEgressRule(endpointsName string, endpointsNamespace string) (bool, networkingv1.NetworkPolicyEgressRule) {
+	dnsRule := networkingv1.NetworkPolicyEgressRule{}
+	if dnsEndpoints, err := r.getEndpoints(endpointsName, endpointsNamespace); err == nil {
+		if len(dnsEndpoints.Subsets) > 0 {
+			if endpointPort := utils.GetEndpointPortByName(&dnsEndpoints.Subsets[0].Ports, "dns"); endpointPort != nil {
+				dnsRule.Ports = append(dnsRule.Ports, utils.CreateNetworkPolicyPortFromEndpointPort(endpointPort))
+			}
+			if endpointPort := utils.GetEndpointPortByName(&dnsEndpoints.Subsets[0].Ports, "dns-tcp"); endpointPort != nil {
+				dnsRule.Ports = append(dnsRule.Ports, utils.CreateNetworkPolicyPortFromEndpointPort(endpointPort))
+			}
+		}
+		peer := networkingv1.NetworkPolicyPeer{}
+		peer.NamespaceSelector = &metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"kubernetes.io/metadata.name": endpointsNamespace,
+			},
+		}
+		dnsRule.To = append(dnsRule.To, peer)
+		// reqLogger.Info("Found endpoints for " + endpointsName + " service in the " + endpointsNamespace + " namespace")
+		return false, dnsRule
+	}
+	// use permissive rule
+	// egress:
+	//   - {}
+	// reqLogger.Info("Failed to retrieve endpoints for " + endpointsName + " service in the " + endpointsNamespace + "  namespace. Using more permissive rule.")
+	return true, dnsRule
 }
 
 // SetupWithManager initializes reconciler
