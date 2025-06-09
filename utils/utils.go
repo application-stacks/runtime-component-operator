@@ -591,7 +591,7 @@ func createNetworkPolicyPeer(appName string, namespace string, networkPolicy com
 		peer.NamespaceSelector.MatchLabels = getNamespaceLabels()
 	}
 
-	if networkPolicy == nil || networkPolicy.GetFromLabels() == nil {
+	if networkPolicy == nil || getLabels() == nil {
 		peer.PodSelector.MatchLabels = map[string]string{
 			"app.kubernetes.io/part-of": appName,
 		}
