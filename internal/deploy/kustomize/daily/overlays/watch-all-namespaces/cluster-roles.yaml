@@ -4,6 +4,40 @@ metadata:
   labels:
     app.kubernetes.io/instance: runtime-component-operator
     app.kubernetes.io/name: runtime-component-operator
+  name: metrics-auth-role
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: runtime-component-operator
+    app.kubernetes.io/name: runtime-component-operator
+  name: metrics-reader
+rules:
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: runtime-component-operator
+    app.kubernetes.io/name: runtime-component-operator
   name: rco-leader-election-cluster-role
 rules:
 - apiGroups:
@@ -222,6 +256,22 @@ rules:
   - get
   - list
   - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: runtime-component-operator
+    app.kubernetes.io/name: runtime-component-operator
+  name: metrics-auth-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: metrics-auth-role
+subjects:
+- kind: ServiceAccount
+  name: rco-controller-manager
+  namespace: runtime-component
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
