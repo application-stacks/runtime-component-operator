@@ -218,42 +218,6 @@ rules:
   - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/name: runtime-component-operator
-  name: rco-watched-metrics-auth-role
-  namespace: RUNTIME_COMPONENT_WATCH_NAMESPACE
-rules:
-- apiGroups:
-  - authentication.k8s.io
-  resources:
-  - tokenreviews
-  verbs:
-  - create
-- apiGroups:
-  - authorization.k8s.io
-  resources:
-  - subjectaccessreviews
-  verbs:
-  - create
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/name: runtime-component-operator
-  name: rco-watched-metrics-reader
-  namespace: RUNTIME_COMPONENT_WATCH_NAMESPACE
-rules:
-- nonResourceURLs:
-  - /metrics
-  verbs:
-  - get
----
-apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   labels:
@@ -286,20 +250,3 @@ subjects:
 - kind: ServiceAccount
   name: rco-controller-manager
   namespace: RUNTIME_COMPONENT_OPERATOR_NAMESPACE
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    app.kubernetes.io/instance: runtime-component-operator
-    app.kubernetes.io/name: runtime-component-operator
-  name: rco-watched-metrics-auth-rolebinding
-  namespace: RUNTIME_COMPONENT_WATCH_NAMESPACE
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: rco-watched-metrics-auth-role
-subjects:
-- kind: ServiceAccount
-  name: controller-manager
-  namespace: system
