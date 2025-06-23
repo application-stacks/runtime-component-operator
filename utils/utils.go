@@ -271,12 +271,13 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	}
 
 	// session affinity
-	if sessionAffinity := ba.GetService().GetSessionAffinity(); sessionAffinity == nil || *sessionAffinity != v1.ServiceAffinityClientIP {
-		svc.Spec.SessionAffinity = v1.ServiceAffinityNone
+	if sessionAffinity := ba.GetService().GetSessionAffinity(); sessionAffinity != nil {
+		svc.Spec.SessionAffinity = sessionAffinity.GetType()
+		svc.Spec.SessionAffinityConfig = sessionAffinity.GetConfig()
 	} else {
-		svc.Spec.SessionAffinity = v1.ServiceAffinityClientIP
+		svc.Spec.SessionAffinity = v1.ServiceAffinityNone
+		svc.Spec.SessionAffinityConfig = nil
 	}
-	svc.Spec.SessionAffinityConfig = ba.GetService().GetSessionAffinityConfig()
 }
 
 func CustomizeServiceAnnotations(svc *corev1.Service) {

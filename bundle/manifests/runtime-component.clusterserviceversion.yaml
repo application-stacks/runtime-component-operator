@@ -71,7 +71,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2025-06-17T16:45:46Z"
+    createdAt: "2025-06-23T17:18:31Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -324,15 +324,15 @@ spec:
           container.
         displayName: Environment Variables from Sources
         path: envFrom
-      - description: Setting to maintain session affinity. Must be ClientIP or None.
-          Defaults to None.
+      - description: Configure service session affinity.
         displayName: Session Affinity
         path: service.sessionAffinity
+      - description: Setting to maintain session affinity. Must be ClientIP or None.
+          Defaults to None.
+        displayName: Session Affinity Type
+        path: service.sessionAffinity.type
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Configurations of session affinity.
-        displayName: Session Affinity Config
-        path: service.sessionAffinityConfig
       - description: Represents a volume with data that is accessible to the application
           container.
         displayName: Volumes
@@ -343,6 +343,9 @@ spec:
         path: deployment.updateStrategy
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:updateStrategy
+      - description: Configurations of session affinity.
+        displayName: Config
+        path: service.sessionAffinity.config
       - description: Represents where to mount the volumes into the application container.
         displayName: Volume Mounts
         path: volumeMounts
@@ -764,19 +767,10 @@ spec:
       - description: An array of environment variables for the application container.
         displayName: Environment Variables
         path: env
-      - description: Setting to maintain session affinity. Must be ClientIP or None.
-          Defaults to None.
-        displayName: Session Affinity
-        path: service.sessionAffinity
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
       - description: List of sources to populate environment variables in the application
           container.
         displayName: Environment Variables from Sources
         path: envFrom
-      - description: Configurations of session affinity.
-        displayName: Session Affinity Config
-        path: service.sessionAffinityConfig
       - description: Represents a volume with data that is accessible to the application
           container.
         displayName: Volumes

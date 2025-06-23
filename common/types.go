@@ -134,9 +134,14 @@ type BaseComponentService interface {
 	GetCertificateSecretRef() *string
 	GetCertificate() BaseComponentCertificate
 	GetBindable() *bool
-	GetSessionAffinity() *v1.ServiceAffinity
-	GetSessionAffinityConfig() *corev1.SessionAffinityConfig
+	GetSessionAffinity() BaseComponentServiceSessionAffinity
 }
+
+type BaseComponentServiceSessionAffinity interface {
+	GetType() v1.ServiceAffinity
+	GetConfig() *corev1.SessionAffinityConfig
+}
+
 type BaseComponentCertificate interface {
 	GetAnnotations() map[string]string
 }
