@@ -758,10 +758,12 @@ func (s *RuntimeComponentService) GetSessionAffinity() common.BaseComponentServi
 	return nil
 }
 
+// GetType returns the session affinity type for the service
 func (s *RuntimeComponentServiceSessionAffinity) GetType() v1.ServiceAffinity {
 	return v1.ServiceAffinityNone
 }
 
+// GetConfig returns the session affinity configuration for the service
 func (s *RuntimeComponentServiceSessionAffinity) GetConfig() *corev1.SessionAffinityConfig {
 	return nil
 }
