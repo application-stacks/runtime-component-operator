@@ -24,6 +24,7 @@ import (
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -243,7 +244,13 @@ type RuntimeComponentService struct {
 	// Expose the application as a bindable service. Defaults to false.
 	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Bindable",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	Bindable *bool `json:"bindable,omitempty"`
+
+	// Configure service session affinity.
+	// +operator-sdk:csv:customresourcedefinitions:order=18,type=spec
+	SessionAffinity *RuntimeComponentServiceSessionAffinity `json:"sessionAffinity,omitempty"`
 }
+
+type RuntimeComponentServiceSessionAffinity struct{}
 
 // Defines the desired state and cycle of applications.
 type RuntimeComponentDeployment struct {
@@ -748,6 +755,14 @@ func (s *RuntimeComponentService) GetBindable() *bool {
 
 // GetSessionAffinity returns the session affinity setting for the service
 func (s *RuntimeComponentService) GetSessionAffinity() common.BaseComponentServiceSessionAffinity {
+	return nil
+}
+
+func (s *RuntimeComponentServiceSessionAffinity) GetType() v1.ServiceAffinity {
+	return v1.ServiceAffinityNone
+}
+
+func (s *RuntimeComponentServiceSessionAffinity) GetConfig() *corev1.SessionAffinityConfig {
 	return nil
 }
 

@@ -13271,6 +13271,9 @@ spec:
                       - port
                       type: object
                     type: array
+                  sessionAffinity:
+                    description: Configure service session affinity.
+                    type: object
                   targetPort:
                     description: The port that the operator assigns to containers
                       inside pods. Defaults to the value of spec.service.port.

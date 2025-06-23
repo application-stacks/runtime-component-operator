@@ -894,6 +894,9 @@ func (s *RuntimeComponentService) GetBindable() *bool {
 
 // GetSessionAffinity returns the session affinity settings for the service
 func (s *RuntimeComponentService) GetSessionAffinity() common.BaseComponentServiceSessionAffinity {
+	if s.SessionAffinity == nil {
+		return nil
+	}
 	return s.SessionAffinity
 }
 

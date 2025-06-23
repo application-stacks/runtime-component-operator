@@ -71,7 +71,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2025-06-23T17:18:31Z"
+    createdAt: "2025-06-23T19:28:01Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -767,6 +767,9 @@ spec:
       - description: An array of environment variables for the application container.
         displayName: Environment Variables
         path: env
+      - description: Configure service session affinity.
+        displayName: Session Affinity
+        path: service.sessionAffinity
       - description: List of sources to populate environment variables in the application
           container.
         displayName: Environment Variables from Sources
