@@ -258,6 +258,15 @@ spec:
           container.
         displayName: Environment Variables from Sources
         path: envFrom
+      - description: Configure service session affinity.
+        displayName: Session Affinity
+        path: service.sessionAffinity
+      - description: Setting to maintain session affinity. Must be ClientIP or None.
+          Defaults to None.
+        displayName: Session Affinity Type
+        path: service.sessionAffinity.type
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: Represents a volume with data that is accessible to the application
           container.
         displayName: Volumes
@@ -268,6 +277,9 @@ spec:
         path: deployment.updateStrategy
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:updateStrategy
+      - description: Configurations of session affinity.
+        displayName: Config
+        path: service.sessionAffinity.config
       - description: Represents where to mount the volumes into the application container.
         displayName: Volume Mounts
         path: volumeMounts
@@ -613,6 +625,9 @@ spec:
       - description: An array of environment variables for the application container.
         displayName: Environment Variables
         path: env
+      - description: Configure service session affinity.
+        displayName: Session Affinity
+        path: service.sessionAffinity
       - description: List of sources to populate environment variables in the application
           container.
         displayName: Environment Variables from Sources

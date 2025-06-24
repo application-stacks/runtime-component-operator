@@ -29,6 +29,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -267,6 +268,15 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 			svc.Spec.Ports = svc.Spec.Ports[:len(svc.Spec.Ports)-1]
 			numOfCurrentPorts--
 		}
+	}
+
+	// session affinity
+	if sessionAffinity := ba.GetService().GetSessionAffinity(); sessionAffinity != nil {
+		svc.Spec.SessionAffinity = sessionAffinity.GetType()
+		svc.Spec.SessionAffinityConfig = sessionAffinity.GetConfig()
+	} else {
+		svc.Spec.SessionAffinity = v1.ServiceAffinityNone
+		svc.Spec.SessionAffinityConfig = nil
 	}
 }
 
