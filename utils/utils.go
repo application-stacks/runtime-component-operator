@@ -1626,12 +1626,24 @@ func (r *ReconcilerBase) toJSONFromRaw(content *runtime.RawExtension) (map[strin
 
 // Looks for a pull secret in the service account retrieved from the component
 // Returns nil if there is at least one image pull secret, otherwise an error
+// Will always return nil if 'skipPullSecretValidation' is specified in the CR
 func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Client) error {
 	obj := ba.(metav1.Object)
 	ns := obj.GetNamespace()
 	saName := obj.GetName()
-	if name := GetServiceAccountName(ba); name != "" {
+	name := GetServiceAccountName(ba)
+	if name != "" {
 		saName = name
+	}
+
+	// Skip the check if a custom SA is specified, and SkipPullSecretValidation is in the CR
+	if name != "" {
+		if basa := ba.GetServiceAccount(); basa != nil {
+			if vs := basa.GetSkipPullSecretValidation(); vs != nil && *vs == true {
+				log.V(common.LogLevelDebug).Info("Skipping service account pull secret validation")
+				return nil
+			}
+		}
 	}
 
 	sa := &corev1.ServiceAccount{}

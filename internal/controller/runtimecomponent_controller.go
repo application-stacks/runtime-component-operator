@@ -257,13 +257,9 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Check if the ServiceAccount has a valid pull secret before creating the deployment/statefulset
 	// or setting up knative. Otherwise the pods can go into an ImagePullBackOff loop
-	if instance.Spec.SkipPullSecretValidation == nil || !*instance.Spec.SkipPullSecretValidation {
-		saErr := appstacksutils.ServiceAccountPullSecretExists(instance, r.GetClient())
-		if saErr != nil {
-			return r.ManageError(saErr, common.StatusConditionTypeReconciled, instance)
-		}
-	} else {
-		reqLogger.V(common.LogLevelDebug).Info("Skipping service account pull secret validation")
+	saErr := appstacksutils.ServiceAccountPullSecretExists(instance, r.GetClient())
+	if saErr != nil {
+		return r.ManageError(saErr, common.StatusConditionTypeReconciled, instance)
 	}
 
 	if instance.Spec.CreateKnativeService != nil && *instance.Spec.CreateKnativeService {
