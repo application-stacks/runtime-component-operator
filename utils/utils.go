@@ -1647,11 +1647,8 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 	ba.GetStatus().SetReference(common.StatusReferenceSAResourceVersion, sa.ResourceVersion)
 
 	// Skip the pull secret check if a custom SA is specified, and SkipPullSecretValidation is in the CR
-	log.V(common.LogLevelDebug).Info("name is  " + name)
 	if name != "" {
-		log.V(common.LogLevelDebug).Info("name is  def " + name)
 		if basa := ba.GetServiceAccount(); basa != nil {
-			log.V(common.LogLevelDebug).Info("got SA struct")
 			if vs := basa.GetSkipPullSecretValidation(); vs != nil && *vs == true {
 				log.V(common.LogLevelDebug).Info("Skipping service account pull secret validation")
 				return nil
