@@ -1636,9 +1636,22 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 		saName = name
 	}
 
-	// Skip the check if a custom SA is specified, and SkipPullSecretValidation is in the CR
+	sa := &corev1.ServiceAccount{}
+	getErr := client.Get(context.TODO(), types.NamespacedName{Name: saName, Namespace: ns}, sa)
+	if getErr != nil {
+		return getErr
+	}
+
+	// Set a reference in the CR to the service account version. This is done here as
+	// the service account has been retrieved whether it is ours or a user provided one
+	ba.GetStatus().SetReference(common.StatusReferenceSAResourceVersion, sa.ResourceVersion)
+
+	// Skip the pull secret check if a custom SA is specified, and SkipPullSecretValidation is in the CR
+	log.V(common.LogLevelDebug).Info("name is  " + name)
 	if name != "" {
+		log.V(common.LogLevelDebug).Info("name is  def " + name)
 		if basa := ba.GetServiceAccount(); basa != nil {
+			log.V(common.LogLevelDebug).Info("got SA struct")
 			if vs := basa.GetSkipPullSecretValidation(); vs != nil && *vs == true {
 				log.V(common.LogLevelDebug).Info("Skipping service account pull secret validation")
 				return nil
@@ -1646,11 +1659,7 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 		}
 	}
 
-	sa := &corev1.ServiceAccount{}
-	getErr := client.Get(context.TODO(), types.NamespacedName{Name: saName, Namespace: ns}, sa)
-	if getErr != nil {
-		return getErr
-	}
+	log.V(common.LogLevelDebug).Info("doing service account pull secret validation")
 	secrets := sa.ImagePullSecrets
 	if len(secrets) > 0 {
 		// if this is our service account there will be one image pull secret
@@ -1662,10 +1671,6 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 			return saErr
 		}
 	}
-
-	// Set a reference in the CR to the service account version. This is done here as
-	// the service account has been retrieved whether it is ours or a user provided one
-	ba.GetStatus().SetReference(common.StatusReferenceSAResourceVersion, sa.ResourceVersion)
 
 	return nil
 }
