@@ -1222,27 +1222,67 @@ func (s *RuntimeComponentStatus) GetCondition(t common.StatusConditionType) comm
 
 // SetCondition sets status condition
 func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
-		condition := &StatusCondition{}
-	found := false
+	var readyCondition *StatusCondition
+	var existingCondition *StatusCondition
+
 	for i := range s.Conditions {
 		if s.Conditions[i].GetType() == c.GetType() {
-			condition = &s.Conditions[i]
-			found = true
-			break
+			existingCondition = &s.Conditions[i]
+		} else if s.Conditions[i].GetType() == common.StatusConditionTypeReady {
+			readyCondition = &s.Conditions[i]
 		}
 	}
 
-	if condition.GetStatus() != c.GetStatus() || condition.GetMessage() != c.GetMessage() || condition.GetReason() != c.GetReason() {
-		condition.SetLastTransitionTime(&metav1.Time{Time: time.Now()})
+	var updatedCondition *StatusCondition
+	if existingCondition != nil {
+		updatedCondition = existingCondition
+		if updatedCondition.GetStatus() != c.GetStatus() || updatedCondition.GetMessage() != c.GetMessage() || updatedCondition.GetReason() != c.GetReason() {
+			updatedCondition.SetLastTransitionTime(&metav1.Time{Time: time.Now()})
+		}
+	} else {
+		updatedCondition = &StatusCondition{}
+		updatedCondition.SetLastTransitionTime(&metav1.Time{Time: time.Now()})
 	}
 
-	condition.SetReason(c.GetReason())
-	condition.SetMessage(c.GetMessage())
-	condition.SetStatus(c.GetStatus())
-	condition.SetType(c.GetType())
-	if !found {
-		s.Conditions = append(s.Conditions, *condition)
+	updatedCondition.SetReason(c.GetReason())
+	updatedCondition.SetMessage(c.GetMessage())
+	updatedCondition.SetStatus(c.GetStatus())
+	updatedCondition.SetType(c.GetType())
+
+	if readyCondition == nil && c.GetType() != common.StatusConditionTypeReady {
+		readyCondition = &StatusCondition{}
+		readyCondition.SetType(common.StatusConditionTypeReady)
+		readyCondition.SetStatus(corev1.ConditionFalse)
+		readyCondition.SetReason("Reconciling")
+		readyCondition.SetMessage("Application status is being reconciled")
+		readyCondition.SetLastTransitionTime(&metav1.Time{Time: time.Now()})
 	}
+
+	newConditions := make([]StatusCondition, 0, len(s.Conditions)+1)
+
+	if c.GetType() == common.StatusConditionTypeReady {
+		newConditions = append(newConditions, *updatedCondition)
+
+		for i := range s.Conditions {
+			if s.Conditions[i].GetType() != common.StatusConditionTypeReady {
+				newConditions = append(newConditions, s.Conditions[i])
+			}
+		}
+	} else {
+		if readyCondition != nil {
+			newConditions = append(newConditions, *readyCondition)
+		}
+
+		newConditions = append(newConditions, *updatedCondition)
+
+		for i := range s.Conditions {
+			if s.Conditions[i].GetType() != common.StatusConditionTypeReady && s.Conditions[i].GetType() != c.GetType() {
+				newConditions = append(newConditions, s.Conditions[i])
+			}
+		}
+	}
+
+	s.Conditions = newConditions
 }
 
 func (s *RuntimeComponentStatus) UnsetCondition(c common.StatusCondition) {
