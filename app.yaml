@@ -1,0 +1,22 @@
+apiVersion: rc.app.stacks/v1
+kind: RuntimeComponent
+metadata:
+  name: app
+  namespace: rco-test
+spec:
+  applicationImage: docker.io/library/nginx:latest
+  replicas: 1
+  expose: false
+  manageTLS: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+  service:
+    port: 80
+    type: ClusterIP
+  volumes:
+    - name: nginx-cache
+      emptyDir: {}
+  volumeMounts:
+    - name: nginx-cache
+      mountPath: /var/cache/nginx

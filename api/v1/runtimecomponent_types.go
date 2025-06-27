@@ -1222,7 +1222,7 @@ func (s *RuntimeComponentStatus) GetCondition(t common.StatusConditionType) comm
 
 // SetCondition sets status condition
 func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
-	condition := &StatusCondition{}
+		condition := &StatusCondition{}
 	found := false
 	for i := range s.Conditions {
 		if s.Conditions[i].GetType() == c.GetType() {
