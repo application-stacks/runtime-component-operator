@@ -279,6 +279,65 @@ func updateReconcileInterval(maxSeconds int, s common.BaseComponentStatus, ba co
 	return time.Duration(newInterval) * time.Second
 }
 
+func (r *ReconcilerBase) ensureReadyExists(ba common.BaseComponent) {
+	status := ba.GetStatus()
+
+	readyExists := false
+	for _, condition := range status.GetConditions() {
+		if condition.GetType() == common.StatusConditionTypeReady {
+			readyExists = true
+			break
+		}
+	}
+
+	if !readyExists {
+		readyCondition := status.NewCondition(common.StatusConditionTypeReady)
+		readyCondition.SetStatus(corev1.ConditionFalse)
+		readyCondition.SetReason("Reconciling")
+		readyCondition.SetMessage("Application is being reconciled")
+		readyCondition.SetLastTransitionTime(&metav1.Time{Time: time.Now()})
+		status.SetCondition(readyCondition)
+	}
+}
+
+func (r *ReconcilerBase) sanitizeReadyFirst(ba common.BaseComponent) {
+	status := ba.GetStatus()
+	conditions := status.GetConditions()
+
+	if len(conditions) <= 1 {
+		return
+	}
+
+	var readyCondition common.StatusCondition
+	readyIndex := -1
+
+	for i, condition := range conditions {
+		if condition.GetType() == common.StatusConditionTypeReady {
+			readyCondition = condition
+			readyIndex = i
+			break
+		}
+	}
+
+	if readyIndex > 0 {
+
+		rcs, ok := status.(*v1.RuntimeComponentStatus)
+		if ok {
+			ready := rcs.Conditions[readyIndex]
+			newConditions := make([]v1.StatusCondition, len(rcs.Conditions))
+			newConditions[0] = ready
+
+			copy(newConditions[1:readyIndex+1], rcs.Conditions[:readyIndex])
+
+			if readyIndex < len(rcs.Conditions)-1 {
+				copy(newConditions[readyIndex+1:], rcs.Conditions[readyIndex+1:])
+			}
+
+			rcs.Conditions = newConditions
+		}
+	}
+}
+
 // ManageError ...
 func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
 	s := ba.GetStatus()
@@ -326,9 +385,12 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 		retryInterval = updateReconcileInterval(maxSeconds, s, ba)
 	}
 
+	// Ensure Ready condition exists before updating status
+	r.ensureReadyExists(ba)
+	r.sanitizeReadyFirst(ba)
+
 	err := r.UpdateStatus(obj)
 	if err != nil {
-
 		if apierrors.IsConflict(issue) {
 			return reconcile.Result{Requeue: true}, nil
 		}
@@ -340,7 +402,6 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 	}
 
 	return reconcile.Result{
-		//RequeueAfter: time.Duration(math.Min(float64(retryInterval.Nanoseconds()*2), float64(time.Hour.Nanoseconds()*6))),
 		RequeueAfter: retryInterval,
 		Requeue:      true,
 	}, nil
@@ -383,6 +444,10 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 			retryInterval = updateReconcileInterval(maxSeconds, s, ba)
 		}
 	}
+
+	// Ensure Ready condition exists before updating status
+	r.ensureReadyExists(ba)
+	r.sanitizeReadyFirst(ba)
 
 	err := r.UpdateStatus(ba.(client.Object))
 	if err != nil {
@@ -746,7 +811,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, "*."+bao.GetName()+"-headless")
 			}
 			svcCert.Spec.IsCA = false
-			svcCert.Spec.IssuerRef = certmanagermetav1.ObjectReference{
+			svcCert.Spec.IssuerRef = certmanagervetav1.ObjectReference{
 				Name: prefix + "-ca-issuer",
 			}
 			if customIssuerFound {
