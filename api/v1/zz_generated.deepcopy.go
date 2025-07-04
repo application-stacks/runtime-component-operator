@@ -407,6 +407,11 @@ func (in *RuntimeComponentService) DeepCopyInto(out *RuntimeComponentService) {
 			(*out)[key] = val
 		}
 	}
+	if in.DisableAnnotations != nil {
+		in, out := &in.DisableAnnotations, &out.DisableAnnotations
+		*out = new(bool)
+		**out = **in
+	}
 	if in.TargetPort != nil {
 		in, out := &in.TargetPort, &out.TargetPort
 		*out = new(int32)

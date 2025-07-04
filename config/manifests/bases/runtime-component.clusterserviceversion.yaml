@@ -217,16 +217,26 @@ spec:
         path: service.certificate.annotations
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Removes default annotations added to the service. Defaults to
+          false.
+        displayName: Disable Annotations
+        path: service.disableAnnotations
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - displayName: StatefulSet
+        path: statefulSet
+      - displayName: Service
+        path: service
       - description: The port that the operator assigns to containers inside pods.
           Defaults to the value of .spec.service.port.
         displayName: Target Port
         path: service.targetPort
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
-      - displayName: StatefulSet
-        path: statefulSet
-      - displayName: Service
-        path: service
+      - displayName: Network Policy
+        path: networkPolicy
+      - displayName: Route
+        path: route
       - description: 'A name of a secret that already contains TLS key, certificate
           and CA to be mounted in the pod. The following keys are valid in the secret:
           ca.crt, tls.crt, and tls.key.'
@@ -234,30 +244,26 @@ spec:
         path: service.certificateSecretRef
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - displayName: Network Policy
-        path: networkPolicy
-      - displayName: Route
-        path: route
+      - displayName: Monitoring
+        path: monitoring
       - description: Configure service certificate.
         displayName: Service Certificate
         path: service.certificate
-      - displayName: Monitoring
-        path: monitoring
-      - description: An array consisting of service ports.
-        displayName: Ports
-        path: service.ports
       - description: An array of environment variables for the application container.
         displayName: Environment Variables
         path: env
+      - description: An array consisting of service ports.
+        displayName: Ports
+        path: service.ports
+      - description: List of sources to populate environment variables in the application
+          container.
+        displayName: Environment Variables from Sources
+        path: envFrom
       - description: Expose the application as a bindable service. Defaults to false.
         displayName: Bindable
         path: service.bindable
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: List of sources to populate environment variables in the application
-          container.
-        displayName: Environment Variables from Sources
-        path: envFrom
       - description: Configure service session affinity.
         displayName: Session Affinity
         path: service.sessionAffinity

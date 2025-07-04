@@ -705,6 +705,11 @@ func (s *RuntimeComponentService) GetAnnotations() map[string]string {
 	return s.Annotations
 }
 
+// GetDisableAnnotations returns true if default annotations should be removed from the service
+func (s *RuntimeComponentService) GetDisableAnnotations() bool {
+	return false
+}
+
 // GetPort returns service port
 func (s *RuntimeComponentService) GetPort() int32 {
 	return s.Port

@@ -276,31 +276,35 @@ type RuntimeComponentService struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=13,type=spec,displayName="Service Annotations",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Annotations map[string]string `json:"annotations,omitempty"`
 
+	// Removes default annotations added to the service. Defaults to false.
+	// +operator-sdk:csv:customresourcedefinitions:order=14,type=spec,displayName="Disable Annotations",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	DisableAnnotations *bool `json:"disableAnnotations,omitempty"`
+
 	// The port that the operator assigns to containers inside pods. Defaults to the value of .spec.service.port.
 	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:validation:Minimum=1
-	// +operator-sdk:csv:customresourcedefinitions:order=14,type=spec,displayName="Target Port",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
+	// +operator-sdk:csv:customresourcedefinitions:order=15,type=spec,displayName="Target Port",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
 	TargetPort *int32 `json:"targetPort,omitempty"`
 
 	// A name of a secret that already contains TLS key, certificate and CA to be mounted in the pod. The following keys are valid in the secret: ca.crt, tls.crt, and tls.key.
 	// +k8s:openapi-gen=true
-	// +operator-sdk:csv:customresourcedefinitions:order=15,type=spec,displayName="Certificate Secret Reference",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec,displayName="Certificate Secret Reference",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	CertificateSecretRef *string `json:"certificateSecretRef,omitempty"`
 
 	// Configure service certificate.
-	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec,displayName="Service Certificate"
+	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Service Certificate"
 	Certificate *RuntimeComponentCertificate `json:"certificate,omitempty"`
 
 	// An array consisting of service ports.
-	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec
+	// +operator-sdk:csv:customresourcedefinitions:order=18,type=spec
 	Ports []corev1.ServicePort `json:"ports,omitempty"`
 
 	// Expose the application as a bindable service. Defaults to false.
-	// +operator-sdk:csv:customresourcedefinitions:order=18,type=spec,displayName="Bindable",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	// +operator-sdk:csv:customresourcedefinitions:order=19,type=spec,displayName="Bindable",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	Bindable *bool `json:"bindable,omitempty"`
 
 	// Configure service session affinity.
-	// +operator-sdk:csv:customresourcedefinitions:order=19,type=spec
+	// +operator-sdk:csv:customresourcedefinitions:order=20,type=spec
 	SessionAffinity *RuntimeComponentServiceSessionAffinity `json:"sessionAffinity,omitempty"`
 }
 
@@ -839,6 +843,14 @@ func (s *RuntimeComponentStorage) GetVolumeClaimTemplate() *corev1.PersistentVol
 // GetAnnotations returns a set of annotations to be added to the service
 func (s *RuntimeComponentService) GetAnnotations() map[string]string {
 	return s.Annotations
+}
+
+// GetDisableAnnotations returns true if default annotations should be removed from the service
+func (s *RuntimeComponentService) GetDisableAnnotations() bool {
+	if s.DisableAnnotations == nil {
+		return false
+	}
+	return *s.DisableAnnotations
 }
 
 // GetPort returns service port

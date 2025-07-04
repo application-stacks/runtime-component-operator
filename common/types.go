@@ -131,6 +131,7 @@ type BaseComponentService interface {
 	GetNodePort() *int32
 	GetPorts() []corev1.ServicePort
 	GetAnnotations() map[string]string
+	GetDisableAnnotations() bool
 	GetCertificateSecretRef() *string
 	GetCertificate() BaseComponentCertificate
 	GetBindable() *bool

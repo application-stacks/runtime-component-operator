@@ -4640,6 +4640,10 @@ spec:
                       certificate and CA to be mounted in the pod. The following keys
                       are valid in the secret: ca.crt, tls.crt, and tls.key.'
                     type: string
+                  disableAnnotations:
+                    description: Removes default annotations added to the service.
+                      Defaults to false.
+                    type: boolean
                   nodePort:
                     description: Node proxies this port into your service.
                     format: int32
