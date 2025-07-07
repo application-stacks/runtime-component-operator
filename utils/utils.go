@@ -27,7 +27,7 @@ import (
 
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -1022,16 +1022,48 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	}
 }
 
-// CustomizeHPA ...
-func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseComponent) {
+// CustomizeHPA for autoscaling/v2
+func CustomizeHPA(hpa *autoscalingv2.HorizontalPodAutoscaler, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	hpa.Labels = ba.GetLabels()
 	hpa.Annotations = MergeMaps(hpa.Annotations, ba.GetAnnotations())
 
 	hpa.Spec.MaxReplicas = ba.GetAutoscaling().GetMaxReplicas()
 	hpa.Spec.MinReplicas = ba.GetAutoscaling().GetMinReplicas()
-	hpa.Spec.TargetCPUUtilizationPercentage = ba.GetAutoscaling().GetTargetCPUUtilizationPercentage()
+	hpa.Spec.Behavior = ba.GetAutoscaling().GetHorizontalPodAutoscalerBehavior()
 
+	var metricsList []autoscalingv2.MetricSpec
+
+	cpuPer := ba.GetAutoscaling().GetTargetCPUUtilizationPercentage()
+	if cpuPer != nil {
+		metricSpec := autoscalingv2.MetricSpec{
+			Type: autoscalingv2.ResourceMetricSourceType,
+			Resource: &autoscalingv2.ResourceMetricSource{
+				Name:   corev1.ResourceCPU,
+				Target: autoscalingv2.MetricTarget{Type: autoscalingv2.UtilizationMetricType, AverageUtilization: cpuPer},
+			},
+		}
+		metricsList = append(metricsList, metricSpec)
+	}
+
+	memPer := ba.GetAutoscaling().GetTargetMemoryUtilizationPercentage()
+	if memPer != nil {
+		metricSpec := autoscalingv2.MetricSpec{
+			Type: autoscalingv2.ResourceMetricSourceType,
+			Resource: &autoscalingv2.ResourceMetricSource{
+				Name:   corev1.ResourceMemory,
+				Target: autoscalingv2.MetricTarget{Type: autoscalingv2.UtilizationMetricType, AverageUtilization: memPer},
+			},
+		}
+		metricsList = append(metricsList, metricSpec)
+	}
+	metrics := ba.GetAutoscaling().GetMetrics()
+
+	if metrics != nil {
+		metricsList = append(metricsList, metrics...)
+	}
+
+	hpa.Spec.Metrics = metricsList
 	hpa.Spec.ScaleTargetRef.Name = obj.GetName()
 	hpa.Spec.ScaleTargetRef.APIVersion = "apps/v1"
 
