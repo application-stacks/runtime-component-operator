@@ -1615,6 +1615,8 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 	ba.GetStatus().SetReference(common.StatusReferenceSAResourceVersion, sa.ResourceVersion)
 
 	// Skip the pull secret check if a custom SA is specified, and SkipPullSecretValidation is in the CR
+	log.Info("got the " + name)
+	log.Error(nil, "error name")
 	if name != "" {
 		log.Info("name was " + name)
 		if basa := ba.GetServiceAccount(); basa != nil {
@@ -1641,7 +1643,7 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 		sName := secrets[0].Name
 		err := client.Get(context.TODO(), types.NamespacedName{Name: sName, Namespace: ns}, &corev1.Secret{})
 		if err != nil {
-			saErr := errors.New("Service account " + saName + " isn't ready. Reason: " + err.Error())
+			saErr := errors.New("we checked the Service account and it isn't ready: " + saName + " isn't ready. Reason: " + err.Error())
 			return saErr
 		}
 	}
