@@ -68,15 +68,19 @@ func init() {
 }
 
 func main() {
-	//var metricsAddr string
+	var metricsAddr string
 	var enableLeaderElection bool
-	//flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	var probeAddr string
 
+	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
+		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
+
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+
 	flag.Parse()
 
 	utils.CreateConfigMap(controller.OperatorName)
@@ -98,11 +102,13 @@ func main() {
 			"the manager will watch and manage resources in all Namespaces")
 	}
 
+	metricsServerOptions := metricsserver.Options{
+		BindAddress: metricsAddr,
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme: scheme,
-		Metrics: metricsserver.Options{
-			BindAddress: "0",
-		},
+		Scheme:  scheme,
+		Metrics: metricsServerOptions,
 		WebhookServer: &webhook.DefaultServer{
 			Options: webhook.Options{
 				Port: 9443,
