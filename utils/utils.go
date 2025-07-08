@@ -1592,13 +1592,16 @@ func (r *ReconcilerBase) toJSONFromRaw(content *runtime.RawExtension) (map[strin
 	return data, nil
 }
 
-// Looks for a pull secret in the service account retrieved from the component
-// Returns nil if there is at least one image pull secret, otherwise an error
+// If the service account specifies a pull secret,
+// check that the pull secret actually exists. Returns an error if a
+// non-existent secret is specified, otherwise nil.
+// The check is skipped (and nil returned) if the cr specifies SkipPullSecretValidation
 func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Client) error {
 	obj := ba.(metav1.Object)
 	ns := obj.GetNamespace()
 	saName := obj.GetName()
-	if name := GetServiceAccountName(ba); name != "" {
+	name := GetServiceAccountName(ba)
+	if name != "" {
 		saName = name
 	}
 
@@ -1607,6 +1610,22 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 	if getErr != nil {
 		return getErr
 	}
+
+	// Set a reference in the CR to the service account version. This is done here as
+	// the service account has been retrieved whether it is ours or a user provided one
+	ba.GetStatus().SetReference(common.StatusReferenceSAResourceVersion, sa.ResourceVersion)
+
+	// Skip the pull secret check if a custom SA is specified, and SkipPullSecretValidation is in the CR
+	if name != "" {
+		if basa := ba.GetServiceAccount(); basa != nil {
+			if vs := basa.GetSkipPullSecretValidation(); vs != nil && *vs == true {
+				log.V(common.LogLevelDebug).Info("Skipping service account pull secret validation")
+				return nil
+			}
+		}
+	}
+
+	log.V(common.LogLevelDebug).Info("doing service account pull secret validation")
 	secrets := sa.ImagePullSecrets
 	if len(secrets) > 0 {
 		// if this is our service account there will be one image pull secret
@@ -1618,10 +1637,6 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 			return saErr
 		}
 	}
-
-	// Set a reference in the CR to the service account version. This is done here as
-	// the service account has been retrieved whether it is ours or a user provided one
-	ba.GetStatus().SetReference(common.StatusReferenceSAResourceVersion, sa.ResourceVersion)
 
 	return nil
 }

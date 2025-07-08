@@ -205,6 +205,7 @@ type BaseComponentProbes interface {
 type BaseComponentServiceAccount interface {
 	GetMountToken() *bool
 	GetName() *string
+	GetSkipPullSecretValidation() *bool
 }
 
 type BaseComponentTopologySpreadConstraints interface {
