@@ -1223,62 +1223,26 @@ func (s *RuntimeComponentStatus) GetCondition(t common.StatusConditionType) comm
 // SetCondition sets status condition
 func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
     condition := &StatusCondition{}
-    found := false
-    readyUpdated := c.GetType() == common.StatusConditionTypeReady
-    
-    for i := range s.Conditions {
-        if s.Conditions[i].GetType() == c.GetType() {
-            condition = &s.Conditions[i]
-            found = true
-            break
-        }
-    }
+	found := false
+	for i := range s.Conditions {
+		if s.Conditions[i].GetType() == c.GetType() {
+			condition = &s.Conditions[i]
+			found = true
+			break
+		}
+	}
 
-    if condition.GetStatus() != c.GetStatus() || condition.GetMessage() != c.GetMessage() || condition.GetReason() != c.GetReason() {
-        condition.SetLastTransitionTime(&metav1.Time{Time: time.Now()})
-    }
+	if condition.GetStatus() != c.GetStatus() || condition.GetMessage() != c.GetMessage() || condition.GetReason() != c.GetReason() {
+		condition.SetLastTransitionTime(&metav1.Time{Time: time.Now()})
+	}
 
-    condition.SetReason(c.GetReason())
-    condition.SetMessage(c.GetMessage())
-    condition.SetStatus(c.GetStatus())
-    condition.SetType(c.GetType())
-
-    if !found {
-        if readyUpdated {
-            // New Ready condition - prepend it
-            s.Conditions = append([]StatusCondition{*condition}, s.Conditions...)
-        } else {
-            // New non-Ready condition - append it
-            s.Conditions = append(s.Conditions, *condition)
-        }
-    } else if readyUpdated && len(s.Conditions) > 1 {
-        // Existing Ready condition was updated - move it to front
-        // First, find the Ready condition index
-        readyIndex := -1
-        for i := range s.Conditions {
-            if s.Conditions[i].GetType() == common.StatusConditionTypeReady {
-                readyIndex = i
-                break
-            }
-        }
-        
-        // Only reorder if Ready isn't already first
-        if readyIndex > 0 {
-            // Create a new slice with Ready first
-            newConditions := make([]StatusCondition, len(s.Conditions))
-            newConditions[0] = s.Conditions[readyIndex]
-            
-            // Copy conditions before Ready
-            copy(newConditions[1:readyIndex+1], s.Conditions[:readyIndex])
-            
-            // Copy conditions after Ready
-            if readyIndex < len(s.Conditions)-1 {
-                copy(newConditions[readyIndex+1:], s.Conditions[readyIndex+1:])
-            }
-            
-            s.Conditions = newConditions
-        }
-    }
+	condition.SetReason(c.GetReason())
+	condition.SetMessage(c.GetMessage())
+	condition.SetStatus(c.GetStatus())
+	condition.SetType(c.GetType())
+	if !found {
+		s.Conditions = append(s.Conditions, *condition)
+	}
 }
 
 func (s *RuntimeComponentStatus) UnsetCondition(c common.StatusCondition) {

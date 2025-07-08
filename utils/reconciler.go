@@ -308,12 +308,12 @@ func (r *ReconcilerBase) sanitizeReadyFirst(ba common.BaseComponent) {
 		return
 	}
 
-	var readyCondition common.StatusCondition
+	var ready common.StatusCondition
 	readyIndex := -1
 
 	for i, condition := range conditions {
 		if condition.GetType() == common.StatusConditionTypeReady {
-			readyCondition = condition
+			ready = condition
 			readyIndex = i
 			break
 		}
@@ -335,6 +335,8 @@ func (r *ReconcilerBase) sanitizeReadyFirst(ba common.BaseComponent) {
 
 			rcs.Conditions = newConditions
 		}
+		status.UnsetCondition(ready)
+		status.SetCondition(ready)
 	}
 }
 
