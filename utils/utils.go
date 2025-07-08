@@ -1592,9 +1592,10 @@ func (r *ReconcilerBase) toJSONFromRaw(content *runtime.RawExtension) (map[strin
 	return data, nil
 }
 
-// Looks for a pull secret in the service account retrieved from the component
-// Returns nil if there is at least one image pull secret, otherwise an error
-// Will always return nil if 'skipPullSecretValidation' is specified in the CR
+// If the service account specifies a pull secret,
+// check that the pull secret actually exists. Returns an error if a
+// non-existent secret is specified, otherwise nil.
+// The check is skipped (and nil returned) if the cr specifies SkipPullSecretValidation
 func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Client) error {
 	obj := ba.(metav1.Object)
 	ns := obj.GetNamespace()
