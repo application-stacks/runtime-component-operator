@@ -12,6 +12,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 
 	"github.com/application-stacks/runtime-component-operator/common"
+	v1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	certmanagerv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	certmanagermetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -302,42 +303,26 @@ func (r *ReconcilerBase) ensureReadyExists(ba common.BaseComponent) {
 
 func (r *ReconcilerBase) sanitizeReadyFirst(ba common.BaseComponent) {
 	status := ba.GetStatus()
-	conditions := status.GetConditions()
-
-	if len(conditions) <= 1 {
+	rcs, ok := status.(*v1.RuntimeComponentStatus)
+	if !ok || len(rcs.Conditions) <= 1 {
 		return
 	}
 
-	var ready common.StatusCondition
-	readyIndex := -1
-
-	for i, condition := range conditions {
-		if condition.GetType() == common.StatusConditionTypeReady {
-			ready = condition
-			readyIndex = i
-			break
+	var ready v1.StatusCondition
+	var others []v1.StatusCondition
+	for _, c := range rcs.Conditions {
+		if c.GetType() == common.StatusConditionTypeReady {
+			ready = c
+		} else {
+			others = append(others, c)
 		}
 	}
 
-	if readyIndex > 0 {
+	if ready.GetType() == "" || rcs.Conditions[0].GetType() == common.StatusConditionTypeReady {
+        return
+    }
 
-		rcs, ok := status.(*v1.RuntimeComponentStatus)
-		if ok {
-			ready := rcs.Conditions[readyIndex]
-			newConditions := make([]v1.StatusCondition, len(rcs.Conditions))
-			newConditions[0] = ready
-
-			copy(newConditions[1:readyIndex+1], rcs.Conditions[:readyIndex])
-
-			if readyIndex < len(rcs.Conditions)-1 {
-				copy(newConditions[readyIndex+1:], rcs.Conditions[readyIndex+1:])
-			}
-
-			rcs.Conditions = newConditions
-		}
-		status.UnsetCondition(ready)
-		status.SetCondition(ready)
-	}
+	rcs.Conditions = append([]v1.StatusCondition{ready}, others...)
 }
 
 // ManageError ...
@@ -813,7 +798,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 				svcCert.Spec.DNSNames = append(svcCert.Spec.DNSNames, "*."+bao.GetName()+"-headless")
 			}
 			svcCert.Spec.IsCA = false
-			svcCert.Spec.IssuerRef = certmanagervetav1.ObjectReference{
+			svcCert.Spec.IssuerRef = certmanagermetav1.ObjectReference{
 				Name: prefix + "-ca-issuer",
 			}
 			if customIssuerFound {
