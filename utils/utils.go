@@ -1616,21 +1616,12 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 
 	// Skip the pull secret check if a custom SA is specified, and SkipPullSecretValidation is in the CR
 	if name != "" {
-		log.Info("name was " + name)
 		if basa := ba.GetServiceAccount(); basa != nil {
-			log.Info("basa was not nil")
 			if vs := basa.GetSkipPullSecretValidation(); vs != nil && *vs == true {
-				log.Info("we should skip")
 				log.V(common.LogLevelDebug).Info("Skipping service account pull secret validation")
 				return nil
-			} else {
-				log.Info("no skip specified")
 			}
-		} else {
-			log.Info("basa was nil")
 		}
-	} else {
-		log.Info("name empty")
 	}
 
 	log.V(common.LogLevelDebug).Info("doing service account pull secret validation")
