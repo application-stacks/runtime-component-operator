@@ -80,6 +80,17 @@ containerize:
 
     # instruct bash to exit if any command fails
     set -e
+
+    echo dir is $(pwd)
+    ls
+
+    printf "\nAnd files from the parent are:"
+    ls ..
+    
+    printf "\nAnd does rco exist?"
+    ls ../runtime-component-operator
+
+    exit 1
     
     ./operators/scripts/pipeline/containerize-stage.sh
 
