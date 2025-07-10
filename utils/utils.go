@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -45,10 +46,41 @@ const RCOOperandVersion = "1.4.4"
 
 var APIVersionNotFoundError = errors.New("APIVersion is not available")
 
+func AnnotationsEqual(a1, a2 map[string]string) bool {
+	if a1 == nil && a2 == nil {
+		return true
+	}
+	if a1 == nil {
+		return false
+	}
+	if a2 == nil {
+		return false
+	}
+	if len(a1) != len(a2) {
+		return false
+	}
+	for k1, v1 := range a1 {
+		if a2[k1] != v1 {
+			return false
+		}
+	}
+	return true
+}
+
+func FilterMapByKeys(values map[string]string, keys []string) map[string]string {
+	for k := range values {
+		if !slices.Contains(keys, k) {
+			delete(values, k)
+		}
+	}
+	return values
+}
+
 // CustomizeDeployment ...
 func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	deploy.Labels = ba.GetLabels()
+	deploy.Annotations = common.DeleteMissingTrackedAnnotations(deploy.Annotations, ba, common.StatusTrackedAnnotationTypeDeployment)
 	deploy.Annotations = MergeMaps(deploy.Annotations, ba.GetAnnotations())
 
 	if ba.GetAutoscaling() == nil {
@@ -79,6 +111,7 @@ func CustomizeDeployment(deploy *appsv1.Deployment, ba common.BaseComponent) {
 func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	statefulSet.Labels = ba.GetLabels()
+	statefulSet.Annotations = common.DeleteMissingTrackedAnnotations(statefulSet.Annotations, ba, common.StatusTrackedAnnotationTypeStatefulSet)
 	statefulSet.Annotations = MergeMaps(statefulSet.Annotations, ba.GetAnnotations())
 
 	if ba.GetAutoscaling() == nil {
@@ -110,6 +143,7 @@ func CustomizeStatefulSet(statefulSet *appsv1.StatefulSet, ba common.BaseCompone
 func CustomizeRoute(route *routev1.Route, ba common.BaseComponent, key string, crt string, ca string, destCACert string) {
 	obj := ba.(metav1.Object)
 	route.Labels = ba.GetLabels()
+	route.Annotations = common.DeleteMissingTrackedAnnotations(route.Annotations, ba, common.StatusTrackedAnnotationTypeRoute)
 	route.Annotations = MergeMaps(route.Annotations, ba.GetAnnotations())
 
 	if ba.GetRoute() != nil {
@@ -198,6 +232,7 @@ func ErrorIsNoMatchesForKind(err error, kind string, version string) bool {
 func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	svc.Labels = ba.GetLabels()
+	svc.Annotations = common.DeleteMissingTrackedAnnotations(svc.Annotations, ba, common.StatusTrackedAnnotationTypeService)
 	CustomizeServiceAnnotations(svc)
 	svc.Annotations = MergeMaps(svc.Annotations, ba.GetAnnotations())
 
@@ -344,6 +379,7 @@ func customizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	networkPolicy.Labels = ba.GetLabels()
+	networkPolicy.Annotations = common.DeleteMissingTrackedAnnotations(networkPolicy.Annotations, ba, common.StatusTrackedAnnotationTypeNetworkPolicy)
 	networkPolicy.Annotations = MergeMaps(networkPolicy.Annotations, ba.GetAnnotations())
 
 	networkPolicy.Spec.PolicyTypes = []networkingv1.PolicyType{networkingv1.PolicyTypeIngress}
@@ -649,6 +685,7 @@ func customizeAffinityArchitectures(affinity *corev1.Affinity, affinityConfig co
 func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	pts.Labels = ba.GetLabels()
+	pts.Annotations = common.DeleteMissingTrackedAnnotations(pts.Annotations, ba, common.StatusTrackedAnnotationTypeDeployment, common.StatusTrackedAnnotationTypeStatefulSet)
 	pts.Annotations = MergeMaps(pts.Annotations, ba.GetAnnotations())
 
 	// If they exist, add annotations from the StatefulSet or Deployment to the pods

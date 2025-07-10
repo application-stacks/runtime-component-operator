@@ -18,6 +18,10 @@ type StatusEndpointScope string
 
 type StatusReferences map[string]string
 
+type StatusTrackedAnnotationType string
+
+type StatusTrackedAnnotations map[StatusTrackedAnnotationType][]string
+
 const (
 	StatusReferenceCertSecretName    = "svcCertSecretName"
 	StatusReferencePullSecretName    = "saPullSecretName"
@@ -90,6 +94,11 @@ type BaseComponentStatus interface {
 	UnsetReconcileInterval()
 
 	GetLatestTransitionTime() *metav1.Time
+
+	GetTrackedAnnotations() StatusTrackedAnnotations
+	SetTrackedAnnotations(StatusTrackedAnnotations)
+	GetTrackedAnnotation(StatusTrackedAnnotationType) []string
+	SetTrackedAnnotation(StatusTrackedAnnotationType, []string)
 }
 
 const (
@@ -105,6 +114,14 @@ const (
 	// Status Endpoint Scopes
 	StatusEndpointScopeExternal StatusEndpointScope = "External"
 	StatusEndpointScopeInternal StatusEndpointScope = "Internal"
+
+	// Status Tracked Annotation Types
+	StatusTrackedAnnotationTypeGlobal        StatusTrackedAnnotationType = "global"
+	StatusTrackedAnnotationTypeDeployment    StatusTrackedAnnotationType = "deployment"
+	StatusTrackedAnnotationTypeStatefulSet   StatusTrackedAnnotationType = "statefulset"
+	StatusTrackedAnnotationTypeService       StatusTrackedAnnotationType = "service"
+	StatusTrackedAnnotationTypeRoute         StatusTrackedAnnotationType = "route"
+	StatusTrackedAnnotationTypeNetworkPolicy StatusTrackedAnnotationType = "networkpolicy"
 )
 
 // BaseComponentAutoscaling represents basic HPA configuration
