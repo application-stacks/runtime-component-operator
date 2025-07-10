@@ -379,7 +379,7 @@ func customizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	networkPolicy.Labels = ba.GetLabels()
-	networkPolicy.Annotations = common.DeleteMissingTrackedAnnotations(networkPolicy.Annotations, ba, common.StatusTrackedAnnotationTypeNetworkPolicy)
+	networkPolicy.Annotations = common.DeleteMissingTrackedAnnotations(networkPolicy.Annotations, ba, common.StatusTrackedAnnotationTypeGlobal)
 	networkPolicy.Annotations = MergeMaps(networkPolicy.Annotations, ba.GetAnnotations())
 
 	networkPolicy.Spec.PolicyTypes = []networkingv1.PolicyType{networkingv1.PolicyTypeIngress}

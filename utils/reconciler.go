@@ -390,8 +390,7 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 		common.StatusTrackedAnnotationTypeDeployment,
 		common.StatusTrackedAnnotationTypeStatefulSet,
 		common.StatusTrackedAnnotationTypeService,
-		common.StatusTrackedAnnotationTypeRoute,
-		common.StatusTrackedAnnotationTypeNetworkPolicy)
+		common.StatusTrackedAnnotationTypeRoute)
 
 	err := r.UpdateStatus(ba.(client.Object))
 	if err != nil {

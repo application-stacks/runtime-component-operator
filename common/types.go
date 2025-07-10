@@ -116,12 +116,11 @@ const (
 	StatusEndpointScopeInternal StatusEndpointScope = "Internal"
 
 	// Status Tracked Annotation Types
-	StatusTrackedAnnotationTypeGlobal        StatusTrackedAnnotationType = "global"
-	StatusTrackedAnnotationTypeDeployment    StatusTrackedAnnotationType = "deployment"
-	StatusTrackedAnnotationTypeStatefulSet   StatusTrackedAnnotationType = "statefulset"
-	StatusTrackedAnnotationTypeService       StatusTrackedAnnotationType = "service"
-	StatusTrackedAnnotationTypeRoute         StatusTrackedAnnotationType = "route"
-	StatusTrackedAnnotationTypeNetworkPolicy StatusTrackedAnnotationType = "networkpolicy"
+	StatusTrackedAnnotationTypeGlobal      StatusTrackedAnnotationType = "global"
+	StatusTrackedAnnotationTypeDeployment  StatusTrackedAnnotationType = "deployment"
+	StatusTrackedAnnotationTypeStatefulSet StatusTrackedAnnotationType = "statefulset"
+	StatusTrackedAnnotationTypeService     StatusTrackedAnnotationType = "service"
+	StatusTrackedAnnotationTypeRoute       StatusTrackedAnnotationType = "route"
 )
 
 // BaseComponentAutoscaling represents basic HPA configuration
