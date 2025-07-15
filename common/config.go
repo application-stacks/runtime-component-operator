@@ -3,6 +3,7 @@ package common
 import (
 	"errors"
 	"strconv"
+	"strings"
 	"sync"
 
 	uberzap "go.uber.org/zap"
@@ -59,6 +60,9 @@ const (
 
 	// OpConfigShowReconcileInterval default whether reconcile interval will be visible in the instance's status field
 	OpConfigShowReconcileInterval = "showReconcileInterval"
+
+	// OpConfigDelayReconcile list of instances/namespaces with delayed reconciliation
+	OpConfigDelayReconcile = "delayReconcile"
 )
 
 // Config stores operator configuration
@@ -106,6 +110,33 @@ func LoadFromConfig(oc *sync.Map, key string) string {
 		return ""
 	}
 	return value.(string)
+}
+
+// Checks if the instance / namespace exists in delay reconcile list
+func CheckDelayReconcile(oc *sync.Map, key string, name string, namespace string, OperatorName string) bool {
+	value := LoadFromConfig(oc, key)
+	lines := strings.Split(value, "\n")
+
+	nsFound := false
+
+	for _, line := range lines {
+		if strings.Contains(line, ":") {
+			ns := strings.TrimRight(line, ":")
+			if namespace == ns {
+				nsFound = true
+			} else {
+				nsFound = false
+			}
+		}
+		if nsFound && strings.Contains(line, "- ") {
+			instance := strings.TrimLeft(line, "- ")
+			if instance == "*" || instance == name {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func CheckValidValue(oc *sync.Map, key string, OperatorName string) error {
