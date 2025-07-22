@@ -113,7 +113,7 @@ func LoadFromConfig(oc *sync.Map, key string) string {
 }
 
 // Checks if the instance / namespace exists in delay reconcile list
-func CheckDelayReconcile(oc *sync.Map, key string, name string, namespace string, OperatorName string) bool {
+func CheckDelayReconcile(oc *sync.Map, key string, name string, namespace string, OperatorName string) (bool, error) {
 	value := LoadFromConfig(oc, key)
 	lines := strings.Split(value, "\n")
 
@@ -127,16 +127,17 @@ func CheckDelayReconcile(oc *sync.Map, key string, name string, namespace string
 			} else {
 				nsFound = false
 			}
-		}
-		if nsFound && strings.Contains(line, "- ") {
+		} else if nsFound && strings.Contains(line, "- ") {
 			instance := strings.TrimLeft(line, "- ")
 			if instance == "*" || instance == name {
-				return true
+				return true, nil
 			}
+		} else if !strings.Contains(line, ":") && !strings.Contains(line, "- ") {
+			return false, errors.New("delayReconcile syntax error in ConfigMap: " + OperatorName + ".")
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 func CheckValidValue(oc *sync.Map, key string, OperatorName string) error {

@@ -127,8 +127,10 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	// If the instance was already reconciled and is waiting for operator version upgrade
 	if instance.Status.Versions.Reconciled != "" && instance.Status.Versions.Reconciled != appstacksutils.RCOOperandVersion {
 		// If the instance / namespace is listed under delayReconcile in ConfigMap, skip and delay reconciliation
-		delay := common.CheckDelayReconcile(common.Config, common.OpConfigDelayReconcile, req.Name, req.Namespace, OperatorName)
-		if delay {
+		delay, err := common.CheckDelayReconcile(common.Config, common.OpConfigDelayReconcile, req.Name, req.Namespace, OperatorName)
+		if err != nil {
+			return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
+		} else if delay {
 			return r.ManageSuccess(common.StatusConditionTypeReconciled, instance)
 		}
 	}
