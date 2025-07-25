@@ -71,7 +71,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2025-07-18T20:38:10Z"
+    createdAt: "2025-07-25T20:09:21Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -199,6 +199,12 @@ spec:
           if the probe fails.
         displayName: Liveness Probe
         path: probes.liveness
+      - description: Target average Memory utilization, represented as a percentage
+          of requested memory, over all the pods.
+        displayName: Target Memory Utilization Percentage
+        path: autoscaling.targetMemoryUtilizationPercentage
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
       - description: Policy for pulling container images. Defaults to IfNotPresent.
         displayName: Pull Policy
         path: pullPolicy
