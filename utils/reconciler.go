@@ -371,6 +371,10 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 		maxSeconds := getMaxReconcileInterval(false)
 		retryInterval = updateReconcileInterval(maxSeconds, s, ba)
 	}
+	
+	// Ensure Ready condition exists before updating status
+	r.ensureReadyExists(ba)
+	r.sanitizeReadyFirst(ba)
 
 	err := r.UpdateStatus(obj)
 	if err != nil {
@@ -429,6 +433,10 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 			retryInterval = updateReconcileInterval(maxSeconds, s, ba)
 		}
 	}
+	
+	// Ensure Ready condition exists before updating status
+	r.ensureReadyExists(ba)
+	r.sanitizeReadyFirst(ba)
 
 	err := r.UpdateStatus(ba.(client.Object))
 	if err != nil {
