@@ -99,6 +99,18 @@ func LoadFromConfigMap(oc *sync.Map, cm *corev1.ConfigMap) {
 	}
 }
 
+// LoadFromConfigMapWithAddedDefaults creates a config out of kubernetes config map using added defaults
+func LoadFromConfigMapWithAddedDefaults(oc *sync.Map, cm *corev1.ConfigMap, addedDefaults *sync.Map) {
+	cfg := DefaultOpConfigWithAddedDefaults(addedDefaults)
+	cfg.Range(func(key, value interface{}) bool {
+		oc.Store(key, value)
+		return true
+	})
+	for k, v := range cm.Data {
+		oc.Store(k, v)
+	}
+}
+
 // Loads a string value stored at key in the sync.Map oc or "" if it does not exist
 func LoadFromConfig(oc *sync.Map, key string) string {
 	value, ok := oc.Load(key)
@@ -191,7 +203,7 @@ func DefaultOpConfig() *sync.Map {
 // DefaultOpConfigWithAddedDefaults returns default configuration with addedDefaults
 func DefaultOpConfigWithAddedDefaults(addedDefaults *sync.Map) *sync.Map {
 	cfg := DefaultOpConfig()
-	addedDefaults.Range(func(key, value any) bool {
+	addedDefaults.Range(func(key, value interface{}) bool {
 		cfg.Store(key, value)
 		return true
 	})
