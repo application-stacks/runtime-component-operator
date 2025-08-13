@@ -189,10 +189,11 @@ func DefaultOpConfig() *sync.Map {
 }
 
 // DefaultOpConfigWithAddedDefaults returns default configuration with addedDefaults
-func DefaultOpConfigWithAddedDefaults(addedDefaults map[string]string) *sync.Map {
+func DefaultOpConfigWithAddedDefaults(addedDefaults *sync.Map) *sync.Map {
 	cfg := DefaultOpConfig()
-	for k, v := range addedDefaults {
-		cfg.Store(k, v)
-	}
+	addedDefaults.Range(func(key, value any) bool {
+		cfg.Store(key, value)
+		return true
+	})
 	return cfg
 }
