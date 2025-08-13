@@ -187,3 +187,12 @@ func DefaultOpConfig() *sync.Map {
 	cfg.Store(OpConfigShowReconcileInterval, "false")
 	return cfg
 }
+
+// DefaultOpConfig returns default configuration with addedDefaults
+func DefaultOpConfigWithAddedDefaults(addedDefaults map[string]string) *sync.Map {
+	cfg := DefaultOpConfig()
+	for k, v := range addedDefaults {
+		cfg.Store(k, v)
+	}
+	return cfg
+}
