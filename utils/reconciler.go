@@ -12,6 +12,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 
 	"github.com/application-stacks/runtime-component-operator/common"
+	v1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	certmanagerv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	certmanagermetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	routev1 "github.com/openshift/api/route/v1"
