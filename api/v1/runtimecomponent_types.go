@@ -197,7 +197,7 @@ type RuntimeComponentServiceAccount struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="Service Account Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Name *string `json:"name,omitempty"`
 
-	// Don't verify that the service account has a valid pull secret. Defaults to false
+	// Skip verifying that the service account has a valid pull secret. Defaults to false.
 	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Skip service account pull secret validation",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	SkipPullSecretValidation *bool `json:"skipPullSecretValidation,omitempty"`
 }

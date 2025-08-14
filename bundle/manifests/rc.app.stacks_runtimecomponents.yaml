@@ -5366,8 +5366,8 @@ spec:
                       if it's not specified.
                     type: string
                   skipPullSecretValidation:
-                    description: Don't verify that the service account has a valid
-                      pull secret. Defaults to false
+                    description: Skip verifying that the service account has a valid
+                      pull secret. Defaults to false.
                     type: boolean
                 type: object
               serviceAccountName:
