@@ -5365,6 +5365,10 @@ spec:
                       the application. A service account is automatically created
                       if it's not specified.
                     type: string
+                  skipPullSecretValidation:
+                    description: Don't verify that the service account has a valid
+                      pull secret. Defaults to false
+                    type: boolean
                 type: object
               serviceAccountName:
                 description: Deprecated. .spec.serviceAccount.name should be used
