@@ -133,6 +133,12 @@ spec:
           if the probe fails.
         displayName: Liveness Probe
         path: probes.liveness
+      - description: Skip verifying that the service account has a valid pull secret.
+          Defaults to false.
+        displayName: Skip service account pull secret validation
+        path: serviceAccount.skipPullSecretValidation
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Target average Memory utilization, represented as a percentage
           of requested memory, over all the pods.
         displayName: Target Memory Utilization Percentage

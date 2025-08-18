@@ -196,6 +196,10 @@ type RuntimeComponentServiceAccount struct {
 	// Name of the service account to use for deploying the application. A service account is automatically created if it's not specified.
 	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="Service Account Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Name *string `json:"name,omitempty"`
+
+	// Skip verifying that the service account has a valid pull secret. Defaults to false.
+	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Skip service account pull secret validation",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	SkipPullSecretValidation *bool `json:"skipPullSecretValidation,omitempty"`
 }
 
 // Define health checks on application container to determine whether it is alive or ready to receive traffic
@@ -587,6 +591,11 @@ func (sa *RuntimeComponentServiceAccount) GetMountToken() *bool {
 // GetName returns the service account name
 func (sa *RuntimeComponentServiceAccount) GetName() *string {
 	return sa.Name
+}
+
+// GetSkipPullSecretValidation returns whether pull secrets should be validated
+func (sa *RuntimeComponentServiceAccount) GetSkipPullSecretValidation() *bool {
+	return sa.SkipPullSecretValidation
 }
 
 // GetReplicas returns number of replicas
