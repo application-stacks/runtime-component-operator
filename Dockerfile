@@ -39,7 +39,7 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 ARG USER_ID=65532
 ARG GROUP_ID=65532
 
-ARG VERSION_LABEL=1.4.4
+ARG VERSION_LABEL=1.5.0
 ARG RELEASE_LABEL=XX
 ARG VCS_REF=0123456789012345678901234567890123456789
 ARG VCS_URL="https://github.com/application-stacks/runtime-component-operator"
