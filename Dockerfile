@@ -1,9 +1,9 @@
 # Build the manager binary
-FROM registry.access.redhat.com/ubi8-minimal:latest as builder
+FROM registry.access.redhat.com/ubi9-minimal:latest as builder
 ARG GO_PLATFORM=amd64
 ARG GO_VERSION_ARG
 ENV PATH=$PATH:/usr/local/go/bin
-RUN microdnf install tar gzip
+RUN microdnf install -y tar gzip
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -34,7 +34,7 @@ RUN CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -ldflags="-s -w" -a -o mana
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
 ARG USER_ID=65532
 ARG GROUP_ID=65532

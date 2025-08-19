@@ -1,5 +1,5 @@
-FROM registry.redhat.io/openshift4/ose-operator-registry:v4.14 AS builder
-FROM registry.redhat.io/ubi8/ubi-minimal
+FROM registry.redhat.io/openshift4/ose-operator-registry-rhel9:v4.19 AS builder
+FROM registry.redhat.io/ubi9/ubi-minimal
 
 # Add label for location of Declarative Config root directory & required OpenShift labels
 ARG VERSION_LABEL=1.4.4
@@ -31,7 +31,7 @@ COPY LICENSE /licenses
 USER root
 
 # Pick up any latest fixes
-RUN microdnf update && microdnf clean all
+RUN microdnf update -y && microdnf clean all
 
 # Copy required tooling, licenses, and declarative config into defined location
 COPY --from=builder --chown=1001:0 /bin/opm /bin/opm
