@@ -15,7 +15,7 @@ Appropriate roles and bindings are required to watch another namespace or watch 
 +
 [source,sh]
 ----
-kubectl create -f https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/internal/deploy/kubectl/runtime-component-crd.yaml
+kubectl create -f https://raw.githubusercontent.com/application-stacks/runtime-component-operator/deploy-1.5.0-rc/internal/deploy/kubectl/runtime-component-crd.yaml
 ----
 
 . Install the Runtime Component Operator:
@@ -38,7 +38,7 @@ NOTE: Ensure that you replace  `<SPECIFY_OPERATOR_NAMESPACE_HERE>` and `<SPECIFY
 +
 [source,sh]
 ----
-curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/internal/deploy/kubectl/runtime-component-rbac-watch-all.yaml \
+curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/deploy-1.5.0-rc/internal/deploy/kubectl/runtime-component-rbac-watch-all.yaml \
       | sed -e "s/RUNTIME_COMPONENT_OPERATOR_NAMESPACE/${OPERATOR_NAMESPACE}/" \
       | kubectl apply -f -
 ----
@@ -47,7 +47,7 @@ curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-o
 +
 [source,sh]
 ----
-curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/internal/deploy/kubectl/runtime-component-rbac-watch-another.yaml \
+curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/deploy-1.5.0-rc/internal/deploy/kubectl/runtime-component-rbac-watch-another.yaml \
       | sed -e "s/RUNTIME_COMPONENT_OPERATOR_NAMESPACE/${OPERATOR_NAMESPACE}/" \
       | sed -e "s/RUNTIME_COMPONENT_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" \
       | kubectl apply -f -
@@ -57,7 +57,7 @@ curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-o
 +
 [source,sh]
 ----
-curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/main/internal/deploy/kubectl/runtime-component-operator.yaml \
+curl -L https://raw.githubusercontent.com/application-stacks/runtime-component-operator/deploy-1.5.0-rc/internal/deploy/kubectl/runtime-component-operator.yaml \
       | sed -e "s/RUNTIME_COMPONENT_WATCH_NAMESPACE/${WATCH_NAMESPACE}/" \
       | kubectl apply -n ${OPERATOR_NAMESPACE} -f -
 ----
