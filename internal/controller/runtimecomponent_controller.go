@@ -592,7 +592,8 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	pred := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			// Ignore updates to CR status in which case metadata.Generation does not change
-			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration() && (isClusterWide || watchNamespacesMap[e.ObjectNew.GetNamespace()])
+			return (e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration() && (isClusterWide || watchNamespacesMap[e.ObjectNew.GetNamespace()])) ||
+				(e.ObjectOld.GetGeneration() == e.ObjectNew.GetGeneration() && !appstacksutils.AnnotationsEqual(e.ObjectOld.GetAnnotations(), e.ObjectNew.GetAnnotations()))
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
 			return isClusterWide || watchNamespacesMap[e.Object.GetNamespace()]

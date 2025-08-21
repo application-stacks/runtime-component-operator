@@ -465,6 +465,8 @@ type RuntimeComponentStatus struct {
 
 	// The reconciliation interval in seconds.
 	ReconcileInterval *int32 `json:"reconcileInterval,omitempty"`
+
+	TrackedAnnotations map[common.StatusTrackedAnnotationType][]string `json:"trackedAnnotations,omitempty"`
 }
 
 // Defines possible status conditions.
@@ -819,6 +821,28 @@ func (s *RuntimeComponentStatus) GetBinding() *corev1.LocalObjectReference {
 // SetBinding sets BindingStatus representing binding status
 func (s *RuntimeComponentStatus) SetBinding(r *corev1.LocalObjectReference) {
 	s.Binding = r
+}
+
+func (s *RuntimeComponentStatus) GetTrackedAnnotations() common.StatusTrackedAnnotations {
+	return s.TrackedAnnotations
+}
+
+func (s *RuntimeComponentStatus) SetTrackedAnnotations(trackedAnnotations common.StatusTrackedAnnotations) {
+	s.TrackedAnnotations = trackedAnnotations
+}
+
+func (s *RuntimeComponentStatus) GetTrackedAnnotation(annotationType common.StatusTrackedAnnotationType) []string {
+	if s.TrackedAnnotations == nil {
+		s.TrackedAnnotations = make(common.StatusTrackedAnnotations)
+	}
+	return s.TrackedAnnotations[annotationType]
+}
+
+func (s *RuntimeComponentStatus) SetTrackedAnnotation(annotationType common.StatusTrackedAnnotationType, annotationKeys []string) {
+	if s.TrackedAnnotations == nil {
+		s.TrackedAnnotations = make(common.StatusTrackedAnnotations)
+	}
+	s.TrackedAnnotations[annotationType] = annotationKeys
 }
 
 // GetMinReplicas returns minimum replicas
