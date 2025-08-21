@@ -16,7 +16,7 @@ metadata:
     features.operators.openshift.io/token-auth-aws: "false"
     features.operators.openshift.io/token-auth-azure: "false"
     features.operators.openshift.io/token-auth-gcp: "false"
-    olm.skipRange: '>=0.8.0 <1.4.4'
+    olm.skipRange: '>=0.8.0 <1.5.0'
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
   labels:
@@ -133,6 +133,18 @@ spec:
           if the probe fails.
         displayName: Liveness Probe
         path: probes.liveness
+      - description: Skip verifying that the service account has a valid pull secret.
+          Defaults to false.
+        displayName: Skip service account pull secret validation
+        path: serviceAccount.skipPullSecretValidation
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Target average Memory utilization, represented as a percentage
+          of requested memory, over all the pods.
+        displayName: Target Memory Utilization Percentage
+        path: autoscaling.targetMemoryUtilizationPercentage
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
       - description: Policy for pulling container images. Defaults to IfNotPresent.
         displayName: Pull Policy
         path: pullPolicy

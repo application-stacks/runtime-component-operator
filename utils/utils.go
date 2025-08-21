@@ -27,7 +27,7 @@ import (
 
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -41,7 +41,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const RCOOperandVersion = "1.4.4"
+const RCOOperandVersion = "1.5.0"
 
 var APIVersionNotFoundError = errors.New("APIVersion is not available")
 
@@ -1022,16 +1022,48 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	}
 }
 
-// CustomizeHPA ...
-func CustomizeHPA(hpa *autoscalingv1.HorizontalPodAutoscaler, ba common.BaseComponent) {
+// CustomizeHPA for autoscaling/v2
+func CustomizeHPA(hpa *autoscalingv2.HorizontalPodAutoscaler, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	hpa.Labels = ba.GetLabels()
 	hpa.Annotations = MergeMaps(hpa.Annotations, ba.GetAnnotations())
 
 	hpa.Spec.MaxReplicas = ba.GetAutoscaling().GetMaxReplicas()
 	hpa.Spec.MinReplicas = ba.GetAutoscaling().GetMinReplicas()
-	hpa.Spec.TargetCPUUtilizationPercentage = ba.GetAutoscaling().GetTargetCPUUtilizationPercentage()
+	hpa.Spec.Behavior = ba.GetAutoscaling().GetHorizontalPodAutoscalerBehavior()
 
+	var metricsList []autoscalingv2.MetricSpec
+
+	cpuPer := ba.GetAutoscaling().GetTargetCPUUtilizationPercentage()
+	if cpuPer != nil {
+		metricSpec := autoscalingv2.MetricSpec{
+			Type: autoscalingv2.ResourceMetricSourceType,
+			Resource: &autoscalingv2.ResourceMetricSource{
+				Name:   corev1.ResourceCPU,
+				Target: autoscalingv2.MetricTarget{Type: autoscalingv2.UtilizationMetricType, AverageUtilization: cpuPer},
+			},
+		}
+		metricsList = append(metricsList, metricSpec)
+	}
+
+	memPer := ba.GetAutoscaling().GetTargetMemoryUtilizationPercentage()
+	if memPer != nil {
+		metricSpec := autoscalingv2.MetricSpec{
+			Type: autoscalingv2.ResourceMetricSourceType,
+			Resource: &autoscalingv2.ResourceMetricSource{
+				Name:   corev1.ResourceMemory,
+				Target: autoscalingv2.MetricTarget{Type: autoscalingv2.UtilizationMetricType, AverageUtilization: memPer},
+			},
+		}
+		metricsList = append(metricsList, metricSpec)
+	}
+	metrics := ba.GetAutoscaling().GetMetrics()
+
+	if metrics != nil {
+		metricsList = append(metricsList, metrics...)
+	}
+
+	hpa.Spec.Metrics = metricsList
 	hpa.Spec.ScaleTargetRef.Name = obj.GetName()
 	hpa.Spec.ScaleTargetRef.APIVersion = "apps/v1"
 
@@ -1594,11 +1626,13 @@ func (r *ReconcilerBase) toJSONFromRaw(content *runtime.RawExtension) (map[strin
 
 // Looks for a pull secret in the service account retrieved from the component
 // Returns nil if there is at least one image pull secret, otherwise an error
+// Will always return nil if 'skipPullSecretValidation' is specified in the CR
 func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Client) error {
 	obj := ba.(metav1.Object)
 	ns := obj.GetNamespace()
 	saName := obj.GetName()
-	if name := GetServiceAccountName(ba); name != "" {
+	name := GetServiceAccountName(ba)
+	if name != "" {
 		saName = name
 	}
 
@@ -1607,6 +1641,22 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 	if getErr != nil {
 		return getErr
 	}
+
+	// Set a reference in the CR to the service account version. This is done here as
+	// the service account has been retrieved whether it is ours or a user provided one
+	ba.GetStatus().SetReference(common.StatusReferenceSAResourceVersion, sa.ResourceVersion)
+
+	// Skip the pull secret check if a custom SA is specified, and SkipPullSecretValidation is in the CR
+	if name != "" {
+		if basa := ba.GetServiceAccount(); basa != nil {
+			if vs := basa.GetSkipPullSecretValidation(); vs != nil && *vs == true {
+				log.V(common.LogLevelDebug).Info("Skipping service account pull secret validation")
+				return nil
+			}
+		}
+	}
+
+	log.V(common.LogLevelDebug).Info("doing service account pull secret validation")
 	secrets := sa.ImagePullSecrets
 	if len(secrets) > 0 {
 		// if this is our service account there will be one image pull secret
@@ -1618,10 +1668,6 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 			return saErr
 		}
 	}
-
-	// Set a reference in the CR to the service account version. This is done here as
-	// the service account has been retrieved whether it is ours or a user provided one
-	ba.GetStatus().SetReference(common.StatusReferenceSAResourceVersion, sa.ResourceVersion)
 
 	return nil
 }
