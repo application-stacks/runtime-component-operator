@@ -30,27 +30,27 @@ type EnqueueRequestsForCustomIndexField struct {
 }
 
 // Create implements EventHandler
-func (e *EnqueueRequestsForCustomIndexField) Create(ctx context.Context, evt event.CreateEvent, q workqueue.RateLimitingInterface) {
+func (e *EnqueueRequestsForCustomIndexField) Create(ctx context.Context, evt event.CreateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.handle(evt.Object, evt.Object, q)
 }
 
 // Update implements EventHandler
-func (e *EnqueueRequestsForCustomIndexField) Update(ctx context.Context, evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
+func (e *EnqueueRequestsForCustomIndexField) Update(ctx context.Context, evt event.UpdateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.handle(evt.ObjectNew, evt.ObjectNew, q)
 }
 
 // Delete implements EventHandler
-func (e *EnqueueRequestsForCustomIndexField) Delete(ctx context.Context, evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
+func (e *EnqueueRequestsForCustomIndexField) Delete(ctx context.Context, evt event.DeleteEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.handle(evt.Object, evt.Object, q)
 }
 
 // Generic implements EventHandler
-func (e *EnqueueRequestsForCustomIndexField) Generic(ctx context.Context, evt event.GenericEvent, q workqueue.RateLimitingInterface) {
+func (e *EnqueueRequestsForCustomIndexField) Generic(ctx context.Context, evt event.GenericEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.handle(evt.Object, evt.Object, q)
 }
 
 // handle common implementation to enqueue reconcile Requests for applications
-func (e *EnqueueRequestsForCustomIndexField) handle(evtMeta metav1.Object, evtObj runtime.Object, q workqueue.RateLimitingInterface) {
+func (e *EnqueueRequestsForCustomIndexField) handle(evtMeta metav1.Object, evtObj runtime.Object, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	apps, _ := e.Matcher.Match(evtMeta)
 	for _, app := range apps {
 		q.Add(reconcile.Request{
