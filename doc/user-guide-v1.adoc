@@ -198,6 +198,7 @@ Each `RuntimeComponent` CR must at least specify the `.spec.applicationImage` fi
 | `serviceAccount`| [[crd-spec-serviceAccount-name]] The service account to use for application deployment. If a service account name is not specified, a service account is automatically created. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#create-a-service-account++[Configure a service account].
 | `serviceAccount.name` | Name of the service account to use for deploying the application.
 | `serviceAccount.mountToken` | A Boolean to toggle whether the service account's token should be mounted in the application pods. If unset or `true`, the token will be mounted.
+| `serviceAccount.skipPullSecretValidation` | Skips verifying that the service account has a valid pull secret. Defaults to `false`.
 | `sidecarContainers` | The list of `sidecar` containers. These are additional containers to be added to the pods. Note: Sidecar containers should not be named `app`. 
 | `statefulSet` | The wanted state and cycle of stateful applications. For examples, see link:++https://github.com/OpenLiberty/open-liberty-operator/blob/main/doc/user-guide-v1.adoc#persist-resources++[Persist resources].
 | `statefulSet.annotations`   | Annotations to be added only to the StatefulSet and resources owned by the StatefulSet.
