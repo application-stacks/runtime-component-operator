@@ -671,6 +671,20 @@ func (s *RuntimeComponentStatus) SetBinding(r *corev1.LocalObjectReference) {
 	s.Binding = r
 }
 
+func (s *RuntimeComponentStatus) GetTrackedAnnotations() common.StatusTrackedAnnotations {
+	return nil
+}
+
+func (s *RuntimeComponentStatus) SetTrackedAnnotations(trackedAnnotations common.StatusTrackedAnnotations) {
+}
+
+func (s *RuntimeComponentStatus) GetTrackedAnnotation(annotationType common.StatusTrackedAnnotationType) []string {
+	return nil
+}
+
+func (s *RuntimeComponentStatus) SetTrackedAnnotation(annotationType common.StatusTrackedAnnotationType, annotationKeys []string) {
+}
+
 // GetMinReplicas returns minimum replicas
 func (a *RuntimeComponentAutoScaling) GetMinReplicas() *int32 {
 	return a.MinReplicas
