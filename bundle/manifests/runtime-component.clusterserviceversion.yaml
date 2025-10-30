@@ -11,7 +11,7 @@ metadata:
             "name": "runtimecomponent-sample"
           },
           "spec": {
-            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:1862d437f8a3b85bdfb455f91dba3c039268ff8811ed9084d81a02956ce8d6b8",
+            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:fbe77bebd1d61bd7f39929fd8ff42a0ad56a148d29aa3665c23058dd6f5568f4",
             "expose": true,
             "manageTLS": true,
             "replicas": 1,
@@ -44,7 +44,7 @@ metadata:
             "name": "runtimecomponent-sample"
           },
           "spec": {
-            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:1862d437f8a3b85bdfb455f91dba3c039268ff8811ed9084d81a02956ce8d6b8",
+            "applicationImage": "icr.io/appcafe/open-liberty/samples/getting-started@sha256:fbe77bebd1d61bd7f39929fd8ff42a0ad56a148d29aa3665c23058dd6f5568f4",
             "expose": true,
             "replicas": 1,
             "service": {
@@ -71,7 +71,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2025-09-15T18:08:27Z"
+    createdAt: "2025-10-30T19:51:52Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -80,7 +80,7 @@ metadata:
     features.operators.openshift.io/token-auth-aws: "false"
     features.operators.openshift.io/token-auth-azure: "false"
     features.operators.openshift.io/token-auth-gcp: "false"
-    olm.skipRange: '>=0.8.0 <1.5.0'
+    olm.skipRange: '>=0.8.0 <1.5.1'
     operators.operatorframework.io/builder: operator-sdk-v1.39.2
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
     repository: https://github.com/application-stacks/runtime-component-operator
@@ -90,7 +90,7 @@ metadata:
     operatorframework.io/arch.ppc64le: supported
     operatorframework.io/arch.s390x: supported
     operatorframework.io/os.linux: supported
-  name: runtime-component.v1.5.0
+  name: runtime-component.v1.5.1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -1058,7 +1058,7 @@ spec:
                     fieldRef:
                       fieldPath: metadata.annotations['olm.targetNamespaces']
                 - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
-                  value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:1862d437f8a3b85bdfb455f91dba3c039268ff8811ed9084d81a02956ce8d6b8
+                  value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:fbe77bebd1d61bd7f39929fd8ff42a0ad56a148d29aa3665c23058dd6f5568f4
                 - name: RELATED_IMAGE_RUNTIME_COMPONENT_OPERATOR
                   value: icr.io/appcafe/runtime-component-operator:daily
                 image: icr.io/appcafe/runtime-component-operator:daily
@@ -1333,8 +1333,8 @@ spec:
   provider:
     name: Community
   relatedImages:
-  - image: icr.io/appcafe/open-liberty/samples/getting-started@sha256:1862d437f8a3b85bdfb455f91dba3c039268ff8811ed9084d81a02956ce8d6b8
+  - image: icr.io/appcafe/open-liberty/samples/getting-started@sha256:fbe77bebd1d61bd7f39929fd8ff42a0ad56a148d29aa3665c23058dd6f5568f4
     name: liberty-sample-app
   - image: icr.io/appcafe/runtime-component-operator:daily
     name: runtime-component-operator
-  version: 1.5.0
+  version: 1.5.1
