@@ -336,7 +336,7 @@ func TestCustomizePodSpecAnnotations(t *testing.T) {
 
 	// No dep or set, annotation should be empty
 	pts1, runtime1 := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
-	CustomizePodSpec(pts1, runtime1)
+	CustomizePodSpec(pts1, runtime1, nil)
 	annolen1 := len(pts1.Annotations)
 	testAnnotations1 := []Test{
 		{"Shouldn't be any annotations", 0, annolen1},
@@ -346,7 +346,7 @@ func TestCustomizePodSpecAnnotations(t *testing.T) {
 	// dep but not set, annotation should be dep annotations
 	spec.Deployment = deployment
 	pts2, runtime2 := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
-	CustomizePodSpec(pts2, runtime2)
+	CustomizePodSpec(pts2, runtime2, nil)
 	annolen2 := len(pts2.Annotations)
 	anno2 := pts2.Annotations["depAnno"]
 	testAnnotations2 := []Test{
@@ -359,7 +359,7 @@ func TestCustomizePodSpecAnnotations(t *testing.T) {
 	spec.Deployment = nil
 	spec.StatefulSet = statefulSet
 	pts3, runtime3 := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
-	CustomizePodSpec(pts3, runtime3)
+	CustomizePodSpec(pts3, runtime3, nil)
 	annolen3 := len(pts3.Annotations)
 	anno3 := pts3.Annotations["setAnno"]
 	testAnnotations3 := []Test{
@@ -371,7 +371,7 @@ func TestCustomizePodSpecAnnotations(t *testing.T) {
 	// dep and set, annotation should be set annotations
 	spec.Deployment = deployment
 	pts4, runtime4 := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
-	CustomizePodSpec(pts4, runtime4)
+	CustomizePodSpec(pts4, runtime4, nil)
 	annolen4 := len(pts4.Annotations)
 	anno4 := pts4.Annotations["setAnno"]
 	testAnnotations4 := []Test{
@@ -399,7 +399,7 @@ func TestCustomizePodSpec(t *testing.T) {
 	}
 	pts, runtime := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
 	// else cond
-	CustomizePodSpec(pts, runtime)
+	CustomizePodSpec(pts, runtime, nil)
 	noCont := len(pts.Spec.Containers)
 	noPorts := len(pts.Spec.Containers[0].Ports)
 	ptsSAN := pts.Spec.ServiceAccountName
@@ -425,7 +425,7 @@ func TestCustomizePodSpec(t *testing.T) {
 		Affinity:           &affinityConfig,
 	}
 	runtime = createRuntimeComponent(name, namespace, spec)
-	CustomizePodSpec(pts, runtime)
+	CustomizePodSpec(pts, runtime, nil)
 	ptsCSAN := pts.Spec.ServiceAccountName
 
 	// affinity tests
@@ -473,17 +473,17 @@ func TestCustomizePodSpecServiceLinks(t *testing.T) {
 	}
 
 	pts, runtime := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
-	CustomizePodSpec(pts, runtime)
+	CustomizePodSpec(pts, runtime, nil)
 	defaultLinks := pts.Spec.EnableServiceLinks
 
 	spec.DisableServiceLinks = &tv
 	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
-	CustomizePodSpec(pts, runtime)
+	CustomizePodSpec(pts, runtime, nil)
 	disableLinks := *pts.Spec.EnableServiceLinks
 
 	spec.DisableServiceLinks = &fv
 	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
-	CustomizePodSpec(pts, runtime)
+	CustomizePodSpec(pts, runtime, nil)
 	enableLinks := pts.Spec.EnableServiceLinks
 
 	testCPS := []Test{
@@ -565,7 +565,7 @@ func TestCustomizeKnativeService(t *testing.T) {
 	}
 	ksvc, runtime := &servingv1.Service{}, createRuntimeComponent(name, namespace, spec)
 
-	CustomizeKnativeService(ksvc, runtime)
+	CustomizeKnativeService(ksvc, runtime, nil)
 	ksvcNumPorts := len(ksvc.Spec.Template.Spec.Containers[0].Ports)
 	ksvcSAN := ksvc.Spec.Template.Spec.ServiceAccountName
 
@@ -582,13 +582,13 @@ func TestCustomizeKnativeService(t *testing.T) {
 	rcsa := appstacksv1.RuntimeComponentServiceAccount{MountToken: &mt}
 	spec.ServiceAccount = &rcsa
 	ksvc, runtime = &servingv1.Service{}, createRuntimeComponent(name, namespace, spec)
-	CustomizeKnativeService(ksvc, runtime)
+	CustomizeKnativeService(ksvc, runtime, nil)
 	ksvcNoMount := ksvc.Spec.Template.Spec.AutomountServiceAccountToken
 
 	mt = true
 	rcsa.MountToken = &mt
 	ksvc, runtime = &servingv1.Service{}, createRuntimeComponent(name, namespace, spec)
-	CustomizeKnativeService(ksvc, runtime)
+	CustomizeKnativeService(ksvc, runtime, nil)
 	ksvcTrueMount := ksvc.Spec.Template.Spec.AutomountServiceAccountToken
 
 	spec = appstacksv1.RuntimeComponentSpec{
@@ -603,12 +603,12 @@ func TestCustomizeKnativeService(t *testing.T) {
 		Expose:             &expose,
 	}
 	runtime = createRuntimeComponent(name, namespace, spec)
-	CustomizeKnativeService(ksvc, runtime)
+	CustomizeKnativeService(ksvc, runtime, nil)
 	ksvcLabelTrueExpose := ksvc.Labels["serving.knative.dev/visibility"]
 
 	fls := false
 	runtime.Spec.Expose = &fls
-	CustomizeKnativeService(ksvc, runtime)
+	CustomizeKnativeService(ksvc, runtime, nil)
 	ksvcLabelFalseExpose := ksvc.Labels["serving.knative.dev/visibility"]
 
 	var bnil *bool = nil

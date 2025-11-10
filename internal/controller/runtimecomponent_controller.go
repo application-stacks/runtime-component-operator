@@ -295,7 +295,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			reqLogger.Info("Knative is supported and Knative Service is enabled")
 			ksvc := &servingv1.Service{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(ksvc, instance, func() error {
-				appstacksutils.CustomizeKnativeService(ksvc, instance)
+				appstacksutils.CustomizeKnativeService(ksvc, instance, nil)
 				return nil
 			})
 			if err != nil {
@@ -394,7 +394,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		statefulSet := &appsv1.StatefulSet{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(statefulSet, instance, func() error {
 			appstacksutils.CustomizeStatefulSet(statefulSet, instance)
-			appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, instance)
+			appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, instance, nil)
 			if err := appstacksutils.CustomizePodWithSVCCertificate(&statefulSet.Spec.Template, instance, r.GetClient()); err != nil {
 				return err
 			}
@@ -426,7 +426,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		deploy := &appsv1.Deployment{ObjectMeta: defaultMeta}
 		err = r.CreateOrUpdate(deploy, instance, func() error {
 			appstacksutils.CustomizeDeployment(deploy, instance)
-			appstacksutils.CustomizePodSpec(&deploy.Spec.Template, instance)
+			appstacksutils.CustomizePodSpec(&deploy.Spec.Template, instance, nil)
 			if err := appstacksutils.CustomizePodWithSVCCertificate(&deploy.Spec.Template, instance, r.GetClient()); err != nil {
 				return err
 			}

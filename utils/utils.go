@@ -288,15 +288,19 @@ func CustomizeServiceAnnotations(svc *corev1.Service) {
 	svc.Annotations = MergeMaps(svc.Annotations, serviceAnnotations)
 }
 
-func CustomizeProbes(container *corev1.Container, ba common.BaseComponent) {
+func CustomizeProbes(container *corev1.Container, ba common.BaseComponent, overlayProbes common.BaseComponentProbes) {
 	probesConfig := ba.GetProbes()
 
 	// Probes not defined -- reset all probesConfig to nil
 	if probesConfig == nil {
-		container.ReadinessProbe = nil
-		container.LivenessProbe = nil
-		container.StartupProbe = nil
-		return
+		if overlayProbes == nil {
+			container.ReadinessProbe = nil
+			container.LivenessProbe = nil
+			container.StartupProbe = nil
+			return
+		} else {
+			probesConfig = overlayProbes
+		}
 	}
 
 	container.ReadinessProbe = customizeProbe(probesConfig.GetReadinessProbe(), probesConfig.GetDefaultReadinessProbe, ba)
@@ -646,7 +650,7 @@ func customizeAffinityArchitectures(affinity *corev1.Affinity, affinityConfig co
 }
 
 // CustomizePodSpec ...
-func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
+func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent, overlayProbes common.BaseComponentProbes) {
 	obj := ba.(metav1.Object)
 	pts.Labels = ba.GetLabels()
 	pts.Annotations = MergeMaps(pts.Annotations, ba.GetAnnotations())
@@ -694,7 +698,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		appContainer.Resources = *ba.GetResourceConstraints()
 	}
 
-	CustomizeProbes(&appContainer, ba)
+	CustomizeProbes(&appContainer, ba, overlayProbes)
 
 	if ba.GetPullPolicy() != nil {
 		appContainer.ImagePullPolicy = *ba.GetPullPolicy()
@@ -929,7 +933,7 @@ func removePullSecret(sa *corev1.ServiceAccount, pullSecretName string) {
 }
 
 // CustomizeKnativeService ...
-func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
+func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent, overlayProbes common.BaseComponentProbes) {
 	obj := ba.(metav1.Object)
 	ksvc.Labels = ba.GetLabels()
 	ksvc.Annotations = filterMerge("autoscaling.knative.dev/", ksvc.Annotations, ba.GetAnnotations())
@@ -968,7 +972,7 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	// Knative sets its own resource constraints
 	// ksvc.Spec.Template.Spec.Containers[0].Resources = *cr.Spec.ResourceConstraints
 
-	CustomizeProbes(&ksvc.Spec.Template.Spec.Containers[0], ba)
+	CustomizeProbes(&ksvc.Spec.Template.Spec.Containers[0], ba, overlayProbes)
 
 	ksvc.Spec.Template.Spec.Containers[0].ImagePullPolicy = *ba.GetPullPolicy()
 	ksvc.Spec.Template.Spec.Containers[0].Env = ba.GetEnv()
