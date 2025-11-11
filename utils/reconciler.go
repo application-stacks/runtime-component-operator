@@ -324,7 +324,7 @@ func (r *ReconcilerBase) ManageErrorWithWarnings(issue error, conditionType comm
 	r.setCondition(ba, oldCondition, newCondition)
 
 	warnings := getDefaultWarnings()
-	if statusWarnings != nil && conditionType == common.StatusConditionTypeWarning {
+	if statusWarnings != nil {
 		for _, newWarning := range *statusWarnings {
 			warnings = append(warnings, newWarning)
 		}
