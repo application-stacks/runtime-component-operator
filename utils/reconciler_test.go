@@ -461,36 +461,36 @@ func TestAddStatusWarnings(t *testing.T) {
 	svc := appstacksv1.RuntimeComponentService{Port: 9080}
 	spec := appstacksv1.RuntimeComponentSpec{Service: &svc}
 	comp := createRuntimeComponent(name, namespace, spec)
-
+	warnings := getDefaultWarnings()
 	// manageTLS is implicitly true, service port 9080
-	addStatusWarnings(comp)
+	addStatusWarnings(comp, warnings)
 	status := comp.GetStatus()
 	c := status.GetConditions()
 	testData = append(testData, Test{test: "serviceport=9080, condition type should be warning", actual: c[0].GetType(), expected: common.StatusConditionTypeWarning})
 
 	// manageTLS is implicitly true, Service is nil
 	comp.Spec.Service = nil
-	addStatusWarnings(comp)
+	addStatusWarnings(comp, warnings)
 	testData = append(testData, Test{test: "service=nil, length of conditions should be zero", actual: len(comp.GetStatus().GetConditions()), expected: 0})
 
 	// manageTLS is explicitly true, service is nil
 	comp.Spec.ManageTLS = &tr
-	addStatusWarnings(comp)
+	addStatusWarnings(comp, warnings)
 	testData = append(testData, Test{test: "manageTLS=true, service=nil, length of conditions should be zero", actual: len(comp.GetStatus().GetConditions()), expected: 0})
 
 	// manageTLS is explicitly true, service port is 9080
 	comp.Spec.Service = &svc
-	addStatusWarnings(comp)
+	addStatusWarnings(comp, warnings)
 	testData = append(testData, Test{test: "mangeTLS=true, serviceport=9080, condition type should be warning", actual: comp.GetStatus().GetConditions()[0].GetType(), expected: common.StatusConditionTypeWarning})
 
 	// manageTLS is explicitly false, service port is 9080
 	comp.Spec.ManageTLS = &fl
-	addStatusWarnings(comp)
+	addStatusWarnings(comp, warnings)
 	testData = append(testData, Test{test: "mangeTLS=false, serviceport=9080, length of conditions should be zero", actual: len(comp.GetStatus().GetConditions()), expected: 0})
 
 	// manageTLS is explicitly false, service port is 9443
 	svc.Port = 9443
-	addStatusWarnings(comp)
+	addStatusWarnings(comp, warnings)
 	testData = append(testData, Test{test: "mangeTLS=false, serviceport=9443, length of conditions should be zero", actual: len(comp.GetStatus().GetConditions()), expected: 0})
 
 	verifyTests(testData, t)

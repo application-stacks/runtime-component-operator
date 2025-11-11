@@ -316,10 +316,10 @@ func customizeProbe(config *corev1.Probe, defaultProbeCallback func(ba common.Ba
 	}
 
 	// Probe handler is not defined so use default values for the probe if values not set in probe config
-	return customizeProbeDefaults(config, defaultProbeCallback(ba))
+	return CustomizeProbeDefaults(config, defaultProbeCallback(ba))
 }
 
-func customizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *corev1.Probe {
+func CustomizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *corev1.Probe {
 	probe := defaultProbe
 	if config.InitialDelaySeconds != 0 {
 		probe.InitialDelaySeconds = config.InitialDelaySeconds

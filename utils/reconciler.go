@@ -174,19 +174,43 @@ func (r *ReconcilerBase) GetOpConfigMap(name string, ns string) (*corev1.ConfigM
 	return configMap, nil
 }
 
-func addStatusWarnings(ba common.BaseComponent) {
+type StatusWarning struct {
+	GetCondition func(ba common.BaseComponent) bool
+	Message      string
+}
 
+func getDefaultWarnings() []StatusWarning {
+	return []StatusWarning{
+		{
+			GetCondition: func(ba common.BaseComponent) bool {
+				mtls := ba.GetManageTLS()
+				svc := ba.GetService()
+				return (mtls == nil || *mtls == true) && svc != nil && svc.GetPort() == 9080
+			},
+			Message: "ManageTLS is true but port is set to 9080",
+		},
+	}
+}
+
+func addStatusWarnings(ba common.BaseComponent, statusWarnings []StatusWarning) {
 	s := ba.GetStatus()
 
-	mtls := ba.GetManageTLS()
-	svc := ba.GetService()
-	if (mtls == nil || *mtls == true) && svc != nil && svc.GetPort() == 9080 {
-		status := corev1.ConditionTrue
-		msg := "ManageTLS is true but port is set to 9080"
+	// get the first status warning
+	hasWarning := false
+	var firstWarning *StatusWarning
+	for _, warning := range statusWarnings {
+		if warning.GetCondition(ba) {
+			hasWarning = true
+			firstWarning = &warning
+			break
+		}
+	}
+
+	if hasWarning && firstWarning != nil {
 		statusCondition := s.NewCondition(common.StatusConditionTypeWarning)
 		statusCondition.SetReason("")
-		statusCondition.SetMessage(msg)
-		statusCondition.SetStatus(status)
+		statusCondition.SetMessage(firstWarning.Message)
+		statusCondition.SetStatus(corev1.ConditionTrue)
 		s.SetCondition(statusCondition)
 	} else {
 		// The warning condition may previously have been set, but is now not needed.
@@ -281,6 +305,11 @@ func updateReconcileInterval(maxSeconds int, s common.BaseComponentStatus, ba co
 
 // ManageError ...
 func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
+	return r.ManageErrorWithWarnings(issue, conditionType, ba, nil)
+}
+
+// ManageErrorWithWarnings ...
+func (r *ReconcilerBase) ManageErrorWithWarnings(issue error, conditionType common.StatusConditionType, ba common.BaseComponent, statusWarnings *[]StatusWarning) (reconcile.Result, error) {
 	s := ba.GetStatus()
 	obj := ba.(client.Object)
 	logger := log.WithValues("ba.Namespace", obj.GetNamespace(), "ba.Name", obj.GetName())
@@ -294,7 +323,13 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 	newCondition.SetStatus(corev1.ConditionFalse)
 	r.setCondition(ba, oldCondition, newCondition)
 
-	addStatusWarnings(ba)
+	warnings := getDefaultWarnings()
+	if statusWarnings != nil {
+		for _, newWarning := range *statusWarnings {
+			warnings = append(warnings, newWarning)
+		}
+	}
+	addStatusWarnings(ba, warnings)
 
 	if conditionType != common.StatusConditionTypeResourcesReady {
 		//Check Application status (reconciliation & resource status & endpoint status)
@@ -348,6 +383,11 @@ func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusCon
 
 // ManageSuccess ...
 func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
+	return r.ManageSuccessWithWarnings(conditionType, ba, nil)
+}
+
+// ManageSuccessWithWarnings ...
+func (r *ReconcilerBase) ManageSuccessWithWarnings(conditionType common.StatusConditionType, ba common.BaseComponent, statusWarnings *[]StatusWarning) (reconcile.Result, error) {
 	s := ba.GetStatus()
 	oldRecCondition := s.GetCondition(conditionType)
 
@@ -357,7 +397,13 @@ func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType,
 	newRecCondition.SetStatus(corev1.ConditionTrue)
 	s.SetCondition(newRecCondition)
 
-	addStatusWarnings(ba)
+	warnings := getDefaultWarnings()
+	if statusWarnings != nil {
+		for _, newWarning := range *statusWarnings {
+			warnings = append(warnings, newWarning)
+		}
+	}
+	addStatusWarnings(ba, warnings)
 
 	// Check application status (reconciliation & resource condition & endpoint condition)
 	// CheckApplicationStatus returns overall Application condition if ready
