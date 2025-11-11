@@ -16,7 +16,7 @@ metadata:
     features.operators.openshift.io/token-auth-aws: "false"
     features.operators.openshift.io/token-auth-azure: "false"
     features.operators.openshift.io/token-auth-gcp: "false"
-    olm.skipRange: '>=0.8.0 <1.5.1'
+    olm.skipRange: '>=0.8.0 <1.5.2'
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
   labels:

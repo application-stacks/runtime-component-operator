@@ -2,7 +2,7 @@ FROM registry.redhat.io/openshift4/ose-operator-registry-rhel9:v4.18 AS builder
 FROM registry.redhat.io/ubi9/ubi-minimal
 
 # Add label for location of Declarative Config root directory & required OpenShift labels
-ARG VERSION_LABEL=1.5.1
+ARG VERSION_LABEL=1.5.2
 ARG RELEASE_LABEL=XX
 ARG VCS_REF=0123456789012345678901234567890123456789
 ARG VCS_URL="https://github.com/application-stacks/runtime-component-operator"
