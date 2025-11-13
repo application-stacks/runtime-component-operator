@@ -169,11 +169,11 @@ $(ENVTEST): $(LOCALBIN)
 
 .PHONY: setup
 setup: ## Ensure Operator SDK is installed.
-	./operators/scripts/installers/install-operator-sdk.sh ${OPERATOR_SDK_RELEASE_VERSION}
+	${SCRIPT_PATH}/scripts/installers/install-operator-sdk.sh ${OPERATOR_SDK_RELEASE_VERSION}
 
 .PHONY: setup-go
 setup-go: ## Ensure Go is installed.
-	./operators/scripts/installers/install-go.sh ${GO_RELEASE_VERSION}
+	${SCRIPT_PATH}/scripts/installers/install-go.sh ${GO_RELEASE_VERSION}
 
 ##@ Development
 
@@ -307,25 +307,25 @@ rm -rf $$TMP_DIR ;\
 endef
 
 kind-e2e-test:
-	./operators/scripts/test/e2e-kind.sh --test-tag "${BUILD_NUMBER}"
+	${SCRIPT_PATH}/scripts/test/e2e-kind.sh --test-tag "${BUILD_NUMBER}"
 
 build-manifest: setup-manifest
-	./operators/scripts/build/build-manifest.sh --registry "${PUBLISH_REGISTRY}" --image "${OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
+	${SCRIPT_PATH}/scripts/build/build-manifest.sh --registry "${PUBLISH_REGISTRY}" --image "${OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
 
 build-operator-pipeline:
-	./operators/scripts/build/build-operator.sh --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
+	${SCRIPT_PATH}/scripts/build/build-operator.sh --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
 
 build-manifest-pipeline:
-	./operators/scripts/build/build-manifest.sh --registry "${REGISTRY}" --image "${IMAGE}" --tag "${RELEASE_TARGET}"
+	${SCRIPT_PATH}/scripts/build/build-manifest.sh --registry "${REGISTRY}" --image "${IMAGE}" --tag "${RELEASE_TARGET}"
 
 build-bundle-pipeline:
-	./operators/scripts/build/build-bundle.sh --prod-image "${PIPELINE_PRODUCTION_IMAGE}" --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
+	${SCRIPT_PATH}/scripts/build/build-bundle.sh --prod-image "${PIPELINE_PRODUCTION_IMAGE}" --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}"
 
 build-catalog-pipeline:
-	./operators/scripts/build/build-catalog.sh --prod-image "${OPERATOR_IMAGE}" --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}" --version "${VERSION}"
+	${SCRIPT_PATH}/scripts/build/build-catalog.sh --prod-image "${OPERATOR_IMAGE}" --registry "${REGISTRY}" --image "${PIPELINE_OPERATOR_IMAGE}" --tag "${RELEASE_TARGET}" --version "${VERSION}"
 
 test-pipeline-e2e:
-	./operators/scripts/test/e2e-ocp.sh --cluster-url "${CLUSTER_URL}" --cluster-user "${CLUSTER_USER}" --cluster-token "${CLUSTER_TOKEN}" \
+	${SCRIPT_PATH}/scripts/test/e2e-ocp.sh --cluster-url "${CLUSTER_URL}" --cluster-user "${CLUSTER_USER}" --cluster-token "${CLUSTER_TOKEN}" \
                                             --test-tag "${BUILD_NUMBER}" --install-mode "${INSTALL_MODE}" --channel "${DEFAULT_CHANNEL}" \
                                             --architecture "${ARCHITECTURE}" --digest "${DIGEST}" --version "${VERSION}"
 
