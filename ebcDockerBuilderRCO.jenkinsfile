@@ -19,6 +19,7 @@ properties([
       string(name: 'ARTIFACTORY_REPO_URL', defaultValue: "hyc-taas-onepipeline-team-docker-local.artifactory.swg-devops.com", description: 'artifactory repo url [only used if disable artifactory is false]]'),
       string(name: 'DISABLE_ARTIFACTORY', defaultValue: "false", description: 'whether to back up container images to artifactorys'),
       string(name: 'COMMON_OPERATORS_BRANCH', defaultValue: "main", description: 'branch to use for websphere/operators repository')
+      string(name: 'COMMON_DIR', defaultValue: "/runtime-component-operator/operators", description: 'Base location of the common scripts')
    ])
 ])
 timestamps {
@@ -110,11 +111,9 @@ def gitCloneAndStash() {
   
 // Job Specific Functions
 def void doWork(){
-   // Setup global variables
-   
    // Unstash the git repo
    unstash(name: 'runtime-component-operator')
-   sh "./operators/scripts/build/build-initialize.sh"
+   sh "./operators/scripts/build/build-initialize.sh --path ./operators"
    sh "${command}"
 }
 
