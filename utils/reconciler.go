@@ -12,6 +12,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 
 	"github.com/application-stacks/runtime-component-operator/common"
+	v1 "github.com/application-stacks/runtime-component-operator/api/v1"
 	certmanagerv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	certmanagermetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -303,6 +304,51 @@ func updateReconcileInterval(maxSeconds int, s common.BaseComponentStatus, ba co
 	return time.Duration(newInterval) * time.Second
 }
 
+func (r *ReconcilerBase) ensureReadyExists(ba common.BaseComponent) {
+	status := ba.GetStatus()
+
+	readyExists := false
+	for _, condition := range status.GetConditions() {
+		if condition.GetType() == common.StatusConditionTypeReady {
+			readyExists = true
+			break
+		}
+	}
+
+	if !readyExists {
+		readyCondition := status.NewCondition(common.StatusConditionTypeReady)
+		readyCondition.SetStatus(corev1.ConditionFalse)
+		readyCondition.SetReason("Reconciling")
+		readyCondition.SetMessage("Application is being reconciled")
+		readyCondition.SetLastTransitionTime(&metav1.Time{Time: time.Now()})
+		status.SetCondition(readyCondition)
+	}
+}
+
+func (r *ReconcilerBase) sanitizeReadyFirst(ba common.BaseComponent) {
+	status := ba.GetStatus()
+	rcs, ok := status.(*v1.RuntimeComponentStatus)
+	if !ok || len(rcs.Conditions) <= 1 {
+		return
+	}
+
+	var ready v1.StatusCondition
+	var others []v1.StatusCondition
+	for _, c := range rcs.Conditions {
+		if c.GetType() == common.StatusConditionTypeReady {
+			ready = c
+		} else {
+			others = append(others, c)
+		}
+	}
+
+	if ready.GetType() == "" || rcs.Conditions[0].GetType() == common.StatusConditionTypeReady {
+        return
+    }
+
+	rcs.Conditions = append([]v1.StatusCondition{ready}, others...)
+}
+
 // ManageError ...
 func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
 	return r.ManageErrorWithWarnings(issue, conditionType, ba, nil)
@@ -360,6 +406,10 @@ func (r *ReconcilerBase) ManageErrorWithWarnings(issue error, conditionType comm
 		maxSeconds := getMaxReconcileInterval(false)
 		retryInterval = updateReconcileInterval(maxSeconds, s, ba)
 	}
+	
+	// Ensure Ready condition exists before updating status
+	r.ensureReadyExists(ba)
+	r.sanitizeReadyFirst(ba)
 
 	err := r.UpdateStatus(obj)
 	if err != nil {
@@ -429,6 +479,10 @@ func (r *ReconcilerBase) ManageSuccessWithWarnings(conditionType common.StatusCo
 			retryInterval = updateReconcileInterval(maxSeconds, s, ba)
 		}
 	}
+	
+	// Ensure Ready condition exists before updating status
+	r.ensureReadyExists(ba)
+	r.sanitizeReadyFirst(ba)
 
 	err := r.UpdateStatus(ba.(client.Object))
 	if err != nil {
