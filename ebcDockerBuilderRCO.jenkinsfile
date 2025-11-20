@@ -88,7 +88,7 @@ def gitCloneAndStash() {
         sh "git checkout ${RELEASE_TARGET}"
     }
     if (params.PIPELINE_TYPE == "SPS") {
-        dir('runtime-component-operator-sps-config') {
+        dir('websphere-liberty-operator-sps-config') {
             git branch: "main", url: "git@github.ibm.com:websphere-operators-sps/websphere-liberty-operator-sps-config.git"
             sh "git checkout ${COMMON_OPERATORS_BRANCH}"
         }
@@ -110,8 +110,6 @@ def gitCloneAndStash() {
   
 // Job Specific Functions
 def void doWork(){
-   // Setup global variables
-   
    // Unstash the git repo
    unstash(name: 'runtime-component-operator')
    sh "./operators/scripts/build/build-initialize.sh"
