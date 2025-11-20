@@ -112,7 +112,7 @@ def gitCloneAndStash() {
 def void doWork(){
    // Unstash the git repo
    unstash(name: 'runtime-component-operator')
-   sh "./operators/scripts/build/build-initialize.sh --path ./operators"
+   sh "./operators/scripts/build/build-initialize.sh"
    sh "${command}"
 }
 
