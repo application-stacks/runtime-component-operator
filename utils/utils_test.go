@@ -66,21 +66,21 @@ var (
 		TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"}}
 	storage        = appstacksv1.RuntimeComponentStorage{Size: "10Mi", MountPath: "/mnt/data", VolumeClaimTemplate: volumeCT}
 	arch           = []string{"ppc64le"}
-	readinessProbe = &corev1.Probe{
-		ProbeHandler: corev1.ProbeHandler{
-			HTTPGet:   &corev1.HTTPGetAction{},
+	readinessProbe = &common.BaseComponentProbe{
+		BaseComponentProbeHandler: common.BaseComponentProbeHandler{
+			HTTPGet:   &common.OptionalHTTPGetAction{},
 			TCPSocket: &corev1.TCPSocketAction{},
 		},
 	}
-	livenessProbe = &corev1.Probe{
-		ProbeHandler: corev1.ProbeHandler{
-			HTTPGet:   &corev1.HTTPGetAction{},
+	livenessProbe = &common.BaseComponentProbe{
+		BaseComponentProbeHandler: common.BaseComponentProbeHandler{
+			HTTPGet:   &common.OptionalHTTPGetAction{},
 			TCPSocket: &corev1.TCPSocketAction{},
 		},
 	}
-	startupProbe = &corev1.Probe{
-		ProbeHandler: corev1.ProbeHandler{
-			HTTPGet:   &corev1.HTTPGetAction{},
+	startupProbe = &common.BaseComponentProbe{
+		BaseComponentProbeHandler: common.BaseComponentProbeHandler{
+			HTTPGet:   &common.OptionalHTTPGetAction{},
 			TCPSocket: &corev1.TCPSocketAction{},
 		},
 	}
@@ -616,11 +616,11 @@ func TestCustomizeKnativeService(t *testing.T) {
 		{"ksvc container ports", 1, ksvcNumPorts},
 		{"ksvc ServiceAccountName is nil", name, ksvcSAN},
 		{"ksvc ServiceAccountName not nil", *runtime.Spec.ServiceAccountName, ksvc.Spec.Template.Spec.ServiceAccountName},
-		{"liveness probe port", intstr.IntOrString{}, ksvcLPPort},
+		{"liveness probe port", intstr.FromInt32(service.Port), ksvcLPPort},
 		{"liveness probe TCP socket port", intstr.IntOrString{}, ksvcLPTCP},
-		{"Readiness probe port", intstr.IntOrString{}, ksvcRPPort},
+		{"Readiness probe port", intstr.FromInt32(service.Port), ksvcRPPort},
 		{"Readiness probe TCP socket port", intstr.IntOrString{}, ksvcRPTCP},
-		{"Startup probe port", intstr.IntOrString{}, ksvcSPPort},
+		{"Startup probe port", intstr.FromInt32(service.Port), ksvcSPPort},
 		{"Startup probe TCP socket port", intstr.IntOrString{}, ksvcSPTCP},
 		{"expose not set", "cluster-local", ksvcLabelNoExpose},
 		{"expose set to true", "", ksvcLabelTrueExpose},
