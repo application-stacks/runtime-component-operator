@@ -310,11 +310,6 @@ func customizeProbe(config *corev1.Probe, defaultProbeCallback func(ba common.Ba
 		return nil
 	}
 
-	// Probe handler is defined in config so use probe as is
-	if config.ProbeHandler != (corev1.ProbeHandler{}) {
-		return config
-	}
-
 	// Probe handler is not defined so use default values for the probe if values not set in probe config
 	return CustomizeProbeDefaults(config, defaultProbeCallback(ba))
 }
@@ -335,6 +330,9 @@ func CustomizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 	}
 	if config.FailureThreshold != 0 {
 		probe.FailureThreshold = config.FailureThreshold
+	}
+	if config.TerminationGracePeriodSeconds != nil {
+		probe.TerminationGracePeriodSeconds = config.TerminationGracePeriodSeconds
 	}
 
 	return probe
