@@ -488,17 +488,17 @@ func (cr *RuntimeComponent) GetProbes() common.BaseComponentProbes {
 }
 
 // GetLivenessProbe returns liveness probe
-func (p *RuntimeComponentProbes) GetLivenessProbe() *corev1.Probe {
+func (p *RuntimeComponentProbes) GetLivenessProbe(ba common.BaseComponent) *corev1.Probe {
 	return p.Liveness
 }
 
 // GetReadinessProbe returns readiness probe
-func (p *RuntimeComponentProbes) GetReadinessProbe() *corev1.Probe {
+func (p *RuntimeComponentProbes) GetReadinessProbe(ba common.BaseComponent) *corev1.Probe {
 	return p.Readiness
 }
 
 // GetStartupProbe returns startup probe
-func (p *RuntimeComponentProbes) GetStartupProbe() *corev1.Probe {
+func (p *RuntimeComponentProbes) GetStartupProbe(ba common.BaseComponent) *corev1.Probe {
 	return p.Startup
 }
 

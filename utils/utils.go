@@ -299,9 +299,9 @@ func CustomizeProbes(container *corev1.Container, ba common.BaseComponent) {
 		return
 	}
 
-	container.ReadinessProbe = customizeProbe(probesConfig.GetReadinessProbe(), probesConfig.GetDefaultReadinessProbe, ba)
-	container.LivenessProbe = customizeProbe(probesConfig.GetLivenessProbe(), probesConfig.GetDefaultLivenessProbe, ba)
-	container.StartupProbe = customizeProbe(probesConfig.GetStartupProbe(), probesConfig.GetDefaultStartupProbe, ba)
+	container.ReadinessProbe = customizeProbe(probesConfig.GetReadinessProbe(ba), probesConfig.GetDefaultReadinessProbe, ba)
+	container.LivenessProbe = customizeProbe(probesConfig.GetLivenessProbe(ba), probesConfig.GetDefaultLivenessProbe, ba)
+	container.StartupProbe = customizeProbe(probesConfig.GetStartupProbe(ba), probesConfig.GetDefaultStartupProbe, ba)
 }
 
 func customizeProbe(config *corev1.Probe, defaultProbeCallback func(ba common.BaseComponent) *corev1.Probe, ba common.BaseComponent) *corev1.Probe {
@@ -316,6 +316,18 @@ func customizeProbe(config *corev1.Probe, defaultProbeCallback func(ba common.Ba
 
 func CustomizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *corev1.Probe {
 	probe := defaultProbe
+	if config.ProbeHandler.Exec != nil {
+		probe.ProbeHandler.Exec = config.ProbeHandler.Exec
+	}
+	if config.ProbeHandler.GRPC != nil {
+		probe.ProbeHandler.GRPC = config.ProbeHandler.GRPC
+	}
+	if config.ProbeHandler.HTTPGet != nil {
+		probe.ProbeHandler.HTTPGet = config.ProbeHandler.HTTPGet
+	}
+	if config.ProbeHandler.TCPSocket != nil {
+		probe.ProbeHandler.TCPSocket = config.ProbeHandler.TCPSocket
+	}
 	if config.InitialDelaySeconds != 0 {
 		probe.InitialDelaySeconds = config.InitialDelaySeconds
 	}
@@ -334,7 +346,6 @@ func CustomizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 	if config.TerminationGracePeriodSeconds != nil {
 		probe.TerminationGracePeriodSeconds = config.TerminationGracePeriodSeconds
 	}
-
 	return probe
 }
 

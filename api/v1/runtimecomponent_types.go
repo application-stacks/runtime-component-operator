@@ -206,15 +206,15 @@ type RuntimeComponentServiceAccount struct {
 type RuntimeComponentProbes struct {
 	// Periodic probe of container liveness. Container will be restarted if the probe fails.
 	// +operator-sdk:csv:customresourcedefinitions:order=3,type=spec,displayName="Liveness Probe"
-	Liveness *corev1.Probe `json:"liveness,omitempty"`
+	Liveness *common.BaseComponentProbe `json:"liveness,omitempty"`
 
 	// Periodic probe of container service readiness. Container will be removed from service endpoints if the probe fails.
 	// +operator-sdk:csv:customresourcedefinitions:order=2,type=spec,displayName="Readiness Probe"
-	Readiness *corev1.Probe `json:"readiness,omitempty"`
+	Readiness *common.BaseComponentProbe `json:"readiness,omitempty"`
 
 	// Probe to determine successful initialization. If specified, other probes are not executed until this completes successfully.
 	// +operator-sdk:csv:customresourcedefinitions:order=1,type=spec,displayName="Startup Probe"
-	Startup *corev1.Probe `json:"startup,omitempty"`
+	Startup *common.BaseComponentProbe `json:"startup,omitempty"`
 }
 
 // Configure pods to run on particular Nodes.
@@ -611,18 +611,18 @@ func (cr *RuntimeComponent) GetProbes() common.BaseComponentProbes {
 }
 
 // GetLivenessProbe returns liveness probe
-func (p *RuntimeComponentProbes) GetLivenessProbe() *corev1.Probe {
-	return p.Liveness
+func (p *RuntimeComponentProbes) GetLivenessProbe(ba common.BaseComponent) *corev1.Probe {
+	return common.ConvertBaseComponentProbeToCoreProbe(p.Liveness, p.GetDefaultLivenessProbe(ba))
 }
 
 // GetReadinessProbe returns readiness probe
-func (p *RuntimeComponentProbes) GetReadinessProbe() *corev1.Probe {
-	return p.Readiness
+func (p *RuntimeComponentProbes) GetReadinessProbe(ba common.BaseComponent) *corev1.Probe {
+	return common.ConvertBaseComponentProbeToCoreProbe(p.Readiness, p.GetDefaultReadinessProbe(ba))
 }
 
 // GetStartupProbe returns startup probe
-func (p *RuntimeComponentProbes) GetStartupProbe() *corev1.Probe {
-	return p.Startup
+func (p *RuntimeComponentProbes) GetStartupProbe(ba common.BaseComponent) *corev1.Probe {
+	return common.ConvertBaseComponentProbeToCoreProbe(p.Startup, p.GetDefaultStartupProbe(ba))
 }
 
 // GetDefaultLivenessProbe returns default values for liveness probe

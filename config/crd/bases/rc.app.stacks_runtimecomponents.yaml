@@ -4369,7 +4369,9 @@ spec:
                         format: int32
                         type: integer
                       grpc:
-                        description: GRPC specifies an action involving a GRPC port.
+                        description: |-
+                          GRPC specifies an action involving a GRPC port.
+                          This is a beta field and requires enabling GRPCContainerProbe feature gate.
                         properties:
                           port:
                             description: Port number of the gRPC service. Number must
@@ -4415,7 +4417,6 @@ spec:
                               - value
                               type: object
                             type: array
-                            x-kubernetes-list-type: atomic
                           path:
                             description: Path to access on the HTTP server.
                             type: string
@@ -4433,8 +4434,6 @@ spec:
                               Scheme to use for connecting to the host.
                               Defaults to HTTP.
                             type: string
-                        required:
-                        - port
                         type: object
                       initialDelaySeconds:
                         description: |-
@@ -4522,7 +4521,9 @@ spec:
                         format: int32
                         type: integer
                       grpc:
-                        description: GRPC specifies an action involving a GRPC port.
+                        description: |-
+                          GRPC specifies an action involving a GRPC port.
+                          This is a beta field and requires enabling GRPCContainerProbe feature gate.
                         properties:
                           port:
                             description: Port number of the gRPC service. Number must
@@ -4568,7 +4569,6 @@ spec:
                               - value
                               type: object
                             type: array
-                            x-kubernetes-list-type: atomic
                           path:
                             description: Path to access on the HTTP server.
                             type: string
@@ -4586,8 +4586,6 @@ spec:
                               Scheme to use for connecting to the host.
                               Defaults to HTTP.
                             type: string
-                        required:
-                        - port
                         type: object
                       initialDelaySeconds:
                         description: |-
@@ -4676,7 +4674,9 @@ spec:
                         format: int32
                         type: integer
                       grpc:
-                        description: GRPC specifies an action involving a GRPC port.
+                        description: |-
+                          GRPC specifies an action involving a GRPC port.
+                          This is a beta field and requires enabling GRPCContainerProbe feature gate.
                         properties:
                           port:
                             description: Port number of the gRPC service. Number must
@@ -4722,7 +4722,6 @@ spec:
                               - value
                               type: object
                             type: array
-                            x-kubernetes-list-type: atomic
                           path:
                             description: Path to access on the HTTP server.
                             type: string
@@ -4740,8 +4739,6 @@ spec:
                               Scheme to use for connecting to the host.
                               Defaults to HTTP.
                             type: string
-                        required:
-                        - port
                         type: object
                       initialDelaySeconds:
                         description: |-
