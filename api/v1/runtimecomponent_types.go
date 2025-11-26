@@ -767,7 +767,10 @@ func (cr *RuntimeComponent) GetManageTLS() *bool {
 }
 
 func (cr *RuntimeComponent) GetManagedPort() int {
-	return int(cr.GetService().GetPort())
+	if cr.GetService() != nil && cr.GetService().GetPort() != 0 {
+		return int(cr.GetService().GetPort())
+	}
+	return 8080
 }
 
 func (cr *RuntimeComponent) GetManagedScheme() corev1.URIScheme {
@@ -1119,7 +1122,7 @@ func (cr *RuntimeComponent) Initialize() {
 	}
 
 	if cr.Spec.Service.Port == 0 {
-		cr.Spec.Service.Port = 8080
+		cr.Spec.Service.Port = int32(cr.GetManagedPort())
 	}
 
 	// If TargetPorts on Serviceports are not set, default them to the Port value in the CR
