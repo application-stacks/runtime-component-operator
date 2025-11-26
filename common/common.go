@@ -2,6 +2,7 @@ package common
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func ConvertBaseComponentProbeToCoreProbe(bcp *BaseComponentProbe, defaultProbe *corev1.Probe) *corev1.Probe {
@@ -84,7 +85,7 @@ func GetDefaultMicroProfileStartupProbe(ba BaseComponent) *corev1.Probe {
 		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/started",
-				Port:   ba.GetManagedPort(),
+				Port:   intstr.FromInt(ba.GetManagedPort()),
 				Scheme: ba.GetManagedScheme(),
 			},
 		},
@@ -100,7 +101,7 @@ func GetDefaultMicroProfileReadinessProbe(ba BaseComponent) *corev1.Probe {
 		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/ready",
-				Port:   ba.GetManagedPort(),
+				Port:   intstr.FromInt(ba.GetManagedPort()),
 				Scheme: ba.GetManagedScheme(),
 			},
 		},
@@ -117,7 +118,7 @@ func GetDefaultMicroProfileLivenessProbe(ba BaseComponent) *corev1.Probe {
 		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/live",
-				Port:   ba.GetManagedPort(),
+				Port:   intstr.FromInt(ba.GetManagedPort()),
 				Scheme: ba.GetManagedScheme(),
 			},
 		},

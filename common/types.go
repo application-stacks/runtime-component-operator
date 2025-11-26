@@ -342,7 +342,7 @@ type BaseComponent interface {
 	GetTopologySpreadConstraints() BaseComponentTopologySpreadConstraints
 	GetSecurityContext() *corev1.SecurityContext
 	GetManageTLS() *bool
-	GetManagedPort() intstr.IntOrString
+	GetManagedPort() int
 	GetManagedScheme() corev1.URIScheme
 	GetDisableServiceLinks() *bool
 	GetTolerations() []corev1.Toleration

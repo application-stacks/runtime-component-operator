@@ -765,8 +765,8 @@ func (cr *RuntimeComponent) GetManageTLS() *bool {
 	return cr.Spec.ManageTLS
 }
 
-func (cr *RuntimeComponent) GetManagedPort() intstr.IntOrString {
-	return intstr.FromInt(int(cr.GetService().GetPort()))
+func (cr *RuntimeComponent) GetManagedPort() int {
+	return int(cr.GetService().GetPort())
 }
 
 func (cr *RuntimeComponent) GetManagedScheme() corev1.URIScheme {
