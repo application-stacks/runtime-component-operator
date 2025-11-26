@@ -5,80 +5,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func ConvertBaseComponentProbeToCoreProbe(bcp *BaseComponentProbe, defaultProbe *corev1.Probe) *corev1.Probe {
-	if bcp == nil {
-		return nil
-	}
-	return CustomizeBaseComponentProbeDefaults(bcp, defaultProbe)
-}
-
-func CustomizeBaseComponentProbeDefaults(config *BaseComponentProbe, defaultProbe *corev1.Probe) *corev1.Probe {
-	probe := defaultProbe
-	if probe == nil {
-		probe = &corev1.Probe{}
-	}
-	if config == nil {
-		return probe
-	}
-	if config.BaseComponentProbeHandler.Exec != nil {
-		probe.ProbeHandler.Exec = config.BaseComponentProbeHandler.Exec
-	}
-	if config.BaseComponentProbeHandler.GRPC != nil {
-		probe.ProbeHandler.GRPC = config.BaseComponentProbeHandler.GRPC
-	}
-	if config.BaseComponentProbeHandler.TCPSocket != nil {
-		probe.ProbeHandler.TCPSocket = config.BaseComponentProbeHandler.TCPSocket
-	}
-	if config.BaseComponentProbeHandler.HTTPGet != nil {
-		probe.ProbeHandler.HTTPGet = convertOptionalHTTPGetActionToHTTPGetAction(config.BaseComponentProbeHandler.HTTPGet, probe.ProbeHandler.HTTPGet)
-	}
-	if config.InitialDelaySeconds != 0 {
-		probe.InitialDelaySeconds = config.InitialDelaySeconds
-	}
-	if config.TimeoutSeconds != 0 {
-		probe.TimeoutSeconds = config.TimeoutSeconds
-	}
-	if config.PeriodSeconds != 0 {
-		probe.PeriodSeconds = config.PeriodSeconds
-	}
-	if config.SuccessThreshold != 0 {
-		probe.SuccessThreshold = config.SuccessThreshold
-	}
-	if config.FailureThreshold != 0 {
-		probe.FailureThreshold = config.FailureThreshold
-	}
-	if config.TerminationGracePeriodSeconds != nil {
-		probe.TerminationGracePeriodSeconds = config.TerminationGracePeriodSeconds
-	}
-	return probe
-}
-
-func convertOptionalHTTPGetActionToHTTPGetAction(optAction *OptionalHTTPGetAction, defaultHTTPGetAction *corev1.HTTPGetAction) *corev1.HTTPGetAction {
-	action := defaultHTTPGetAction
-	if action == nil {
-		action = &corev1.HTTPGetAction{}
-	}
-	if optAction == nil {
-		return action
-	}
-	if optAction.Host != nil {
-		action.Host = *optAction.Host
-	}
-	if optAction.Path != nil {
-		action.Path = *optAction.Path
-	}
-	if optAction.Port != nil {
-		action.Port = *optAction.Port
-	}
-	if optAction.Scheme != nil {
-		action.Scheme = *optAction.Scheme
-	}
-	if optAction.HTTPHeaders != nil {
-		action.HTTPHeaders = *optAction.HTTPHeaders
-	}
-	return action
-}
-
 // GetDefaultMicroProfileStartupProbe returns the default values for MicroProfile Health-based startup probe.
 func GetDefaultMicroProfileStartupProbe(ba BaseComponent) *corev1.Probe {
 	return &corev1.Probe{
@@ -132,4 +58,56 @@ func GetDefaultMicroProfileLivenessProbe(ba BaseComponent) *corev1.Probe {
 // GetComponentNameLabel returns the component's name label.
 func GetComponentNameLabel(ba BaseComponent) string {
 	return ba.GetGroupName() + "/name"
+}
+
+func CustomizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *corev1.Probe {
+	probe := defaultProbe
+	if config.ProbeHandler.Exec != nil {
+		probe.ProbeHandler.Exec = config.ProbeHandler.Exec
+	}
+	if config.ProbeHandler.GRPC != nil {
+		probe.ProbeHandler.GRPC = config.ProbeHandler.GRPC
+	}
+	if config.ProbeHandler.HTTPGet != nil {
+		if probe.ProbeHandler.HTTPGet == nil {
+			probe.ProbeHandler.HTTPGet = &corev1.HTTPGetAction{}
+		}
+		if config.ProbeHandler.HTTPGet.Port.Type != 0 {
+			probe.ProbeHandler.HTTPGet.Port = config.ProbeHandler.HTTPGet.Port
+		}
+		if config.ProbeHandler.HTTPGet.Host != "" {
+			probe.ProbeHandler.HTTPGet.Host = config.ProbeHandler.HTTPGet.Host
+		}
+		if config.ProbeHandler.HTTPGet.Path != "" {
+			probe.ProbeHandler.HTTPGet.Path = config.ProbeHandler.HTTPGet.Path
+		}
+		if config.ProbeHandler.HTTPGet.Scheme != "" {
+			probe.ProbeHandler.HTTPGet.Scheme = config.ProbeHandler.HTTPGet.Scheme
+		}
+		if len(config.ProbeHandler.HTTPGet.HTTPHeaders) > 0 {
+			probe.ProbeHandler.HTTPGet.HTTPHeaders = config.ProbeHandler.HTTPGet.HTTPHeaders
+		}
+	}
+	if config.ProbeHandler.TCPSocket != nil {
+		probe.ProbeHandler.TCPSocket = config.ProbeHandler.TCPSocket
+	}
+	if config.InitialDelaySeconds != 0 {
+		probe.InitialDelaySeconds = config.InitialDelaySeconds
+	}
+	if config.TimeoutSeconds != 0 {
+		probe.TimeoutSeconds = config.TimeoutSeconds
+	}
+	if config.PeriodSeconds != 0 {
+		probe.PeriodSeconds = config.PeriodSeconds
+	}
+	if config.SuccessThreshold != 0 {
+		probe.SuccessThreshold = config.SuccessThreshold
+	}
+	if config.FailureThreshold != 0 {
+		probe.FailureThreshold = config.FailureThreshold
+	}
+	if config.TerminationGracePeriodSeconds != nil {
+		probe.TerminationGracePeriodSeconds = config.TerminationGracePeriodSeconds
+	}
+	return probe
 }

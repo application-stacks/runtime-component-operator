@@ -343,17 +343,17 @@ func (in *RuntimeComponentProbes) DeepCopyInto(out *RuntimeComponentProbes) {
 	*out = *in
 	if in.Liveness != nil {
 		in, out := &in.Liveness, &out.Liveness
-		*out = new(common.BaseComponentProbe)
+		*out = new(corev1.Probe)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Readiness != nil {
 		in, out := &in.Readiness, &out.Readiness
-		*out = new(common.BaseComponentProbe)
+		*out = new(corev1.Probe)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Startup != nil {
 		in, out := &in.Startup, &out.Startup
-		*out = new(common.BaseComponentProbe)
+		*out = new(corev1.Probe)
 		(*in).DeepCopyInto(*out)
 	}
 }

@@ -66,21 +66,21 @@ var (
 		TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"}}
 	storage        = appstacksv1.RuntimeComponentStorage{Size: "10Mi", MountPath: "/mnt/data", VolumeClaimTemplate: volumeCT}
 	arch           = []string{"ppc64le"}
-	readinessProbe = &common.BaseComponentProbe{
-		BaseComponentProbeHandler: common.BaseComponentProbeHandler{
-			HTTPGet:   &common.OptionalHTTPGetAction{},
+	readinessProbe = &corev1.Probe{
+		ProbeHandler: corev1.ProbeHandler{
+			HTTPGet:   &corev1.HTTPGetAction{},
 			TCPSocket: &corev1.TCPSocketAction{},
 		},
 	}
-	livenessProbe = &common.BaseComponentProbe{
-		BaseComponentProbeHandler: common.BaseComponentProbeHandler{
-			HTTPGet:   &common.OptionalHTTPGetAction{},
+	livenessProbe = &corev1.Probe{
+		ProbeHandler: corev1.ProbeHandler{
+			HTTPGet:   &corev1.HTTPGetAction{},
 			TCPSocket: &corev1.TCPSocketAction{},
 		},
 	}
-	startupProbe = &common.BaseComponentProbe{
-		BaseComponentProbeHandler: common.BaseComponentProbeHandler{
-			HTTPGet:   &common.OptionalHTTPGetAction{},
+	startupProbe = &corev1.Probe{
+		ProbeHandler: corev1.ProbeHandler{
+			HTTPGet:   &corev1.HTTPGetAction{},
 			TCPSocket: &corev1.TCPSocketAction{},
 		},
 	}
@@ -156,7 +156,7 @@ func TestCustomizeService(t *testing.T) {
 	CustomizeService(svc, runtime)
 	testCS := []Test{
 		{"Service number of exposed ports", 1, len(svc.Spec.Ports)},
-		{"Sercice first exposed port", runtime.Spec.Service.Port, svc.Spec.Ports[0].Port},
+		{"Service first exposed port", runtime.Spec.Service.Port, svc.Spec.Ports[0].Port},
 		{"Service first exposed target port", intstr.FromInt(int(runtime.Spec.Service.Port)), svc.Spec.Ports[0].TargetPort},
 		{"Service type", *runtime.Spec.Service.Type, svc.Spec.Type},
 		{"Service selector", name, svc.Spec.Selector["app.kubernetes.io/instance"]},
@@ -195,7 +195,7 @@ func optionalNodePortFunctionalityTests() []Test {
 	CustomizeService(svc, runtime)
 	testCS := []Test{
 		{"Service number of exposed ports", 1, len(svc.Spec.Ports)},
-		{"Sercice first exposed port", runtime.Spec.Service.Port, svc.Spec.Ports[0].Port},
+		{"Service first exposed port", runtime.Spec.Service.Port, svc.Spec.Ports[0].Port},
 		{"Service first exposed target port", intstr.FromInt(int(runtime.Spec.Service.Port)), svc.Spec.Ports[0].TargetPort},
 		{"Service type", *runtime.Spec.Service.Type, svc.Spec.Type},
 		{"Service selector", name, svc.Spec.Selector["app.kubernetes.io/instance"]},
