@@ -765,6 +765,17 @@ func (cr *RuntimeComponent) GetManageTLS() *bool {
 	return cr.Spec.ManageTLS
 }
 
+func (cr *RuntimeComponent) GetManagedPort() intstr.IntOrString {
+	return intstr.FromInt(int(cr.GetService().GetPort()))
+}
+
+func (cr *RuntimeComponent) GetManagedScheme() corev1.URIScheme {
+	if cr.GetManageTLS() != nil && *cr.GetManageTLS() {
+		return corev1.URISchemeHTTPS
+	}
+	return corev1.URISchemeHTTP
+}
+
 // GetDeployment returns deployment settings
 func (cr *RuntimeComponent) GetDeployment() common.BaseComponentDeployment {
 	if cr.Spec.Deployment == nil {

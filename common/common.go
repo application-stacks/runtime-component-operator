@@ -2,7 +2,6 @@ package common
 
 import (
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func ConvertBaseComponentProbeToCoreProbe(bcp *BaseComponentProbe, defaultProbe *corev1.Probe) *corev1.Probe {
@@ -85,8 +84,8 @@ func GetDefaultMicroProfileStartupProbe(ba BaseComponent) *corev1.Probe {
 		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/started",
-				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
-				Scheme: "HTTPS",
+				Port:   ba.GetManagedPort(),
+				Scheme: ba.GetManagedScheme(),
 			},
 		},
 		PeriodSeconds:    10,
@@ -101,8 +100,8 @@ func GetDefaultMicroProfileReadinessProbe(ba BaseComponent) *corev1.Probe {
 		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/ready",
-				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
-				Scheme: "HTTPS",
+				Port:   ba.GetManagedPort(),
+				Scheme: ba.GetManagedScheme(),
 			},
 		},
 		InitialDelaySeconds: 10,
@@ -118,8 +117,8 @@ func GetDefaultMicroProfileLivenessProbe(ba BaseComponent) *corev1.Probe {
 		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/live",
-				Port:   intstr.FromInt(int(ba.GetService().GetPort())),
-				Scheme: "HTTPS",
+				Port:   ba.GetManagedPort(),
+				Scheme: ba.GetManagedScheme(),
 			},
 		},
 		InitialDelaySeconds: 60,
