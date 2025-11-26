@@ -282,9 +282,9 @@ type OptionalHTTPGetAction struct {
 
 // BaseComponentProbes describes the probes for application container
 type BaseComponentProbes interface {
-	GetLivenessProbe(ba BaseComponent) *corev1.Probe
-	GetReadinessProbe(ba BaseComponent) *corev1.Probe
-	GetStartupProbe(ba BaseComponent) *corev1.Probe
+	GetLivenessProbe() *corev1.Probe
+	GetReadinessProbe() *corev1.Probe
+	GetStartupProbe() *corev1.Probe
 
 	GetDefaultLivenessProbe(ba BaseComponent) *corev1.Probe
 	GetDefaultReadinessProbe(ba BaseComponent) *corev1.Probe
