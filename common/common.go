@@ -12,7 +12,7 @@ func GetDefaultMicroProfileStartupProbe(ba BaseComponent) *corev1.Probe {
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/started",
 				Port:   intstr.FromInt(ba.GetManagedPort()),
-				Scheme: ba.GetManagedScheme(),
+				Scheme: corev1.URISchemeHTTPS,
 			},
 		},
 		PeriodSeconds:    10,
@@ -28,7 +28,7 @@ func GetDefaultMicroProfileReadinessProbe(ba BaseComponent) *corev1.Probe {
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/ready",
 				Port:   intstr.FromInt(ba.GetManagedPort()),
-				Scheme: ba.GetManagedScheme(),
+				Scheme: corev1.URISchemeHTTPS,
 			},
 		},
 		InitialDelaySeconds: 10,
@@ -45,7 +45,7 @@ func GetDefaultMicroProfileLivenessProbe(ba BaseComponent) *corev1.Probe {
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/live",
 				Port:   intstr.FromInt(ba.GetManagedPort()),
-				Scheme: ba.GetManagedScheme(),
+				Scheme: corev1.URISchemeHTTPS,
 			},
 		},
 		InitialDelaySeconds: 60,
