@@ -774,10 +774,7 @@ func (cr *RuntimeComponent) GetManagedPort() int {
 }
 
 func (cr *RuntimeComponent) GetManagedScheme() corev1.URIScheme {
-	if cr.GetManageTLS() == nil || *cr.GetManageTLS() {
-		return corev1.URISchemeHTTPS
-	}
-	return corev1.URISchemeHTTP
+	return corev1.URISchemeHTTPS
 }
 
 // GetDeployment returns deployment settings
