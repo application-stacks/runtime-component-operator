@@ -12,7 +12,7 @@ func GetDefaultMicroProfileStartupProbe(ba BaseComponent) *corev1.Probe {
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/started",
 				Port:   intstr.FromInt(ba.GetManagedPort()),
-				Scheme: corev1.URISchemeHTTPS,
+				Scheme: ba.GetManagedScheme(),
 			},
 		},
 		PeriodSeconds:    10,
@@ -28,7 +28,7 @@ func GetDefaultMicroProfileReadinessProbe(ba BaseComponent) *corev1.Probe {
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/ready",
 				Port:   intstr.FromInt(ba.GetManagedPort()),
-				Scheme: corev1.URISchemeHTTPS,
+				Scheme: ba.GetManagedScheme(),
 			},
 		},
 		InitialDelaySeconds: 10,
@@ -45,7 +45,7 @@ func GetDefaultMicroProfileLivenessProbe(ba BaseComponent) *corev1.Probe {
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/health/live",
 				Port:   intstr.FromInt(ba.GetManagedPort()),
-				Scheme: corev1.URISchemeHTTPS,
+				Scheme: ba.GetManagedScheme(),
 			},
 		},
 		InitialDelaySeconds: 60,
@@ -72,9 +72,7 @@ func CustomizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 		if probe.ProbeHandler.HTTPGet == nil {
 			probe.ProbeHandler.HTTPGet = &corev1.HTTPGetAction{}
 		}
-		if config.ProbeHandler.HTTPGet.Port.Type != 0 {
-			probe.ProbeHandler.HTTPGet.Port = config.ProbeHandler.HTTPGet.Port
-		}
+		probe.ProbeHandler.HTTPGet.Port = config.ProbeHandler.HTTPGet.Port
 		if config.ProbeHandler.HTTPGet.Host != "" {
 			probe.ProbeHandler.HTTPGet.Host = config.ProbeHandler.HTTPGet.Host
 		}
