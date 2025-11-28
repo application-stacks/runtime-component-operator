@@ -618,7 +618,6 @@ func (p *RuntimeComponentProbes) GetLivenessProbe() *corev1.Probe {
 // GetReadinessProbe returns readiness probe
 func (p *RuntimeComponentProbes) GetReadinessProbe() *corev1.Probe {
 	return p.Readiness
-
 }
 
 // GetStartupProbe returns startup probe
