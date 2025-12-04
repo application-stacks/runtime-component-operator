@@ -1983,6 +1983,27 @@ spec:
                 description: Expose the application externally via a Route, a Knative
                   Route or an Ingress resource.
                 type: boolean
+              hostAliases:
+                description: The list of hosts and IPs that will be inejcted into
+                  the application pod's hosts file
+                items:
+                  description: |-
+                    HostAlias holds the mapping between IP and hostnames that will be injected as an entry in the
+                    pod's hosts file.
+                  properties:
+                    hostnames:
+                      description: Hostnames for the above IP address.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    ip:
+                      description: IP address of the host file entry.
+                      type: string
+                  required:
+                  - ip
+                  type: object
+                type: array
               initContainers:
                 description: List of containers to run before other containers in
                   a pod.
