@@ -1,0 +1,8 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rco-leader-election-cluster-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: rco-controller-manager
+  namespace: rco-ns
