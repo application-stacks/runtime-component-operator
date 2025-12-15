@@ -532,6 +532,11 @@ func (in *RuntimeComponentSpec) DeepCopyInto(out *RuntimeComponentSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.PullSecrets != nil {
+		in, out := &in.PullSecrets, &out.PullSecrets
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.ServiceAccountName != nil {
 		in, out := &in.ServiceAccountName, &out.ServiceAccountName
 		*out = new(string)

@@ -4855,6 +4855,13 @@ spec:
                   repository. It is not required if the cluster is configured with
                   a global image pull secret.
                 type: string
+              pullSecrets:
+                description: List of Secrets to use to pull images from one or more
+                  specified repositories. It is not required if the cluster is configured
+                  with a global image pull secret.
+                items:
+                  type: string
+                type: array
               replicas:
                 description: Number of pods to create. Defaults to 1. Not applicable
                   when .spec.autoscaling or .spec.createKnativeService is specified.
