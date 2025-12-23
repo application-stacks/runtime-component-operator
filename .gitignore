@@ -83,3 +83,4 @@ tags
 # End of https://www.gitignore.io/api/go,vim,emacs,visualstudiocode
 ### Jetbrains ###
 .idea
+rco.secrets.baseline
