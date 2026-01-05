@@ -83,3 +83,6 @@ tags
 # End of https://www.gitignore.io/api/go,vim,emacs,visualstudiocode
 ### Jetbrains ###
 .idea
+# To allow the file to be copied into this repo during a build
+rco.secrets.baseline
+#
