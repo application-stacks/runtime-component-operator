@@ -310,34 +310,8 @@ func customizeProbe(config *corev1.Probe, defaultProbeCallback func(ba common.Ba
 		return nil
 	}
 
-	// Probe handler is defined in config so use probe as is
-	if config.ProbeHandler != (corev1.ProbeHandler{}) {
-		return config
-	}
-
 	// Probe handler is not defined so use default values for the probe if values not set in probe config
-	return CustomizeProbeDefaults(config, defaultProbeCallback(ba))
-}
-
-func CustomizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *corev1.Probe {
-	probe := defaultProbe
-	if config.InitialDelaySeconds != 0 {
-		probe.InitialDelaySeconds = config.InitialDelaySeconds
-	}
-	if config.TimeoutSeconds != 0 {
-		probe.TimeoutSeconds = config.TimeoutSeconds
-	}
-	if config.PeriodSeconds != 0 {
-		probe.PeriodSeconds = config.PeriodSeconds
-	}
-	if config.SuccessThreshold != 0 {
-		probe.SuccessThreshold = config.SuccessThreshold
-	}
-	if config.FailureThreshold != 0 {
-		probe.FailureThreshold = config.FailureThreshold
-	}
-
-	return probe
+	return common.CustomizeProbeDefaults(config, defaultProbeCallback(ba))
 }
 
 // CustomizeNetworkPolicy configures the network policy.
