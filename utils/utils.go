@@ -848,7 +848,7 @@ func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseCompone
 }
 
 // CustomizeServiceAccount ...
-func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent, client client.Client) error {
+func CustomizeServiceAccount(recCtx context.Context, sa *corev1.ServiceAccount, ba common.BaseComponent, client client.Client) error {
 	sa.Labels = ba.GetLabels()
 	sa.Annotations = MergeMaps(sa.Annotations, ba.GetAnnotations())
 
@@ -1113,7 +1113,7 @@ func secretShouldExist(secretKeySelector corev1.SecretKeySelector) bool {
 }
 
 // Returns an error if any user specified non-optional Secret or ConfigMap for Prometheus monitoring does not exist, otherwise return nil.
-func ValidatePrometheusMonitoringEndpoints(ba common.BaseComponent, client client.Client, namespace string) error {
+func ValidatePrometheusMonitoringEndpoints(recCtx context.Context, ba common.BaseComponent, client client.Client, namespace string) error {
 	var basicAuth *prometheusv1.BasicAuth
 	var oauth2 *prometheusv1.OAuth2
 	var bearerTokenSecret corev1.SecretKeySelector
@@ -1160,7 +1160,8 @@ func ValidatePrometheusMonitoringEndpoints(ba common.BaseComponent, client clien
 			}
 			// Error if any Secret is specified but does not exist
 			for _, secretName := range secretNames {
-				if err := client.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: namespace}, &corev1.Secret{}); err != nil {
+				secret := common.NewSecret(recCtx, secretName, namespace)
+				if err := client.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: namespace}, secret); err != nil {
 					errorMessage := fmt.Sprintf("Could not find Secret '%s' in this namespace.", secretName)
 					return errors.New(errorMessage)
 				}
@@ -1621,7 +1622,7 @@ func (r *ReconcilerBase) toJSONFromRaw(content *runtime.RawExtension) (map[strin
 // Looks for a pull secret in the service account retrieved from the component
 // Returns nil if there is at least one image pull secret, otherwise an error
 // Will always return nil if 'skipPullSecretValidation' is specified in the CR
-func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Client) error {
+func ServiceAccountPullSecretExists(recCtx context.Context, ba common.BaseComponent, client client.Client) error {
 	obj := ba.(metav1.Object)
 	ns := obj.GetNamespace()
 	saName := obj.GetName()
@@ -1656,7 +1657,8 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 		// if this is our service account there will be one image pull secret
 		// For others there could be more. either way, just use the first?
 		sName := secrets[0].Name
-		err := client.Get(context.TODO(), types.NamespacedName{Name: sName, Namespace: ns}, &corev1.Secret{})
+		pullSecret := common.NewSecret(recCtx, sName, ns)
+		err := client.Get(context.TODO(), types.NamespacedName{Name: pullSecret.Name, Namespace: pullSecret.Namespace}, pullSecret)
 		if err != nil {
 			saErr := errors.New("Service account " + saName + " isn't ready. Reason: " + err.Error())
 			return saErr
@@ -1846,7 +1848,7 @@ func UpdateConfigMap(configMap *corev1.ConfigMap, key string) {
 	data[key] = common.LoadFromConfig(common.Config, key)
 }
 
-func GetIssuerResourceVersion(client client.Client, certificate *certmanagerv1.Certificate) (string, error) {
+func GetIssuerResourceVersion(recCtx context.Context, client client.Client, certificate *certmanagerv1.Certificate) (string, error) {
 	issuer := &certmanagerv1.Issuer{}
 	err := client.Get(context.Background(), types.NamespacedName{Name: certificate.Spec.IssuerRef.Name,
 		Namespace: certificate.Namespace}, issuer)
@@ -1854,9 +1856,8 @@ func GetIssuerResourceVersion(client client.Client, certificate *certmanagerv1.C
 		return "", err
 	}
 	if issuer.Spec.CA != nil {
-		caSecret := &corev1.Secret{}
-		err = client.Get(context.Background(), types.NamespacedName{Name: issuer.Spec.CA.SecretName,
-			Namespace: certificate.Namespace}, caSecret)
+		caSecret := common.NewSecret(recCtx, issuer.Spec.CA.SecretName, certificate.Namespace)
+		err = client.Get(context.Background(), types.NamespacedName{Name: caSecret.Name, Namespace: caSecret.Namespace}, caSecret)
 		if err != nil {
 			return "", err
 		} else {
