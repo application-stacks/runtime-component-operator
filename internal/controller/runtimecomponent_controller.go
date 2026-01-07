@@ -101,6 +101,11 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		ns = r.watchNamespaces[0]
 	}
 
+	// This reconcile context is cancelled right before the Reconcile function terminates or when the parent context ctx is cancelled (such as in operator leader election), whichever happens first.
+	// Resources that require cleanup may use this context to hook into program execution before a function return.
+	recCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	configMap, err := r.GetOpConfigMap(OperatorName, ns)
 	if err != nil {
 		reqLogger.Info("Failed to find runtime-component-operator config map")
@@ -238,7 +243,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		if serviceAccountName == "" {
 			serviceAccount := &corev1.ServiceAccount{ObjectMeta: defaultMeta}
 			err = r.CreateOrUpdate(serviceAccount, instance, func() error {
-				return appstacksutils.CustomizeServiceAccount(serviceAccount, instance, r.GetClient())
+				return appstacksutils.CustomizeServiceAccount(recCtx, serviceAccount, instance, r.GetClient())
 			})
 			if err != nil {
 				reqLogger.Error(err, "Failed to reconcile ServiceAccount")
@@ -257,7 +262,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Check if the ServiceAccount has a valid pull secret before creating the deployment/statefulset
 	// or setting up knative. Otherwise the pods can go into an ImagePullBackOff loop
-	saErr := appstacksutils.ServiceAccountPullSecretExists(instance, r.GetClient())
+	saErr := appstacksutils.ServiceAccountPullSecretExists(recCtx, instance, r.GetClient())
 	if saErr != nil {
 		return r.ManageError(saErr, common.StatusConditionTypeReconciled, instance)
 	}
@@ -319,7 +324,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	useCertmanager, err := r.GenerateSvcCertSecret(ba, "rco", "Runtime Component Operator", "runtime-component-operator")
+	useCertmanager, err := r.GenerateSvcCertSecret(recCtx, ba, "rco", "Runtime Component Operator", "runtime-component-operator")
 	if err != nil {
 		reqLogger.Error(err, "Failed to reconcile CertManager Certificate")
 		return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
@@ -365,7 +370,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	err = r.ReconcileBindings(instance)
+	err = r.ReconcileBindings(recCtx, instance)
 	if err != nil {
 		return r.ManageError(err, common.StatusConditionTypeReconciled, ba)
 	}
@@ -395,7 +400,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		err = r.CreateOrUpdate(statefulSet, instance, func() error {
 			appstacksutils.CustomizeStatefulSet(statefulSet, instance)
 			appstacksutils.CustomizePodSpec(&statefulSet.Spec.Template, instance)
-			if err := appstacksutils.CustomizePodWithSVCCertificate(&statefulSet.Spec.Template, instance, r.GetClient()); err != nil {
+			if err := appstacksutils.CustomizePodWithSVCCertificate(recCtx, &statefulSet.Spec.Template, instance, r.GetClient()); err != nil {
 				return err
 			}
 			appstacksutils.CustomizePersistence(statefulSet, instance)
@@ -427,7 +432,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		err = r.CreateOrUpdate(deploy, instance, func() error {
 			appstacksutils.CustomizeDeployment(deploy, instance)
 			appstacksutils.CustomizePodSpec(&deploy.Spec.Template, instance)
-			if err := appstacksutils.CustomizePodWithSVCCertificate(&deploy.Spec.Template, instance, r.GetClient()); err != nil {
+			if err := appstacksutils.CustomizePodWithSVCCertificate(recCtx, &deploy.Spec.Template, instance, r.GetClient()); err != nil {
 				return err
 			}
 			return nil
@@ -529,7 +534,7 @@ func (r *RuntimeComponentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	} else if ok {
 		if instance.Spec.Monitoring != nil && (instance.Spec.CreateKnativeService == nil || !*instance.Spec.CreateKnativeService) {
 			// Validate the monitoring endpoints' configuration before creating/updating the ServiceMonitor
-			if err := appstacksutils.ValidatePrometheusMonitoringEndpoints(instance, r.GetClient(), instance.GetNamespace()); err != nil {
+			if err := appstacksutils.ValidatePrometheusMonitoringEndpoints(recCtx, instance, r.GetClient(), instance.GetNamespace()); err != nil {
 				return r.ManageError(err, common.StatusConditionTypeReconciled, instance)
 			}
 			sm := &prometheusv1.ServiceMonitor{ObjectMeta: defaultMeta}
