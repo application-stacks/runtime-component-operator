@@ -586,14 +586,12 @@ func (r *ReconcilerBase) checkIssuerReady(issuer *certmanagerv1.Issuer) error {
 	return nil
 }
 
-func (r *ReconcilerBase) checkSecretExists(secretName, secretNamespace string) error {
-	secret := &corev1.Secret{}
-	secret.Name = secretName
-	secret.Namespace = secretNamespace
-	return r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: secretNamespace}, secret)
+func (r *ReconcilerBase) checkSecretExists(recCtx context.Context, secretName, secretNamespace string) error {
+	secret := common.NewSecret(recCtx, secretName, secretNamespace)
+	return r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secret.Name, Namespace: secret.Namespace}, secret)
 }
 
-func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACommonName string, operatorName string) error {
+func (r *ReconcilerBase) GenerateCMIssuer(recCtx context.Context, namespace string, prefix string, CACommonName string, operatorName string) error {
 	if ok, err := r.IsGroupVersionSupported(certmanagerv1.SchemeGroupVersion.String(), "Issuer"); err != nil {
 		return err
 	} else if !ok {
@@ -644,13 +642,9 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 		return err
 	}
 
-	CustomCACert := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{
-		Name:      prefix + "-custom-ca-tls",
-		Namespace: namespace,
-	}}
+	customCACert := common.NewSecret(recCtx, prefix+"-custom-ca-tls", namespace)
 	customCACertFound := false
-	err = r.GetClient().Get(context.Background(), types.NamespacedName{Name: CustomCACert.GetName(),
-		Namespace: CustomCACert.GetNamespace()}, CustomCACert)
+	err = r.GetClient().Get(context.Background(), types.NamespacedName{Name: customCACert.Name, Namespace: customCACert.Namespace}, customCACert)
 	if err == nil {
 		customCACertFound = true
 	} else {
@@ -658,7 +652,7 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 		if err := r.checkCertificateReady(caCert); err != nil {
 			return err
 		}
-		if err := r.checkSecretExists(caCertSecretName, namespace); err != nil {
+		if err := r.checkSecretExists(recCtx, caCertSecretName, namespace); err != nil {
 			return err
 		}
 	}
@@ -675,8 +669,7 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 			issuer.Annotations = map[string]string{}
 		}
 		if customCACertFound {
-			issuer.Spec.CA.SecretName = CustomCACert.Name
-
+			issuer.Spec.CA.SecretName = customCACert.Name
 		}
 		return nil
 	})
@@ -695,7 +688,7 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 	return nil
 }
 
-func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string) (bool, error) {
+func (r *ReconcilerBase) GenerateSvcCertSecret(recCtx context.Context, ba common.BaseComponent, prefix string, CACommonName string, operatorName string) (bool, error) {
 	delete(ba.GetStatus().GetReferences(), common.StatusReferenceCertSecretName)
 	cleanup := func() {
 		if ok, err := r.IsGroupVersionSupported(certmanagerv1.SchemeGroupVersion.String(), "Certificate"); err != nil {
@@ -736,7 +729,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 	} else if ok {
 		bao := ba.(metav1.Object)
 
-		err = r.GenerateCMIssuer(bao.GetNamespace(), prefix, CACommonName, operatorName)
+		err = r.GenerateCMIssuer(recCtx, bao.GetNamespace(), prefix, CACommonName, operatorName)
 		if err != nil {
 			if errors.Is(err, APIVersionNotFoundError) {
 				return false, nil
@@ -799,7 +792,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix s
 				svcCert.Spec.IssuerRef.Name = customIssuer.Name
 			}
 
-			rVersion, _ := GetIssuerResourceVersion(r.client, svcCert)
+			rVersion, _ := GetIssuerResourceVersion(recCtx, r.client, svcCert)
 			if svcCert.Spec.SecretTemplate == nil {
 				svcCert.Spec.SecretTemplate = &certmanagerv1.CertificateSecretTemplate{
 					Annotations: map[string]string{},
