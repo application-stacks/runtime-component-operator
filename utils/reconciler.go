@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"sync"
 	"time"
 
 	networkingv1 "k8s.io/api/networking/v1"
@@ -125,6 +126,15 @@ func (r *ReconcilerBase) CreateOrUpdate(obj client.Object, owner metav1.Object, 
 	}
 
 	return err
+}
+
+// Runs CreateOrUpdate tracked by a WaitGroup wg
+func (r *ReconcilerBase) TrackedCreateOrUpdate(obj client.Object, owner metav1.Object, reconcile func() error, wg *sync.WaitGroup) error {
+	if wg != nil {
+		wg.Add(1)
+		defer wg.Done()
+	}
+	return r.CreateOrUpdate(obj, owner, reconcile)
 }
 
 // DeleteResource deletes kubernetes resource
