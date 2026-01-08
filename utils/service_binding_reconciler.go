@@ -29,10 +29,10 @@ func (r *ReconcilerBase) ReconcileBindings(recCtx context.Context, ba common.Bas
 
 func (r *ReconcilerBase) reconcileExpose(recCtx context.Context, ba common.BaseComponent) error {
 	mObj := ba.(metav1.Object)
-	bindingSecret := common.NewSecret(recCtx, getExposeBindingSecretName(ba), mObj.GetNamespace())
+	bindingSecret, wg := common.NewWaitableSecret(recCtx, getExposeBindingSecretName(ba), mObj.GetNamespace())
 
 	if ba.GetService() != nil && ba.GetService().GetBindable() != nil && *ba.GetService().GetBindable() {
-		err := r.CreateOrUpdate(bindingSecret, mObj, func() error {
+		err := r.TrackedCreateOrUpdate(bindingSecret, mObj, func() error {
 			customSecret := &corev1.Secret{}
 			// Check if custom values are provided in a secret, and apply the custom values
 			if err := r.getCustomValuesToExpose(customSecret, ba); err != nil {
@@ -43,7 +43,7 @@ func (r *ReconcilerBase) reconcileExpose(recCtx context.Context, ba common.BaseC
 			// Apply default values to the override secret if certain values are not set
 			r.applyDefaultValuesToExpose(recCtx, bindingSecret, ba)
 			return nil
-		})
+		}, wg)
 		if err != nil {
 			return err
 		}
