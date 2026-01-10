@@ -676,6 +676,10 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	appContainer.Env = ba.GetEnv()
 	appContainer.EnvFrom = ba.GetEnvFrom()
 
+	if ba.GetHostAliases() != nil {
+		pts.Spec.HostAliases = *ba.GetHostAliases()
+	}
+
 	pts.Spec.InitContainers = ba.GetInitContainers()
 
 	appContainer.VolumeMounts = ba.GetVolumeMounts()

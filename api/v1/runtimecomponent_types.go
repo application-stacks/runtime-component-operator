@@ -163,6 +163,10 @@ type RuntimeComponentSpec struct {
 	// DNS settings for the pod.
 	// +operator-sdk:csv:customresourcedefinitions:order=29,type=spec,displayName="DNS"
 	DNS *RuntimeComponentDNS `json:"dns,omitempty"`
+
+	// The list of hosts and IPs that will be inejcted into the application pod's hosts file
+	// +operator-sdk:csv:customresourcedefinitions:order=30,type=spec,displayName="Host Aliases"
+	HostAliases *[]corev1.HostAlias `json:"hostAliases,omitempty"`
 }
 
 // Defines the DNS
@@ -1084,6 +1088,10 @@ func (cr *RuntimeComponentTopologySpreadConstraints) GetConstraints() *[]corev1.
 
 func (cr *RuntimeComponentTopologySpreadConstraints) GetDisableOperatorDefaults() *bool {
 	return cr.DisableOperatorDefaults
+}
+
+func (cr *RuntimeComponent) GetHostAliases() *[]corev1.HostAlias {
+	return cr.Spec.HostAliases
 }
 
 // Initialize the RuntimeComponent instance

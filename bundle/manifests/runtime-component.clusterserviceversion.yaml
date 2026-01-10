@@ -419,6 +419,10 @@ spec:
       - description: DNS settings for the pod.
         displayName: DNS
         path: dns
+      - description: The list of hosts and IPs that will be inejcted into the application
+          pod's hosts file
+        displayName: Host Aliases
+        path: hostAliases
       - description: Labels to set on ServiceMonitor.
         displayName: Monitoring Labels
         path: monitoring.labels
