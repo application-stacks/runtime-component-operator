@@ -198,7 +198,7 @@ func ErrorIsNoMatchesForKind(err error, kind string, version string) bool {
 func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	svc.Labels = ba.GetLabels()
-	CustomizeServiceAnnotations(svc)
+	CustomizeServiceAnnotations(svc, ba.GetDisableTopology())
 	svc.Annotations = MergeMaps(svc.Annotations, ba.GetAnnotations())
 
 	if len(svc.Spec.Ports) == 0 {
@@ -280,12 +280,15 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	}
 }
 
-func CustomizeServiceAnnotations(svc *corev1.Service) {
-	// Enable topology aware hints/routing
-	serviceAnnotations := make(map[string]string)
-	serviceAnnotations["service.kubernetes.io/topology-aware-hints"] = "Auto" // Topology Aware Hints (< k8s version 1.27)
-	serviceAnnotations["service.kubernetes.io/topology-mode"] = "Auto"        // Topology Aware Routing (>= k8s version 1.27)
-	svc.Annotations = MergeMaps(svc.Annotations, serviceAnnotations)
+func CustomizeServiceAnnotations(svc *corev1.Service, disableTopology *bool) {
+	if disableTopology != nil && *disableTopology {
+		delete(svc.Annotations, "service.kubernetes.io/topology-aware-hints")
+		delete(svc.Annotations, "service.kubernetes.io/topology-mode")
+	} else {
+		serviceAnnotations := make(map[string]string)
+		serviceAnnotations["service.kubernetes.io/topology-mode"] = "Auto" // Topology Aware Routing (>= k8s version 1.27)
+		svc.Annotations = MergeMaps(svc.Annotations, serviceAnnotations)
+	}
 }
 
 func CustomizeProbes(container *corev1.Container, ba common.BaseComponent) {
