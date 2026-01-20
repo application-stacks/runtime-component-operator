@@ -317,6 +317,10 @@ type RuntimeComponentService struct {
 	// Configure service session affinity.
 	// +operator-sdk:csv:customresourcedefinitions:order=19,type=spec
 	SessionAffinity *RuntimeComponentServiceSessionAffinity `json:"sessionAffinity,omitempty"`
+
+	// Disables topology aware annotations from being added to the Service. Defaults to false.
+	// +operator-sdk:csv:customresourcedefinitions:order=20,type=spec,displayName="Disable Topology",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	DisableTopology *bool `json:"disableTopology,omitempty"`
 }
 
 // Configure service session affinity
@@ -763,6 +767,27 @@ func (cr *RuntimeComponent) GetAffinity() common.BaseComponentAffinity {
 // GetAffinity returns deployment's node and pod affinity settings
 func (cr *RuntimeComponent) GetManageTLS() *bool {
 	return cr.Spec.ManageTLS
+}
+
+func (cr *RuntimeComponent) GetManagedPort() int {
+	if cr.GetService() != nil && cr.GetService().GetPort() != 0 {
+		return int(cr.GetService().GetPort())
+	}
+	return 8080
+}
+
+func (cr *RuntimeComponent) GetManagedScheme() corev1.URIScheme {
+	if cr.GetManageTLS() == nil || *cr.GetManageTLS() {
+		return corev1.URISchemeHTTPS
+	}
+	return corev1.URISchemeHTTP
+}
+
+func (cr *RuntimeComponent) GetDisableTopology() *bool {
+	if cr.Spec.Service != nil {
+		return cr.Spec.Service.DisableTopology
+	}
+	return nil
 }
 
 // GetDeployment returns deployment settings
