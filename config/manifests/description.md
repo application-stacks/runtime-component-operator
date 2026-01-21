@@ -6,6 +6,7 @@ Kubernetes platform installed on one of the following platforms:
 - Linux&reg; x86_64 (amd64)
 - Linux&reg; on IBM&reg; Z (s390x)
 - Linux&reg; on Power&reg; (ppc64le)
+- Linux&reg; on AArch64 (arm64)
 ## Details
 Key features provided by the operator:
 ### Integration with Certificate Managers
