@@ -439,3 +439,10 @@ NOTE: The `RuntimeOperation` CR must be created in the same namespace as the Pod
 === Troubleshooting
 
 See the link:++troubleshooting.adoc++[troubleshooting guide] for information on how to investigate and resolve deployment problems.
+
+== Limitations
+=== Using certificates when manageTLS=true
+If `manageTLS=true` is specified in the CR YAML file (or if `manageTLS` is not set, as `true` is the default), then the operator will manage the creation of a TLS secret for the runtime component.
+However, it is the responsibility of the runtime component to make appropriate use of the secret. The runtime component can use the
+value of the `TLS_DIR` environment variable to discover the directory where the certificate files are mounted inside the runtime component's
+pods.
