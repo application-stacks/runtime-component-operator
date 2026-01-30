@@ -17,6 +17,7 @@ limitations under the License.
 package v1
 
 import (
+	"sort"
 	"time"
 
 	"github.com/application-stacks/runtime-component-operator/common"
@@ -1292,6 +1293,18 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 	if !found {
 		s.Conditions = append(s.Conditions, *condition)
 	}
+
+	// Re-sort conditions to prioritize 'Ready' condition
+	sort.Slice(s.Conditions, func(i, j int) bool {
+		if s.Conditions[i].GetType() == common.StatusConditionTypeReady {
+			return true
+		}
+		if s.Conditions[j].GetType() == common.StatusConditionTypeReady {
+			return false
+		}
+		// fallback for other conditions
+		return s.Conditions[i].GetType() < s.Conditions[j].GetType()
+	})
 }
 
 func (s *RuntimeComponentStatus) UnsetCondition(c common.StatusCondition) {
