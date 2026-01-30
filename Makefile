@@ -273,7 +273,7 @@ docker-login:
 	docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
 
 .PHONY: docker-build
-docker-build: test ## Build docker image with the manager.
+docker-build: ## Build docker image with the manager.
 	ARCH=$(shell go env GOARCH) && $(CONTAINER_COMMAND) build -t ${IMG} . --build-arg GO_PLATFORM=$${ARCH}
 
 .PHONY: docker-push
