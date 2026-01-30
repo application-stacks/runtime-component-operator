@@ -11,13 +11,15 @@ COPY go.mod go.mod
 COPY go.sum go.sum
 
 RUN if [ -z "${GO_VERSION_ARG}" ]; then \
-      GO_VERSION=$(grep '^go [0-9]\+.[0-9]\+' go.mod | cut -d ' ' -f 2); \
+      GO_VERSION=$(sed -n 's/^go \([0-9.]*\).*/\1/p' go.mod); \
     else \
       GO_VERSION=${GO_VERSION_ARG}; \
     fi; \
+    # Ensure we don't end up with a partial version like "1.22" if the download needs "1.22.5"
+    if [[ ${GO_VERSION} =~ ^[0-9]+\.[0-9]+$ ]]; then GO_VERSION="${GO_VERSION}.0"; fi; \
+    echo "Downloading Go version: ${GO_VERSION}..."; \
     rm -rf /usr/local/go; \
-    curl -L --output - "https://golang.org/dl/go${GO_VERSION}.linux-${GO_PLATFORM}.tar.gz" | tar -xz -C /usr/local/
-
+    curl -L "https://go.dev/dl/go${GO_VERSION}.linux-${GO_PLATFORM}.tar.gz" | tar -xz -C /usr/local/
 # cache deps before building and copying source so that we don't need to re-download as much
 # and so that source changes don't invalidate our downloaded layer
 RUN go mod download
