@@ -156,7 +156,7 @@ func TestCustomizeService(t *testing.T) {
 	CustomizeService(svc, runtime)
 	testCS := []Test{
 		{"Service number of exposed ports", 1, len(svc.Spec.Ports)},
-		{"Service first exposed port", runtime.Spec.Service.Port, svc.Spec.Ports[0].Port},
+		{"Sercice first exposed port", runtime.Spec.Service.Port, svc.Spec.Ports[0].Port},
 		{"Service first exposed target port", intstr.FromInt(int(runtime.Spec.Service.Port)), svc.Spec.Ports[0].TargetPort},
 		{"Service type", *runtime.Spec.Service.Type, svc.Spec.Type},
 		{"Service selector", name, svc.Spec.Selector["app.kubernetes.io/instance"]},
@@ -195,7 +195,7 @@ func optionalNodePortFunctionalityTests() []Test {
 	CustomizeService(svc, runtime)
 	testCS := []Test{
 		{"Service number of exposed ports", 1, len(svc.Spec.Ports)},
-		{"Service first exposed port", runtime.Spec.Service.Port, svc.Spec.Ports[0].Port},
+		{"Sercice first exposed port", runtime.Spec.Service.Port, svc.Spec.Ports[0].Port},
 		{"Service first exposed target port", intstr.FromInt(int(runtime.Spec.Service.Port)), svc.Spec.Ports[0].TargetPort},
 		{"Service type", *runtime.Spec.Service.Type, svc.Spec.Type},
 		{"Service selector", name, svc.Spec.Selector["app.kubernetes.io/instance"]},
