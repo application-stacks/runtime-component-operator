@@ -17,7 +17,6 @@ limitations under the License.
 package v1
 
 import (
-	"fmt"
 	"sort"
 	"time"
 
@@ -1291,8 +1290,6 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 		}
 		return s.Conditions[i].GetType() < s.Conditions[j].GetType()
 	})
-
-	fmt.Printf("DEBUG: First condition is now: %s\n", s.Conditions[0].GetType())
 }
 
 func (s *RuntimeComponentStatus) UnsetCondition(c common.StatusCondition) {
