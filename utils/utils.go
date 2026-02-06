@@ -3,10 +3,12 @@ package utils
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -912,7 +914,62 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent,
 		}
 	}
 
+	pssr := ba.GetStatus().GetReferences()[common.StatusReferencePullSecrets]
+	pullSecrets := Set(DecodePullSecrets(pssr))
+	crPullSecrets := Set(ba.GetPullSecrets())
+	if pssr != "" && !SetEquals(crPullSecrets, pullSecrets) {
+		// There is a reference to a pull secret but it doesn't match the one
+		// from the CR (which is empty or different)
+		// so delete the refered pull secret from the service account
+		missingPullSecrets := SetDiff(pullSecrets, crPullSecrets)
+		removePullSecrets(sa, missingPullSecrets)
+	}
+	if len(crPullSecrets) == 0 {
+		// There is no pull secret so delete the status reference
+		// This has to happen after the reference has been used to remove the pull
+		// secret from the service account
+		delete(ba.GetStatus().GetReferences(), common.StatusReferencePullSecrets)
+	} else {
+		// Add the pull secrets from the CR to the service account. First check that all are valid
+		for _, ps := range crPullSecrets {
+			err := client.Get(context.TODO(), types.NamespacedName{Name: ps, Namespace: ba.(metav1.Object).GetNamespace()}, &corev1.Secret{})
+			if err != nil {
+				return err
+			}
+		}
+		ba.GetStatus().SetReference(common.StatusReferencePullSecrets, EncodePullSecrets(pullSecrets))
+		if len(sa.ImagePullSecrets) == 0 {
+			for _, ps := range crPullSecrets {
+				sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
+					Name: ps,
+				})
+			}
+		} else {
+			for _, ps := range crPullSecrets {
+				pullSecretName := ps
+				found := false
+				for _, obj := range sa.ImagePullSecrets {
+					if obj.Name == pullSecretName {
+						found = true
+						break
+					}
+				}
+				if !found {
+					sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
+						Name: pullSecretName,
+					})
+				}
+			}
+		}
+	}
+
 	return nil
+}
+
+func removePullSecrets(sa *corev1.ServiceAccount, pullSecrets []string) {
+	for _, ps := range pullSecrets {
+		removePullSecret(sa, ps)
+	}
 }
 
 func removePullSecret(sa *corev1.ServiceAccount, pullSecretName string) {
@@ -1984,4 +2041,59 @@ func parseEnvAsBool(envValue string) bool {
 		}
 	}
 	return false
+}
+
+// Encodes a pullSecrets list into a comma-separated and base64 encoded string
+func EncodePullSecrets(pullSecrets []string) string {
+	return base64.RawURLEncoding.EncodeToString([]byte(strings.Join(pullSecrets, ",")))
+}
+
+// Decodes a comma-separated and base64 encoded pull secrets string into a list
+func DecodePullSecrets(pullSecretsString string) []string {
+	output, err := base64.RawURLEncoding.DecodeString(pullSecretsString)
+	if err != nil {
+		return []string{}
+	}
+	return strings.Split(string(output), ",")
+}
+
+// Returns true if set A and B are equivalent
+func SetEquals(a []string, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	// track seen items in a
+	seen := map[string]bool{}
+	for _, v := range a {
+		seen[v] = true
+	}
+	// return false if b contains an element not in a
+	for _, v := range b {
+		if _, found := seen[v]; !found {
+			return false
+		}
+	}
+	return true
+}
+
+// Converts list A into a set without repeated values
+func Set(a []string) []string {
+	out := []string{}
+	for _, v := range a {
+		if !slices.Contains(out, v) {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
+// Returns the set difference of A \ B
+func SetDiff(a []string, b []string) []string {
+	out := []string{}
+	for _, v := range a {
+		if !slices.Contains(b, v) {
+			out = append(out, v)
+		}
+	}
+	return out
 }
