@@ -299,7 +299,7 @@ func TestManageError(t *testing.T) {
 
 	testME := []Test{
 		{"ManageError Requeue", true, rec.Requeue},
-		{"ManageError New Condition Status", corev1.ConditionFalse, runtimecomponent.Status.Conditions[0].Status},
+		{"ManageError New Condition Status", corev1.ConditionFalse, runtimecomponent.Status.GetCondition(common.StatusConditionTypeReconciled).GetStatus()},
 	}
 	verifyTests(testME, t)
 }
@@ -318,7 +318,7 @@ func TestManageSuccess(t *testing.T) {
 	r.ManageSuccess(common.StatusConditionTypeReconciled, runtimecomponent)
 
 	testMS := []Test{
-		{"ManageSuccess New Condition Status", corev1.ConditionTrue, runtimecomponent.Status.Conditions[0].Status},
+		{"ManageSuccess New Condition Status", corev1.ConditionTrue, runtimecomponent.Status.GetCondition(common.StatusConditionTypeReconciled).GetStatus()},
 	}
 	verifyTests(testMS, t)
 }
