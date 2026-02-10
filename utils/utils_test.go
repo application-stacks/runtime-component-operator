@@ -878,6 +878,31 @@ func TestShouldDeleteRoute(t *testing.T) {
 	verifyTests(testCR, t)
 }
 
+func TestGetEnvVarValue(t *testing.T) {
+	logger := zap.New()
+	logf.SetLogger(logger)
+
+	envs := []corev1.EnvVar{
+		{Name: "EXISTING_VAR", Value: "/custom/path"},
+		{Name: "EMPTY_VAR", Value: ""},
+	}
+
+	// Helper to run func for Test struct
+	val1, found1 := GetEnvVarValue(envs, "EXISTING_VAR")
+	_, found2 := GetEnvVarValue(envs, "MISSING_VAR")
+	val3, found3 := GetEnvVarValue(envs, "EMPTY_VAR")
+
+	testGEVV := []Test{
+		{"Retrieve existing variable value", "/custom/path", val1},
+		{"Retrieve existing variable found status", true, found1},
+		{"Handle missing variable found status", false, found2},
+		{"Handle empty string variable found status", true, found3},
+		{"Handle empty string variable value", "", val3},
+	}
+
+	verifyTests(testGEVV, t)
+}
+
 // Helper Functions
 // Unconditionally set the proper tags for an enabled runtime omponent
 func createAppDefinitionTags(app *appstacksv1.RuntimeComponent) (map[string]string, map[string]string) {

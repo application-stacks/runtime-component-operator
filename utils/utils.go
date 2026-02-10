@@ -645,6 +645,15 @@ func customizeAffinityArchitectures(affinity *corev1.Affinity, affinityConfig co
 	}
 }
 
+func GetEnvVarValue(envs []corev1.EnvVar, name string) (string, bool) {
+	for _, env := range envs {
+		if env.Name == name {
+			return env.Value, true
+		}
+	}
+	return "", false
+}
+
 // CustomizePodSpec ...
 func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
@@ -709,10 +718,15 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 
 	appContainer.SecurityContext = GetSecurityContext(ba)
 
+	tlsDir, found := GetEnvVarValue(appContainer.Env, "TLS_DIR")
+
 	if ba.GetManageTLS() == nil || *ba.GetManageTLS() || ba.GetService().GetCertificateSecretRef() != nil {
 
 		secretName := ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName]
-		appContainer.Env = append(appContainer.Env, corev1.EnvVar{Name: "TLS_DIR", Value: "/etc/x509/certs"})
+		if !found {
+			appContainer.Env = append(appContainer.Env, corev1.EnvVar{Name: "TLS_DIR", Value: "/etc/x509/certs"})
+			tlsDir = "/etc/x509/certs"
+		}
 		pts.Spec.Volumes = append(pts.Spec.Volumes, corev1.Volume{
 			Name: "svc-certificate",
 			VolumeSource: corev1.VolumeSource{
@@ -723,7 +737,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		})
 		appContainer.VolumeMounts = append(appContainer.VolumeMounts, corev1.VolumeMount{
 			Name:      "svc-certificate",
-			MountPath: "/etc/x509/certs",
+			MountPath: tlsDir,
 			ReadOnly:  true,
 		})
 	}
