@@ -430,6 +430,14 @@ func (r *ReconcilerBase) ManageSuccessWithWarnings(conditionType common.StatusCo
 		}
 	}
 
+	// Track annotations that were defined in the CR into status
+	common.SaveTrackedAnnotations(ba,
+		common.StatusTrackedAnnotationTypeGlobal,
+		common.StatusTrackedAnnotationTypeDeployment,
+		common.StatusTrackedAnnotationTypeStatefulSet,
+		common.StatusTrackedAnnotationTypeService,
+		common.StatusTrackedAnnotationTypeRoute)
+
 	err := r.UpdateStatus(ba.(client.Object))
 	if err != nil {
 		log.Error(err, "Unable to update status")

@@ -9415,6 +9415,12 @@ spec:
                 additionalProperties:
                   type: string
                 type: object
+              trackedAnnotations:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                type: object
               versions:
                 properties:
                   reconciled:
