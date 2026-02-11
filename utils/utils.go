@@ -1752,27 +1752,25 @@ func AddOCPCertAnnotation(ba common.BaseComponent, svc *corev1.Service) {
 }
 
 func CustomizePodWithSVCCertificate(pts *corev1.PodTemplateSpec, ba common.BaseComponent, client client.Client) error {
-
 	if ba.GetManageTLS() == nil || *ba.GetManageTLS() || ba.GetService().GetCertificateSecretRef() != nil {
 		obj := ba.(metav1.Object)
 		secretName := ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName]
 		if secretName != "" {
-			return addSecretResourceVersionAsEnvVar(pts, obj, client, secretName, "SERVICE_CERT")
+			return addSecretHashAsAnnotation(pts, obj, client, secretName, ba.GetGroupName())
 		} else {
 			return errors.New("Service certifcate secret name must not be empty")
 		}
 	}
 	return nil
 }
-func addSecretResourceVersionAsEnvVar(pts *corev1.PodTemplateSpec, object metav1.Object, client client.Client, secretName string, envNamePrefix string) error {
+
+func addSecretHashAsAnnotation(pts *corev1.PodTemplateSpec, object metav1.Object, client client.Client, secretName string, groupName string) error {
 	secret := &corev1.Secret{}
 	err := client.Get(context.Background(), types.NamespacedName{Name: secretName, Namespace: object.GetNamespace()}, secret)
 	if err != nil {
 		return fmt.Errorf("Secret %q was not found in namespace %q, %w", secretName, object.GetNamespace(), err)
 	}
-	pts.Spec.Containers[0].Env = append(pts.Spec.Containers[0].Env, corev1.EnvVar{
-		Name:  envNamePrefix + "_SECRET_RESOURCE_VERSION",
-		Value: secret.ResourceVersion})
+	pts.ObjectMeta.Annotations[groupName+"/secret-"+secretName] = HashData(secret.Data)
 	return nil
 }
 
@@ -1856,7 +1854,7 @@ func GetIssuerResourceVersion(client client.Client, certificate *certmanagerv1.C
 		if err != nil {
 			return "", err
 		} else {
-			return issuer.ResourceVersion + "," + caSecret.ResourceVersion, nil
+			return issuer.ResourceVersion + "," + HashData(caSecret.Data), nil
 		}
 	} else {
 		return issuer.ResourceVersion, nil
