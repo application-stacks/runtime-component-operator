@@ -340,13 +340,117 @@ func CustomizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 	return probe
 }
 
-// CustomizeNetworkPolicy configures the network policy.
-func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, ba common.BaseComponent) {
+func createEgressBypass(ba common.BaseComponent, isOpenShift bool, getDNSEgressRule func(string, string) (bool, networkingv1.NetworkPolicyEgressRule), getEndpoints func(string, string) (*corev1.Endpoints, error)) (bool, []networkingv1.NetworkPolicyEgressRule) {
+	egressRules := []networkingv1.NetworkPolicyEgressRule{}
+
+	var dnsRule networkingv1.NetworkPolicyEgressRule
+	var usingPermissiveRule bool
+	// If allowed, add an Egress rule to access the OpenShift DNS or K8s CoreDNS. Otherwise, use a permissive cluster-wide Egress rule.
+	if isOpenShift {
+		usingPermissiveRule, dnsRule = getDNSEgressRule("dns-default", "openshift-dns")
+	} else {
+		usingPermissiveRule, dnsRule = getDNSEgressRule("kube-dns", "kube-system")
+	}
+	egressRules = append(egressRules, dnsRule)
+
+	// If the DNS rule is a specific Egress rule also check if another Egress rule can be created for the API server.
+	// Otherwise, fallback to a permissive cluster-wide Egress rule.
+	if !usingPermissiveRule {
+		if apiServerEndpoints, err := getEndpoints("kubernetes", "default"); err == nil {
+			rule := networkingv1.NetworkPolicyEgressRule{}
+			// Define the port
+			port := networkingv1.NetworkPolicyPort{}
+			port.Protocol = &apiServerEndpoints.Subsets[0].Ports[0].Protocol
+			var portNumber intstr.IntOrString = intstr.FromInt((int)(apiServerEndpoints.Subsets[0].Ports[0].Port))
+			port.Port = &portNumber
+			rule.Ports = append(rule.Ports, port)
+
+			// Add the endpoint address as ipBlock entries
+			for _, endpoint := range apiServerEndpoints.Subsets {
+				for _, address := range endpoint.Addresses {
+					peer := networkingv1.NetworkPolicyPeer{}
+					ipBlock := networkingv1.IPBlock{}
+					ipBlock.CIDR = address.IP + "/32"
+
+					peer.IPBlock = &ipBlock
+					rule.To = append(rule.To, peer)
+				}
+			}
+			egressRules = append(egressRules, rule)
+		} else {
+			// The operator couldn't create a rule for the K8s API server so add a permissive Egress rule
+			rule := networkingv1.NetworkPolicyEgressRule{}
+			egressRules = append(egressRules, rule)
+		}
+	}
+	return usingPermissiveRule, egressRules
+}
+
+// createNetworkPolicyEgressRules returns the network policy rules for outgoing traffic to other Pod(s)
+func createNetworkPolicyEgressRules(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, isBypassingDenyAllEgress bool, getDNSEgressRule func(string, string) (bool, networkingv1.NetworkPolicyEgressRule), getEndpoints func(string, string) (*corev1.Endpoints, error), ba common.BaseComponent) []networkingv1.NetworkPolicyEgressRule {
+	config := ba.GetNetworkPolicy()
+	egressRules := []networkingv1.NetworkPolicyEgressRule{}
+	if isBypassingDenyAllEgress {
+		usingPermissiveRule, bypassRules := createEgressBypass(ba, isOpenShift, getDNSEgressRule, getEndpoints)
+		egressRules = append(egressRules, bypassRules...)
+		if usingPermissiveRule {
+			return egressRules // exit early because permissive egress is set
+		}
+	}
+	// configure the main application egress rule
+	var rule networkingv1.NetworkPolicyEgressRule
+	if config == nil || ((config.GetToNamespaceLabels() != nil && len(config.GetToNamespaceLabels()) == 0) &&
+		(config.GetToLabels() != nil && len(config.GetToLabels()) == 0)) {
+		rule = createAllowAllNetworkPolicyEgressRule()
+	} else {
+		rule = createNetworkPolicyEgressRule(ba.GetApplicationName(), networkPolicy.Namespace, config)
+	}
+	egressRules = append(egressRules, rule)
+	return egressRules
+}
+
+func createNetworkPolicyEgressRule(appName string, namespace string, config common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyEgressRule {
+	rule := networkingv1.NetworkPolicyEgressRule{}
+	if config != nil {
+		rule.To = append(rule.To,
+			// Add peer to allow traffic to other pods belonging to the app
+			createNetworkPolicyPeer(appName, namespace, config, getNetworkPolicyEgressLabelGetters),
+		)
+	}
+	return rule
+}
+
+func createAllowAllNetworkPolicyEgressRule() networkingv1.NetworkPolicyEgressRule {
+	return networkingv1.NetworkPolicyEgressRule{
+		To: []networkingv1.NetworkPolicyPeer{{
+			NamespaceSelector: &metav1.LabelSelector{},
+		}},
+	}
+}
+
+func GetEndpointPortByName(endpointPorts *[]corev1.EndpointPort, name string) *corev1.EndpointPort {
+	if endpointPorts != nil {
+		for _, endpointPort := range *endpointPorts {
+			if endpointPort.Name == name {
+				return &endpointPort
+			}
+		}
+	}
+	return nil
+}
+
+func CreateNetworkPolicyPortFromEndpointPort(endpointPort *corev1.EndpointPort) networkingv1.NetworkPolicyPort {
+	port := networkingv1.NetworkPolicyPort{}
+	port.Protocol = &endpointPort.Protocol
+	var portNumber intstr.IntOrString = intstr.FromInt((int)(endpointPort.Port))
+	port.Port = &portNumber
+	return port
+}
+
+func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, getDNSEgressRule func(string, string) (bool, networkingv1.NetworkPolicyEgressRule), getEndpoints func(string, string) (*corev1.Endpoints, error), ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	networkPolicy.Labels = ba.GetLabels()
 	networkPolicy.Annotations = MergeMaps(networkPolicy.Annotations, ba.GetAnnotations())
-
-	networkPolicy.Spec.PolicyTypes = []networkingv1.PolicyType{networkingv1.PolicyTypeIngress}
 
 	networkPolicy.Spec.PodSelector = metav1.LabelSelector{
 		MatchLabels: map[string]string{
@@ -354,11 +458,53 @@ func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShi
 		},
 	}
 
+	ingressDisabled := ba.GetNetworkPolicy() != nil && ba.GetNetworkPolicy().IsIngressDisabled()
+	hasIngressPolicy := policyTypesContains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeIngress)
+	if ingressDisabled {
+		if hasIngressPolicy {
+			networkPolicy.Spec.PolicyTypes = networkPolicy.Spec.PolicyTypes[1:] // remove the first element
+		}
+		networkPolicy.Spec.Ingress = []networkingv1.NetworkPolicyIngressRule{}
+	} else {
+		if !hasIngressPolicy {
+			networkPolicy.Spec.PolicyTypes = append(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeIngress)
+		}
+		networkPolicy.Spec.Ingress = createNetworkPolicyIngressRules(networkPolicy, isOpenShift, ba)
+	}
+
+	egressDisabled := ba.GetNetworkPolicy() != nil && ba.GetNetworkPolicy().IsEgressDisabled()
+	hasEgressPolicy := policyTypesContains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress)
+	if egressDisabled {
+		if hasEgressPolicy {
+			networkPolicy.Spec.PolicyTypes = networkPolicy.Spec.PolicyTypes[:len(networkPolicy.Spec.PolicyTypes)-1] // remove the last element
+		}
+		networkPolicy.Spec.Egress = []networkingv1.NetworkPolicyEgressRule{}
+	} else {
+		egressConfigured := ba.GetNetworkPolicy() != nil && (ba.GetNetworkPolicy().GetToLabels() != nil || ba.GetNetworkPolicy().GetToNamespaceLabels() != nil)
+		egressBypass := ba.GetNetworkPolicy() != nil && ba.GetNetworkPolicy().IsBypassingDenyAllEgress() // check if egress should bypass deny all policy to access the API server and DNS
+		if egressConfigured || egressBypass {
+			if !hasEgressPolicy {
+				networkPolicy.Spec.PolicyTypes = append(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress)
+			}
+
+			networkPolicy.Spec.Egress = createNetworkPolicyEgressRules(networkPolicy, isOpenShift, egressBypass, getDNSEgressRule, getEndpoints, ba)
+		} else {
+			// if egress is not configured, consider the network policy disabled
+			if hasEgressPolicy {
+				networkPolicy.Spec.PolicyTypes = networkPolicy.Spec.PolicyTypes[:len(networkPolicy.Spec.PolicyTypes)-1] // remove the last element
+			}
+			networkPolicy.Spec.Egress = []networkingv1.NetworkPolicyEgressRule{}
+		}
+	}
+}
+
+// createNetworkPolicyIngressRules returns the network policy rules for incoming traffic from other Pod(s)
+func createNetworkPolicyIngressRules(networkPolicy *networkingv1.NetworkPolicy, isOpenShift bool, ba common.BaseComponent) []networkingv1.NetworkPolicyIngressRule {
 	config := ba.GetNetworkPolicy()
 	isExposed := ba.GetExpose() != nil && *ba.GetExpose()
 	var rule networkingv1.NetworkPolicyIngressRule
 
-	if config != nil && config.GetNamespaceLabels() != nil && len(config.GetNamespaceLabels()) == 0 &&
+	if config != nil && config.GetFromNamespaceLabels() != nil && len(config.GetFromNamespaceLabels()) == 0 &&
 		config.GetFromLabels() != nil && len(config.GetFromLabels()) == 0 {
 		rule = createAllowAllNetworkPolicyIngressRule()
 	} else if isOpenShift {
@@ -368,7 +514,7 @@ func CustomizeNetworkPolicy(networkPolicy *networkingv1.NetworkPolicy, isOpenShi
 	}
 
 	customizeNetworkPolicyPorts(&rule, ba)
-	networkPolicy.Spec.Ingress = []networkingv1.NetworkPolicyIngressRule{rule}
+	return []networkingv1.NetworkPolicyIngressRule{rule}
 }
 
 func createOpenShiftNetworkPolicyIngressRule(appName string, namespace string, isExposed bool, config common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyIngressRule {
@@ -397,8 +543,7 @@ func createOpenShiftNetworkPolicyIngressRule(appName string, namespace string, i
 
 	rule.From = append(rule.From,
 		// Add peer to allow traffic from other pods belonging to the app
-		createNetworkPolicyPeer(appName, namespace, config),
-
+		createNetworkPolicyPeer(appName, namespace, config, getNetworkPolicyIngressLabelGetters),
 		// Add peer to allow traffic from OpenShift monitoring
 		networkingv1.NetworkPolicyPeer{
 			NamespaceSelector: &metav1.LabelSelector{
@@ -419,7 +564,7 @@ func createKubernetesNetworkPolicyIngressRule(appName string, namespace string, 
 
 	rule := networkingv1.NetworkPolicyIngressRule{}
 	rule.From = []networkingv1.NetworkPolicyPeer{
-		createNetworkPolicyPeer(appName, namespace, config),
+		createNetworkPolicyPeer(appName, namespace, config, getNetworkPolicyIngressLabelGetters),
 	}
 	return rule
 }
@@ -432,26 +577,26 @@ func createAllowAllNetworkPolicyIngressRule() networkingv1.NetworkPolicyIngressR
 	}
 }
 
-func createNetworkPolicyPeer(appName string, namespace string, networkPolicy common.BaseComponentNetworkPolicy) networkingv1.NetworkPolicyPeer {
+func createNetworkPolicyPeer(appName string, namespace string, networkPolicy common.BaseComponentNetworkPolicy, getNetworkPolicyLabelGetters func(common.BaseComponentNetworkPolicy) (func() map[string]string, func() map[string]string)) networkingv1.NetworkPolicyPeer {
 	peer := networkingv1.NetworkPolicyPeer{
 		NamespaceSelector: &metav1.LabelSelector{},
 		PodSelector:       &metav1.LabelSelector{},
 	}
-
-	if networkPolicy == nil || networkPolicy.GetNamespaceLabels() == nil {
+	getNamespaceLabels, getLabels := getNetworkPolicyLabelGetters(networkPolicy)
+	if networkPolicy == nil || getNamespaceLabels() == nil {
 		peer.NamespaceSelector.MatchLabels = map[string]string{
 			"kubernetes.io/metadata.name": namespace,
 		}
 	} else {
-		peer.NamespaceSelector.MatchLabels = networkPolicy.GetNamespaceLabels()
+		peer.NamespaceSelector.MatchLabels = getNamespaceLabels()
 	}
 
-	if networkPolicy == nil || networkPolicy.GetFromLabels() == nil {
+	if networkPolicy == nil || getLabels() == nil {
 		peer.PodSelector.MatchLabels = map[string]string{
 			"app.kubernetes.io/part-of": appName,
 		}
 	} else {
-		peer.PodSelector.MatchLabels = networkPolicy.GetFromLabels()
+		peer.PodSelector.MatchLabels = getLabels()
 	}
 
 	return peer
@@ -492,6 +637,40 @@ func customizeNetworkPolicyPorts(ingress *networkingv1.NetworkPolicyIngressRule,
 			ingress.Ports[i+1].Port = additionalPort
 		}
 	}
+}
+
+func getNetworkPolicyIngressLabelGetters(config common.BaseComponentNetworkPolicy) (func() map[string]string, func() map[string]string) {
+	var getNamespaceLabels, getLabels func() map[string]string
+	if config != nil {
+		getNamespaceLabels = config.GetFromNamespaceLabels
+		getLabels = config.GetFromLabels
+	} else {
+		getNamespaceLabels = nil
+		getLabels = nil
+	}
+	return getNamespaceLabels, getLabels
+}
+
+func getNetworkPolicyEgressLabelGetters(config common.BaseComponentNetworkPolicy) (func() map[string]string, func() map[string]string) {
+	var getNamespaceLabels, getLabels func() map[string]string
+	if config != nil {
+		getNamespaceLabels = config.GetToNamespaceLabels
+		getLabels = config.GetToLabels
+	} else {
+		getNamespaceLabels = nil
+		getLabels = nil
+	}
+	return getNamespaceLabels, getLabels
+}
+
+// returns true if policy is contained within the policyTypes array, false otherwise
+func policyTypesContains(policyTypes []networkingv1.PolicyType, policy networkingv1.PolicyType) bool {
+	for _, currentPolicy := range policyTypes {
+		if currentPolicy == policy {
+			return true
+		}
+	}
+	return false
 }
 
 // CustomizeAffinity ...

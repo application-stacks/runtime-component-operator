@@ -438,16 +438,53 @@ spec:
         path: networkPolicy.disable
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: Specify the labels of namespaces that incoming traffic is allowed
-          from.
+      - description: Disable the creation of the network policy ingress. Defaults
+          to false.
+        displayName: Disable Ingress
+        path: networkPolicy.disableIngress
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Disable the creation of the network policy egress. Defaults to
+          false.
+        displayName: Disable Egress
+        path: networkPolicy.disableEgress
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Bypasses deny all egress rules to allow API server and DNS access.
+          Defaults to false.
+        displayName: Bypass Deny All Egress
+        path: networkPolicy.bypassDenyAllEgress
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Deprecated. .spec.networkPolicy.fromNamespaceLabels should be
+          used instead. If both are specified, .spec.networkPolicy.fromNamespaceLabels
+          will override this.
         displayName: Namespace Labels
         path: networkPolicy.namespaceLabels
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Specify the labels of namespaces that incoming traffic is allowed
+          from.
+        displayName: From Namespace Labels
+        path: networkPolicy.fromNamespaceLabels
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Specify the labels of pod(s) that incoming traffic is allowed
           from.
         displayName: From Labels
         path: networkPolicy.fromLabels
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Specify the labels of namespaces that outgoing traffic is allowed
+          to.
+        displayName: To Namespace Labels
+        path: networkPolicy.toNamespaceLabels
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Specify the labels of pod(s) that outgoing traffic is allowed
+          to.
+        displayName: To Labels
+        path: networkPolicy.toLabels
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       statusDescriptors:
