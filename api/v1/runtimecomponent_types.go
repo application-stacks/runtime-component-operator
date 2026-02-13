@@ -163,6 +163,10 @@ type RuntimeComponentSpec struct {
 	// DNS settings for the pod.
 	// +operator-sdk:csv:customresourcedefinitions:order=29,type=spec,displayName="DNS"
 	DNS *RuntimeComponentDNS `json:"dns,omitempty"`
+
+	// Name of the PriorityClass for the pod.
+	// +operator-sdk:csv:customresourcedefinitions:order=30,type=spec,displayName="Priority Class Name"
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 // Defines the DNS

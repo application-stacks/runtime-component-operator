@@ -260,4 +260,5 @@ type BaseComponent interface {
 	GetDisableServiceLinks() *bool
 	GetTolerations() []corev1.Toleration
 	GetDNS() BaseComponentDNS
+	GetPriorityClassName() *string
 }
