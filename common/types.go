@@ -9,6 +9,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 )
 
 // StatusConditionType ...
@@ -162,6 +163,12 @@ type BaseComponentMonitoring interface {
 	GetEndpoints() []prometheusv1.Endpoint
 }
 
+// BaseComponentKnativeService represents basic Knative service configuration
+type BaseComponentKnativeService interface {
+	GetTrafficTarget() []servingv1.TrafficTarget
+	GetAutoscalingAnnotations() map[string]string
+}
+
 // BaseComponentRoute represents route configuration
 type BaseComponentRoute interface {
 	GetTermination() *routev1.TLSTerminationType
@@ -246,6 +253,7 @@ type BaseComponent interface {
 	GetApplicationVersion() string
 	GetApplicationName() string
 	GetMonitoring() BaseComponentMonitoring
+	GetKnativeService() BaseComponentKnativeService
 	GetLabels() map[string]string
 	GetAnnotations() map[string]string
 	GetStatus() BaseComponentStatus

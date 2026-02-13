@@ -952,7 +952,7 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 		ksvc.Spec.Template.Spec.Containers[0].Ports = append(ksvc.Spec.Template.Spec.Containers[0].Ports, corev1.ContainerPort{})
 	}
 	ksvc.Spec.Template.ObjectMeta.Labels = ba.GetLabels()
-	ksvc.Spec.Template.ObjectMeta.Annotations = MergeMaps(ksvc.Spec.Template.ObjectMeta.Annotations, ba.GetAnnotations())
+	ksvc.Spec.Template.ObjectMeta.Annotations = MergeMaps(ksvc.Spec.Template.ObjectMeta.Annotations, ba.GetAnnotations(), ba.GetKnativeService().GetAutoscalingAnnotations())
 
 	if ba.GetService().GetTargetPort() != nil {
 		ksvc.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = *ba.GetService().GetTargetPort()
@@ -1002,6 +1002,8 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 			ksvc.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet.Scheme = ""
 		}
 	}
+
+	ksvc.Spec.Traffic = ba.GetKnativeService().GetTrafficTarget()
 
 	basa := ba.GetServiceAccount()
 	if basa != nil && basa.GetMountToken() != nil && !*basa.GetMountToken() {
