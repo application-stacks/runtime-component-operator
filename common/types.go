@@ -264,4 +264,5 @@ type BaseComponent interface {
 	GetDNS() BaseComponentDNS
 	GetDisableTopologyRouting() *bool
 	GetHostAliases() *[]corev1.HostAlias
+	GetPriorityClassName() *string
 }
