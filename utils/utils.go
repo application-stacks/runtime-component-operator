@@ -1770,6 +1770,9 @@ func addSecretHashAsAnnotation(pts *corev1.PodTemplateSpec, object metav1.Object
 	if err != nil {
 		return fmt.Errorf("Secret %q was not found in namespace %q, %w", secretName, object.GetNamespace(), err)
 	}
+	if pts.ObjectMeta.Annotations == nil {
+		pts.ObjectMeta.Annotations = make(map[string]string)
+	}
 	pts.ObjectMeta.Annotations[groupName+"/secret-"+secretName] = HashData(secret.Data)
 	return nil
 }
