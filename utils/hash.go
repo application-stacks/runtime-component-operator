@@ -1,15 +1,17 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/hex"
+	"io"
 	"sort"
 
-	"github.com/zeebo/blake3"
+	"lukechampine.com/blake3"
 )
 
 func HashData(data map[string][]byte) string {
-	hasher := blake3.New()
-	hasher.Write(serializeSecretData(data))
+	hasher := blake3.New(32, nil)
+	io.Copy(hasher, bytes.NewReader(serializeSecretData(data)))
 	hash := hasher.Sum(nil)
 	return hex.EncodeToString(hash)
 }
