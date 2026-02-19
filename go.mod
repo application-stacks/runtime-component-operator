@@ -9,7 +9,6 @@ require (
 	github.com/openshift/library-go v0.0.0-20250818065802-cf8518058622
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.78.2
-	github.com/zeebo/blake3 v0.2.4
 	go.uber.org/zap v1.27.0
 	k8s.io/api v0.33.3
 	k8s.io/apimachinery v0.33.3
