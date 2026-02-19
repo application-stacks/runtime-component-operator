@@ -769,20 +769,6 @@ func (cr *RuntimeComponent) GetManageTLS() *bool {
 	return cr.Spec.ManageTLS
 }
 
-func (cr *RuntimeComponent) GetManagedPort() int {
-	if cr.GetService() != nil && cr.GetService().GetPort() != 0 {
-		return int(cr.GetService().GetPort())
-	}
-	return 8080
-}
-
-func (cr *RuntimeComponent) GetManagedScheme() corev1.URIScheme {
-	if cr.GetManageTLS() == nil || *cr.GetManageTLS() {
-		return corev1.URISchemeHTTPS
-	}
-	return corev1.URISchemeHTTP
-}
-
 func (cr *RuntimeComponent) GetDisableTopology() *bool {
 	if cr.Spec.Service != nil {
 		return cr.Spec.Service.DisableTopology
