@@ -34,13 +34,14 @@ import (
 
 // ReconcilerBase base reconciler with some common behaviour
 type ReconcilerBase struct {
-	apiReader  client.Reader
-	client     client.Client
-	scheme     *runtime.Scheme
-	recorder   record.EventRecorder
-	restConfig *rest.Config
-	discovery  discovery.DiscoveryInterface
-	controller controller.Controller
+	apiReader      client.Reader
+	client         client.Client
+	scheme         *runtime.Scheme
+	recorder       record.EventRecorder
+	restConfig     *rest.Config
+	discovery      discovery.DiscoveryInterface
+	controller     controller.Controller
+	statusWarnings []StatusWarning
 }
 
 // NewReconcilerBase creates a new ReconcilerBase
@@ -101,6 +102,14 @@ func (r *ReconcilerBase) GetDiscoveryClient() (discovery.DiscoveryInterface, err
 // SetDiscoveryClient ...
 func (r *ReconcilerBase) SetDiscoveryClient(discovery discovery.DiscoveryInterface) {
 	r.discovery = discovery
+}
+
+func (r *ReconcilerBase) GetStatusWarnings() []StatusWarning {
+	return r.statusWarnings
+}
+
+func (r *ReconcilerBase) SetStatusWarnings(statusWarnings []StatusWarning) {
+	r.statusWarnings = statusWarnings
 }
 
 var log = logf.Log.WithName("utils")
@@ -305,11 +314,6 @@ func updateReconcileInterval(maxSeconds int, s common.BaseComponentStatus, ba co
 
 // ManageError ...
 func (r *ReconcilerBase) ManageError(issue error, conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
-	return r.ManageErrorWithWarnings(issue, conditionType, ba, nil)
-}
-
-// ManageErrorWithWarnings ...
-func (r *ReconcilerBase) ManageErrorWithWarnings(issue error, conditionType common.StatusConditionType, ba common.BaseComponent, statusWarnings *[]StatusWarning) (reconcile.Result, error) {
 	s := ba.GetStatus()
 	obj := ba.(client.Object)
 	logger := log.WithValues("ba.Namespace", obj.GetNamespace(), "ba.Name", obj.GetName())
@@ -324,8 +328,8 @@ func (r *ReconcilerBase) ManageErrorWithWarnings(issue error, conditionType comm
 	r.setCondition(ba, oldCondition, newCondition)
 
 	warnings := getDefaultWarnings()
-	if statusWarnings != nil {
-		for _, newWarning := range *statusWarnings {
+	if r.statusWarnings != nil {
+		for _, newWarning := range r.statusWarnings {
 			warnings = append(warnings, newWarning)
 		}
 	}
@@ -383,11 +387,6 @@ func (r *ReconcilerBase) ManageErrorWithWarnings(issue error, conditionType comm
 
 // ManageSuccess ...
 func (r *ReconcilerBase) ManageSuccess(conditionType common.StatusConditionType, ba common.BaseComponent) (reconcile.Result, error) {
-	return r.ManageSuccessWithWarnings(conditionType, ba, nil)
-}
-
-// ManageSuccessWithWarnings ...
-func (r *ReconcilerBase) ManageSuccessWithWarnings(conditionType common.StatusConditionType, ba common.BaseComponent, statusWarnings *[]StatusWarning) (reconcile.Result, error) {
 	s := ba.GetStatus()
 	oldRecCondition := s.GetCondition(conditionType)
 
@@ -398,8 +397,8 @@ func (r *ReconcilerBase) ManageSuccessWithWarnings(conditionType common.StatusCo
 	s.SetCondition(newRecCondition)
 
 	warnings := getDefaultWarnings()
-	if statusWarnings != nil {
-		for _, newWarning := range *statusWarnings {
+	if r.statusWarnings != nil {
+		for _, newWarning := range r.statusWarnings {
 			warnings = append(warnings, newWarning)
 		}
 	}
