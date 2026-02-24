@@ -112,6 +112,26 @@ func (r *ReconcilerBase) SetStatusWarnings(statusWarnings []StatusWarning) {
 	r.statusWarnings = statusWarnings
 }
 
+// Deletes a status warning from the ReconcilerBase if a status message matches
+func (r *ReconcilerBase) DeleteStatusWarning(message string) {
+	for {
+		// check if a status warning exists
+		i := -1
+		for k, statusWarning := range r.statusWarnings {
+			if statusWarning.Message == message {
+				i = k
+				break
+			}
+		}
+		// no status warning matched so return out
+		if i == -1 {
+			return
+		}
+		// status warning matched and can be deleted
+		r.statusWarnings = append(r.statusWarnings[:i], r.statusWarnings[i+1:]...)
+	}
+}
+
 var log = logf.Log.WithName("utils")
 var logD1 = log.V(common.LogLevelDebug)
 
