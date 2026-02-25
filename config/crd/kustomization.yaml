@@ -13,12 +13,6 @@ patches:
 #- patches/webhook_in_runtimeoperations.yaml
 # +kubebuilder:scaffold:crdkustomizewebhookpatch
 
-# [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
-# patches here are for enabling the CA injection for each CRD
-#- patches/cainjection_in_runtimecomponents.yaml
-#- patches/cainjection_in_runtimeoperations.yaml
-# +kubebuilder:scaffold:crdkustomizecainjectionpatch
-
 - path: patches/preserveUnknownFields_runtimecomponents.yaml
 - path: patches/preserveUnknownFields_runtimeoperations.yaml
 # +kubebuilder:scaffold:preserveunknownfieldspatch
