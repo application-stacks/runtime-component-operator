@@ -318,8 +318,8 @@ type RuntimeComponentService struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=19,type=spec
 	SessionAffinity *RuntimeComponentServiceSessionAffinity `json:"sessionAffinity,omitempty"`
 
-	// Disables topology routing annotations from being added to the Service. Defaults to false.
-	// +operator-sdk:csv:customresourcedefinitions:order=20,type=spec,displayName="Disable Topology",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	// Disable topology aware routing annotations from being added to the Service. Defaults to false.
+	// +operator-sdk:csv:customresourcedefinitions:order=20,type=spec,displayName="Disable Topology Routing",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	DisableTopologyRouting *bool `json:"disableTopologyRouting,omitempty"`
 }
 
