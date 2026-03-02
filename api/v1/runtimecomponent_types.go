@@ -769,6 +769,7 @@ func (cr *RuntimeComponent) GetManageTLS() *bool {
 	return cr.Spec.ManageTLS
 }
 
+// GetDisableTopologyRouting returns whether topology aware routing annotations are disabled for the service
 func (cr *RuntimeComponent) GetDisableTopologyRouting() *bool {
 	if cr.Spec.Service != nil {
 		return cr.Spec.Service.DisableTopologyRouting
