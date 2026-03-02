@@ -71,7 +71,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2025-12-08T16:01:38Z"
+    createdAt: "2026-03-02T22:51:15Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -339,6 +339,12 @@ spec:
       - description: Configure service session affinity.
         displayName: Session Affinity
         path: service.sessionAffinity
+      - description: Disable topology aware routing annotations from being added to
+          the Service. Defaults to false.
+        displayName: Disable Topology Routing
+        path: service.disableTopologyRouting
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Setting to maintain session affinity. Must be ClientIP or None.
           Defaults to None.
         displayName: Session Affinity Type
