@@ -273,10 +273,10 @@ spec:
       - description: Configure service session affinity.
         displayName: Session Affinity
         path: service.sessionAffinity
-      - description: Disables topology aware annotations from being added to the Service.
-          Defaults to false.
+      - description: Disables topology routing annotations from being added to the
+          Service. Defaults to false.
         displayName: Disable Topology
-        path: service.disableTopology
+        path: service.disableTopologyRouting
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Setting to maintain session affinity. Must be ClientIP or None.

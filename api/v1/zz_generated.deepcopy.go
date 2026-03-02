@@ -457,8 +457,8 @@ func (in *RuntimeComponentService) DeepCopyInto(out *RuntimeComponentService) {
 		*out = new(RuntimeComponentServiceSessionAffinity)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.DisableTopology != nil {
-		in, out := &in.DisableTopology, &out.DisableTopology
+	if in.DisableTopologyRouting != nil {
+		in, out := &in.DisableTopologyRouting, &out.DisableTopologyRouting
 		*out = new(bool)
 		**out = **in
 	}

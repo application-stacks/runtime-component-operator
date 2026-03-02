@@ -198,7 +198,7 @@ func ErrorIsNoMatchesForKind(err error, kind string, version string) bool {
 func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	obj := ba.(metav1.Object)
 	svc.Labels = ba.GetLabels()
-	CustomizeServiceAnnotations(svc, ba.GetDisableTopology())
+	CustomizeServiceAnnotations(svc, ba.GetDisableTopologyRouting())
 	svc.Annotations = MergeMaps(svc.Annotations, ba.GetAnnotations())
 
 	if len(svc.Spec.Ports) == 0 {
@@ -280,8 +280,8 @@ func CustomizeService(svc *corev1.Service, ba common.BaseComponent) {
 	}
 }
 
-func CustomizeServiceAnnotations(svc *corev1.Service, disableTopology *bool) {
-	if disableTopology != nil && *disableTopology {
+func CustomizeServiceAnnotations(svc *corev1.Service, disableTopologyRouting *bool) {
+	if disableTopologyRouting != nil && *disableTopologyRouting {
 		delete(svc.Annotations, "service.kubernetes.io/topology-aware-hints")
 		delete(svc.Annotations, "service.kubernetes.io/topology-mode")
 	} else {
