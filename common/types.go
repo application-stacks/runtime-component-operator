@@ -22,7 +22,6 @@ type StatusReferences map[string]string
 const (
 	StatusReferenceCertSecretName    = "svcCertSecretName"
 	StatusReferencePullSecretName    = "saPullSecretName"
-	StatusReferencePullSecrets       = "saPullSecrets"
 	StatusReferenceSAResourceVersion = "saResourceVersion"
 	StatusReferenceRouteHost         = "routeHost"
 )
@@ -228,7 +227,6 @@ type BaseComponent interface {
 	GetApplicationImage() string
 	GetPullPolicy() *corev1.PullPolicy
 	GetPullSecret() *string
-	GetPullSecrets() []string
 	GetServiceAccountName() *string
 	GetServiceAccount() BaseComponentServiceAccount
 	GetReplicas() *int32

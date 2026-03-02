@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -876,62 +875,24 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent,
 	sa.Annotations = MergeMaps(sa.Annotations, ba.GetAnnotations())
 
 	psr := ba.GetStatus().GetReferences()[common.StatusReferencePullSecretName]
+	pullSecrets := Set(DecodePullSecrets(psr))
+	crPullSecrets := []string{}
+	if ba.GetPullSecret() != nil {
+		crPullSecrets = Set(DecodePullSecrets(*ba.GetPullSecret()))
+	}
 	if psr != "" && (ba.GetPullSecret() == nil || *ba.GetPullSecret() != psr) {
-		// There is a reference to a pull secret but it doesn't match the one
-		// from the CR (which is empty or different)
-		// so delete the refered pull secret from the service account
-		removePullSecret(sa, psr)
-	}
-
-	if ba.GetPullSecret() == nil {
-		// There is no pull secret so delete the status reference
-		// This has to happen after the reference has been used to remove the pull
-		// secret from the service account
-		delete(ba.GetStatus().GetReferences(), common.StatusReferencePullSecretName)
-	} else {
-		// Add the pull secret from the CR to the service account. First check that it is valid
-		ps := *ba.GetPullSecret()
-		err := client.Get(context.TODO(), types.NamespacedName{Name: ps, Namespace: ba.(metav1.Object).GetNamespace()}, &corev1.Secret{})
-		if err != nil {
-			return err
-		}
-		ba.GetStatus().SetReference(common.StatusReferencePullSecretName, ps)
-		if len(sa.ImagePullSecrets) == 0 {
-			sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
-				Name: ps,
-			})
-		} else {
-			pullSecretName := ps
-			found := false
-			for _, obj := range sa.ImagePullSecrets {
-				if obj.Name == pullSecretName {
-					found = true
-					break
-				}
-			}
-			if !found {
-				sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
-					Name: pullSecretName,
-				})
-			}
-		}
-	}
-
-	pssr := ba.GetStatus().GetReferences()[common.StatusReferencePullSecrets]
-	pullSecrets := Set(DecodePullSecrets(pssr))
-	crPullSecrets := Set(ba.GetPullSecrets())
-	if pssr != "" && !SetEquals(crPullSecrets, pullSecrets) {
 		// There is a reference to a pull secret but it doesn't match the one
 		// from the CR (which is empty or different)
 		// so delete the refered pull secret from the service account
 		missingPullSecrets := SetDiff(pullSecrets, crPullSecrets)
 		removePullSecrets(sa, missingPullSecrets)
 	}
+
 	if len(crPullSecrets) == 0 {
 		// There is no pull secret so delete the status reference
 		// This has to happen after the reference has been used to remove the pull
 		// secret from the service account
-		delete(ba.GetStatus().GetReferences(), common.StatusReferencePullSecrets)
+		delete(ba.GetStatus().GetReferences(), common.StatusReferencePullSecretName)
 	} else {
 		// Add the pull secrets from the CR to the service account. First check that all are valid
 		for _, ps := range crPullSecrets {
@@ -940,7 +901,7 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent,
 				return err
 			}
 		}
-		ba.GetStatus().SetReference(common.StatusReferencePullSecrets, EncodePullSecrets(pullSecrets))
+		ba.GetStatus().SetReference(common.StatusReferencePullSecretName, EncodePullSecrets(crPullSecrets))
 		if len(sa.ImagePullSecrets) == 0 {
 			for _, ps := range crPullSecrets {
 				sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
@@ -2047,18 +2008,14 @@ func parseEnvAsBool(envValue string) bool {
 	return false
 }
 
-// Encodes a pullSecrets list into a comma-separated and base64 encoded string
+// Encodes a pullSecrets list into a comma-separated string
 func EncodePullSecrets(pullSecrets []string) string {
-	return base64.RawURLEncoding.EncodeToString([]byte(strings.Join(pullSecrets, ",")))
+	return strings.Join(pullSecrets, ",")
 }
 
-// Decodes a comma-separated and base64 encoded pull secrets string into a list
+// Decodes a comma-separated and pull secrets string into a list
 func DecodePullSecrets(pullSecretsString string) []string {
-	output, err := base64.RawURLEncoding.DecodeString(pullSecretsString)
-	if err != nil {
-		return []string{}
-	}
-	return strings.Split(string(output), ",")
+	return strings.Split(string(pullSecretsString), ",")
 }
 
 // Returns true if set A and B are equivalent
