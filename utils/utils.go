@@ -875,10 +875,10 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent,
 	sa.Annotations = MergeMaps(sa.Annotations, ba.GetAnnotations())
 
 	psr := ba.GetStatus().GetReferences()[common.StatusReferencePullSecretName]
-	pullSecrets := Set(DecodePullSecrets(psr))
+	pullSecrets := Set(DecodeStringToList(psr))
 	crPullSecrets := []string{}
 	if ba.GetPullSecret() != nil {
-		crPullSecrets = Set(DecodePullSecrets(*ba.GetPullSecret()))
+		crPullSecrets = Set(DecodeStringToList(*ba.GetPullSecret()))
 	}
 	if psr != "" && (ba.GetPullSecret() == nil || *ba.GetPullSecret() != psr) {
 		// There is a reference to a pull secret but it doesn't match the one
@@ -901,7 +901,7 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent,
 				return err
 			}
 		}
-		ba.GetStatus().SetReference(common.StatusReferencePullSecretName, EncodePullSecrets(crPullSecrets))
+		ba.GetStatus().SetReference(common.StatusReferencePullSecretName, EncodeListToString(crPullSecrets))
 		if len(sa.ImagePullSecrets) == 0 {
 			for _, ps := range crPullSecrets {
 				sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
@@ -2008,14 +2008,14 @@ func parseEnvAsBool(envValue string) bool {
 	return false
 }
 
-// Encodes a pullSecrets list into a comma-separated string
-func EncodePullSecrets(pullSecrets []string) string {
-	return strings.Join(pullSecrets, ",")
+// Encodes a list into a comma-separated string
+func EncodeListToString(arr []string) string {
+	return strings.Join(arr, ",")
 }
 
-// Decodes a comma-separated and pull secrets string into a list
-func DecodePullSecrets(pullSecretsString string) []string {
-	return strings.Split(string(pullSecretsString), ",")
+// Decodes a comma-separated into a string list
+func DecodeStringToList(commaSeparatedString string) []string {
+	return strings.Split(string(commaSeparatedString), ",")
 }
 
 // Returns true if set A and B are equivalent
