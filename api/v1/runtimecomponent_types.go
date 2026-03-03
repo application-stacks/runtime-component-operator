@@ -17,6 +17,7 @@ limitations under the License.
 package v1
 
 import (
+	"sort"
 	"time"
 
 	"github.com/application-stacks/runtime-component-operator/common"
@@ -317,6 +318,10 @@ type RuntimeComponentService struct {
 	// Configure service session affinity.
 	// +operator-sdk:csv:customresourcedefinitions:order=19,type=spec
 	SessionAffinity *RuntimeComponentServiceSessionAffinity `json:"sessionAffinity,omitempty"`
+
+	// Disable topology aware routing annotations from being added to the Service. Defaults to false.
+	// +operator-sdk:csv:customresourcedefinitions:order=20,type=spec,displayName="Disable Topology Routing",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	DisableTopologyRouting *bool `json:"disableTopologyRouting,omitempty"`
 }
 
 // Configure service session affinity
@@ -763,6 +768,14 @@ func (cr *RuntimeComponent) GetAffinity() common.BaseComponentAffinity {
 // GetAffinity returns deployment's node and pod affinity settings
 func (cr *RuntimeComponent) GetManageTLS() *bool {
 	return cr.Spec.ManageTLS
+}
+
+// GetDisableTopologyRouting returns whether topology aware routing annotations are disabled for the service
+func (cr *RuntimeComponent) GetDisableTopologyRouting() *bool {
+	if cr.Spec.Service != nil {
+		return cr.Spec.Service.DisableTopologyRouting
+	}
+	return nil
 }
 
 // GetDeployment returns deployment settings
@@ -1278,6 +1291,17 @@ func (s *RuntimeComponentStatus) SetCondition(c common.StatusCondition) {
 	if !found {
 		s.Conditions = append(s.Conditions, *condition)
 	}
+
+	// Re-sort conditions to prioritize 'Ready' condition
+	sort.Slice(s.Conditions, func(i, j int) bool {
+		if s.Conditions[i].GetType() == common.StatusConditionTypeReady {
+			return true
+		}
+		if s.Conditions[j].GetType() == common.StatusConditionTypeReady {
+			return false
+		}
+		return s.Conditions[i].GetType() < s.Conditions[j].GetType()
+	})
 }
 
 func (s *RuntimeComponentStatus) UnsetCondition(c common.StatusCondition) {
