@@ -71,7 +71,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2026-03-03T19:38:49Z"
+    createdAt: "2026-03-03T20:06:19Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -418,6 +418,10 @@ spec:
         path: disableServiceLinks
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: The list of hostnames and IPs that will be injected into the
+          application pod's hosts file
+        displayName: Host Aliases
+        path: hostAliases
       - description: Labels to set on ServiceMonitor.
         displayName: Monitoring Labels
         path: monitoring.labels
