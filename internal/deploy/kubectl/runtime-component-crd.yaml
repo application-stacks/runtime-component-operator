@@ -1983,7 +1983,7 @@ spec:
                   Route or an Ingress resource.
                 type: boolean
               hostAliases:
-                description: The list of hosts and IPs that will be inejcted into
+                description: The list of hostnames and IPs that will be injected into
                   the application pod's hosts file
                 items:
                   description: |-

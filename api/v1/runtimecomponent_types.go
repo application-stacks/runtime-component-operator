@@ -165,7 +165,7 @@ type RuntimeComponentSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=32,type=spec,displayName="DNS"
 	DNS *RuntimeComponentDNS `json:"dns,omitempty"`
 
-	// The list of hosts and IPs that will be inejcted into the application pod's hosts file
+	// The list of hostnames and IPs that will be injected into the application pod's hosts file
 	// +operator-sdk:csv:customresourcedefinitions:order=30,type=spec,displayName="Host Aliases"
 	HostAliases *[]corev1.HostAlias `json:"hostAliases,omitempty"`
 }

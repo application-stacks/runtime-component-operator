@@ -999,6 +999,10 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	ksvc.Spec.Template.Spec.Containers[0].Env = ba.GetEnv()
 	ksvc.Spec.Template.Spec.Containers[0].EnvFrom = ba.GetEnvFrom()
 
+	if ba.GetHostAliases() != nil {
+		ksvc.Spec.Template.Spec.HostAliases = *ba.GetHostAliases()
+	}
+
 	ksvc.Spec.Template.Spec.Containers[0].SecurityContext = GetSecurityContext(ba)
 
 	ksvc.Spec.Template.Spec.Containers[0].VolumeMounts = ba.GetVolumeMounts()
