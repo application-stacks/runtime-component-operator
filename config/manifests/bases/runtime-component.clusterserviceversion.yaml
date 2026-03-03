@@ -264,6 +264,8 @@ spec:
       - description: Configure service session affinity.
         displayName: Session Affinity
         path: service.sessionAffinity
+      - displayName: Monitoring
+        path: monitoring
       - description: Disable topology aware routing annotations from being added to
           the Service. Defaults to false.
         displayName: Disable Topology Routing
