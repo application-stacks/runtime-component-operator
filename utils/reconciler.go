@@ -112,6 +112,22 @@ func (r *ReconcilerBase) SetStatusWarnings(statusWarnings []StatusWarning) {
 	r.statusWarnings = statusWarnings
 }
 
+// Adds a new status warning into the ReconcilerBase or updates one that already exists
+func (r *ReconcilerBase) AddStatusWarning(newWarning StatusWarning) {
+	index := -1
+	for i, statusWarning := range r.statusWarnings {
+		if statusWarning.Message == newWarning.Message {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		r.statusWarnings = append(r.statusWarnings, newWarning)
+	} else if index < len(r.statusWarnings) {
+		r.statusWarnings[index] = newWarning
+	}
+}
+
 // Deletes a status warning from the ReconcilerBase if a status message matches
 func (r *ReconcilerBase) DeleteStatusWarning(message string) {
 	for {
