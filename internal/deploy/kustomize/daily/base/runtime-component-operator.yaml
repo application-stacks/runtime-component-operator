@@ -65,6 +65,7 @@ spec:
           successThreshold: 1
           timeoutSeconds: 10
         name: manager
+        ports: []
         readinessProbe:
           failureThreshold: 3
           httpGet:
@@ -92,6 +93,7 @@ spec:
           runAsNonRoot: true
           seccompProfile:
             type: RuntimeDefault
+        volumeMounts: []
       hostIPC: false
       hostNetwork: false
       hostPID: false
@@ -101,3 +103,4 @@ spec:
           type: RuntimeDefault
       serviceAccountName: rco-controller-manager
       terminationGracePeriodSeconds: 10
+      volumes: []
