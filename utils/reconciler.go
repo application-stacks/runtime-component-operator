@@ -121,7 +121,7 @@ func (r *ReconcilerBase) AddStatusWarning(newWarning StatusWarning) {
 			break
 		}
 	}
-	if index != -1 {
+	if index == -1 {
 		r.statusWarnings = append(r.statusWarnings, newWarning)
 	} else if index < len(r.statusWarnings) {
 		r.statusWarnings[index] = newWarning
