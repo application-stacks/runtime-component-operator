@@ -3,7 +3,7 @@ kind: RuntimeComponent
 metadata:
   name: payment-service
 spec:
-  applicationImage: icr.io/appcafe/open-liberty/samples/getting-started@sha256:80a28b6a71ec02369cc13f621e4
+  applicationImage: icr.io/appcafe/open-liberty/samples/getting-started@sha256:80a28b6a71ec02369cc13f621e4c3cca0d63b1977be76e15dabbfba48411107f
   manageTLS: true
   resources:
     limits:
