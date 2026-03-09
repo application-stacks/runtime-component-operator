@@ -505,20 +505,27 @@ func TestCustomizePodSpecPriorityClassName(t *testing.T) {
 
 	pts, runtime := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
 	CustomizePodSpec(pts, runtime)
-	nilResult := pts.Spec.PriorityClassName
+	defaultPriorityClassName := pts.Spec.PriorityClassName
 
 	priorityClassName := "high-priority"
 	spec.PriorityClassName = &priorityClassName
 	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
 	CustomizePodSpec(pts, runtime)
-	setResult := pts.Spec.PriorityClassName
+	setPriorityClassName := pts.Spec.PriorityClassName
+
+	spec.PriorityClassName = nil
+	pts = &corev1.PodTemplateSpec{}
+	pts.Spec.PriorityClassName = priorityClassName
+	runtime = createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	clearPriorityClassName := pts.Spec.PriorityClassName
 
 	testCPS := []Test{
-		{"Default PriorityClassName", "", nilResult},
-		{"Set PriorityClassName", priorityClassName, setResult},
+		{"Default PriorityClassName (not set)", "", defaultPriorityClassName},
+		{"Set PriorityClassName", priorityClassName, setPriorityClassName},
+		{"Clearing PriorityClassName", "", clearPriorityClassName},
 	}
 	verifyTests(testCPS, t)
-
 }
 
 func TestCustomizePersistence(t *testing.T) {
