@@ -768,6 +768,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 
 	pts.Spec.Tolerations = ba.GetTolerations()
 
+	pts.Spec.PriorityClassName = ""
 	if ba.GetPriorityClassName() != nil {
 		pts.Spec.PriorityClassName = *ba.GetPriorityClassName()
 	}
