@@ -294,6 +294,52 @@ func TestKnativeReady(t *testing.T) {
 	verifyTests(testKS, t)
 }
 
+func TestReadyConditionSorting(t *testing.T) {
+	// Setup fake client and reconciler base
+	spec := appstacksv1.RuntimeComponentSpec{Replicas: &st_replicas}
+	_, runtimecomponent := setupFakeClientWithRC(spec)
+	s := runtimecomponent.GetStatus()
+
+	// Add conditions in worst-case order, Ready adeed last
+	reconciled := s.NewCondition(common.StatusConditionTypeReconciled)
+	reconciled.SetStatus(v1.ConditionTrue)
+	s.SetCondition(reconciled)
+
+	resourcesReady := s.NewCondition(common.StatusConditionTypeResourcesReady)
+	resourcesReady.SetStatus(v1.ConditionTrue)
+	s.SetCondition(resourcesReady)
+
+	ready := s.NewCondition(common.StatusConditionTypeReady)
+	ready.SetStatus(v1.ConditionTrue)
+	s.SetCondition(ready)
+
+	conditions := s.GetConditions()
+	readyTrueFirst := conditions[0].GetType()
+
+	// Set Ready to False and call SetCondition again
+	ready.SetStatus(v1.ConditionFalse)
+	s.SetCondition(ready)
+
+	conditions = s.GetConditions()
+	readyFalseFirst := conditions[0].GetType()
+
+	// Adding a fourth condition- warning
+	warning := s.NewCondition(common.StatusConditionTypeWarning)
+	warning.SetStatus(v1.ConditionTrue)
+	s.SetCondition(warning)
+
+	conditions = s.GetConditions()
+	readyWithWarningFirst := conditions[0].GetType()
+
+	testCases := []Test{
+		{test: "Ready is first condition", expected: common.StatusConditionTypeReady, actual: readyTrueFirst},
+		{test: "Ready is first condition with False status", expected: common.StatusConditionTypeReady, actual: readyFalseFirst},
+		{test: "Ready is first condition with additional warning condition", expected: common.StatusConditionTypeReady, actual: readyWithWarningFirst},
+	}
+
+	verifyTests(testCases, t)
+}
+
 // Setup fake client with RuntimeComponent kind
 // Creates a RuntimeComponent object with input spec
 func setupFakeClientWithRC(spec appstacksv1.RuntimeComponentSpec) (ReconcilerBase, *appstacksv1.RuntimeComponent) {
