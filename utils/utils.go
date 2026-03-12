@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -41,7 +42,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const RCOOperandVersion = "1.5.2"
+const RCOOperandVersion = "1.6.0"
 
 var APIVersionNotFoundError = errors.New("APIVersion is not available")
 
@@ -313,34 +314,8 @@ func customizeProbe(config *corev1.Probe, defaultProbeCallback func(ba common.Ba
 		return nil
 	}
 
-	// Probe handler is defined in config so use probe as is
-	if config.ProbeHandler != (corev1.ProbeHandler{}) {
-		return config
-	}
-
 	// Probe handler is not defined so use default values for the probe if values not set in probe config
-	return CustomizeProbeDefaults(config, defaultProbeCallback(ba))
-}
-
-func CustomizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *corev1.Probe {
-	probe := defaultProbe
-	if config.InitialDelaySeconds != 0 {
-		probe.InitialDelaySeconds = config.InitialDelaySeconds
-	}
-	if config.TimeoutSeconds != 0 {
-		probe.TimeoutSeconds = config.TimeoutSeconds
-	}
-	if config.PeriodSeconds != 0 {
-		probe.PeriodSeconds = config.PeriodSeconds
-	}
-	if config.SuccessThreshold != 0 {
-		probe.SuccessThreshold = config.SuccessThreshold
-	}
-	if config.FailureThreshold != 0 {
-		probe.FailureThreshold = config.FailureThreshold
-	}
-
-	return probe
+	return common.CustomizeProbeDefaults(config, defaultProbeCallback(ba))
 }
 
 // CustomizeNetworkPolicy configures the network policy.
@@ -714,6 +689,10 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	appContainer.Env = ba.GetEnv()
 	appContainer.EnvFrom = ba.GetEnvFrom()
 
+	if ba.GetHostAliases() != nil {
+		pts.Spec.HostAliases = *ba.GetHostAliases()
+	}
+
 	pts.Spec.InitContainers = ba.GetInitContainers()
 
 	appContainer.VolumeMounts = ba.GetVolumeMounts()
@@ -888,48 +867,65 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent,
 	sa.Annotations = MergeMaps(sa.Annotations, ba.GetAnnotations())
 
 	psr := ba.GetStatus().GetReferences()[common.StatusReferencePullSecretName]
+	pullSecrets := Set(DecodeStringToList(psr))
+	crPullSecrets := []string{}
+	if ba.GetPullSecret() != nil {
+		crPullSecrets = Set(DecodeStringToList(*ba.GetPullSecret()))
+	}
 	if psr != "" && (ba.GetPullSecret() == nil || *ba.GetPullSecret() != psr) {
 		// There is a reference to a pull secret but it doesn't match the one
 		// from the CR (which is empty or different)
 		// so delete the refered pull secret from the service account
-		removePullSecret(sa, psr)
+		missingPullSecrets := SetDiff(pullSecrets, crPullSecrets)
+		removePullSecrets(sa, missingPullSecrets)
 	}
 
-	if ba.GetPullSecret() == nil {
+	if len(crPullSecrets) == 0 {
 		// There is no pull secret so delete the status reference
 		// This has to happen after the reference has been used to remove the pull
 		// secret from the service account
 		delete(ba.GetStatus().GetReferences(), common.StatusReferencePullSecretName)
 	} else {
-		// Add the pull secret from the CR to the service account. First check that it is valid
-		ps := *ba.GetPullSecret()
-		err := client.Get(context.TODO(), types.NamespacedName{Name: ps, Namespace: ba.(metav1.Object).GetNamespace()}, &corev1.Secret{})
-		if err != nil {
-			return err
-		}
-		ba.GetStatus().SetReference(common.StatusReferencePullSecretName, ps)
-		if len(sa.ImagePullSecrets) == 0 {
-			sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
-				Name: ps,
-			})
-		} else {
-			pullSecretName := ps
-			found := false
-			for _, obj := range sa.ImagePullSecrets {
-				if obj.Name == pullSecretName {
-					found = true
-					break
-				}
+		// Add the pull secrets from the CR to the service account. First check that all are valid
+		for _, ps := range crPullSecrets {
+			err := client.Get(context.TODO(), types.NamespacedName{Name: ps, Namespace: ba.(metav1.Object).GetNamespace()}, &corev1.Secret{})
+			if err != nil {
+				return err
 			}
-			if !found {
+		}
+		ba.GetStatus().SetReference(common.StatusReferencePullSecretName, EncodeListToString(crPullSecrets))
+		if len(sa.ImagePullSecrets) == 0 {
+			for _, ps := range crPullSecrets {
 				sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
-					Name: pullSecretName,
+					Name: ps,
 				})
+			}
+		} else {
+			for _, ps := range crPullSecrets {
+				pullSecretName := ps
+				found := false
+				for _, obj := range sa.ImagePullSecrets {
+					if obj.Name == pullSecretName {
+						found = true
+						break
+					}
+				}
+				if !found {
+					sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{
+						Name: pullSecretName,
+					})
+				}
 			}
 		}
 	}
 
 	return nil
+}
+
+func removePullSecrets(sa *corev1.ServiceAccount, pullSecrets []string) {
+	for _, ps := range pullSecrets {
+		removePullSecret(sa, ps)
+	}
 }
 
 func removePullSecret(sa *corev1.ServiceAccount, pullSecretName string) {
@@ -990,6 +986,10 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	ksvc.Spec.Template.Spec.Containers[0].ImagePullPolicy = *ba.GetPullPolicy()
 	ksvc.Spec.Template.Spec.Containers[0].Env = ba.GetEnv()
 	ksvc.Spec.Template.Spec.Containers[0].EnvFrom = ba.GetEnvFrom()
+
+	if ba.GetHostAliases() != nil {
+		ksvc.Spec.Template.Spec.HostAliases = *ba.GetHostAliases()
+	}
 
 	ksvc.Spec.Template.Spec.Containers[0].SecurityContext = GetSecurityContext(ba)
 
@@ -2002,4 +2002,55 @@ func parseEnvAsBool(envValue string) bool {
 		}
 	}
 	return false
+}
+
+// Encodes a list into a comma-separated string
+func EncodeListToString(arr []string) string {
+	return strings.Join(arr, ",")
+}
+
+// Decodes a comma-separated into a string list
+func DecodeStringToList(commaSeparatedString string) []string {
+	return strings.Split(string(commaSeparatedString), ",")
+}
+
+// Returns true if set A and B are equivalent
+func SetEquals(a []string, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	// track seen items in a
+	seen := map[string]bool{}
+	for _, v := range a {
+		seen[v] = true
+	}
+	// return false if b contains an element not in a
+	for _, v := range b {
+		if _, found := seen[v]; !found {
+			return false
+		}
+	}
+	return true
+}
+
+// Converts list A into a set without repeated values
+func Set(a []string) []string {
+	out := []string{}
+	for _, v := range a {
+		if !slices.Contains(out, v) {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
+// Returns the set difference of A \ B
+func SetDiff(a []string, b []string) []string {
+	out := []string{}
+	for _, v := range a {
+		if !slices.Contains(b, v) {
+			out = append(out, v)
+		}
+	}
+	return out
 }

@@ -50,7 +50,7 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         - name: RELATED_IMAGE_LIBERTY_SAMPLE_APP
-          value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:80a28b6a71ec02369cc13f621e4c3cca0d63b1977be76e15dabbfba48411107f
+          value: icr.io/appcafe/open-liberty/samples/getting-started@sha256:c069799108639810d59a0747c044272585dea7e324ef0e9f1550048a637a8680
         - name: RELATED_IMAGE_RUNTIME_COMPONENT_OPERATOR
           value: icr.io/appcafe/runtime-component-operator:daily
         image: icr.io/appcafe/runtime-component-operator:daily
@@ -65,6 +65,7 @@ spec:
           successThreshold: 1
           timeoutSeconds: 10
         name: manager
+        ports: []
         readinessProbe:
           failureThreshold: 3
           httpGet:
@@ -92,6 +93,7 @@ spec:
           runAsNonRoot: true
           seccompProfile:
             type: RuntimeDefault
+        volumeMounts: []
       hostIPC: false
       hostNetwork: false
       hostPID: false
@@ -101,3 +103,4 @@ spec:
           type: RuntimeDefault
       serviceAccountName: rco-controller-manager
       terminationGracePeriodSeconds: 10
+      volumes: []

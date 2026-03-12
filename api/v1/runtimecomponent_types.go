@@ -62,108 +62,112 @@ type RuntimeComponentSpec struct {
 	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
 
 	// The service account to use for deploying the application. A service account is automatically created if this is not specifed.
-	// +operator-sdk:csv:customresourcedefinitions:order=6,type=spec,displayName="Service Account"
+	// +operator-sdk:csv:customresourcedefinitions:order=7,type=spec,displayName="Service Account"
 	ServiceAccount *RuntimeComponentServiceAccount `json:"serviceAccount,omitempty"`
 
 	// Create Knative resources and use Knative serving.
-	// +operator-sdk:csv:customresourcedefinitions:order=7,type=spec,displayName="Create Knative Service",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	// +operator-sdk:csv:customresourcedefinitions:order=8,type=spec,displayName="Create Knative Service",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	CreateKnativeService *bool `json:"createKnativeService,omitempty"`
 
 	// Expose the application externally via a Route, a Knative Route or an Ingress resource.
-	// +operator-sdk:csv:customresourcedefinitions:order=8,type=spec,displayName="Expose",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	// +operator-sdk:csv:customresourcedefinitions:order=9,type=spec,displayName="Expose",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	Expose *bool `json:"expose,omitempty"`
 
 	// Enable management of TLS certificates. Defaults to true.
-	// +operator-sdk:csv:customresourcedefinitions:order=8,type=spec,displayName="Manage TLS",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	// +operator-sdk:csv:customresourcedefinitions:order=10,type=spec,displayName="Manage TLS",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	ManageTLS *bool `json:"manageTLS,omitempty"`
 
 	// Number of pods to create. Defaults to 1. Not applicable when .spec.autoscaling or .spec.createKnativeService is specified.
-	// +operator-sdk:csv:customresourcedefinitions:order=9,type=spec,displayName="Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:podCount"
+	// +operator-sdk:csv:customresourcedefinitions:order=11,type=spec,displayName="Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:podCount"
 	Replicas *int32 `json:"replicas,omitempty"`
 
-	// +operator-sdk:csv:customresourcedefinitions:order=10,type=spec,displayName="Auto Scaling"
+	// +operator-sdk:csv:customresourcedefinitions:order=12,type=spec,displayName="Auto Scaling"
 	Autoscaling *RuntimeComponentAutoScaling `json:"autoscaling,omitempty"`
 
 	// Resource requests and limits for the application container.
-	// +operator-sdk:csv:customresourcedefinitions:order=11,type=spec,displayName="Resource Requirements",xDescriptors="urn:alm:descriptor:com.tectonic.ui:resourceRequirements"
+	// +operator-sdk:csv:customresourcedefinitions:order=13,type=spec,displayName="Resource Requirements",xDescriptors="urn:alm:descriptor:com.tectonic.ui:resourceRequirements"
 	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
 
-	// +operator-sdk:csv:customresourcedefinitions:order=12,type=spec,displayName="Probes"
+	// +operator-sdk:csv:customresourcedefinitions:order=14,type=spec,displayName="Probes"
 	Probes *RuntimeComponentProbes `json:"probes,omitempty"`
 
-	// +operator-sdk:csv:customresourcedefinitions:order=13,type=spec,displayName="Deployment"
+	// +operator-sdk:csv:customresourcedefinitions:order=15,type=spec,displayName="Deployment"
 	Deployment *RuntimeComponentDeployment `json:"deployment,omitempty"`
 
-	// +operator-sdk:csv:customresourcedefinitions:order=14,type=spec,displayName="StatefulSet"
+	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec,displayName="StatefulSet"
 	StatefulSet *RuntimeComponentStatefulSet `json:"statefulSet,omitempty"`
 
-	// +operator-sdk:csv:customresourcedefinitions:order=15,type=spec,displayName="Service"
+	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Service"
 	Service *RuntimeComponentService `json:"service,omitempty"`
 
-	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec,displayName="Route"
+	// +operator-sdk:csv:customresourcedefinitions:order=18,type=spec,displayName="Route"
 	Route *RuntimeComponentRoute `json:"route,omitempty"`
 
-	// +operator-sdk:csv:customresourcedefinitions:order=16,type=spec,displayName="Network Policy"
+	// +operator-sdk:csv:customresourcedefinitions:order=19,type=spec,displayName="Network Policy"
 	NetworkPolicy *RuntimeComponentNetworkPolicy `json:"networkPolicy,omitempty"`
 
-	// +operator-sdk:csv:customresourcedefinitions:order=17,type=spec,displayName="Monitoring"
+	// +operator-sdk:csv:customresourcedefinitions:order=20,type=spec,displayName="Monitoring"
 	Monitoring *RuntimeComponentMonitoring `json:"monitoring,omitempty"`
 
 	// An array of environment variables for the application container.
 	// +listType=map
 	// +listMapKey=name
-	// +operator-sdk:csv:customresourcedefinitions:order=18,type=spec,displayName="Environment Variables"
+	// +operator-sdk:csv:customresourcedefinitions:order=21,type=spec,displayName="Environment Variables"
 	Env []corev1.EnvVar `json:"env,omitempty"`
 
 	// List of sources to populate environment variables in the application container.
 	// +listType=atomic
-	// +operator-sdk:csv:customresourcedefinitions:order=19,type=spec,displayName="Environment Variables from Sources"
+	// +operator-sdk:csv:customresourcedefinitions:order=22,type=spec,displayName="Environment Variables from Sources"
 	EnvFrom []corev1.EnvFromSource `json:"envFrom,omitempty"`
 
 	// Represents a volume with data that is accessible to the application container.
 	// +listType=map
 	// +listMapKey=name
-	// +operator-sdk:csv:customresourcedefinitions:order=20,type=spec,displayName="Volumes"
+	// +operator-sdk:csv:customresourcedefinitions:order=23,type=spec,displayName="Volumes"
 	Volumes []corev1.Volume `json:"volumes,omitempty"`
 
 	// Represents where to mount the volumes into the application container.
 	// +listType=atomic
-	// +operator-sdk:csv:customresourcedefinitions:order=21,type=spec,displayName="Volume Mounts"
+	// +operator-sdk:csv:customresourcedefinitions:order=24,type=spec,displayName="Volume Mounts"
 	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
 
 	// List of containers to run before other containers in a pod.
 	// +listType=map
 	// +listMapKey=name
-	// +operator-sdk:csv:customresourcedefinitions:order=22,type=spec,displayName="Init Containers"
+	// +operator-sdk:csv:customresourcedefinitions:order=25,type=spec,displayName="Init Containers"
 	InitContainers []corev1.Container `json:"initContainers,omitempty"`
 
 	// List of sidecar containers. These are additional containers to be added to the pods.
 	// +listType=map
 	// +listMapKey=name
-	// +operator-sdk:csv:customresourcedefinitions:order=23,type=spec,displayName="Sidecar Containers"
+	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Sidecar Containers"
 	SidecarContainers []corev1.Container `json:"sidecarContainers,omitempty"`
 
-	// +operator-sdk:csv:customresourcedefinitions:order=24,type=spec,displayName="Affinity"
+	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="Affinity"
 	Affinity *RuntimeComponentAffinity `json:"affinity,omitempty"`
 
 	// Security context for the application container.
-	// +operator-sdk:csv:customresourcedefinitions:order=25,type=spec,displayName="Security Context"
+	// +operator-sdk:csv:customresourcedefinitions:order=28,type=spec,displayName="Security Context"
 	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
 
-	// +operator-sdk:csv:customresourcedefinitions:order=26,type=spec,displayName="Topology Spread Constraints"
+	// +operator-sdk:csv:customresourcedefinitions:order=29,type=spec,displayName="Topology Spread Constraints"
 	TopologySpreadConstraints *RuntimeComponentTopologySpreadConstraints `json:"topologySpreadConstraints,omitempty"`
 
 	// Disable information about services being injected into the application pod's environment variables. Default to false.
-	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="Disable Service Links",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	// +operator-sdk:csv:customresourcedefinitions:order=30,type=spec,displayName="Disable Service Links",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	DisableServiceLinks *bool `json:"disableServiceLinks,omitempty"`
 
 	// Tolerations to be added to application pods. Tolerations allow the scheduler to schedule pods on nodes with matching taints.
-	// +operator-sdk:csv:customresourcedefinitions:order=28,type=spec,displayName="Tolerations"
+	// +operator-sdk:csv:customresourcedefinitions:order=31,type=spec,displayName="Tolerations"
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 
 	// DNS settings for the pod.
-	// +operator-sdk:csv:customresourcedefinitions:order=29,type=spec,displayName="DNS"
+	// +operator-sdk:csv:customresourcedefinitions:order=32,type=spec,displayName="DNS"
 	DNS *RuntimeComponentDNS `json:"dns,omitempty"`
+
+	// The list of hostnames and IPs that will be injected into the application pod's hosts file
+	// +operator-sdk:csv:customresourcedefinitions:order=30,type=spec,displayName="Host Aliases"
+	HostAliases *[]corev1.HostAlias `json:"hostAliases,omitempty"`
 }
 
 // Defines the DNS
@@ -665,6 +669,20 @@ func (cr *RuntimeComponent) GetExpose() *bool {
 	return cr.Spec.Expose
 }
 
+func (cr *RuntimeComponent) GetManagedPort() int {
+	if cr.GetService() != nil && cr.GetService().GetPort() != 0 {
+		return int(cr.GetService().GetPort())
+	}
+	return 8080
+}
+
+func (cr *RuntimeComponent) GetManagedScheme() corev1.URIScheme {
+	if cr.GetManageTLS() == nil || *cr.GetManageTLS() {
+		return corev1.URISchemeHTTPS
+	}
+	return corev1.URISchemeHTTP
+}
+
 // GetEnv returns slice of environment variables
 func (cr *RuntimeComponent) GetEnv() []corev1.EnvVar {
 	return cr.Spec.Env
@@ -1085,6 +1103,10 @@ func (cr *RuntimeComponentTopologySpreadConstraints) GetDisableOperatorDefaults(
 	return cr.DisableOperatorDefaults
 }
 
+func (cr *RuntimeComponent) GetHostAliases() *[]corev1.HostAlias {
+	return cr.Spec.HostAliases
+}
+
 // Initialize the RuntimeComponent instance
 func (cr *RuntimeComponent) Initialize() {
 	if cr.Spec.PullPolicy == nil {
@@ -1120,7 +1142,7 @@ func (cr *RuntimeComponent) Initialize() {
 	}
 
 	if cr.Spec.Service.Port == 0 {
-		cr.Spec.Service.Port = 8080
+		cr.Spec.Service.Port = int32(cr.GetManagedPort())
 	}
 
 	// If TargetPorts on Serviceports are not set, default them to the Port value in the CR
