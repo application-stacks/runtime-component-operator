@@ -16,7 +16,7 @@ func HashLockedData(data common.SecretMap) string {
 }
 
 func HashData(data map[string][]byte) string {
-	return hash(data, serializeSecretData)
+	return hash(data, serializeData)
 }
 
 func hash(data any, serializer func(any) []byte) string {
@@ -56,7 +56,7 @@ func serializeLockedData(data any) []byte {
 	return dataBuffer
 }
 
-func serializeSecretData(data any) []byte {
+func serializeData(data any) []byte {
 	if _, ok := data.(map[string][]byte); !ok {
 		return []byte{}
 	}
