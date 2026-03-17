@@ -128,7 +128,7 @@ func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *common.LockedBufferS
 
 	if _, found = secretData["certificates"]; !found && ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName] != "" {
 		certSecret, err := common.GetSecret(r.GetClient(), ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName], mObj.GetNamespace())
-		defer certSecret.LockedData.Destroy()
+		defer certSecret.Destroy()
 		if err == nil {
 			caCert, _ := certSecret.LockedData.Get("ca.crt")
 			tlsCrt, _ := certSecret.LockedData.Get("tls.crt")

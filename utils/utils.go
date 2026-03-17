@@ -1158,8 +1158,7 @@ func ValidatePrometheusMonitoringEndpoints(ba common.BaseComponent, client clien
 			}
 			// Error if any Secret is specified but does not exist
 			for _, secretName := range secretNames {
-				secret, err := common.GetSecret(client, secretName, namespace)
-				secret.LockedData.Destroy()
+				err := common.CheckSecret(client, secretName, namespace)
 				if err != nil {
 					errorMessage := fmt.Sprintf("Could not find Secret '%s' in this namespace.", secretName)
 					return errors.New(errorMessage)
