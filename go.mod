@@ -3,6 +3,7 @@ module github.com/application-stacks/runtime-component-operator
 go 1.26
 
 require (
+	github.com/awnumar/memguard v0.23.0
 	github.com/cert-manager/cert-manager v1.19.4
 	github.com/go-logr/logr v1.4.3
 	github.com/openshift/api v0.0.0-20260304172252-b0658d22beea
@@ -27,6 +28,7 @@ require (
 )
 
 require (
+	github.com/awnumar/memcall v0.4.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect

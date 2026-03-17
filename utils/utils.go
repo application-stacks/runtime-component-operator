@@ -1158,8 +1158,9 @@ func ValidatePrometheusMonitoringEndpoints(recCtx context.Context, ba common.Bas
 			}
 			// Error if any Secret is specified but does not exist
 			for _, secretName := range secretNames {
-				secret := common.NewSecret(recCtx, secretName, namespace)
-				if err := client.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: namespace}, secret); err != nil {
+				secret, err := common.GetSecret(client, secretName, namespace)
+				secret.LockedData.Destroy()
+				if err != nil {
 					errorMessage := fmt.Sprintf("Could not find Secret '%s' in this namespace.", secretName)
 					return errors.New(errorMessage)
 				}
@@ -1655,9 +1656,7 @@ func ServiceAccountPullSecretExists(recCtx context.Context, ba common.BaseCompon
 		// if this is our service account there will be one image pull secret
 		// For others there could be more. either way, just use the first?
 		sName := secrets[0].Name
-		pullSecret := common.NewSecret(recCtx, sName, ns)
-		err := client.Get(context.TODO(), types.NamespacedName{Name: pullSecret.Name, Namespace: pullSecret.Namespace}, pullSecret)
-		if err != nil {
+		if err := common.CheckSecret(client, sName, ns); err != nil {
 			saErr := errors.New("Service account " + saName + " isn't ready. Reason: " + err.Error())
 			return saErr
 		}
@@ -1854,8 +1853,8 @@ func GetIssuerResourceVersion(recCtx context.Context, client client.Client, cert
 		return "", err
 	}
 	if issuer.Spec.CA != nil {
-		caSecret := common.NewSecret(recCtx, issuer.Spec.CA.SecretName, certificate.Namespace)
-		err = client.Get(context.Background(), types.NamespacedName{Name: caSecret.Name, Namespace: caSecret.Namespace}, caSecret)
+		caSecret, err := common.GetSecret(client, issuer.Spec.CA.SecretName, certificate.Namespace)
+		caSecret.LockedData.Destroy()
 		if err != nil {
 			return "", err
 		} else {
