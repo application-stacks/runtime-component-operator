@@ -11,8 +11,8 @@ import (
 	"lukechampine.com/blake3"
 )
 
-func HashSecretMapData(data common.SecretMap) string {
-	return hash(data, serializeSecretMapData)
+func HashLockedData(data common.SecretMap) string {
+	return hash(data, serializeLockedData)
 }
 
 func HashData(data map[string][]byte) string {
@@ -34,7 +34,7 @@ func hash(data any, serializer func(any) []byte) string {
 	return hex.EncodeToString(hash)
 }
 
-func serializeSecretMapData(data any) []byte {
+func serializeLockedData(data any) []byte {
 	if _, ok := data.(common.SecretMap); !ok {
 		return []byte{}
 	}

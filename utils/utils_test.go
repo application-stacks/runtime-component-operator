@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"context"
 	"os"
 	"reflect"
 	"strconv"
@@ -536,13 +535,13 @@ func TestCustomizeServiceAccount(t *testing.T) {
 
 	spec := appstacksv1.RuntimeComponentSpec{PullSecret: &pullSecret}
 	sa, runtime := &corev1.ServiceAccount{}, createRuntimeComponent(name, namespace, spec)
-	CustomizeServiceAccount(context.TODO(), sa, runtime, fcl)
+	CustomizeServiceAccount(sa, runtime, fcl)
 	emptySAIPS := sa.ImagePullSecrets[0].Name
 
 	newSecret := "my-new-secret"
 	spec = appstacksv1.RuntimeComponentSpec{PullSecret: &newSecret}
 	runtime = createRuntimeComponent(name, namespace, spec)
-	CustomizeServiceAccount(context.TODO(), sa, runtime, fcl)
+	CustomizeServiceAccount(sa, runtime, fcl)
 
 	testCSA := []Test{
 		{"ServiceAccount image pull secrets is empty", pullSecret, emptySAIPS},

@@ -653,7 +653,7 @@ func (r *ReconcilerBase) checkIssuerReady(issuer *certmanagerv1.Issuer) error {
 	return nil
 }
 
-func (r *ReconcilerBase) GenerateCMIssuer(recCtx context.Context, namespace string, prefix string, CACommonName string, operatorName string) error {
+func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACommonName string, operatorName string) error {
 	if ok, err := r.IsGroupVersionSupported(certmanagerv1.SchemeGroupVersion.String(), "Issuer"); err != nil {
 		return err
 	} else if !ok {
@@ -750,7 +750,7 @@ func (r *ReconcilerBase) GenerateCMIssuer(recCtx context.Context, namespace stri
 	return nil
 }
 
-func (r *ReconcilerBase) GenerateSvcCertSecret(recCtx context.Context, ba common.BaseComponent, prefix string, CACommonName string, operatorName string) (bool, error) {
+func (r *ReconcilerBase) GenerateSvcCertSecret(ba common.BaseComponent, prefix string, CACommonName string, operatorName string) (bool, error) {
 	delete(ba.GetStatus().GetReferences(), common.StatusReferenceCertSecretName)
 	cleanup := func() {
 		if ok, err := r.IsGroupVersionSupported(certmanagerv1.SchemeGroupVersion.String(), "Certificate"); err != nil {
@@ -791,7 +791,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(recCtx context.Context, ba common
 	} else if ok {
 		bao := ba.(metav1.Object)
 
-		err = r.GenerateCMIssuer(recCtx, bao.GetNamespace(), prefix, CACommonName, operatorName)
+		err = r.GenerateCMIssuer(bao.GetNamespace(), prefix, CACommonName, operatorName)
 		if err != nil {
 			if errors.Is(err, APIVersionNotFoundError) {
 				return false, nil
@@ -854,7 +854,7 @@ func (r *ReconcilerBase) GenerateSvcCertSecret(recCtx context.Context, ba common
 				svcCert.Spec.IssuerRef.Name = customIssuer.Name
 			}
 
-			rVersion, _ := GetIssuerResourceVersion(recCtx, r.client, svcCert)
+			rVersion, _ := GetIssuerResourceVersion(r.client, svcCert)
 			if svcCert.Spec.SecretTemplate == nil {
 				svcCert.Spec.SecretTemplate = &certmanagerv1.CertificateSecretTemplate{
 					Annotations: map[string]string{},

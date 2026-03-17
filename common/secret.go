@@ -32,9 +32,9 @@ func (sm SecretMap) Get(key string) ([]byte, bool) {
 	return []byte{}, false
 }
 
-func (lockedBufferSecret LockedBufferSecret) Destroy() {
-	if lockedBufferSecret.LockedData != nil {
-		lockedBufferSecret.LockedData.Destroy()
+func (lockedSecret LockedBufferSecret) Destroy() {
+	if lockedSecret.LockedData != nil {
+		lockedSecret.LockedData.Destroy()
 	}
 }
 
@@ -51,19 +51,27 @@ func GetSecret(client client.Client, name string, ns string) (*LockedBufferSecre
 		return nil, err
 	}
 
-	lockedBufferSecret := &LockedBufferSecret{}
-	lockedBufferSecret.TypeMeta = secret.TypeMeta
-	lockedBufferSecret.ObjectMeta = secret.ObjectMeta
-	for secretKey, secretValue := range secret.Data {
-		lockedBufferSecret.LockedData[secretKey] = memguard.NewBufferFromBytes(secretValue)
+	lockedSecret := &LockedBufferSecret{}
+	lockedSecret.TypeMeta = secret.TypeMeta
+	lockedSecret.ObjectMeta = secret.ObjectMeta
+	if lockedSecret.LockedData == nil {
+		lockedSecret.LockedData = SecretMap{}
 	}
-	return lockedBufferSecret, nil
+	if secret.Data != nil {
+		for secretKey, secretValue := range secret.Data {
+			lockedSecret.LockedData[secretKey] = memguard.NewBufferFromBytes(secretValue)
+		}
+	}
+	return lockedSecret, nil
 }
 
 // Copies a Locked Buffer Secret into a core Secret with a corresponding cleanup func
 func CopySecret(in *LockedBufferSecret, out *corev1.Secret) func() {
 	out.TypeMeta = in.TypeMeta
 	out.ObjectMeta = in.ObjectMeta
+	if out.Data == nil {
+		out.Data = map[string][]byte{}
+	}
 	for key, buf := range in.LockedData {
 		out.Data[key] = buf.Bytes()
 	}
