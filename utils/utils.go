@@ -846,7 +846,7 @@ func CustomizePersistence(statefulSet *appsv1.StatefulSet, ba common.BaseCompone
 }
 
 // CustomizeServiceAccount ...
-func CustomizeServiceAccount(recCtx context.Context, sa *corev1.ServiceAccount, ba common.BaseComponent, client client.Client) error {
+func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent, client client.Client) error {
 	sa.Labels = ba.GetLabels()
 	sa.Annotations = MergeMaps(sa.Annotations, ba.GetAnnotations())
 
@@ -1111,7 +1111,7 @@ func secretShouldExist(secretKeySelector corev1.SecretKeySelector) bool {
 }
 
 // Returns an error if any user specified non-optional Secret or ConfigMap for Prometheus monitoring does not exist, otherwise return nil.
-func ValidatePrometheusMonitoringEndpoints(recCtx context.Context, ba common.BaseComponent, client client.Client, namespace string) error {
+func ValidatePrometheusMonitoringEndpoints(ba common.BaseComponent, client client.Client, namespace string) error {
 	var basicAuth *prometheusv1.BasicAuth
 	var oauth2 *prometheusv1.OAuth2
 	var bearerTokenSecret corev1.SecretKeySelector
@@ -1621,7 +1621,7 @@ func (r *ReconcilerBase) toJSONFromRaw(content *runtime.RawExtension) (map[strin
 // Looks for a pull secret in the service account retrieved from the component
 // Returns nil if there is at least one image pull secret, otherwise an error
 // Will always return nil if 'skipPullSecretValidation' is specified in the CR
-func ServiceAccountPullSecretExists(recCtx context.Context, ba common.BaseComponent, client client.Client) error {
+func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Client) error {
 	obj := ba.(metav1.Object)
 	ns := obj.GetNamespace()
 	saName := obj.GetName()
@@ -1767,15 +1767,15 @@ func CustomizePodWithSVCCertificate(pts *corev1.PodTemplateSpec, ba common.BaseC
 }
 
 func addSecretHashAsAnnotation(pts *corev1.PodTemplateSpec, object metav1.Object, client client.Client, secretName string, groupName string) error {
-	secret := &corev1.Secret{}
-	err := client.Get(context.Background(), types.NamespacedName{Name: secretName, Namespace: object.GetNamespace()}, secret)
+	secret, err := common.GetSecret(client, secretName, object.GetNamespace())
+	defer secret.Destroy()
 	if err != nil {
 		return fmt.Errorf("Secret %q was not found in namespace %q, %w", secretName, object.GetNamespace(), err)
 	}
 	if pts.ObjectMeta.Annotations == nil {
 		pts.ObjectMeta.Annotations = make(map[string]string)
 	}
-	pts.ObjectMeta.Annotations[groupName+"/secret-"+secretName] = HashData(secret.Data)
+	pts.ObjectMeta.Annotations[groupName+"/secret-"+secretName] = HashLockedData(secret.LockedData)
 	return nil
 }
 
@@ -1845,7 +1845,7 @@ func UpdateConfigMap(configMap *corev1.ConfigMap, key string) {
 	data[key] = common.LoadFromConfig(common.Config, key)
 }
 
-func GetIssuerResourceVersion(recCtx context.Context, client client.Client, certificate *certmanagerv1.Certificate) (string, error) {
+func GetIssuerResourceVersion(client client.Client, certificate *certmanagerv1.Certificate) (string, error) {
 	issuer := &certmanagerv1.Issuer{}
 	err := client.Get(context.Background(), types.NamespacedName{Name: certificate.Spec.IssuerRef.Name,
 		Namespace: certificate.Namespace}, issuer)
@@ -1854,11 +1854,11 @@ func GetIssuerResourceVersion(recCtx context.Context, client client.Client, cert
 	}
 	if issuer.Spec.CA != nil {
 		caSecret, err := common.GetSecret(client, issuer.Spec.CA.SecretName, certificate.Namespace)
-		caSecret.LockedData.Destroy()
+		defer caSecret.Destroy()
 		if err != nil {
 			return "", err
 		} else {
-			return issuer.ResourceVersion + "," + HashData(caSecret.Data), nil
+			return issuer.ResourceVersion + "," + HashLockedData(caSecret.LockedData), nil
 		}
 	} else {
 		return issuer.ResourceVersion, nil

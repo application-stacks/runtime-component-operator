@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -20,14 +19,14 @@ const (
 )
 
 // ReconcileBindings goes through the reconcile logic for service binding
-func (r *ReconcilerBase) ReconcileBindings(recCtx context.Context, ba common.BaseComponent) error {
-	if err := r.reconcileExpose(recCtx, ba); err != nil {
+func (r *ReconcilerBase) ReconcileBindings(ba common.BaseComponent) error {
+	if err := r.reconcileExpose(ba); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *ReconcilerBase) reconcileExpose(recCtx context.Context, ba common.BaseComponent) error {
+func (r *ReconcilerBase) reconcileExpose(ba common.BaseComponent) error {
 	mObj := ba.(metav1.Object)
 	bindingSecret, err := common.GetSecret(r.GetClient(), getExposeBindingSecretName(ba), mObj.GetNamespace())
 	defer bindingSecret.Destroy()
@@ -47,7 +46,7 @@ func (r *ReconcilerBase) reconcileExpose(recCtx context.Context, ba common.BaseC
 		bindingSecret.LockedData = customSecret.LockedData
 		customSecret.LockedData = nil
 		// Apply default values to the override secret if certain values are not set
-		r.applyDefaultValuesToExpose(recCtx, bindingSecret, ba)
+		r.applyDefaultValuesToExpose(bindingSecret, ba)
 
 		if err := r.CreateOrUpdateSecret(bindingSecret, mObj); err != nil {
 			return err
@@ -79,7 +78,7 @@ func (r *ReconcilerBase) getCustomValuesToExpose(secret *common.LockedBufferSecr
 	return nil
 }
 
-func (r *ReconcilerBase) applyDefaultValuesToExpose(recCtx context.Context, secret *common.LockedBufferSecret, ba common.BaseComponent) {
+func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *common.LockedBufferSecret, ba common.BaseComponent) {
 	mObj := ba.(metav1.Object)
 	secret.Labels = ba.GetLabels()
 	secret.Annotations = MergeMaps(secret.Annotations, ba.GetAnnotations())
