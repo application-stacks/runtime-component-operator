@@ -172,6 +172,31 @@ func (r *ReconcilerBase) CreateOrUpdate(obj client.Object, owner metav1.Object, 
 	return err
 }
 
+func (r *ReconcilerBase) CreateOrUpdateSecret(secret *common.LockedBufferSecret, owner metav1.Object) error {
+	// populate Secret obj with the locked buffer secret contents
+	obj := &corev1.Secret{}
+	objCleanup := common.CopySecret(secret, obj)
+	// once completed, delete references to protected memory
+	defer objCleanup()
+
+	if owner != nil {
+		controllerutil.SetControllerReference(owner, obj, r.scheme)
+	}
+
+	result, err := controllerutil.CreateOrUpdate(context.TODO(), r.GetClient(), obj, func() error { return nil })
+	if err != nil {
+		return err
+	}
+
+	var gvk schema.GroupVersionKind
+	gvk, err = apiutil.GVKForObject(obj, r.scheme)
+	if err == nil {
+		logD1.Info("Reconciled", "Kind", gvk.Kind, "Namespace", obj.GetNamespace(), "Name", obj.GetName(), "Status", result)
+	}
+
+	return err
+}
+
 // DeleteResource deletes kubernetes resource
 func (r *ReconcilerBase) DeleteResource(obj client.Object) error {
 	err := r.client.Delete(context.TODO(), obj)
@@ -196,6 +221,13 @@ func (r *ReconcilerBase) DeleteResource(obj client.Object) error {
 		log.Info("Reconciled", "Kind", gvk.Kind, "Name", metaObj.GetName(), "Status", "deleted")
 	}
 	return nil
+}
+
+func (r *ReconcilerBase) DeleteSecretResource(secret *common.LockedBufferSecret) error {
+	obj := &corev1.Secret{}
+	obj.TypeMeta = secret.TypeMeta
+	obj.ObjectMeta = secret.ObjectMeta
+	return r.DeleteResource(obj)
 }
 
 // DeleteResources ...
@@ -522,35 +554,35 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string,
 	key, cert, ca, destCa = "", "", "", ""
 	mObj := ba.(metav1.Object)
 	if ba.GetManageTLS() == nil || *ba.GetManageTLS() || ba.GetService() != nil && ba.GetService().GetCertificateSecretRef() != nil {
-		tlsSecret := &corev1.Secret{}
 		secretName := ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName]
-		err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: mObj.GetNamespace()}, tlsSecret)
+		tlsSecret, err := common.GetSecret(r.GetClient(), secretName, mObj.GetNamespace())
+		defer tlsSecret.Destroy()
 		if err != nil {
 			r.ManageError(err, common.StatusConditionTypeReconciled, ba)
 			return "", "", "", "", err
 		}
-		caCrt, ok := tlsSecret.Data["ca.crt"]
+		caCrt, ok := tlsSecret.LockedData["ca.crt"]
 		if ok {
-			destCa = string(caCrt)
+			destCa = string(caCrt.Bytes())
 		}
 	}
 	if ba.GetRoute() != nil && ba.GetRoute().GetCertificateSecretRef() != nil {
-		tlsSecret := &corev1.Secret{}
 		secretName := mObj.GetName() + "-route-tls"
 		if ba.GetRoute().GetCertificateSecretRef() != nil {
 			secretName = *ba.GetRoute().GetCertificateSecretRef()
 		}
-		err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: mObj.GetNamespace()}, tlsSecret)
+		tlsSecret, err := common.GetSecret(r.GetClient(), secretName, mObj.GetNamespace())
+		defer tlsSecret.Destroy()
 		if err != nil {
 			r.ManageError(err, common.StatusConditionTypeReconciled, ba)
 			return "", "", "", "", err
 		}
 
 		var extraCerts string
-		v, ok := tlsSecret.Data["tls.crt"]
+		v, ok := tlsSecret.LockedData["tls.crt"]
 		if ok {
-			cert = string(v)
-			certBlock, nextCerts := pem.Decode(v)
+			cert = string(v.Bytes())
+			certBlock, nextCerts := pem.Decode(v.Bytes())
 			if certBlock == nil {
 				return "", "", "", "", errors.New("failed to load route certificate")
 			}
@@ -560,9 +592,9 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string,
 				extraCerts = string(nextCerts)
 			}
 		}
-		v, ok = tlsSecret.Data["ca.crt"]
+		v, ok = tlsSecret.LockedData["ca.crt"]
 		if ok || extraCerts != "" {
-			ca = string(v)
+			ca = string(v.Bytes())
 			if extraCerts != "" {
 				if ca != "" {
 					ca = ca + "\n" + extraCerts
@@ -571,13 +603,13 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string,
 				}
 			}
 		}
-		v, ok = tlsSecret.Data["tls.key"]
+		v, ok = tlsSecret.LockedData["tls.key"]
 		if ok {
-			key = string(v)
+			key = string(v.Bytes())
 		}
-		v, ok = tlsSecret.Data["destCA.crt"]
+		v, ok = tlsSecret.LockedData["destCA.crt"]
 		if ok {
-			destCa = string(v)
+			destCa = string(v.Bytes())
 		}
 	}
 	return key, cert, ca, destCa, nil
@@ -619,13 +651,6 @@ func (r *ReconcilerBase) checkIssuerReady(issuer *certmanagerv1.Issuer) error {
 		return fmt.Errorf("issuer %s is not ready", issuer.Name)
 	}
 	return nil
-}
-
-func (r *ReconcilerBase) checkSecretExists(secretName, secretNamespace string) error {
-	secret := &corev1.Secret{}
-	secret.Name = secretName
-	secret.Namespace = secretNamespace
-	return r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: secretNamespace}, secret)
 }
 
 func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACommonName string, operatorName string) error {
@@ -679,13 +704,9 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 		return err
 	}
 
-	CustomCACert := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{
-		Name:      prefix + "-custom-ca-tls",
-		Namespace: namespace,
-	}}
+	customCACertName := prefix + "-custom-ca-tls"
+	err = common.CheckSecret(r.GetClient(), customCACertName, namespace)
 	customCACertFound := false
-	err = r.GetClient().Get(context.Background(), types.NamespacedName{Name: CustomCACert.GetName(),
-		Namespace: CustomCACert.GetNamespace()}, CustomCACert)
 	if err == nil {
 		customCACertFound = true
 	} else {
@@ -693,7 +714,7 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 		if err := r.checkCertificateReady(caCert); err != nil {
 			return err
 		}
-		if err := r.checkSecretExists(caCertSecretName, namespace); err != nil {
+		if err := common.CheckSecret(r.GetClient(), caCertSecretName, namespace); err != nil {
 			return err
 		}
 	}
@@ -710,8 +731,7 @@ func (r *ReconcilerBase) GenerateCMIssuer(namespace string, prefix string, CACom
 			issuer.Annotations = map[string]string{}
 		}
 		if customCACertFound {
-			issuer.Spec.CA.SecretName = CustomCACert.Name
-
+			issuer.Spec.CA.SecretName = customCACertName
 		}
 		return nil
 	})
