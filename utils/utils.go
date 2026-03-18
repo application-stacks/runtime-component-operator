@@ -680,9 +680,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	appContainer.Env = ba.GetEnv()
 	appContainer.EnvFrom = ba.GetEnvFrom()
 
-	if ba.GetHostAliases() != nil {
-		pts.Spec.HostAliases = *ba.GetHostAliases()
-	}
+	pts.Spec.HostAliases = ba.GetHostAliases()
 
 	pts.Spec.InitContainers = ba.GetInitContainers()
 
@@ -975,9 +973,7 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	ksvc.Spec.Template.Spec.Containers[0].Env = ba.GetEnv()
 	ksvc.Spec.Template.Spec.Containers[0].EnvFrom = ba.GetEnvFrom()
 
-	if ba.GetHostAliases() != nil {
-		ksvc.Spec.Template.Spec.HostAliases = *ba.GetHostAliases()
-	}
+	ksvc.Spec.Template.Spec.HostAliases = ba.GetHostAliases()
 
 	ksvc.Spec.Template.Spec.Containers[0].SecurityContext = GetSecurityContext(ba)
 

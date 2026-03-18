@@ -167,7 +167,7 @@ type RuntimeComponentSpec struct {
 
 	// The list of hostnames and IPs that will be injected into the application pod's hosts file
 	// +operator-sdk:csv:customresourcedefinitions:order=30,type=spec,displayName="Host Aliases"
-	HostAliases *[]corev1.HostAlias `json:"hostAliases,omitempty"`
+	HostAliases []corev1.HostAlias `json:"hostAliases,omitempty"`
 }
 
 // Defines the DNS
@@ -1103,7 +1103,7 @@ func (cr *RuntimeComponentTopologySpreadConstraints) GetDisableOperatorDefaults(
 	return cr.DisableOperatorDefaults
 }
 
-func (cr *RuntimeComponent) GetHostAliases() *[]corev1.HostAlias {
+func (cr *RuntimeComponent) GetHostAliases() []corev1.HostAlias {
 	return cr.Spec.HostAliases
 }
 

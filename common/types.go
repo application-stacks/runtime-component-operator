@@ -263,5 +263,5 @@ type BaseComponent interface {
 	GetTolerations() []corev1.Toleration
 	GetDNS() BaseComponentDNS
 	GetDisableTopologyRouting() *bool
-	GetHostAliases() *[]corev1.HostAlias
+	GetHostAliases() []corev1.HostAlias
 }
