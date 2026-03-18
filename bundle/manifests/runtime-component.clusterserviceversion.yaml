@@ -422,6 +422,9 @@ spec:
           application pod's hosts file
         displayName: Host Aliases
         path: hostAliases
+      - description: Name of the PriorityClass for the pod.
+        displayName: Priority Class Name
+        path: priorityClassName
       - description: Labels to set on ServiceMonitor.
         displayName: Monitoring Labels
         path: monitoring.labels
