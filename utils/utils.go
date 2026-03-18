@@ -767,6 +767,11 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	}
 
 	pts.Spec.Tolerations = ba.GetTolerations()
+
+	pts.Spec.PriorityClassName = ""
+	if ba.GetPriorityClassName() != nil {
+		pts.Spec.PriorityClassName = *ba.GetPriorityClassName()
+	}
 }
 
 // Initialize an empty TopologySpreadConstraints list and optionally prefers scheduling across zones/hosts for pods with podMatchLabels

@@ -4586,6 +4586,9 @@ spec:
                       is allowed from.
                     type: object
                 type: object
+              priorityClassName:
+                description: Name of the PriorityClass for the pod.
+                type: string
               probes:
                 description: Define health checks on application container to determine
                   whether it is alive or ready to receive traffic
