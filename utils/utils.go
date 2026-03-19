@@ -1020,9 +1020,9 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 		ksvc.Spec.Template.Spec.AutomountServiceAccountToken = nil
 	}
 
-	kvsc.Spec.Template.Spec.PriorityClassName = ""
+	ksvc.Spec.Template.Spec.PriorityClassName = ""
 	if ba.GetPriorityClassName() != nil {
-		kvsc.Spec.Template.Spec.PriorityClassName = *ba.GetPriorityClassName()
+		ksvc.Spec.Template.Spec.PriorityClassName = *ba.GetPriorityClassName()
 	}
 }
 
