@@ -30,7 +30,7 @@ func (r *ReconcilerBase) reconcileExpose(ba common.BaseComponent) error {
 	mObj := ba.(metav1.Object)
 	bindingSecret, err := common.GetSecret(r.GetClient(), getExposeBindingSecretName(ba), mObj.GetNamespace())
 	defer bindingSecret.Destroy()
-	if err != nil {
+	if client.IgnoreNotFound(err) != nil {
 		return err
 	}
 

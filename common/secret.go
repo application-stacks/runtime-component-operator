@@ -46,14 +46,16 @@ func GetSecret(client client.Client, name string, ns string) (*LockedBufferSecre
 	secret := &corev1.Secret{}
 	secret.Name = name
 	secret.Namespace = ns
-	err := client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: ns}, secret)
-	if err != nil {
-		return nil, err
-	}
 
 	lockedSecret := &LockedBufferSecret{}
 	lockedSecret.TypeMeta = secret.TypeMeta
 	lockedSecret.ObjectMeta = secret.ObjectMeta
+
+	err := client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: ns}, secret)
+	if err != nil {
+		return lockedSecret, err
+	}
+
 	if lockedSecret.LockedData == nil {
 		lockedSecret.LockedData = SecretMap{}
 	}
