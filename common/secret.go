@@ -68,7 +68,7 @@ func GetSecret(client client.Client, name string, ns string) (*LockedBufferSecre
 	}
 	if secret.Data != nil {
 		for secretKey, secretValue := range secret.Data {
-			lockedSecret.LockedData[secretKey] = memguard.NewBufferFromBytes(secretValue)
+			lockedSecret.LockedData.Set(secretKey, secretValue)
 		}
 	}
 	return lockedSecret, nil

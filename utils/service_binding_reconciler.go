@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/application-stacks/runtime-component-operator/common"
-	"github.com/awnumar/memguard"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -91,7 +90,7 @@ func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *common.LockedBufferS
 	var found bool
 	if host, found := secretData.Get("host"); !found {
 		host = []byte(fmt.Sprintf("%s.%s.svc.cluster.local", mObj.GetName(), mObj.GetNamespace()))
-		secretData["host"] = memguard.NewBufferFromBytes(host)
+		secretData.Set("host", host)
 	}
 	if protocol, found = secretData.Get("protocol"); !found {
 		if ba.GetManageTLS() == nil || *ba.GetManageTLS() {
@@ -100,17 +99,17 @@ func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *common.LockedBufferS
 		} else {
 			protocol = []byte("http")
 		}
-		secretData["protocol"] = memguard.NewBufferFromBytes(protocol)
+		secretData.Set("protocol", protocol)
 	}
 	if basePath, found = secretData.Get("basePath"); !found {
 		basePath = []byte("/")
-		secretData["basePath"] = memguard.NewBufferFromBytes(basePath)
+		secretData.Set("basePath", basePath)
 	}
 	if port, found = secretData.Get("port"); !found {
 		if ba.GetCreateKnativeService() == nil || !*ba.GetCreateKnativeService() {
 			port = []byte(strconv.Itoa(int(ba.GetService().GetPort())))
 		}
-		secretData["port"] = memguard.NewBufferFromBytes(port)
+		secretData.Set("port", port)
 	}
 	if _, found = secretData["uri"]; !found {
 		uri := []byte(fmt.Sprintf("%s://%s", protocol, host))
@@ -123,7 +122,7 @@ func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *common.LockedBufferS
 			basePathStr = strings.TrimPrefix(basePathStr, "/")
 			uri = []byte(fmt.Sprintf("%s/%s", uri, basePathStr))
 		}
-		secretData["uri"] = memguard.NewBufferFromBytes(uri)
+		secretData.Set("uri", uri)
 	}
 
 	if _, found = secretData["certificates"]; !found && ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName] != "" {
@@ -137,14 +136,14 @@ func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *common.LockedBufferS
 			nCount := copy(chainedCerts, tlsCrt)
 			nCount += copy(chainedCerts[len(tlsCrt):], caCert)
 			if nCount > 0 {
-				secretData["certificates"] = memguard.NewBufferFromBytes(chainedCerts)
+				secretData.Set("certificates", chainedCerts)
 			}
 		}
 	}
 
 	if _, found = secretData["ingress-uri"]; !found && ba.GetExpose() != nil && *ba.GetExpose() {
 		host, path, protocol := r.GetIngressInfo(ba)
-		secretData["ingress-uri"] = memguard.NewBufferFromBytes([]byte(fmt.Sprintf("%s://%s%s%s", protocol, host, path, string(basePath))))
+		secretData.Set("ingress-uri", []byte(fmt.Sprintf("%s://%s%s%s", protocol, host, path, string(basePath))))
 	}
 }
 
