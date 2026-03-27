@@ -20,16 +20,23 @@ type LockedBufferSecret struct {
 type SecretMap map[string]*memguard.LockedBuffer
 
 func (sm SecretMap) Destroy() {
-	for _, buf := range sm {
-		buf.Destroy()
+	for _, buffer := range sm {
+		buffer.Destroy()
 	}
 }
 
 func (sm SecretMap) Get(key string) ([]byte, bool) {
-	if buf, found := sm[key]; found {
-		return buf.Bytes(), true
+	if buffer, found := sm[key]; found {
+		return buffer.Bytes(), true
 	}
 	return []byte{}, false
+}
+
+func (sm SecretMap) Set(key string, value []byte) {
+	if buffer, found := sm[key]; found {
+		buffer.Destroy()
+	}
+	sm[key] = memguard.NewBufferFromBytes(value)
 }
 
 func (lockedSecret LockedBufferSecret) Destroy() {
@@ -74,8 +81,8 @@ func CopySecret(in *LockedBufferSecret, out *corev1.Secret) func() {
 	if out.Data == nil {
 		out.Data = map[string][]byte{}
 	}
-	for key, buf := range in.LockedData {
-		out.Data[key] = buf.Bytes()
+	for key, buffer := range in.LockedData {
+		out.Data[key] = buffer.Bytes()
 	}
 	return func() {
 		for key := range out.Data {
