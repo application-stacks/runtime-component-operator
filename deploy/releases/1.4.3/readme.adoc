@@ -33,13 +33,17 @@ spec:
   sourceNamespace: openshift-marketplace
 ```
 
-=== Option 2: Install using kubectl
-
-See the instructions link:++kubectl/++[here].
-
-=== Option 3: Install using kustomize
+=== Option 2: Install using kustomize
 
 See the instructions link:++kustomize/++[here].
+
+=== Option 3: Install using kustomize with Argo CD
+
+See the instructions link:++kustomize-argo-cd/++[here].
+
+=== Option 4: Install using kubectl
+
+See the instructions link:++kubectl/++[here].
 
 
 == Limitations
