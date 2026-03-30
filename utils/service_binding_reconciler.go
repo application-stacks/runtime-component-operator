@@ -47,7 +47,9 @@ func (r *ReconcilerBase) reconcileExpose(ba common.BaseComponent) error {
 		// Apply default values to the override secret if certain values are not set
 		r.applyDefaultValuesToExpose(bindingSecret, ba)
 
-		if err := r.CreateOrUpdateSecret(bindingSecret, mObj); err != nil {
+		cleanup, err := r.CreateOrUpdateSecret(bindingSecret, mObj)
+		defer cleanup()
+		if err != nil {
 			return err
 		}
 

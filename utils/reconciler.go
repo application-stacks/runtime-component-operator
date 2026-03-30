@@ -172,12 +172,10 @@ func (r *ReconcilerBase) CreateOrUpdate(obj client.Object, owner metav1.Object, 
 	return err
 }
 
-func (r *ReconcilerBase) CreateOrUpdateSecret(secret *common.LockedBufferSecret, owner metav1.Object) error {
+func (r *ReconcilerBase) CreateOrUpdateSecret(secret *common.LockedBufferSecret, owner metav1.Object) (func(), error) {
 	// populate Secret obj with the locked buffer secret contents
 	obj := &corev1.Secret{}
 	objCleanup := common.CopySecret(secret, obj)
-	// once completed, delete references to protected memory
-	defer objCleanup()
 
 	if owner != nil {
 		controllerutil.SetControllerReference(owner, obj, r.scheme)
@@ -185,7 +183,7 @@ func (r *ReconcilerBase) CreateOrUpdateSecret(secret *common.LockedBufferSecret,
 
 	result, err := controllerutil.CreateOrUpdate(context.TODO(), r.GetClient(), obj, func() error { return nil })
 	if err != nil {
-		return err
+		return objCleanup, err
 	}
 
 	var gvk schema.GroupVersionKind
@@ -194,7 +192,7 @@ func (r *ReconcilerBase) CreateOrUpdateSecret(secret *common.LockedBufferSecret,
 		logD1.Info("Reconciled", "Kind", gvk.Kind, "Namespace", obj.GetNamespace(), "Name", obj.GetName(), "Status", result)
 	}
 
-	return err
+	return objCleanup, err
 }
 
 // DeleteResource deletes kubernetes resource
