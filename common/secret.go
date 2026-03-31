@@ -99,6 +99,9 @@ func CopySecret(in *LockedBufferSecret, out *corev1.Secret) func() {
 		out.Data[key] = buffer.Bytes()
 	}
 	return func() {
+		if out == nil {
+			return
+		}
 		for key := range out.Data {
 			delete(out.Data, key)
 		}

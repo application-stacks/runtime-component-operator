@@ -197,7 +197,7 @@ func (r *ReconcilerBase) CreateOrUpdateSecret(secret *common.LockedBufferSecret,
 	})
 	if err != nil {
 		objCleanup()
-		return nil, err
+		return func() {}, err
 	}
 
 	var gvk schema.GroupVersionKind
