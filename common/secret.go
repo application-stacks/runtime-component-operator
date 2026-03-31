@@ -80,9 +80,8 @@ func GetSecret(client client.Client, name string, ns string) (*LockedBufferSecre
 func CopySecret(in *LockedBufferSecret, out *corev1.Secret) func() {
 	out.TypeMeta = in.TypeMeta
 	out.ObjectMeta = in.ObjectMeta
-	if out.Data == nil {
-		out.Data = map[string][]byte{}
-	}
+
+	out.Data = make(map[string][]byte)
 	for key, buffer := range in.LockedData {
 		out.Data[key] = buffer.Bytes()
 	}
