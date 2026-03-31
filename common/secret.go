@@ -32,6 +32,19 @@ func (sm SecretMap) Get(key string) ([]byte, bool) {
 	return []byte{}, false
 }
 
+// SetCopy stores a copy of value in SecretMap at the specified key. The original
+// value's memory is securely wiped before the copy is made to prevent data leakage.
+func (sm SecretMap) SetCopy(key string, value []byte) {
+	if buffer, found := sm[key]; found {
+		buffer.Destroy()
+	}
+	valueCopy := make([]byte, len(value))
+	copy(valueCopy, value)
+	sm[key] = memguard.NewBufferFromBytes(valueCopy)
+}
+
+// Set stores the value in SecretMap at the specified key. The original
+// value's memory is securely wiped before the copy is made to prevent data leakage.
 func (sm SecretMap) Set(key string, value []byte) {
 	if buffer, found := sm[key]; found {
 		buffer.Destroy()
