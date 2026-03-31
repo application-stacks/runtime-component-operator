@@ -172,7 +172,7 @@ func (r *ReconcilerBase) CreateOrUpdate(obj client.Object, owner metav1.Object, 
 	return err
 }
 
-func (r *ReconcilerBase) CreateOrUpdateSecret(secret *common.LockedBufferSecret, owner metav1.Object) (func(), error) {
+func (r *ReconcilerBase) CreateOrUpdateSecret(secret *common.LockedBufferSecret, owner metav1.Object, mutateFn func() error) (func(), error) {
 	// populate Secret obj with the locked buffer secret contents
 	obj := &corev1.Secret{}
 	objCleanup := common.CopySecret(secret, obj)
@@ -181,9 +181,23 @@ func (r *ReconcilerBase) CreateOrUpdateSecret(secret *common.LockedBufferSecret,
 		controllerutil.SetControllerReference(owner, obj, r.scheme)
 	}
 
-	result, err := controllerutil.CreateOrUpdate(context.TODO(), r.GetClient(), obj, func() error { return nil })
+	result, err := controllerutil.CreateOrUpdate(context.TODO(), r.GetClient(), obj, func() error {
+		if obj.Data == nil {
+			obj.Data = make(map[string][]byte)
+		}
+		for key := range secret.LockedData {
+			val, _ := secret.LockedData.Get(key)
+			obj.Data[key] = val
+		}
+
+		if mutateFn != nil {
+			return mutateFn()
+		}
+		return nil
+	})
 	if err != nil {
-		return objCleanup, err
+		objCleanup()
+		return nil, err
 	}
 
 	var gvk schema.GroupVersionKind
