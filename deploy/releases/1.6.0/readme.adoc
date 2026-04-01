@@ -16,7 +16,7 @@ Red Hat OpenShift 4.16 or higher is supported. The operator is also supported on
 
 Runtime Component Operator is available from Red Hat's Certified OpenShift Operators catalog. 
 
-To install using the OpenShift UI, select `Ecosystem` from the navigation panel, then select `Software Catalog` and then search for `Runtime Component`. Click on the tile with `ORuntime Component` to install the Operator. Select channel `v1.6` and install it.
+To install using the OpenShift UI, select `Ecosystem` from the navigation panel, then select `Software Catalog` and then search for `Runtime Component`. Click on the tile with `Runtime Component` to install the Operator. Select channel `v1.6` and install it.
 
 To install using the `oc` CLI, use the following `Subscription`. Replace `<install_namespace>` with the namespace you want to install the Operator to:
 
