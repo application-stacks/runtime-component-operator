@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,7 +8,6 @@ import (
 	"github.com/application-stacks/runtime-component-operator/common"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -29,26 +27,28 @@ func (r *ReconcilerBase) ReconcileBindings(ba common.BaseComponent) error {
 
 func (r *ReconcilerBase) reconcileExpose(ba common.BaseComponent) error {
 	mObj := ba.(metav1.Object)
-	bindingSecret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      getExposeBindingSecretName(ba),
-			Namespace: mObj.GetNamespace(),
-		},
+	bindingSecret, err := common.GetSecret(r.GetClient(), getExposeBindingSecretName(ba), mObj.GetNamespace())
+	defer bindingSecret.Destroy()
+	if client.IgnoreNotFound(err) != nil {
+		return err
 	}
 
 	if ba.GetService() != nil && ba.GetService().GetBindable() != nil && *ba.GetService().GetBindable() {
-		err := r.CreateOrUpdate(bindingSecret, mObj, func() error {
-			customSecret := &corev1.Secret{}
-			// Check if custom values are provided in a secret, and apply the custom values
-			if err := r.getCustomValuesToExpose(customSecret, ba); err != nil {
-				return err
-			}
-			// Use content of the 'override' secret as the base secret content
-			bindingSecret.Data = customSecret.Data
-			// Apply default values to the override secret if certain values are not set
-			r.applyDefaultValuesToExpose(bindingSecret, ba)
-			return nil
-		})
+		customSecret := &common.LockedBufferSecret{}
+		defer customSecret.Destroy()
+		// Check if custom values are provided in a secret, and apply the custom values
+		err := r.getCustomValuesToExpose(customSecret, ba)
+		if err != nil {
+			return err
+		}
+		// Use content of the 'override' secret as the base secret content
+		bindingSecret.LockedData = customSecret.LockedData
+		customSecret.LockedData = nil
+		// Apply default values to the override secret if certain values are not set
+		r.applyDefaultValuesToExpose(bindingSecret, ba)
+
+		cleanup, err := r.CreateOrUpdateSecret(bindingSecret, mObj, func() error { return nil })
+		defer cleanup()
 		if err != nil {
 			return err
 		}
@@ -61,55 +61,57 @@ func (r *ReconcilerBase) reconcileExpose(ba common.BaseComponent) error {
 	// Update status
 	r.updateBindingStatus("", ba)
 	// Remove binding secret
-	if err := r.DeleteResource(bindingSecret); client.IgnoreNotFound(err) != nil {
+	if err := r.DeleteSecretResource(bindingSecret); client.IgnoreNotFound(err) != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *ReconcilerBase) getCustomValuesToExpose(secret *corev1.Secret, ba common.BaseComponent) error {
+func (r *ReconcilerBase) getCustomValuesToExpose(secret *common.LockedBufferSecret, ba common.BaseComponent) error {
 	mObj := ba.(metav1.Object)
-	key := types.NamespacedName{Name: getOverrideExposeBindingSecretName(ba), Namespace: mObj.GetNamespace()}
-	err := r.GetClient().Get(context.TODO(), key, secret)
+	overrideExposeBindingSecret, err := common.GetSecret(r.GetClient(), getOverrideExposeBindingSecretName(ba), mObj.GetNamespace())
 	if client.IgnoreNotFound(err) != nil {
 		return err
 	}
+	if overrideExposeBindingSecret != nil {
+		secret = overrideExposeBindingSecret
+	}
 	return nil
 }
 
-func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *corev1.Secret, ba common.BaseComponent) {
+func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *common.LockedBufferSecret, ba common.BaseComponent) {
 	mObj := ba.(metav1.Object)
 	secret.Labels = ba.GetLabels()
 	secret.Annotations = MergeMaps(secret.Annotations, ba.GetAnnotations())
 
-	secretData := secret.Data
-	if secretData == nil {
-		secretData = map[string][]byte{}
+	if secret.LockedData == nil {
+		secret.LockedData = common.SecretMap{}
 	}
+	secretData := secret.LockedData
 	var host, protocol, basePath, port []byte
 	var found bool
-	if host, found = secretData["host"]; !found {
+	if host, found := secretData.Get("host"); !found {
 		host = []byte(fmt.Sprintf("%s.%s.svc.cluster.local", mObj.GetName(), mObj.GetNamespace()))
-		secretData["host"] = host
+		secretData.Set("host", host)
 	}
-	if protocol, found = secretData["protocol"]; !found {
+	if protocol, found = secretData.Get("protocol"); !found {
 		if ba.GetManageTLS() == nil || *ba.GetManageTLS() {
 			protocol = []byte("https")
 
 		} else {
 			protocol = []byte("http")
 		}
-		secretData["protocol"] = protocol
+		secretData.Set("protocol", protocol)
 	}
-	if basePath, found = secretData["basePath"]; !found {
+	if basePath, found = secretData.Get("basePath"); !found {
 		basePath = []byte("/")
-		secretData["basePath"] = basePath
+		secretData.Set("basePath", basePath)
 	}
-	if port, found = secretData["port"]; !found {
+	if port, found = secretData.Get("port"); !found {
 		if ba.GetCreateKnativeService() == nil || !*ba.GetCreateKnativeService() {
 			port = []byte(strconv.Itoa(int(ba.GetService().GetPort())))
 		}
-		secretData["port"] = port
+		secretData.Set("port", port)
 	}
 	if _, found = secretData["uri"]; !found {
 		uri := []byte(fmt.Sprintf("%s://%s", protocol, host))
@@ -122,30 +124,29 @@ func (r *ReconcilerBase) applyDefaultValuesToExpose(secret *corev1.Secret, ba co
 			basePathStr = strings.TrimPrefix(basePathStr, "/")
 			uri = []byte(fmt.Sprintf("%s/%s", uri, basePathStr))
 		}
-		secretData["uri"] = uri
+		secretData.Set("uri", uri)
 	}
 
 	if _, found = secretData["certificates"]; !found && ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName] != "" {
-
-		certSecret := &corev1.Secret{}
-		err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName], Namespace: mObj.GetNamespace()}, certSecret)
+		certSecret, err := common.GetSecret(r.GetClient(), ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName], mObj.GetNamespace())
+		defer certSecret.Destroy()
 		if err == nil {
-			caCert := certSecret.Data["ca.crt"]
-			tlsCrt := certSecret.Data["tls.crt"]
-			chain := string(tlsCrt) + string(caCert)
-			if chain != "" {
-				secretData["certificates"] = []byte(chain)
+			caCert, _ := certSecret.LockedData.Get("ca.crt")
+			tlsCrt, _ := certSecret.LockedData.Get("tls.crt")
+
+			chainedCerts := make([]byte, len(caCert)+len(tlsCrt))
+			nCount := copy(chainedCerts, tlsCrt)
+			nCount += copy(chainedCerts[len(tlsCrt):], caCert)
+			if nCount > 0 {
+				secretData.Set("certificates", chainedCerts)
 			}
 		}
 	}
 
 	if _, found = secretData["ingress-uri"]; !found && ba.GetExpose() != nil && *ba.GetExpose() {
-
 		host, path, protocol := r.GetIngressInfo(ba)
-		secretData["ingress-uri"] = []byte(fmt.Sprintf("%s://%s%s%s", protocol, host, path, string(basePath)))
-
+		secretData.Set("ingress-uri", []byte(fmt.Sprintf("%s://%s%s%s", protocol, host, path, string(basePath))))
 	}
-	secret.Data = secretData
 }
 
 func (r *ReconcilerBase) updateBindingStatus(bindingSecretName string, ba common.BaseComponent) {
