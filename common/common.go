@@ -68,15 +68,13 @@ func CustomizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 		probe.ProbeHandler.GRPC = nil
 		probe.ProbeHandler.HTTPGet = nil
 		probe.ProbeHandler.TCPSocket = nil
-	}
-	if config.ProbeHandler.GRPC != nil {
+	} else if config.ProbeHandler.GRPC != nil {
 		probe.ProbeHandler.GRPC = config.ProbeHandler.GRPC
 		// clear remaining handlers
 		probe.ProbeHandler.Exec = nil
 		probe.ProbeHandler.HTTPGet = nil
 		probe.ProbeHandler.TCPSocket = nil
-	}
-	if config.ProbeHandler.HTTPGet != nil {
+	} else if config.ProbeHandler.HTTPGet != nil {
 		if probe.ProbeHandler.HTTPGet == nil {
 			probe.ProbeHandler.HTTPGet = &corev1.HTTPGetAction{}
 		}
@@ -97,8 +95,7 @@ func CustomizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 		probe.ProbeHandler.Exec = nil
 		probe.ProbeHandler.GRPC = nil
 		probe.ProbeHandler.TCPSocket = nil
-	}
-	if config.ProbeHandler.TCPSocket != nil {
+	} else if config.ProbeHandler.TCPSocket != nil {
 		probe.ProbeHandler.TCPSocket = config.ProbeHandler.TCPSocket
 		// clear remaining handlers
 		probe.ProbeHandler.Exec = nil
