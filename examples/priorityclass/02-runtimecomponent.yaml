@@ -1,0 +1,42 @@
+apiVersion: rc.app.stacks/v1
+kind: RuntimeComponent
+metadata:
+  name: payment-service
+spec:
+  applicationImage: icr.io/appcafe/open-liberty/samples/getting-started@sha256:80a28b6a71ec02369cc13f621e4c3cca0d63b1977be76e15dabbfba48411107f
+  manageTLS: true
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+  replicas: 2
+  priorityClassName: service-critical
+  service:
+    port: 9443
+  serviceAccount:
+    mountToken: true
+  probes:
+    startup:
+      failureThreshold: 12
+      periodSeconds: 5
+      httpGet:
+        path: /health/started
+        port: 9443
+    readiness:
+      httpGet:
+        path: /health/ready
+        port: 9443
+      initialDelaySeconds: 1
+      periodSeconds: 5
+      failureThreshold: 24
+    liveness:
+      httpGet:
+        path: /health/live
+        port: 9443
+      initialDelaySeconds: 8
+      periodSeconds: 5
+      
+    

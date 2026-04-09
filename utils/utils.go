@@ -765,6 +765,11 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	}
 
 	pts.Spec.Tolerations = ba.GetTolerations()
+
+	pts.Spec.PriorityClassName = ""
+	if ba.GetPriorityClassName() != nil {
+		pts.Spec.PriorityClassName = *ba.GetPriorityClassName()
+	}
 }
 
 // Initialize an empty TopologySpreadConstraints list and optionally prefers scheduling across zones/hosts for pods with podMatchLabels
@@ -1011,6 +1016,11 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 		ksvc.Spec.Template.Spec.AutomountServiceAccountToken = &mount
 	} else {
 		ksvc.Spec.Template.Spec.AutomountServiceAccountToken = nil
+	}
+
+	ksvc.Spec.Template.Spec.PriorityClassName = ""
+	if ba.GetPriorityClassName() != nil {
+		ksvc.Spec.Template.Spec.PriorityClassName = *ba.GetPriorityClassName()
 	}
 }
 

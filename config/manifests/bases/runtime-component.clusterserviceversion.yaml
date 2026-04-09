@@ -367,6 +367,9 @@ spec:
         path: monitoring.endpoints
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:endpointList
+      - description: Name of the PriorityClass for the pod.
+        displayName: Priority Class Name
+        path: priorityClassName
       - description: Tolerations to be added to application pods. Tolerations allow
           the scheduler to schedule pods on nodes with matching taints.
         displayName: Tolerations
