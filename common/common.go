@@ -64,9 +64,17 @@ func CustomizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 	probe := defaultProbe
 	if config.ProbeHandler.Exec != nil {
 		probe.ProbeHandler.Exec = config.ProbeHandler.Exec
+		// clear remaining handlers
+		probe.ProbeHandler.GRPC = nil
+		probe.ProbeHandler.HTTPGet = nil
+		probe.ProbeHandler.TCPSocket = nil
 	}
 	if config.ProbeHandler.GRPC != nil {
 		probe.ProbeHandler.GRPC = config.ProbeHandler.GRPC
+		// clear remaining handlers
+		probe.ProbeHandler.Exec = nil
+		probe.ProbeHandler.HTTPGet = nil
+		probe.ProbeHandler.TCPSocket = nil
 	}
 	if config.ProbeHandler.HTTPGet != nil {
 		if probe.ProbeHandler.HTTPGet == nil {
@@ -85,9 +93,17 @@ func CustomizeProbeDefaults(config *corev1.Probe, defaultProbe *corev1.Probe) *c
 		if len(config.ProbeHandler.HTTPGet.HTTPHeaders) > 0 {
 			probe.ProbeHandler.HTTPGet.HTTPHeaders = config.ProbeHandler.HTTPGet.HTTPHeaders
 		}
+		// clear remaining handlers
+		probe.ProbeHandler.Exec = nil
+		probe.ProbeHandler.GRPC = nil
+		probe.ProbeHandler.TCPSocket = nil
 	}
 	if config.ProbeHandler.TCPSocket != nil {
 		probe.ProbeHandler.TCPSocket = config.ProbeHandler.TCPSocket
+		// clear remaining handlers
+		probe.ProbeHandler.Exec = nil
+		probe.ProbeHandler.GRPC = nil
+		probe.ProbeHandler.HTTPGet = nil
 	}
 	if config.InitialDelaySeconds != 0 {
 		probe.InitialDelaySeconds = config.InitialDelaySeconds
