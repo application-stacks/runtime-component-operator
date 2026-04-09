@@ -689,9 +689,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	appContainer.Env = ba.GetEnv()
 	appContainer.EnvFrom = ba.GetEnvFrom()
 
-	if ba.GetHostAliases() != nil {
-		pts.Spec.HostAliases = *ba.GetHostAliases()
-	}
+	pts.Spec.HostAliases = ba.GetHostAliases()
 
 	pts.Spec.InitContainers = ba.GetInitContainers()
 
@@ -866,13 +864,15 @@ func CustomizeServiceAccount(sa *corev1.ServiceAccount, ba common.BaseComponent,
 	sa.Labels = ba.GetLabels()
 	sa.Annotations = MergeMaps(sa.Annotations, ba.GetAnnotations())
 
-	psr := ba.GetStatus().GetReferences()[common.StatusReferencePullSecretName]
+	psr := strings.TrimSpace(ba.GetStatus().GetReferences()[common.StatusReferencePullSecretName])
 	pullSecrets := Set(DecodeStringToList(psr))
 	crPullSecrets := []string{}
+	crPullSecretString := ""
 	if ba.GetPullSecret() != nil {
-		crPullSecrets = Set(DecodeStringToList(*ba.GetPullSecret()))
+		crPullSecretString = strings.TrimSpace(*ba.GetPullSecret())
+		crPullSecrets = Set(DecodeStringToList(crPullSecretString))
 	}
-	if psr != "" && (ba.GetPullSecret() == nil || *ba.GetPullSecret() != psr) {
+	if psr != "" && (ba.GetPullSecret() == nil || crPullSecretString != psr) {
 		// There is a reference to a pull secret but it doesn't match the one
 		// from the CR (which is empty or different)
 		// so delete the refered pull secret from the service account
@@ -987,9 +987,7 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 	ksvc.Spec.Template.Spec.Containers[0].Env = ba.GetEnv()
 	ksvc.Spec.Template.Spec.Containers[0].EnvFrom = ba.GetEnvFrom()
 
-	if ba.GetHostAliases() != nil {
-		ksvc.Spec.Template.Spec.HostAliases = *ba.GetHostAliases()
-	}
+	ksvc.Spec.Template.Spec.HostAliases = ba.GetHostAliases()
 
 	ksvc.Spec.Template.Spec.Containers[0].SecurityContext = GetSecurityContext(ba)
 
@@ -2011,7 +2009,15 @@ func EncodeListToString(arr []string) string {
 
 // Decodes a comma-separated into a string list
 func DecodeStringToList(commaSeparatedString string) []string {
-	return strings.Split(string(commaSeparatedString), ",")
+	commaSeparatedString = strings.TrimSpace(commaSeparatedString)
+	if commaSeparatedString == "" {
+		return []string{}
+	}
+	arr := strings.Split(string(commaSeparatedString), ",")
+	for i := range len(arr) {
+		arr[i] = strings.TrimSpace(arr[i])
+	}
+	return arr
 }
 
 // Returns true if set A and B are equivalent
