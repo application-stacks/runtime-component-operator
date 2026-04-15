@@ -878,6 +878,21 @@ func TestShouldDeleteRoute(t *testing.T) {
 	verifyTests(testCR, t)
 }
 
+func TestDecodeStringToList(t *testing.T) {
+	testDecodeStringToList := []Test{
+		{test: "empty string", expected: []string{}, actual: DecodeStringToList("")},
+		{test: "one element", expected: []string{"a"}, actual: DecodeStringToList("a")},
+		{test: "one element with space", expected: []string{"a"}, actual: DecodeStringToList(" a")},
+		{test: "one element with more space", expected: []string{"a"}, actual: DecodeStringToList(" a    ")},
+		{test: "two elements with space", expected: []string{"a", "b"}, actual: DecodeStringToList(" a,b    ")},
+		{test: "two elements with more space", expected: []string{"a", "b"}, actual: DecodeStringToList(" a   ,b    ")},
+		{test: "two elements with even more space", expected: []string{"a", "b"}, actual: DecodeStringToList(" a   ,  b    ")},
+		{test: "four elements with two empty", expected: []string{"a", "b", "", ""}, actual: DecodeStringToList(" a   ,  b    ,     ,   ")},
+		{test: "four elements with two empty as a string", expected: "a,b,,", actual: EncodeListToString(DecodeStringToList(" a   ,  b    ,     ,   "))},
+	}
+	verifyTests(testDecodeStringToList, t)
+}
+
 // Helper Functions
 // Unconditionally set the proper tags for an enabled runtime omponent
 func createAppDefinitionTags(app *appstacksv1.RuntimeComponent) (map[string]string, map[string]string) {
