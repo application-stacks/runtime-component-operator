@@ -569,12 +569,31 @@ func TestCustomizeKnativeService(t *testing.T) {
 	ksvcNumPorts := len(ksvc.Spec.Template.Spec.Containers[0].Ports)
 	ksvcSAN := ksvc.Spec.Template.Spec.ServiceAccountName
 
-	ksvcLPPort := ksvc.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.Port
-	ksvcLPTCP := ksvc.Spec.Template.Spec.Containers[0].LivenessProbe.TCPSocket.Port
-	ksvcRPPort := ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Port
-	ksvcRPTCP := ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.TCPSocket.Port
-	ksvcSPPort := ksvc.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet.Port
-	ksvcSPTCP := ksvc.Spec.Template.Spec.Containers[0].StartupProbe.TCPSocket.Port
+	var ksvcLPPort, ksvcLPTCP, ksvcRPPort, ksvcRPTCP, ksvcSPPort, ksvcSPTCP intstr.IntOrString
+	if ksvc.Spec.Template.Spec.Containers[0].LivenessProbe != nil {
+		if ksvc.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet != nil {
+			ksvcLPPort = ksvc.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.Port
+		}
+		if ksvc.Spec.Template.Spec.Containers[0].LivenessProbe.TCPSocket != nil {
+			ksvcLPTCP = ksvc.Spec.Template.Spec.Containers[0].LivenessProbe.TCPSocket.Port
+		}
+	}
+	if ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe != nil {
+		if ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet != nil {
+			ksvcRPPort = ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Port
+		}
+		if ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.TCPSocket != nil {
+			ksvcRPTCP = ksvc.Spec.Template.Spec.Containers[0].ReadinessProbe.TCPSocket.Port
+		}
+	}
+	if ksvc.Spec.Template.Spec.Containers[0].StartupProbe != nil {
+		if ksvc.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet != nil {
+			ksvcSPPort = ksvc.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet.Port
+		}
+		if ksvc.Spec.Template.Spec.Containers[0].StartupProbe.TCPSocket != nil {
+			ksvcSPTCP = ksvc.Spec.Template.Spec.Containers[0].StartupProbe.TCPSocket.Port
+		}
+	}
 	ksvcLabelNoExpose := ksvc.Labels["serving.knative.dev/visibility"]
 	ksvcMount := ksvc.Spec.Template.Spec.AutomountServiceAccountToken
 
