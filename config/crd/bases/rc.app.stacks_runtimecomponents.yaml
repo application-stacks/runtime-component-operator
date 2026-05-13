@@ -1123,8 +1123,8 @@ spec:
                               and scale-down and scale-up tolerances of 5% and 1% respectively, scaling will be
                               triggered when the actual consumption falls below 95Mi or exceeds 101Mi.
 
-                              This is an alpha field and requires enabling the HPAConfigurableTolerance
-                              feature gate.
+                              This is an beta field and requires the HPAConfigurableTolerance feature
+                              gate to be enabled.
                             pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                             x-kubernetes-int-or-string: true
                         type: object
@@ -1198,8 +1198,8 @@ spec:
                               and scale-down and scale-up tolerances of 5% and 1% respectively, scaling will be
                               triggered when the actual consumption falls below 95Mi or exceeds 101Mi.
 
-                              This is an alpha field and requires enabling the HPAConfigurableTolerance
-                              feature gate.
+                              This is an beta field and requires the HPAConfigurableTolerance feature
+                              gate to be enabled.
                             pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                             x-kubernetes-int-or-string: true
                         type: object
@@ -2910,7 +2910,9 @@ spec:
                           type: integer
                       type: object
                     resizePolicy:
-                      description: Resources resize policy for the container.
+                      description: |-
+                        Resources resize policy for the container.
+                        This field cannot be set on ephemeral containers.
                       items:
                         description: ContainerResizePolicy represents resource resize
                           policy for the container.
@@ -6388,7 +6390,9 @@ spec:
                           type: integer
                       type: object
                     resizePolicy:
-                      description: Resources resize policy for the container.
+                      description: |-
+                        Resources resize policy for the container.
+                        This field cannot be set on ephemeral containers.
                       items:
                         description: ContainerResizePolicy represents resource resize
                           policy for the container.
@@ -7207,7 +7211,7 @@ spec:
                               resources:
                                 description: |-
                                   resources represents the minimum resources the volume should have.
-                                  If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements
+                                  Users are allowed to specify resource requirements
                                   that are lower than previous value but must still be higher than capacity recorded in the
                                   status field of the claim.
                                   More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
@@ -7371,8 +7375,7 @@ spec:
                                   controller that\nonly is responsible for resizing
                                   capacity of the volume, should ignore PVC updates
                                   that change other valid\nresources associated with
-                                  PVC.\n\nThis is an alpha field and requires enabling
-                                  RecoverVolumeExpansionFailure feature."
+                                  PVC."
                                 type: object
                                 x-kubernetes-map-type: granular
                               allocatedResources:
@@ -7407,8 +7410,7 @@ spec:
                                   For example - a controller that\nonly is responsible
                                   for resizing capacity of the volume, should ignore
                                   PVC updates that change other valid\nresources associated
-                                  with PVC.\n\nThis is an alpha field and requires
-                                  enabling RecoverVolumeExpansionFailure feature."
+                                  with PVC."
                                 type: object
                               capacity:
                                 additionalProperties:
@@ -7524,10 +7526,10 @@ spec:
                               The maximum number of pods that can be unavailable during the update.
                               Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
                               Absolute number is calculated from percentage by rounding up. This can not be 0.
-                              Defaults to 1. This field is alpha-level and is only honored by servers that enable the
-                              MaxUnavailableStatefulSet feature. The field applies to all pods in the range 0 to
+                              Defaults to 1. This field is beta-level and is enabled by default. The field applies to all pods in the range 0 to
                               Replicas-1. That means if there is any unavailable pod in the range 0 to Replicas-1, it
                               will be counted towards MaxUnavailable.
+                              This setting might not be effective for the OrderedReady podManagementPolicy. That policy ensures pods are created and become ready one at a time.
                             x-kubernetes-int-or-string: true
                           partition:
                             description: |-
@@ -7566,9 +7568,10 @@ spec:
                     operator:
                       description: |-
                         Operator represents a key's relationship to the value.
-                        Valid operators are Exists and Equal. Defaults to Equal.
+                        Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.
                         Exists is equivalent to wildcard for value, so that a pod can
                         tolerate all taints of a particular category.
+                        Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).
                       type: string
                     tolerationSeconds:
                       description: |-
@@ -8437,7 +8440,7 @@ spec:
                                 resources:
                                   description: |-
                                     resources represents the minimum resources the volume should have.
-                                    If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements
+                                    Users are allowed to specify resource requirements
                                     that are lower than previous value but must still be higher than capacity recorded in the
                                     status field of the claim.
                                     More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
@@ -9316,6 +9319,24 @@ spec:
                                     description: Kubelet's generated CSRs will be
                                       addressed to this signer.
                                     type: string
+                                  userAnnotations:
+                                    additionalProperties:
+                                      type: string
+                                    description: |-
+                                      userAnnotations allow pod authors to pass additional information to
+                                      the signer implementation.  Kubernetes does not restrict or validate this
+                                      metadata in any way.
+
+                                      These values are copied verbatim into the `spec.unverifiedUserAnnotations` field of
+                                      the PodCertificateRequest objects that Kubelet creates.
+
+                                      Entries are subject to the same validation as object metadata annotations,
+                                      with the addition that all keys must be domain-prefixed. No restrictions
+                                      are placed on values, except an overall size limitation on the entire field.
+
+                                      Signers should document the keys and values they support. Signers should
+                                      deny requests that contain keys they do not recognize.
+                                    type: object
                                 required:
                                 - keyType
                                 - signerName
@@ -11976,7 +11997,9 @@ spec:
                           type: integer
                       type: object
                     resizePolicy:
-                      description: Resources resize policy for the container.
+                      description: |-
+                        Resources resize policy for the container.
+                        This field cannot be set on ephemeral containers.
                       items:
                         description: ContainerResizePolicy represents resource resize
                           policy for the container.
@@ -15187,7 +15210,9 @@ spec:
                           type: integer
                       type: object
                     resizePolicy:
-                      description: Resources resize policy for the container.
+                      description: |-
+                        Resources resize policy for the container.
+                        This field cannot be set on ephemeral containers.
                       items:
                         description: ContainerResizePolicy represents resource resize
                           policy for the container.
@@ -16000,7 +16025,7 @@ spec:
                               resources:
                                 description: |-
                                   resources represents the minimum resources the volume should have.
-                                  If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements
+                                  Users are allowed to specify resource requirements
                                   that are lower than previous value but must still be higher than capacity recorded in the
                                   status field of the claim.
                                   More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
@@ -16164,8 +16189,7 @@ spec:
                                   controller that\nonly is responsible for resizing
                                   capacity of the volume, should ignore PVC updates
                                   that change other valid\nresources associated with
-                                  PVC.\n\nThis is an alpha field and requires enabling
-                                  RecoverVolumeExpansionFailure feature."
+                                  PVC."
                                 type: object
                                 x-kubernetes-map-type: granular
                               allocatedResources:
@@ -16200,8 +16224,7 @@ spec:
                                   For example - a controller that\nonly is responsible
                                   for resizing capacity of the volume, should ignore
                                   PVC updates that change other valid\nresources associated
-                                  with PVC.\n\nThis is an alpha field and requires
-                                  enabling RecoverVolumeExpansionFailure feature."
+                                  with PVC."
                                 type: object
                               capacity:
                                 additionalProperties:
@@ -16317,10 +16340,10 @@ spec:
                               The maximum number of pods that can be unavailable during the update.
                               Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
                               Absolute number is calculated from percentage by rounding up. This can not be 0.
-                              Defaults to 1. This field is alpha-level and is only honored by servers that enable the
-                              MaxUnavailableStatefulSet feature. The field applies to all pods in the range 0 to
+                              Defaults to 1. This field is beta-level and is enabled by default. The field applies to all pods in the range 0 to
                               Replicas-1. That means if there is any unavailable pod in the range 0 to Replicas-1, it
                               will be counted towards MaxUnavailable.
+                              This setting might not be effective for the OrderedReady podManagementPolicy. That policy ensures pods are created and become ready one at a time.
                             x-kubernetes-int-or-string: true
                           partition:
                             description: |-
@@ -17007,7 +17030,7 @@ spec:
                                 resources:
                                   description: |-
                                     resources represents the minimum resources the volume should have.
-                                    If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements
+                                    Users are allowed to specify resource requirements
                                     that are lower than previous value but must still be higher than capacity recorded in the
                                     status field of the claim.
                                     More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
@@ -17886,6 +17909,24 @@ spec:
                                     description: Kubelet's generated CSRs will be
                                       addressed to this signer.
                                     type: string
+                                  userAnnotations:
+                                    additionalProperties:
+                                      type: string
+                                    description: |-
+                                      userAnnotations allow pod authors to pass additional information to
+                                      the signer implementation.  Kubernetes does not restrict or validate this
+                                      metadata in any way.
+
+                                      These values are copied verbatim into the `spec.unverifiedUserAnnotations` field of
+                                      the PodCertificateRequest objects that Kubelet creates.
+
+                                      Entries are subject to the same validation as object metadata annotations,
+                                      with the addition that all keys must be domain-prefixed. No restrictions
+                                      are placed on values, except an overall size limitation on the entire field.
+
+                                      Signers should document the keys and values they support. Signers should
+                                      deny requests that contain keys they do not recognize.
+                                    type: object
                                 required:
                                 - keyType
                                 - signerName
