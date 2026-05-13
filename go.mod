@@ -9,11 +9,11 @@ require (
 	github.com/openshift/library-go v0.0.0-20250818065802-cf8518058622
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.86.2
-	go.uber.org/zap v1.27.1
+	go.uber.org/zap v1.28.0
 	k8s.io/api v0.35.4
 	k8s.io/apimachinery v0.35.4
 	k8s.io/client-go v0.35.4
-	knative.dev/pkg v0.0.0-20260422015212-ec452872dcc1
+	knative.dev/pkg v0.0.0-20260507212125-df317a52d112
 	knative.dev/serving v0.49.0
 	sigs.k8s.io/controller-runtime v0.22.3
 )
