@@ -1158,7 +1158,8 @@ func ValidatePrometheusMonitoringEndpoints(ba common.BaseComponent, client clien
 			}
 			// Error if any Secret is specified but does not exist
 			for _, secretName := range secretNames {
-				if err := client.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: namespace}, &corev1.Secret{}); err != nil {
+				err := common.CheckSecret(client, secretName, namespace)
+				if err != nil {
 					errorMessage := fmt.Sprintf("Could not find Secret '%s' in this namespace.", secretName)
 					return errors.New(errorMessage)
 				}
@@ -1654,8 +1655,7 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 		// if this is our service account there will be one image pull secret
 		// For others there could be more. either way, just use the first?
 		sName := secrets[0].Name
-		err := client.Get(context.TODO(), types.NamespacedName{Name: sName, Namespace: ns}, &corev1.Secret{})
-		if err != nil {
+		if err := common.CheckSecret(client, sName, ns); err != nil {
 			saErr := errors.New("Service account " + saName + " isn't ready. Reason: " + err.Error())
 			return saErr
 		}
@@ -1766,15 +1766,15 @@ func CustomizePodWithSVCCertificate(pts *corev1.PodTemplateSpec, ba common.BaseC
 }
 
 func addSecretHashAsAnnotation(pts *corev1.PodTemplateSpec, object metav1.Object, client client.Client, secretName string, groupName string) error {
-	secret := &corev1.Secret{}
-	err := client.Get(context.Background(), types.NamespacedName{Name: secretName, Namespace: object.GetNamespace()}, secret)
+	secret, err := common.GetSecret(client, secretName, object.GetNamespace())
+	defer secret.Destroy()
 	if err != nil {
 		return fmt.Errorf("Secret %q was not found in namespace %q, %w", secretName, object.GetNamespace(), err)
 	}
 	if pts.ObjectMeta.Annotations == nil {
 		pts.ObjectMeta.Annotations = make(map[string]string)
 	}
-	pts.ObjectMeta.Annotations[groupName+"/secret-"+secretName] = HashData(secret.Data)
+	pts.ObjectMeta.Annotations[groupName+"/secret-"+secretName] = HashLockedData(secret.LockedData)
 	return nil
 }
 
@@ -1852,13 +1852,12 @@ func GetIssuerResourceVersion(client client.Client, certificate *certmanagerv1.C
 		return "", err
 	}
 	if issuer.Spec.CA != nil {
-		caSecret := &corev1.Secret{}
-		err = client.Get(context.Background(), types.NamespacedName{Name: issuer.Spec.CA.SecretName,
-			Namespace: certificate.Namespace}, caSecret)
+		caSecret, err := common.GetSecret(client, issuer.Spec.CA.SecretName, certificate.Namespace)
+		defer caSecret.Destroy()
 		if err != nil {
 			return "", err
 		} else {
-			return issuer.ResourceVersion + "," + HashData(caSecret.Data), nil
+			return issuer.ResourceVersion + "," + HashLockedData(caSecret.LockedData), nil
 		}
 	} else {
 		return issuer.ResourceVersion, nil

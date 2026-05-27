@@ -15,7 +15,7 @@ func TestHashData(t *testing.T) {
 	data["xyz"] = []byte("contentforxyz")
 	data["abc"] = []byte("1Ag@aZ821Sd1asd1231nkgrniekghis168adf")
 	testGHFD := []Test{
-		{"Serialize sample data", []byte("abc\0001Ag@aZ821Sd1asd1231nkgrniekghis168adf\000xyz\000contentforxyz\000"), serializeSecretData(data)},
+		{"Serialize sample data", []byte("abc\0001Ag@aZ821Sd1asd1231nkgrniekghis168adf\000xyz\000contentforxyz\000"), serializeData(data)},
 		{"Get hash from serialized data", "2d0b4d0adc4124bdfb959cb8b584473b5392cf2287b69a11663b288c90cfa010", HashData(data)},
 	}
 	verifyTests(testGHFD, t)

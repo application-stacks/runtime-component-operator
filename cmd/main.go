@@ -36,6 +36,7 @@ import (
 	"github.com/application-stacks/runtime-component-operator/common"
 	"github.com/application-stacks/runtime-component-operator/internal/controller"
 	"github.com/application-stacks/runtime-component-operator/utils"
+	"github.com/awnumar/memguard"
 	certmanagerv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -68,6 +69,9 @@ func init() {
 }
 
 func main() {
+	memguard.CatchInterrupt()
+	defer memguard.Purge()
+
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
