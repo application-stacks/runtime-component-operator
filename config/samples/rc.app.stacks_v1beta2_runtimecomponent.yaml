@@ -4,7 +4,7 @@ metadata:
   name: runtimecomponent-sample
 spec:
   # Add fields here
-  applicationImage: icr.io/appcafe/open-liberty/samples/getting-started@sha256:c069799108639810d59a0747c044272585dea7e324ef0e9f1550048a637a8680
+  applicationImage: icr.io/appcafe/open-liberty/samples/getting-started@sha256:1762625d6217dfeac43443b37e7fede08e8a63525f601443e5e672a4b970b8bd
   expose: true
   replicas: 1
   service:
