@@ -130,6 +130,7 @@ def void ebcDemand(){
          "ebc_priority=${ebcPriority}",
          "ebc_autoCompleteAfterXHours=24",
          "ebc_reasonForEnvironment=${env.BUILD_URL}",
+         "ebc_tracking_productArea=Liberty",
          "ebc_jenkins_agent_label=ebc_${executionId}",
          "ebc_jenkins_server_instance_name=${env.jenkins_server_instance_name}",
          "ebc_jenkins_service_name=${env.jenkins_service_name}"
