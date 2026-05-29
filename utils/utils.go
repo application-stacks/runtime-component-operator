@@ -1201,7 +1201,7 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComp
 	sm.Spec.Endpoints[0].Port = ""
 	sm.Spec.Endpoints[0].TargetPort = nil
 	sm.Spec.Endpoints[0].TLSConfig = nil
-	sm.Spec.Endpoints[0].Scheme = ""
+	sm.Spec.Endpoints[0].Scheme = nil
 
 	if len(ba.GetMonitoring().GetEndpoints()) > 0 {
 		port := ba.GetMonitoring().GetEndpoints()[0].Port
@@ -1231,7 +1231,7 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComp
 
 	if len(ba.GetMonitoring().GetEndpoints()) > 0 {
 		endpoints := ba.GetMonitoring().GetEndpoints()
-		if endpoints[0].Scheme != "" {
+		if endpoints[0].Scheme != nil {
 			sm.Spec.Endpoints[0].Scheme = endpoints[0].Scheme
 		}
 		if endpoints[0].Interval != "" {
@@ -1267,7 +1267,8 @@ func CustomizeServiceMonitor(sm *prometheusv1.ServiceMonitor, ba common.BaseComp
 	}
 	if ba.GetManageTLS() == nil || *ba.GetManageTLS() {
 		if len(ba.GetMonitoring().GetEndpoints()) == 0 || ba.GetMonitoring().GetEndpoints()[0].TLSConfig == nil {
-			sm.Spec.Endpoints[0].Scheme = "https"
+			https_scheme := prometheusv1.SchemeHTTPS
+			sm.Spec.Endpoints[0].Scheme = &https_scheme
 			if sm.Spec.Endpoints[0].TLSConfig == nil {
 				sm.Spec.Endpoints[0].TLSConfig = &prometheusv1.TLSConfig{}
 			}

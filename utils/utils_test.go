@@ -704,13 +704,20 @@ func TestCustomizeServiceMonitor(t *testing.T) {
 	}
 
 	// Endpoint for runtime
+	https_scheme := prometheusv1.SchemeHTTPS
 	endpointApp := &prometheusv1.Endpoint{
-		Port:            "web",
-		Scheme:          "myScheme",
-		Interval:        "myInterval",
-		Path:            "myPath",
-		TLSConfig:       &prometheusv1.TLSConfig{},
-		BasicAuth:       &prometheusv1.BasicAuth{},
+		Port:     "web",
+		Scheme:   &https_scheme,
+		Interval: "myInterval",
+		Path:     "myPath",
+		HTTPConfigWithProxyAndTLSFiles: prometheusv1.HTTPConfigWithProxyAndTLSFiles{
+			HTTPConfigWithTLSFiles: prometheusv1.HTTPConfigWithTLSFiles{
+				TLSConfig: &prometheusv1.TLSConfig{},
+				HTTPConfigWithoutTLS: prometheusv1.HTTPConfigWithoutTLS{
+					BasicAuth: &prometheusv1.BasicAuth{},
+				},
+			},
+		},
 		Params:          params,
 		ScrapeTimeout:   "myScrapeTimeout",
 		BearerTokenFile: "myBearerTokenFile",
