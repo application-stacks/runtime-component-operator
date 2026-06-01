@@ -909,23 +909,24 @@ func TestGetEnvVarValue(t *testing.T) {
 	logf.SetLogger(logger)
 
 	envs := []corev1.EnvVar{
-		{Name: "EXISTING_VAR", Value: "/custom/path"},
+		{Name: "NONEMPTY_VAR", Value: "/custom/path"},
 		{Name: "EMPTY_VAR", Value: ""},
 	}
 
 	// Helper to run func for Test struct
-	val1, found1 := GetEnvVarValue(envs, "EXISTING_VAR")
-	_, found2 := GetEnvVarValue(envs, "MISSING_VAR")
-	val3, found3 := GetEnvVarValue(envs, "EMPTY_VAR")
+	val1, found1 := GetEnvVarValue(envs, "NONEMPTY_VAR", "/default/path")
+	val2, found2 := GetEnvVarValue(envs, "EMPTY_VAR", "/default/path") 
+	val3, found3 := GetEnvVarValue(envs, "UNSET_VAR", "/default/path") 
 
 	testGEVV := []Test{
-		{"Retrieve existing variable value", "/custom/path", val1},
-		{"Retrieve existing variable found status", true, found1},
-		{"Handle missing variable found status", false, found2},
-		{"Handle empty string variable found status", true, found3},
-		{"Handle empty string variable value", "", val3},
+		{"Retrieve existing variable set to non-empty value", "/custom/path", val1},
+		{"Retrieve found status of existing variable set to non-empty value", true, found1},
+		{"Retrieve existing variable set to empty value", "", val2},
+		{"Retrieve found status of existing variable set to empty value", true, found2},
+		{"Handle value for an unset variable", "/default/path", val3},
+		{"Retrieve found status for an unset variable", false, found3},
 	}
-
+	
 	verifyTests(testGEVV, t)
 }
 
