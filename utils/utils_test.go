@@ -494,6 +494,40 @@ func TestCustomizePodSpecServiceLinks(t *testing.T) {
 	verifyTests(testCPS, t)
 }
 
+func TestCustomizePodSpecPriorityClassName(t *testing.T) {
+	logger := zap.New()
+	logf.SetLogger(logger)
+
+	spec := appstacksv1.RuntimeComponentSpec{
+		ApplicationImage: appImage,
+		Service:          service,
+	}
+
+	pts, runtime := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	defaultPriorityClassName := pts.Spec.PriorityClassName
+
+	priorityClassName := "high-priority"
+	spec.PriorityClassName = &priorityClassName
+	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	setPriorityClassName := pts.Spec.PriorityClassName
+
+	spec.PriorityClassName = nil
+	pts = &corev1.PodTemplateSpec{}
+	pts.Spec.PriorityClassName = priorityClassName
+	runtime = createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	clearPriorityClassName := pts.Spec.PriorityClassName
+
+	testCPS := []Test{
+		{"Default PriorityClassName (not set)", "", defaultPriorityClassName},
+		{"Set PriorityClassName", priorityClassName, setPriorityClassName},
+		{"Clearing PriorityClassName", "", clearPriorityClassName},
+	}
+	verifyTests(testCPS, t)
+}
+
 func TestCustomizePersistence(t *testing.T) {
 	logger := zap.New()
 	logf.SetLogger(logger)
