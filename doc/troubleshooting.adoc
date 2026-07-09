@@ -133,16 +133,36 @@ Check the `status` section of the CR. If the application is successfully reconci
 ----
   $ oc describe runtimecomponent <app_name>
 ----
-+
 
 
-== Known Issues
+=== TLS Connections
+If `.spec.expose=true` is set in the CR, then `.spec.manageTLS=true` and `.spec.route.termination=reencyrpt` are set by default. With these settings, the application _must_ have TLS enabled on the port configured in `.spec.service.port`. Otherwise, the application will not receive any requests. The application must also use the TLS certificates mounted by the operator in the application pods. If this configuration is not possible, some alternatives are listed below. Other configurations are possible, but are beyond the scope of this document.
 
-Operator versions < 0.5.0 might crash on startup when optional CRDs API group (eg. serving.knative.dev/v1alpha1) is
-available, but actual CRD (Knative Service) is not present.
+==== Application uses its own certificates
+[source,sh]
+----
+  apiVersion: rc.app.stacks/v1
+  kind: RuntimeComponent
+  ...
+  spec:
+    route:
+        termination: passthrough
+----
+In this case, TLS traffic will be passed directly through to the application pods. The application can use its own certificates.
 
-Version 0.5.0 of operator can crash when creating Ingress with `spec.expose` is set to `true` and `spec.route` is not provided or set (nil). 
-Possible fixes are to set `spec.route` to `{}` or disable Ingress if not used by setting `spec.expose` to `false`.
+==== Application uses HTTP inside the cluster
+[source,sh]
+----
+  apiVersion: rc.app.stacks/v1
+  kind: RuntimeComponent
+  ...
+  spec:
+    route:
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+----
+In this case, insecure external traffic will be redirected to the secure port, but all secure connections will be terminated by the cluster, and the application will only receive HTTP connections.
 
-Knative Serving / OpenShift Serverless sidecar container can only connect to the application's container over HTTP connection. Application
-must be listening on HTTP port to use Knative.
+
+
+
