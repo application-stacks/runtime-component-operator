@@ -445,7 +445,16 @@ Once a `RuntimeComponent` application is exposed as a Provisioned Service, a ser
 
 Runtime Component Operator can create a `ServiceMonitor` resource to integrate with `Prometheus Operator`.
 
-_This feature does not support integration with Knative Service. Prometheus Operator is required to use ServiceMonitor._
+**For users on Red Hat OpenShift Container Platform v4.6+:**
+
+1. Follow the OpenShift guide on link:++https://docs.openshift.com/container-platform/4.10/monitoring/configuring-the-monitoring-stack.html++[Configuring the monitoring stack] which creates two `ConfigMap` resources, `cluster-monitoring-config` and `user-workload-monitoring-config`.
+1. Follow the OpenShift guide on link:++https://docs.openshift.com/container-platform/4.10/monitoring/enabling-monitoring-for-user-defined-projects.html++[Enabling monitoring for user-defined projects] to enable user workloads. 
+1. Create a `RuntimeComponent` CR instance with the link:++#basic-monitoring-specification++[basic] or link:++#advanced-monitoring-specification++[advanced] monitoring specification below.
+1. View metrics through the OpenShift UI as "Administrator" under the `Observe` > `Metrics` tab. 
+
+_The community version of Prometheus Operator is not supported for users on Red Hat OpenShift Container Platform._ 
+
+_This feature does not support integration with Knative Service._
 
 ==== Basic monitoring specification
 
@@ -466,7 +475,7 @@ spec:
 
 ==== Advanced monitoring specification
 
-For advanced scenarios, it is possible to set many `ServicerMonitor` settings such as authentication secret using link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#endpoint++[Prometheus Endpoint]
+For advanced scenarios, it is possible to set many `ServiceMonitor` settings such as authentication secret using link:++https://github.com/coreos/prometheus-operator/blob/main/Documentation/api.md#endpoint++[Prometheus Endpoint]. Ensure that the `basicAuth` secrets (i.e. `metrics-secret`) are created and visible to Runtime Component Operator. 
 
 [source,yaml]
 ----
