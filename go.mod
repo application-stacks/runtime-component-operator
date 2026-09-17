@@ -3,7 +3,7 @@ module github.com/application-stacks/runtime-component-operator
 go 1.27
 
 require (
-	github.com/cert-manager/cert-manager v1.20.3
+	github.com/cert-manager/cert-manager v1.20.4
 	github.com/go-logr/logr v1.4.4
 	github.com/openshift/api v0.0.0-20260916094138-1a69e30ec990
 	github.com/openshift/library-go v0.0.0-20260909144031-8fc95c63c590
