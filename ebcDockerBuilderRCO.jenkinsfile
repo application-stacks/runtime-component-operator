@@ -52,7 +52,7 @@ timestamps {
 
       node(label: "ebc_${executionId}"){
          stage("Running Job"){
-            withCredentials([usernamePassword(credentialsId: 'operator_icrId', usernameVariable: 'PIPELINE_USERNAME', passwordVariable: 'PIPELINE_PASSWORD'),
+            withCredentials([usernamePassword(credentialsId: 'operator_preprod_icrId', usernameVariable: 'PIPELINE_USERNAME', passwordVariable: 'PIPELINE_PASSWORD'),
                              usernamePassword(credentialsId: 'operatorRH_REG_ID', usernameVariable: 'REDHAT_USERNAME', passwordVariable: 'REDHAT_PASSWORD'),
                              usernamePassword(credentialsId: 'operator_artifactory_ID', usernameVariable: 'ARTIFACTORY_USERNAME', passwordVariable: 'ARTIFACTORY_TOKEN')]) {
                //This is executing on ebc dynamic machine
