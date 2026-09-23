@@ -71,7 +71,7 @@ metadata:
     categories: Application Runtime
     certified: "true"
     containerImage: icr.io/appcafe/runtime-component-operator:daily
-    createdAt: "2026-09-17T20:31:41Z"
+    createdAt: "2026-09-23T21:13:09Z"
     description: Deploys any runtime component with dynamic and auto-tuning configuration
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -443,12 +443,22 @@ spec:
       - description: DNS settings for the pod.
         displayName: DNS
         path: dns
+      - description: Lifecycle hooks for the application container.
+        displayName: Lifecycle
+        path: lifecycle
       - description: Controls which nodes the pod are scheduled to run on, based on
           labels on the node.
         displayName: Node Affinity
         path: affinity.nodeAffinity
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:nodeAffinity
+      - description: Optional duration in seconds the pod needs to terminate gracefully.
+          Value must be non-negative integer. The value zero indicates stop immediately
+          via the kill signal.
+        displayName: Pod Termination Grace Period Seconds
+        path: podTerminationGracePeriodSeconds
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
       - description: Controls the nodes the pod are scheduled to run on, based on
           labels on the pods that are already running on the node.
         displayName: Pod Affinity
