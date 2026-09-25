@@ -265,4 +265,6 @@ type BaseComponent interface {
 	GetDisableTopologyRouting() *bool
 	GetHostAliases() []corev1.HostAlias
 	GetPriorityClassName() *string
+	GetLifecycle() *corev1.Lifecycle
+	GetPodTerminationGracePeriodSeconds() *int64
 }

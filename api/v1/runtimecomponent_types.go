@@ -172,6 +172,15 @@ type RuntimeComponentSpec struct {
 	// Name of the PriorityClass for the application pods.
 	// +operator-sdk:csv:customresourcedefinitions:order=31,type=spec,displayName="Priority Class Name"
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+
+	// Lifecycle hooks for the application container.
+	// +operator-sdk:csv:customresourcedefinitions:order=32,type=spec,displayName="Lifecycle"
+	Lifecycle *corev1.Lifecycle `json:"lifecycle,omitempty"`
+
+	// Optional duration in seconds the pod needs to terminate gracefully. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal.
+	// +kubebuilder:validation:Minimum=0
+	// +operator-sdk:csv:customresourcedefinitions:order=33,type=spec,displayName="Pod Termination Grace Period Seconds",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
+	PodTerminationGracePeriodSeconds *int64 `json:"podTerminationGracePeriodSeconds,omitempty"`
 }
 
 // Defines the DNS
@@ -1113,6 +1122,16 @@ func (cr *RuntimeComponent) GetHostAliases() []corev1.HostAlias {
 
 func (cr *RuntimeComponent) GetPriorityClassName() *string {
 	return cr.Spec.PriorityClassName
+}
+
+// GetLifecycle returns the lifecycle hooks for the application container
+func (cr *RuntimeComponent) GetLifecycle() *corev1.Lifecycle {
+	return cr.Spec.Lifecycle
+}
+
+// GetPodTerminationGracePeriodSeconds returns the pod termination grace period
+func (cr *RuntimeComponent) GetPodTerminationGracePeriodSeconds() *int64 {
+	return cr.Spec.PodTerminationGracePeriodSeconds
 }
 
 // Initialize the RuntimeComponent instance

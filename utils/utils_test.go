@@ -528,6 +528,74 @@ func TestCustomizePodSpecPriorityClassName(t *testing.T) {
 	verifyTests(testCPS, t)
 }
 
+func TestCustomizePodSpecLifecycle(t *testing.T) {
+	logger := zap.New()
+	logf.SetLogger(logger)
+
+	spec := appstacksv1.RuntimeComponentSpec{
+		ApplicationImage: appImage,
+		Service:          service,
+	}
+
+	pts, runtime := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	defaultLifecycle := GetAppContainer(pts.Spec.Containers).Lifecycle
+
+	lifecycle := &corev1.Lifecycle{
+		PreStop: &corev1.LifecycleHandler{
+			Exec: &corev1.ExecAction{Command: []string{"/bin/sh", "-c", "curl -X POST http://localhost:9080/stop"}},
+		},
+	}
+	spec.Lifecycle = lifecycle
+	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	setLifecycle := GetAppContainer(pts.Spec.Containers).Lifecycle
+
+	spec.Lifecycle = nil
+	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	clearLifecycle := GetAppContainer(pts.Spec.Containers).Lifecycle
+
+	testCPS := []Test{
+		{"Default Lifecycle (not set)", (*corev1.Lifecycle)(nil), defaultLifecycle},
+		{"Set Lifecycle", lifecycle, setLifecycle},
+		{"Clearing Lifecycle", (*corev1.Lifecycle)(nil), clearLifecycle},
+	}
+	verifyTests(testCPS, t)
+}
+
+func TestCustomizePodSpecTerminationGracePeriod(t *testing.T) {
+	logger := zap.New()
+	logf.SetLogger(logger)
+
+	spec := appstacksv1.RuntimeComponentSpec{
+		ApplicationImage: appImage,
+		Service:          service,
+	}
+
+	pts, runtime := &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	defaultGracePeriod := pts.Spec.TerminationGracePeriodSeconds
+
+	gracePeriod := int64(120)
+	spec.PodTerminationGracePeriodSeconds = &gracePeriod
+	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	setGracePeriod := pts.Spec.TerminationGracePeriodSeconds
+
+	spec.PodTerminationGracePeriodSeconds = nil
+	pts, runtime = &corev1.PodTemplateSpec{}, createRuntimeComponent(name, namespace, spec)
+	CustomizePodSpec(pts, runtime)
+	clearGracePeriod := pts.Spec.TerminationGracePeriodSeconds
+
+	testCPS := []Test{
+		{"Default TerminationGracePeriodSeconds (not set)", (*int64)(nil), defaultGracePeriod},
+		{"Set TerminationGracePeriodSeconds", &gracePeriod, setGracePeriod},
+		{"Clearing TerminationGracePeriodSeconds", (*int64)(nil), clearGracePeriod},
+	}
+	verifyTests(testCPS, t)
+}
+
 func TestCustomizePersistence(t *testing.T) {
 	logger := zap.New()
 	logf.SetLogger(logger)
@@ -949,8 +1017,8 @@ func TestGetEnvVarValue(t *testing.T) {
 
 	// Helper to run func for Test struct
 	val1, found1 := GetEnvVarValue(envs, "NONEMPTY_VAR", "/default/path")
-	val2, found2 := GetEnvVarValue(envs, "EMPTY_VAR", "/default/path") 
-	val3, found3 := GetEnvVarValue(envs, "UNSET_VAR", "/default/path") 
+	val2, found2 := GetEnvVarValue(envs, "EMPTY_VAR", "/default/path")
+	val3, found3 := GetEnvVarValue(envs, "UNSET_VAR", "/default/path")
 
 	testGEVV := []Test{
 		{"Retrieve existing variable set to non-empty value", "/custom/path", val1},
@@ -960,7 +1028,7 @@ func TestGetEnvVarValue(t *testing.T) {
 		{"Handle value for an unset variable", "/default/path", val3},
 		{"Retrieve found status for an unset variable", false, found3},
 	}
-	
+
 	verifyTests(testGEVV, t)
 }
 

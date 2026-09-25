@@ -726,6 +726,8 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 		appContainer.Env = append(appContainer.Env, corev1.EnvVar{Name: "SA_RESOURCE_VERSION", Value: saRV})
 	}
 
+	appContainer.Lifecycle = ba.GetLifecycle()
+
 	pts.Spec.Containers = append([]corev1.Container{appContainer}, ba.GetSidecarContainers()...)
 
 	if name := GetServiceAccountName(ba); name != "" {
@@ -783,6 +785,8 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	} else {
 		pts.Spec.PriorityClassName = ""
 	}
+
+	pts.Spec.TerminationGracePeriodSeconds = ba.GetPodTerminationGracePeriodSeconds()
 }
 
 // Initialize an empty TopologySpreadConstraints list and optionally prefers scheduling across zones/hosts for pods with podMatchLabels
