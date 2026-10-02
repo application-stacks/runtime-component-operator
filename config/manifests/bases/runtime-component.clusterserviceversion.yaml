@@ -16,7 +16,7 @@ metadata:
     features.operators.openshift.io/token-auth-aws: "false"
     features.operators.openshift.io/token-auth-azure: "false"
     features.operators.openshift.io/token-auth-gcp: "false"
-    olm.skipRange: '>=0.8.0 <1.6.2'
+    olm.skipRange: '>=0.8.0 <1.6.3'
     repository: https://github.com/application-stacks/runtime-component-operator
     support: Community
   labels:
@@ -335,15 +335,26 @@ spec:
         path: statefulSet.storage.mountPath
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Security context for the application container.
-        displayName: Security Context
-        path: securityContext
+      - description: Security context for the application pod. Applies to all containers
+          in the pod. If set, the fields of container's securityContext override the
+          equivalent fields of podSecurityContext.
+        displayName: Pod Security Context
+        path: podSecurityContext
       - description: A YAML object that represents a volumeClaimTemplate component
           of a StatefulSet.
         displayName: Storage Volume Claim Template
         path: statefulSet.storage.volumeClaimTemplate
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:PersistentVolumeClaim
+      - description: Security context for the application container. If set, the fields
+          of container's securityContext override the equivalent fields of podSecurityContext.
+        displayName: Security Context
+        path: securityContext
+      - description: Labels to set on ServiceMonitor.
+        displayName: Monitoring Labels
+        path: monitoring.labels
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - displayName: Topology Spread Constraints
         path: topologySpreadConstraints
       - description: Disable information about services being injected into the application
@@ -352,40 +363,53 @@ spec:
         path: disableServiceLinks
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: The list of hostnames and IPs that will be injected into the
-          application pod's hosts file
-        displayName: Host Aliases
-        path: hostAliases
-      - description: Labels to set on ServiceMonitor.
-        displayName: Monitoring Labels
-        path: monitoring.labels
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
       - description: A YAML snippet representing an array of Endpoint component from
           ServiceMonitor.
         displayName: Monitoring Endpoints
         path: monitoring.endpoints
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:endpointList
-      - description: Name of the PriorityClass for the application pods.
-        displayName: Priority Class Name
-        path: priorityClassName
       - description: Tolerations to be added to application pods. Tolerations allow
           the scheduler to schedule pods on nodes with matching taints.
         displayName: Tolerations
         path: tolerations
-      - description: DNS settings for the pod.
-        displayName: DNS
-        path: dns
-      - description: Lifecycle hooks for the application container.
-        displayName: Lifecycle
-        path: lifecycle
       - description: Controls which nodes the pod are scheduled to run on, based on
           labels on the node.
         displayName: Node Affinity
         path: affinity.nodeAffinity
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:nodeAffinity
+      - description: DNS settings for the pod.
+        displayName: DNS
+        path: dns
+      - description: Controls the nodes the pod are scheduled to run on, based on
+          labels on the pods that are already running on the node.
+        displayName: Pod Affinity
+        path: affinity.podAffinity
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:podAffinity
+      - description: The list of hostnames and IPs that will be injected into the
+          application pod's hosts file
+        displayName: Host Aliases
+        path: hostAliases
+      - description: Enables the ability to prevent running a pod on the same node
+          as another pod.
+        displayName: Pod Anti Affinity
+        path: affinity.podAntiAffinity
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:podAntiAffinity
+      - description: Name of the PriorityClass for the application pods.
+        displayName: Priority Class Name
+        path: priorityClassName
+      - description: A YAML object that contains a set of required labels and their
+          values.
+        displayName: Node Affinity Labels
+        path: affinity.nodeAffinityLabels
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Lifecycle hooks for the application container.
+        displayName: Lifecycle
+        path: lifecycle
       - description: Optional duration in seconds the pod needs to terminate gracefully.
           Value must be non-negative integer. The value zero indicates stop immediately
           via the kill signal.
@@ -393,24 +417,6 @@ spec:
         path: podTerminationGracePeriodSeconds
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
-      - description: Controls the nodes the pod are scheduled to run on, based on
-          labels on the pods that are already running on the node.
-        displayName: Pod Affinity
-        path: affinity.podAffinity
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:podAffinity
-      - description: Enables the ability to prevent running a pod on the same node
-          as another pod.
-        displayName: Pod Anti Affinity
-        path: affinity.podAntiAffinity
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:podAntiAffinity
-      - description: A YAML object that contains a set of required labels and their
-          values.
-        displayName: Node Affinity Labels
-        path: affinity.nodeAffinityLabels
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
       - description: Annotations to be added to the Route.
         displayName: Route Annotations
         path: route.annotations

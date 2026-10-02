@@ -146,40 +146,44 @@ type RuntimeComponentSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:order=27,type=spec,displayName="Affinity"
 	Affinity *RuntimeComponentAffinity `json:"affinity,omitempty"`
 
-	// Security context for the application container.
-	// +operator-sdk:csv:customresourcedefinitions:order=28,type=spec,displayName="Security Context"
+	// Security context for the application pod. Applies to all containers in the pod. If set, the fields of container's securityContext override the equivalent fields of podSecurityContext.
+	// +operator-sdk:csv:customresourcedefinitions:order=28,type=spec,displayName="Pod Security Context"
+	PodSecurityContext *corev1.PodSecurityContext `json:"podSecurityContext,omitempty"`
+
+	// Security context for the application container. If set, the fields of container's securityContext override the equivalent fields of podSecurityContext.
+	// +operator-sdk:csv:customresourcedefinitions:order=29,type=spec,displayName="Security Context"
 	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
 
-	// +operator-sdk:csv:customresourcedefinitions:order=29,type=spec,displayName="Topology Spread Constraints"
+	// +operator-sdk:csv:customresourcedefinitions:order=30,type=spec,displayName="Topology Spread Constraints"
 	TopologySpreadConstraints *RuntimeComponentTopologySpreadConstraints `json:"topologySpreadConstraints,omitempty"`
 
 	// Disable information about services being injected into the application pod's environment variables. Default to false.
-	// +operator-sdk:csv:customresourcedefinitions:order=30,type=spec,displayName="Disable Service Links",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	// +operator-sdk:csv:customresourcedefinitions:order=31,type=spec,displayName="Disable Service Links",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	DisableServiceLinks *bool `json:"disableServiceLinks,omitempty"`
 
 	// Tolerations to be added to application pods. Tolerations allow the scheduler to schedule pods on nodes with matching taints.
-	// +operator-sdk:csv:customresourcedefinitions:order=31,type=spec,displayName="Tolerations"
+	// +operator-sdk:csv:customresourcedefinitions:order=32,type=spec,displayName="Tolerations"
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 
 	// DNS settings for the pod.
-	// +operator-sdk:csv:customresourcedefinitions:order=32,type=spec,displayName="DNS"
+	// +operator-sdk:csv:customresourcedefinitions:order=33,type=spec,displayName="DNS"
 	DNS *RuntimeComponentDNS `json:"dns,omitempty"`
 
 	// The list of hostnames and IPs that will be injected into the application pod's hosts file
-	// +operator-sdk:csv:customresourcedefinitions:order=30,type=spec,displayName="Host Aliases"
+	// +operator-sdk:csv:customresourcedefinitions:order=34,type=spec,displayName="Host Aliases"
 	HostAliases []corev1.HostAlias `json:"hostAliases,omitempty"`
 
 	// Name of the PriorityClass for the application pods.
-	// +operator-sdk:csv:customresourcedefinitions:order=31,type=spec,displayName="Priority Class Name"
+	// +operator-sdk:csv:customresourcedefinitions:order=35,type=spec,displayName="Priority Class Name"
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 
 	// Lifecycle hooks for the application container.
-	// +operator-sdk:csv:customresourcedefinitions:order=32,type=spec,displayName="Lifecycle"
+	// +operator-sdk:csv:customresourcedefinitions:order=36,type=spec,displayName="Lifecycle"
 	Lifecycle *corev1.Lifecycle `json:"lifecycle,omitempty"`
 
 	// Optional duration in seconds the pod needs to terminate gracefully. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal.
 	// +kubebuilder:validation:Minimum=0
-	// +operator-sdk:csv:customresourcedefinitions:order=33,type=spec,displayName="Pod Termination Grace Period Seconds",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
+	// +operator-sdk:csv:customresourcedefinitions:order=37,type=spec,displayName="Pod Termination Grace Period Seconds",xDescriptors="urn:alm:descriptor:com.tectonic.ui:number"
 	PodTerminationGracePeriodSeconds *int64 `json:"podTerminationGracePeriodSeconds,omitempty"`
 }
 
@@ -1075,6 +1079,11 @@ func (a *RuntimeComponentAffinity) GetArchitecture() []string {
 // GetNodeAffinityLabels returns list of architecture names
 func (a *RuntimeComponentAffinity) GetNodeAffinityLabels() map[string]string {
 	return a.NodeAffinityLabels
+}
+
+// GetPodSecurityContext returns pod security context
+func (cr *RuntimeComponent) GetPodSecurityContext() *corev1.PodSecurityContext {
+	return cr.Spec.PodSecurityContext
 }
 
 // GetSecurityContext returns container security context

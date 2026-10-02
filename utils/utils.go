@@ -42,7 +42,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const RCOOperandVersion = "1.6.2"
+const RCOOperandVersion = "1.6.3"
 
 var APIVersionNotFoundError = errors.New("APIVersion is not available")
 
@@ -696,6 +696,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	appContainer.VolumeMounts = ba.GetVolumeMounts()
 	pts.Spec.Volumes = ba.GetVolumes()
 
+	pts.Spec.SecurityContext = ba.GetPodSecurityContext()
 	appContainer.SecurityContext = GetSecurityContext(ba)
 
 	if ba.GetManageTLS() == nil || *ba.GetManageTLS() || ba.GetService().GetCertificateSecretRef() != nil {
@@ -997,6 +998,7 @@ func CustomizeKnativeService(ksvc *servingv1.Service, ba common.BaseComponent) {
 
 	ksvc.Spec.Template.Spec.HostAliases = ba.GetHostAliases()
 
+	ksvc.Spec.Template.Spec.SecurityContext = ba.GetPodSecurityContext()
 	ksvc.Spec.Template.Spec.Containers[0].SecurityContext = GetSecurityContext(ba)
 
 	ksvc.Spec.Template.Spec.Containers[0].VolumeMounts = ba.GetVolumeMounts()

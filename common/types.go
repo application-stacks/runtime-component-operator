@@ -256,6 +256,7 @@ type BaseComponent interface {
 	GetAffinity() BaseComponentAffinity
 	GetTopologySpreadConstraints() BaseComponentTopologySpreadConstraints
 	GetSecurityContext() *corev1.SecurityContext
+	GetPodSecurityContext() *corev1.PodSecurityContext
 	GetManageTLS() *bool
 	GetManagedPort() int
 	GetManagedScheme() corev1.URIScheme
