@@ -696,6 +696,7 @@ func CustomizePodSpec(pts *corev1.PodTemplateSpec, ba common.BaseComponent) {
 	appContainer.VolumeMounts = ba.GetVolumeMounts()
 	pts.Spec.Volumes = ba.GetVolumes()
 
+	pts.Spec.SecurityContext = ba.GetPodSecurityContext()
 	appContainer.SecurityContext = GetSecurityContext(ba)
 
 	if ba.GetManageTLS() == nil || *ba.GetManageTLS() || ba.GetService().GetCertificateSecretRef() != nil {
