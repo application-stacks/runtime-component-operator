@@ -1697,7 +1697,13 @@ func ServiceAccountPullSecretExists(ba common.BaseComponent, client client.Clien
 
 // Get security context from CR and apply customization to default settings
 func GetSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
-	baSecurityContext := ba.GetSecurityContext()
+	var containerSecContext *corev1.SecurityContext
+	if ba.GetSecurityContext() != nil {
+		containerSecContext = ba.GetSecurityContext().DeepCopy()
+	} else {
+		containerSecContext = &corev1.SecurityContext{}
+	}
+	podSecContext := ba.GetPodSecurityContext()
 
 	valFalse := false
 	valTrue := true
@@ -1706,7 +1712,7 @@ func GetSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
 	cap[0] = "ALL"
 
 	// Set default security context
-	secContext := &corev1.SecurityContext{
+	defaultSecContext := &corev1.SecurityContext{
 		AllowPrivilegeEscalation: &valFalse,
 		Capabilities: &corev1.Capabilities{
 			Drop: cap,
@@ -1720,28 +1726,60 @@ func GetSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
 	}
 
 	// Customize security context
-	if baSecurityContext != nil {
-		if baSecurityContext.AllowPrivilegeEscalation == nil {
-			baSecurityContext.AllowPrivilegeEscalation = secContext.AllowPrivilegeEscalation
-		}
-		if baSecurityContext.Capabilities == nil {
-			baSecurityContext.Capabilities = secContext.Capabilities
-		}
-		if baSecurityContext.Privileged == nil {
-			baSecurityContext.Privileged = secContext.Privileged
-		}
-		if baSecurityContext.ReadOnlyRootFilesystem == nil {
-			baSecurityContext.ReadOnlyRootFilesystem = secContext.ReadOnlyRootFilesystem
-		}
-		if baSecurityContext.RunAsNonRoot == nil {
-			baSecurityContext.RunAsNonRoot = secContext.RunAsNonRoot
-		}
-		if baSecurityContext.SeccompProfile == nil {
-			baSecurityContext.SeccompProfile = secContext.SeccompProfile
-		}
-		return baSecurityContext
+	if containerSecContext.AllowPrivilegeEscalation == nil {
+		containerSecContext.AllowPrivilegeEscalation = defaultSecContext.AllowPrivilegeEscalation
 	}
-	return secContext
+	if containerSecContext.Capabilities == nil {
+		containerSecContext.Capabilities = defaultSecContext.Capabilities
+	}
+	if containerSecContext.Privileged == nil {
+		containerSecContext.Privileged = defaultSecContext.Privileged
+	}
+	if containerSecContext.ReadOnlyRootFilesystem == nil {
+		containerSecContext.ReadOnlyRootFilesystem = defaultSecContext.ReadOnlyRootFilesystem
+	}
+	if containerSecContext.SELinuxOptions == nil {
+		if podSecContext != nil && podSecContext.SELinuxOptions != nil {
+			containerSecContext.SELinuxOptions = podSecContext.SELinuxOptions
+		}
+	}
+	if containerSecContext.WindowsOptions == nil {
+		if podSecContext != nil && podSecContext.WindowsOptions != nil {
+			containerSecContext.WindowsOptions = podSecContext.WindowsOptions
+		}
+	}
+	if containerSecContext.RunAsUser == nil {
+		if podSecContext != nil && podSecContext.RunAsUser != nil {
+			containerSecContext.RunAsUser = podSecContext.RunAsUser
+		}
+	}
+	if containerSecContext.RunAsGroup == nil {
+		if podSecContext != nil && podSecContext.RunAsGroup != nil {
+			containerSecContext.RunAsGroup = podSecContext.RunAsGroup
+		}
+	}
+	if containerSecContext.RunAsNonRoot == nil {
+		if podSecContext != nil && podSecContext.RunAsNonRoot != nil {
+			containerSecContext.RunAsNonRoot = podSecContext.RunAsNonRoot
+		} else {
+			containerSecContext.RunAsNonRoot = defaultSecContext.RunAsNonRoot
+		}
+	}
+	if containerSecContext.SeccompProfile == nil {
+		if podSecContext != nil && podSecContext.SeccompProfile != nil {
+			containerSecContext.SeccompProfile = podSecContext.SeccompProfile
+		} else {
+			containerSecContext.SeccompProfile = defaultSecContext.SeccompProfile
+		}
+	}
+	if containerSecContext.AppArmorProfile == nil {
+		if podSecContext != nil && podSecContext.AppArmorProfile != nil {
+			containerSecContext.AppArmorProfile = podSecContext.AppArmorProfile
+		} else {
+			containerSecContext.AppArmorProfile = defaultSecContext.AppArmorProfile
+		}
+	}
+	return containerSecContext
 }
 
 func AddOCPCertAnnotation(ba common.BaseComponent, svc *corev1.Service) {

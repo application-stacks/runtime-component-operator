@@ -1032,6 +1032,66 @@ func TestGetEnvVarValue(t *testing.T) {
 	verifyTests(testGEVV, t)
 }
 
+
+func TestGetSecurityContext(t *testing.T) {
+	logger := zap.New()
+	logf.SetLogger(logger)
+
+	valFalse := false
+	valTrue := true
+	user1000 := int64(1000)
+	user2000 := int64(2000)
+
+	specCase1 := appstacksv1.RuntimeComponentSpec{}
+	runtimeCase1 := createRuntimeComponent("case1", namespace, specCase1)
+	sc1 := GetSecurityContext(runtimeCase1)
+
+	specCase2 := appstacksv1.RuntimeComponentSpec{
+		PodSecurityContext: &corev1.PodSecurityContext{
+			RunAsNonRoot: &valFalse,
+			RunAsUser:    &user1000,
+		},
+	}
+	runtimeCase2 := createRuntimeComponent("case2", namespace, specCase2)
+	sc2 := GetSecurityContext(runtimeCase2)
+
+	specCase3 := appstacksv1.RuntimeComponentSpec{
+		SecurityContext: &corev1.SecurityContext{
+			RunAsUser: &user2000,
+		},
+		PodSecurityContext: &corev1.PodSecurityContext{
+			RunAsNonRoot: &valFalse,
+			RunAsUser:    &user1000,
+		},
+	}
+	runtimeCase3 := createRuntimeComponent("case3", namespace, specCase3)
+	sc3 := GetSecurityContext(runtimeCase3)
+
+	testGSC := []Test{
+		{"Case 1: AllowPrivilegeEscalation is false by default", &valFalse, sc1.AllowPrivilegeEscalation},
+		{"Case 1: RunAsNonRoot is true by default", &valTrue, sc1.RunAsNonRoot},
+		{"Case 1: SeccompProfile is RuntimeDefault", corev1.SeccompProfileTypeRuntimeDefault, sc1.SeccompProfile.Type},
+		{"Case 1: RunAsUser is nil by default", (*int64)(nil), sc1.RunAsUser},
+
+		{"Case 2: RunAsNonRoot is false (from PodSecurityContext)", &valFalse, sc2.RunAsNonRoot},
+		{"Case 2: RunAsUser is 1000 (from PodSecurityContext)", &user1000, sc2.RunAsUser},
+		{"Case 2: AllowPrivilegeEscalation is false (from defaults)", &valFalse, sc2.AllowPrivilegeEscalation},
+
+		{"Case 3: RunAsUser is 2000 (from SecurityContext, overriding PodSecurityContext)", &user2000, sc3.RunAsUser},
+		{"Case 3: RunAsNonRoot is false (from PodSecurityContext)", &valFalse, sc3.RunAsNonRoot},
+		{"Case 3: AllowPrivilegeEscalation is false (from defaults)", &valFalse, sc3.AllowPrivilegeEscalation},
+	}
+
+	verifyTests(testGSC, t)
+
+	if runtimeCase3.Spec.SecurityContext.RunAsNonRoot != nil {
+		t.Errorf("Mutation Isolation: runtimeCase3.Spec.SecurityContext.RunAsNonRoot should be nil, got %v", *runtimeCase3.Spec.SecurityContext.RunAsNonRoot)
+	}
+	if runtimeCase3.Spec.SecurityContext.AllowPrivilegeEscalation != nil {
+		t.Errorf("Mutation Isolation: runtimeCase3.Spec.SecurityContext.AllowPrivilegeEscalation should be nil, got %v", *runtimeCase3.Spec.SecurityContext.AllowPrivilegeEscalation)
+	}
+}
+
 // Helper Functions
 // Unconditionally set the proper tags for an enabled runtime omponent
 func createAppDefinitionTags(app *appstacksv1.RuntimeComponent) (map[string]string, map[string]string) {
