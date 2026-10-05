@@ -1032,7 +1032,6 @@ func TestGetEnvVarValue(t *testing.T) {
 	verifyTests(testGEVV, t)
 }
 
-
 func TestGetSecurityContext(t *testing.T) {
 	logger := zap.New()
 	logf.SetLogger(logger)
@@ -1073,12 +1072,12 @@ func TestGetSecurityContext(t *testing.T) {
 		{"Case 1: SeccompProfile is RuntimeDefault", corev1.SeccompProfileTypeRuntimeDefault, sc1.SeccompProfile.Type},
 		{"Case 1: RunAsUser is nil by default", (*int64)(nil), sc1.RunAsUser},
 
-		{"Case 2: RunAsNonRoot is false (from PodSecurityContext)", &valFalse, sc2.RunAsNonRoot},
-		{"Case 2: RunAsUser is 1000 (from PodSecurityContext)", &user1000, sc2.RunAsUser},
+		{"Case 2: RunAsNonRoot is nil (container lets K8s inherit from Pod)", (*bool)(nil), sc2.RunAsNonRoot},
+		{"Case 2: RunAsUser is nil (container lets K8s inherit from Pod)", (*int64)(nil), sc2.RunAsUser},
 		{"Case 2: AllowPrivilegeEscalation is false (from defaults)", &valFalse, sc2.AllowPrivilegeEscalation},
 
 		{"Case 3: RunAsUser is 2000 (from SecurityContext, overriding PodSecurityContext)", &user2000, sc3.RunAsUser},
-		{"Case 3: RunAsNonRoot is false (from PodSecurityContext)", &valFalse, sc3.RunAsNonRoot},
+		{"Case 3: RunAsNonRoot is nil (container lets K8s inherit from Pod)", (*bool)(nil), sc3.RunAsNonRoot},
 		{"Case 3: AllowPrivilegeEscalation is false (from defaults)", &valFalse, sc3.AllowPrivilegeEscalation},
 	}
 

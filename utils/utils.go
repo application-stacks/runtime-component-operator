@@ -1738,46 +1738,11 @@ func GetSecurityContext(ba common.BaseComponent) *corev1.SecurityContext {
 	if containerSecContext.ReadOnlyRootFilesystem == nil {
 		containerSecContext.ReadOnlyRootFilesystem = defaultSecContext.ReadOnlyRootFilesystem
 	}
-	if containerSecContext.SELinuxOptions == nil {
-		if podSecContext != nil && podSecContext.SELinuxOptions != nil {
-			containerSecContext.SELinuxOptions = podSecContext.SELinuxOptions
-		}
+	if containerSecContext.RunAsNonRoot == nil && (podSecContext == nil || podSecContext.RunAsNonRoot == nil) {
+		containerSecContext.RunAsNonRoot = defaultSecContext.RunAsNonRoot
 	}
-	if containerSecContext.WindowsOptions == nil {
-		if podSecContext != nil && podSecContext.WindowsOptions != nil {
-			containerSecContext.WindowsOptions = podSecContext.WindowsOptions
-		}
-	}
-	if containerSecContext.RunAsUser == nil {
-		if podSecContext != nil && podSecContext.RunAsUser != nil {
-			containerSecContext.RunAsUser = podSecContext.RunAsUser
-		}
-	}
-	if containerSecContext.RunAsGroup == nil {
-		if podSecContext != nil && podSecContext.RunAsGroup != nil {
-			containerSecContext.RunAsGroup = podSecContext.RunAsGroup
-		}
-	}
-	if containerSecContext.RunAsNonRoot == nil {
-		if podSecContext != nil && podSecContext.RunAsNonRoot != nil {
-			containerSecContext.RunAsNonRoot = podSecContext.RunAsNonRoot
-		} else {
-			containerSecContext.RunAsNonRoot = defaultSecContext.RunAsNonRoot
-		}
-	}
-	if containerSecContext.SeccompProfile == nil {
-		if podSecContext != nil && podSecContext.SeccompProfile != nil {
-			containerSecContext.SeccompProfile = podSecContext.SeccompProfile
-		} else {
-			containerSecContext.SeccompProfile = defaultSecContext.SeccompProfile
-		}
-	}
-	if containerSecContext.AppArmorProfile == nil {
-		if podSecContext != nil && podSecContext.AppArmorProfile != nil {
-			containerSecContext.AppArmorProfile = podSecContext.AppArmorProfile
-		} else {
-			containerSecContext.AppArmorProfile = defaultSecContext.AppArmorProfile
-		}
+	if containerSecContext.SeccompProfile == nil && (podSecContext == nil || podSecContext.SeccompProfile == nil) {
+		containerSecContext.SeccompProfile = defaultSecContext.SeccompProfile
 	}
 	return containerSecContext
 }
