@@ -44,6 +44,12 @@ type ReconcilerBase struct {
 	controller controller.Controller
 }
 
+// SecretUncachedClientOptions makes the manager client read Secrets live so the informer cache never holds their data.
+// Pair with builder.OnlyMetadata on Owns(&corev1.Secret{}).
+func SecretUncachedClientOptions() client.Options {
+	return client.Options{Cache: &client.CacheOptions{DisableFor: []client.Object{&corev1.Secret{}}}}
+}
+
 // NewReconcilerBase creates a new ReconcilerBase
 func NewReconcilerBase(apiReader client.Reader, client client.Client, scheme *runtime.Scheme, restConfig *rest.Config, recorder record.EventRecorder) ReconcilerBase {
 	return ReconcilerBase{
