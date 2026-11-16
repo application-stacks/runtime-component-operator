@@ -645,7 +645,7 @@ func (r *RuntimeComponentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	if !appstacksutils.GetOperatorDisableWatches() {
 		b = b.Owns(&corev1.Service{}, builder.WithPredicates(predSubResource)).
-			Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource)).
+			Owns(&corev1.Secret{}, builder.WithPredicates(predSubResource), builder.OnlyMetadata).
 			Owns(&appsv1.Deployment{}, builder.WithPredicates(predSubResWithGenCheck)).
 			Owns(&appsv1.StatefulSet{}, builder.WithPredicates(predSubResWithGenCheck))
 

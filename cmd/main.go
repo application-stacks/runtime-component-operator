@@ -196,6 +196,7 @@ func main() {
 		Cache: cache.Options{
 			DefaultNamespaces: map[string]cache.Config{watchNamespace: cache.Config{}},
 		},
+		Client: utils.SecretUncachedClientOptions(),
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
