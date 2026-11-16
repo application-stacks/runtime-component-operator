@@ -498,6 +498,7 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string,
 	mObj := ba.(metav1.Object)
 	if ba.GetManageTLS() == nil || *ba.GetManageTLS() || ba.GetService() != nil && ba.GetService().GetCertificateSecretRef() != nil {
 		tlsSecret := &corev1.Secret{}
+		defer common.ClearSecret(tlsSecret)
 		secretName := ba.GetStatus().GetReferences()[common.StatusReferenceCertSecretName]
 		err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: mObj.GetNamespace()}, tlsSecret)
 		if err != nil {
@@ -511,6 +512,7 @@ func (r *ReconcilerBase) GetRouteTLSValues(ba common.BaseComponent) (key string,
 	}
 	if ba.GetRoute() != nil && ba.GetRoute().GetCertificateSecretRef() != nil {
 		tlsSecret := &corev1.Secret{}
+		defer common.ClearSecret(tlsSecret)
 		secretName := mObj.GetName() + "-route-tls"
 		if ba.GetRoute().GetCertificateSecretRef() != nil {
 			secretName = *ba.GetRoute().GetCertificateSecretRef()
