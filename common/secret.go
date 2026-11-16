@@ -2,6 +2,8 @@ package common
 
 import (
 	"context"
+	"crypto/rand"
+	"math/big"
 	"sync"
 
 	corev1 "k8s.io/api/core/v1"
@@ -74,9 +76,70 @@ func (r *SecretResource) Clear(wg *sync.WaitGroup) {
 		if wg != nil {
 			wg.Wait()
 		}
-		for secretKey, secretValue := range r.secret.Data {
-			clear(secretValue)
-			delete(r.secret.Data, secretKey)
-		}
+		ClearSecret(r.secret)
 	})
+}
+
+// ClearSecret zeroes and removes all data held in the Secret.
+func ClearSecret(secret *corev1.Secret) {
+	if secret == nil {
+		return
+	}
+	for secretKey, secretValue := range secret.Data {
+		clear(secretValue)
+		delete(secret.Data, secretKey)
+	}
+}
+
+// SecretScope collects Secrets and byte slices so one deferred Clear zeroes them all.
+type SecretScope struct {
+	secrets []*corev1.Secret
+	buffers [][]byte
+}
+
+// Track registers the Secret to be cleared and returns it.
+func (s *SecretScope) Track(secret *corev1.Secret) *corev1.Secret {
+	s.secrets = append(s.secrets, secret)
+	return secret
+}
+
+// TrackBytes registers the byte slice to be zeroed and returns it.
+func (s *SecretScope) TrackBytes(buffer []byte) []byte {
+	s.buffers = append(s.buffers, buffer)
+	return buffer
+}
+
+// Clear zeroes everything registered with the scope.
+func (s *SecretScope) Clear() {
+	for _, secret := range s.secrets {
+		ClearSecret(secret)
+	}
+	for _, buffer := range s.buffers {
+		clear(buffer)
+	}
+	s.secrets, s.buffers = nil, nil
+}
+
+const alphanumeric = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+
+// GenerateRandomAlphanumeric returns a cryptographically secure random alphanumeric string as bytes. The caller must clear it.
+func GenerateRandomAlphanumeric(length int) ([]byte, error) {
+	b := make([]byte, length)
+	max := big.NewInt(int64(len(alphanumeric)))
+	for i := range b {
+		n, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			clear(b)
+			return nil, err
+		}
+		b[i] = alphanumeric[n.Int64()]
+	}
+	return b, nil
+}
+
+// SecretArg returns prefix+secret as a string command line argument, clearing the intermediate buffer.
+func SecretArg(prefix string, secret []byte) string {
+	buf := append([]byte(prefix), secret...)
+	defer clear(buf)
+	return string(buf)
 }
