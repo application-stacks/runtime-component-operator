@@ -67,6 +67,7 @@ The Runtime Component Operator is available for the following CPU architectures:
 - Linux&reg; x86_64 (amd64)
 - Linux&reg; on IBM&reg; Z (s390x)
 - Linux&reg; on Power&reg; (ppc64le)
+- Linux&reg; on AArch64 (arm64)
 
 The Runtime Component Operator can be installed to:
 
